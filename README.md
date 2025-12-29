@@ -1,1 +1,11 @@
+Very firstly follow up this youtube video: https://www.youtube.com/results?search_query=usb+to+uart+esp32+issue+downloading+setup
+
+Then follow up this video: 
+
+Later look at the way in mobile:
+
+
+
+Additonal (Arduino Cloud): https://app.arduino.cc/sketches/84254adf-6bb7-4a53-a33b-b326b54d25c8?nav=GenAI&view-mode=preview
+
 
