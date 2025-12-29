@@ -2,7 +2,7 @@ Very firstly follow up this youtube video: https://www.youtube.com/results?searc
 
 Then follow up this video: https://drive.google.com/file/d/1y4SB_j-jd2U377HVJCBDheXXnZwEjTRr/view?usp=sharing
 
-Later look at the way in mobile:
+Later look at the way in mobile: https://drive.google.com/file/d/1EabPWsqeOQudbZmyaz1Xzruphau6CUoi/view?usp=sharing
 
 
 
