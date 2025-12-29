@@ -1,6 +1,6 @@
 Very firstly follow up this youtube video: https://www.youtube.com/results?search_query=usb+to+uart+esp32+issue+downloading+setup
 
-Then follow up this video: 
+Then follow up this video: https://drive.google.com/file/d/1y4SB_j-jd2U377HVJCBDheXXnZwEjTRr/view?usp=sharing
 
 Later look at the way in mobile:
 
