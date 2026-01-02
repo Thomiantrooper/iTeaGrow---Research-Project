@@ -1,0 +1,3 @@
+healthy
+red_rust
+blister_blight
