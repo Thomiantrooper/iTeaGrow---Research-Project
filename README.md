@@ -1,9 +1,11 @@
-# iTeaGrow - Research Project
+Very firstly follow up this youtube video: https://www.youtube.com/results?search_query=usb+to+uart+esp32+issue+downloading+setup
 
-🌱 A research initiative focused on enhancing tea cultivation in Sri Lanka through data-driven insights, monitoring, and technological innovation, aimed at improving yield, sustainability, and disease management.
+Then follow up this video: https://drive.google.com/file/d/1y4SB_j-jd2U377HVJCBDheXXnZwEjTRr/view?usp=sharing
 
-Component 1: Tea Leaf Quality Assessment & Environmental Monitoring System
+Later look at the way in mobile: https://drive.google.com/file/d/1EabPWsqeOQudbZmyaz1Xzruphau6CUoi/view?usp=sharing
 
-🍃 The Tea Leaf Quality Assessment & Environmental Monitoring System is a one-year research project designed to provide an AI-powered, non-destructive solution for early detection and monitoring of tea leaf diseases in Sri Lanka. The system captures high-resolution images of tea leaves using handheld or remote cameras and leverages computer vision and deep learning to detect and classify two main tea leaf diseases, offering disease-specific treatment recommendations. 🌿 At the same time, compact IoT sensors monitor critical environmental parameters such as temperature, humidity, light intensity, and soil moisture in real-time, streaming this data to a cloud or local system for continuous logging and analysis. 📊 An intuitive dashboard visualizes both leaf health and environmental trends, empowering plantation managers to make informed decisions on irrigation, fertilization, and treatment.
 
-The machine learning models are optimized for mobile and edge deployment, ensuring reliable real-time performance even in remote, resource-constrained areas, and the system is designed to be cost-effective, sustainable, and localized in Tamil and Sinhala to support smallholder farmers. 🤖 Key technologies powering the system include TensorFlow/Keras or PyTorch for deep learning, OpenCV/PIL for image processing, Raspberry Pi/Arduino for IoT sensors, MQTT/HTTP for data streaming, and Streamlit/Dash/Grafana for dashboard visualization. By combining AI, IoT, and mobile accessibility, this project delivers a holistic, tech-driven solution that improves tea plantation productivity, disease management, and overall sustainability. 🌱
+
+Additonal (Arduino Cloud): https://app.arduino.cc/sketches/84254adf-6bb7-4a53-a33b-b326b54d25c8?nav=GenAI&view-mode=preview
+
+
