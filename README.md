@@ -25,7 +25,6 @@ The platform combines **computer vision**, **machine learning**, and **edge IoT 
 iTeaGrow operates as a **hybrid edge–mobile–cloud architecture**
 <img width="1536" height="1024" alt="HA" src="https://github.com/user-attachments/assets/6a2fac10-94a0-4237-81b6-d8d2de991c8d" />
 
-
 ---
 
 ## Core Research Modules
@@ -40,7 +39,7 @@ Automated detection of visible tea leaf diseases and stress indicators, synchron
 - Image-based detection of fungal and nutrient-related diseases  
 - Correlation with temperature, humidity, and soil moisture  
 - Actionable treatment recommendations  
- 
+
 ---
 ### 1. Leaf Maturity Detection & Yield Decision Support  
 **Lead: Kanzurrizk M R A (IT22166524)**
@@ -49,13 +48,10 @@ Automated detection of visible tea leaf diseases and stress indicators, synchron
 This module addresses inaccuracies in manual leaf grading and traditional yield estimation by integrating **vision-based maturity detection** with **quality-adjusted yield prediction**.
 
 #### Key Capabilities
-- **Leaf Maturity Classification**  
-  - Real-time classification into *Tender*, *Mature*, and *Coarser* stages  
-  - Multi-leaf detection using instance segmentation
- 
- - **Yield Prediction**  
-  - Predicts factory-usable yield using a hybrid machine learning model
-  - Supports "What-If" simulations adjusting Good Leaf % for economic forecasting
+- Real-time classification into *Tender*, *Mature*, and *Coarser* stages  
+- Multi-leaf detection using instance segmentation
+- Predicts factory-usable yield using a hybrid machine learning model
+- Supports "What-If" simulations adjusting Good Leaf % for economic forecasting
 
 ---
 
@@ -114,9 +110,9 @@ Objective grading and valuation of processed tea powders to replace subjective a
 
 ### AI / Machine Learning
 - YOLOv8n
-- Random Forest 
+- Random Forest  
 - MobileNetV3
-- ShuffleNetV2 
+- ShuffleNetV2  
 - XGBoost
 - CatBoost
 - TensorFlow Lite  
@@ -152,13 +148,14 @@ Objective grading and valuation of processed tea powders to replace subjective a
 
 ## Contributors
 
-- **Kajanthan Kirubakaran (IT22197214)** – Disease Detection 
-- **Kanzurrizk M R A (IT22166524)** – Leaf Maturity Detection & Yield Decision Support  
-- **Ashwin Visvanathan (IT22204448)** – Growth & Fertilization Management  
-- **Peiris M. D. T. N. (IT22109408)** – Powder Grading & Market Valuation  
+- **Kajanthan Kirubakaran (IT22197214)** – Tea Leaf Disease Detection & Environmental Monitoring
+- **Kanzurrizk M R A (IT22166524)** – Tea Leaf Maturity Detection & Yield Decision Support  
+- **Ashwin Visvanathan (IT22204448)** – Soild Monitoring  & Fertilization Management  
+- **Peiris M. D. T. N. (IT22109408)** – Tea Powder Grading & Market Valuation  
 
 ---
 
 ## Research Context
 
 This project is developed as part of an undergraduate research initiative focused on applying **AI, IoT, and Explainable ML** to real-world agricultural decision systems in Sri Lanka.
+
