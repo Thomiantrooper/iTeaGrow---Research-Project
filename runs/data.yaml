@@ -1,9 +1,0 @@
-names:
-- healthy
-- red_rust
-- blister_blight
-nc: 3
-path: C:\Users\lenovo\OneDrive\Desktop\Tea\data
-test: images/test
-train: images/train
-val: images/val
