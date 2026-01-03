@@ -31,7 +31,7 @@ iTeaGrow operates as a **hybrid edge–mobile–cloud architecture**
 ## Core Research Modules
 
 ### 1. Disease Detection & Environmental Monitoring  
-**Lead: Kajanthan Kirubakaran (IT22197214)**
+**Lead: Kajanthan K (IT22197214)**
 
 #### Scope
 Automated detection of visible tea leaf diseases and stress indicators, synchronized with real-time environmental data.
@@ -56,7 +56,7 @@ This module addresses inaccuracies in manual leaf grading and traditional yield 
 ---
 
 ### 3. Growth Analyzer & Fertilization Management  
-**Lead: Ashwin Visvanathan (IT22204448)**
+**Lead: Ashwin V (IT22204448)**
 
 #### Scope
 Data-driven fertilization planning aligned with **Tea Research Institute (TRI)** standards.
