@@ -109,7 +109,8 @@ Objective grading and valuation of processed tea powders to replace subjective a
 - Solar–battery hybrid power system  
 
 ### AI / Machine Learning
-- YOLOv8n  
+- YOLOv8n
+- Random Forest 
 - MobileNetV3
 - ShuffleNetV2 
 - XGBoost
