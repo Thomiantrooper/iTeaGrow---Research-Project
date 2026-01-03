@@ -51,7 +51,11 @@ This module addresses inaccuracies in manual leaf grading and traditional yield 
 #### Key Capabilities
 - **Leaf Maturity Classification**  
   - Real-time classification into *Tender*, *Mature*, and *Coarser* stages  
-  - Multi-leaf detection using instance segmentation  
+  - Multi-leaf detection using instance segmentation
+ 
+ - **Yield Prediction**  
+  - Predicts factory-usable yield using a hybrid machine learning model
+  - Supports "What-If" simulations adjusting Good Leaf % for economic forecasting
 
 ---
 
