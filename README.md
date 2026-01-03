@@ -1,4 +1,4 @@
-# iTeaGrow: AI-IoT system for tea leaf monitoring, fertilization, and powder grading
+# iTeaGrow: AI-IoT System For Tea Leaf Monitoring, Fertilization, and Powder Grading
 
 ---
 
@@ -22,23 +22,9 @@ The platform combines **computer vision**, **machine learning**, and **edge IoT 
 
 ## High-Level System Architecture
 
-iTeaGrow operates as a **hybrid edge–mobile–cloud architecture**:
+iTeaGrow operates as a **hybrid edge–mobile–cloud architecture**
+<img width="1536" height="1024" alt="HA" src="https://github.com/user-attachments/assets/6a2fac10-94a0-4237-81b6-d8d2de991c8d" />
 
-### 1. Edge Layer
-- ESP32-based IoT units collect environmental and soil data  
-- On-device preprocessing ensures robustness in low-connectivity regions  
-
-### 2. Intelligence Layer
-- Deep Learning models process image-based inputs (leaves and tea powder)  
-- Machine Learning regressors analyze tabular operational and environmental data  
-
-### 3. Communication Layer
-- Bluetooth for local IoT-to-mobile communication  
-- GSM for SMS alerts in remote areas  
-- SD card logging for offline data persistence  
-
-### 4. Cloud Layer (Optional)
-- Firebase / GCP used for dataset aggregation, analytics, and model refinement  
 
 ---
 
