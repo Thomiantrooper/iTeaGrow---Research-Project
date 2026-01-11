@@ -1,0 +1,64 @@
+{
+  "experiment_id": "20251213_023127",
+  "model": "MobileNetV3-Small",
+  "task": "2-class tea leaf maturity classification",
+  "results": {
+    "tta_accuracy": 1.0,
+    "standard_accuracy": 1.0,
+    "standard_error": 0.0,
+    "classical_95_ci": {
+      "lower": 1.0,
+      "upper": 1.0
+    },
+    "bootstrap_95_ci": {
+      "lower": 1.0,
+      "upper": 1.0
+    },
+    "bootstrap_mean": 1.0,
+    "min_class_accuracy": 1.0
+  },
+  "auc_results": {
+    "individual_auc": {
+      "Non_Pluckable": 1.0,
+      "Pluckable": 1.0
+    },
+    "micro_auc": 1.0,
+    "macro_auc": 1.0,
+    "mean_auc": 1.0
+  },
+  "class_performance": {
+    "Non_Pluckable": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 400,
+      "auc": 1.0
+    },
+    "Pluckable": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 400,
+      "auc": 1.0
+    }
+  },
+  "stability_config": {
+    "label_smoothing": 0.1,
+    "gradient_clip_norm": 1.0,
+    "dropout_rate": 0.3,
+    "l2_regularization": 0.0005
+  },
+  "plot_paths": {
+    "accuracy": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\accuracy_plot_20251213_023127.png",
+    "loss": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\loss_plot_20251213_023127.png",
+    "confusion_matrix": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\confusion_matrix_20251213_023127.png",
+    "confidence_intervals": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\confidence_intervals_20251213_023127.png",
+    "class_accuracy": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\class_accuracy_20251213_023127.png",
+    "auc_summary": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\auc_summary_20251213_023127.png",
+    "learning_rate": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\learning_rate_20251213_023127.png",
+    "roc_individual": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\roc_individual_20251213_023127.png",
+    "roc_average": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\roc_average_20251213_023127.png"
+  }
+}

@@ -1,0 +1,43 @@
+================================================================================
+FINAL RESEARCH REPORT: MOBILENETV3 TEA MATURITY
+================================================================================
+
+EXPERIMENT ID: 20251213_023127
+MODEL: MobileNetV3-Small with stability fixes
+STABILITY FEATURES:
+  - Label Smoothing: 0.1
+  - Gradient Clipping: 1.0
+  - Gaussian Noise: 0.03
+  - L2 Regularization: 0.0005
+
+RESULTS:
+  Test Accuracy (TTA): 1.0000
+  Bootstrap 95% CI: [1.0000, 1.0000]
+  Micro-average AUC: 1.0000
+  Macro-average AUC: 1.0000
+  Mean Class AUC: 1.0000
+
+CLASS PERFORMANCE:
+  Non_Pluckable:
+    - Accuracy: 1.0000
+    - AUC: 1.0000
+    - F1-Score: 1.0000
+
+  Pluckable:
+    - Accuracy: 1.0000
+    - AUC: 1.0000
+    - F1-Score: 1.0000
+
+RESEARCH ASSESSMENT:
+  🏆 EXCELLENT: Ready for research publication
+
+VISUALIZATIONS:
+  Accuracy: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\accuracy_plot_20251213_023127.png
+  Loss: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\loss_plot_20251213_023127.png
+  Confusion Matrix: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\confusion_matrix_20251213_023127.png
+  Confidence Intervals: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\confidence_intervals_20251213_023127.png
+  Class Accuracy: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\class_accuracy_20251213_023127.png
+  Auc Summary: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\auc_summary_20251213_023127.png
+  Learning Rate: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\learning_rate_20251213_023127.png
+  Roc Individual: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\roc_individual_20251213_023127.png
+  Roc Average: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\roc_average_20251213_023127.png

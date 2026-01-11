@@ -1,0 +1,69 @@
+================================================================================
+RESEARCH REPORT: MOBILENETV3 TEA MATURITY CLASSIFICATION
+================================================================================
+
+EXPERIMENT ID: 20251207_230836
+MODEL: MobileNetV3-Small
+TASK: 4-class tea leaf maturity classification
+
+DATASET INFORMATION:
+  Training samples: 3766
+  Test samples: 475
+
+EXPERIMENTAL SETUP:
+  Regularization:
+    - Dropout: 0.3
+    - Gaussian Noise: 0.03
+    - L2 Regularization: 0.0005
+  Training Schedule:
+    - Stage 1 Epochs: 15
+    - Stage 2 Epochs: 6
+    - Learning Rates: 0.00025/1e-06
+    - Unfreezed Layers: 25%
+
+RESULTS:
+  Test Accuracy (TTA): 0.9116
+  Classical 95% CI: [0.8860, 0.9371]
+  Bootstrap 95% CI: [0.8842, 0.9348]
+  Bootstrap Mean: 0.9116
+  Standard Error: ±0.0130
+  Minimum Class Accuracy: 0.7073
+
+CLASS PERFORMANCE:
+  Assamica/matured:
+    - Accuracy: 0.9583
+    - Precision: 1.0000
+    - Recall: 0.9583
+    - F1-Score: 0.9787
+    - Support: 120 samples
+  Assamica/tender:
+    - Accuracy: 1.0000
+    - Precision: 0.7736
+    - Recall: 1.0000
+    - F1-Score: 0.8723
+    - Support: 123 samples
+  DT1/matured:
+    - Accuracy: 0.9908
+    - Precision: 0.9558
+    - Recall: 0.9908
+    - F1-Score: 0.9730
+    - Support: 109 samples
+  DT1/tender:
+    - Accuracy: 0.7073
+    - Precision: 0.9886
+    - Recall: 0.7073
+    - F1-Score: 0.8246
+    - Support: 123 samples
+
+STATISTICAL VALIDATION:
+  ✅ Confidence intervals calculated using both classical and bootstrap methods
+  ✅ Test-Time Augmentation (TTA) used for robust evaluation
+  ✅ Per-class metrics computed for fairness assessment
+  ✅ Training stability monitored throughout both stages
+
+CONCLUSION:
+  The model shows STRONG performance suitable for production deployment.
+  Results are statistically valid with good confidence intervals.
+
+Report saved: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\results_research\research_report_20251207_230836.txt
+JSON report: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\results_research\research_report_20251207_230836.json

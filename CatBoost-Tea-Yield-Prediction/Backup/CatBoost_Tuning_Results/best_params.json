@@ -1,0 +1,14 @@
+{
+  "iterations": 606,
+  "learning_rate": 0.07428625740419656,
+  "depth": 5,
+  "l2_leaf_reg": 1.984783548619582,
+  "border_count": 238,
+  "random_seed": 42,
+  "verbose": false,
+  "task_type": "CPU",
+  "cat_features": [
+    0
+  ],
+  "early_stopping_rounds": 50
+}

@@ -1,0 +1,24 @@
+{
+    "trial_id": 46,
+    "status": "COMPLETED",
+    "metrics": {
+        "mae": 427.32119048699377,
+        "rmse": 753.5129658976075,
+        "r2": 0.3680231074695044
+    },
+    "hyperparameters": {
+        "booster": "gbtree",
+        "n_estimators": 500,
+        "learning_rate": 0.06218036670708238,
+        "max_depth": 8,
+        "subsample": 0.8748096468185642,
+        "colsample_bytree": 0.6985276761573961,
+        "gamma": 2.783148703779814,
+        "min_child_weight": 1,
+        "reg_alpha": 0.26456370370509774,
+        "reg_lambda": 0.7622097613661514,
+        "n_jobs": -1,
+        "random_state": 42,
+        "objective": "reg:squarederror"
+    }
+}

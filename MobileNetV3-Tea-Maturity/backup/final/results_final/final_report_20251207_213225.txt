@@ -1,0 +1,23 @@
+======================================================================
+FINAL TRAINING REPORT - MOBILENETV3 TEA MATURITY
+======================================================================
+
+Training completed: 20251207_213225
+Test Accuracy: 0.9979
+Standard Error: ±0.0021
+95% Confidence Interval: [0.9938, 1.0020]
+
+PERFORMANCE ASSESSMENT: VERY HIGH
+Assessment: Accuracy >=98% - May need more challenging augmentation
+
+CLASSIFICATION REPORT:
+                  precision    recall  f1-score   support
+
+Assamica/matured     1.0000    1.0000    1.0000       120
+ Assamica/tender     1.0000    0.9919    0.9959       123
+     DT1/matured     1.0000    1.0000    1.0000       109
+      DT1/tender     0.9919    1.0000    0.9960       123
+
+        accuracy                         0.9979       475
+       macro avg     0.9980    0.9980    0.9980       475
+    weighted avg     0.9979    0.9979    0.9979       475

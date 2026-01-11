@@ -1,0 +1,16 @@
+{
+    "n_estimators": 739,
+    "learning_rate": 0.1776,
+    "max_depth": 6,
+    "subsample": 0.8832,
+    "colsample_bytree": 0.8561,
+    "colsample_bylevel": 0.8611,
+    "min_child_weight": 8,
+    "gamma": 0.5598,
+    "reg_alpha": 3.0137e-07,
+    "reg_lambda": 0.09015,
+    "random_state": 42,
+    "n_jobs": -1,
+    "objective": "reg:squarederror",
+    "eval_metric": "rmse"
+}

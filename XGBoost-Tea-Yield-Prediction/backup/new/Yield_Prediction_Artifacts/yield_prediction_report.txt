@@ -1,0 +1,60 @@
+
+TEA YIELD PREDICTION MODEL - FINAL REPORT
+==========================================
+Date: 2025-12-28 20:36:38
+Model: XGBoost Regressor
+Target: Weekly Tea Yield (kg)
+
+DATASET STATISTICS:
+------------------
+Training Samples: 4,376
+Validation Samples: 544
+Test Samples: 548
+Total Features: 34
+
+PERFORMANCE METRICS:
+-------------------
+   Dataset    R²  MAE (kg)  RMSE (kg)  MAPE (%)  Mean Yield (kg)  Mean Prediction (kg)  Mean Error (kg)  Std Error (kg)
+  Training 0.945    29.533     59.109     8.451          369.549            369.867004           -0.318          59.115
+Validation 0.935    31.837     64.158     7.529          398.309            394.670013            3.639          64.113
+      Test 0.904    38.860     73.894    10.905          367.051            368.751007           -1.701          73.942
+
+TOP 5 FEATURES:
+--------------
+1. Labor Total: 0.2878
+2. Yield Momentum: 0.1708
+3. Division ID LN: 0.1344
+4. Kg Per Worker Potential: 0.1068
+5. Week of Year: 0.0414
+
+FEATURE CONTRIBUTION BY CATEGORY:
+---------------------------------
+Month/Temporal Factors: 1.4%
+Labor Factors: 28.8%
+Humidity Factors: 9.3%
+Temperature Factors: 2.2%
+Rainfall Factors: 1.7%
+Plantation Factors: 17.4%
+
+CLIMATE FACTORS SUMMARY:
+-----------------------
+Total Climate Contribution: 13.2%
+• Humidity: 9.3%
+• Temperature: 2.2%
+• Rainfall: 1.7%
+
+MODEL INSIGHTS:
+--------------
+1. The model achieves R² = 0.904 on test data
+2. Average prediction error: 38.9 kg (10.9%)
+3. Most important factor: Labor Total
+4. Climate factors contribute 13.2% to predictions
+5. Model effectively captures seasonal patterns and operational factors
+
+PRACTICAL APPLICATIONS:
+----------------------
+1. Weekly yield forecasting for plantation planning
+2. Resource allocation optimization
+3. Climate impact assessment
+4. Operational efficiency monitoring
+5. Decision support for plantation managers

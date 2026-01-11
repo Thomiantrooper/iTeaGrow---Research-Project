@@ -1,0 +1,47 @@
+
+CATBOOST USABLE YIELD PREDICTION - RESEARCH REPORT
+==================================================
+TIMESTAMP: 2025-12-28 16:47:42
+
+RESEARCH OBJECTIVE
+------------------
+Predict usable tea yield (KG) for estate planning and optimization.
+Target R² range: 75-85% (realistic for agricultural research).
+
+DATA SUMMARY
+------------
+Training samples: 4374
+Validation samples: 1094
+Total features: 50
+Categorical features: 7
+
+MODEL PERFORMANCE (Usable Yield KG)
+-----------------------------------
+Validation R²: 0.2836
+Training R²: 0.3531
+R² Gap (overfitting): 0.0696
+
+Validation RMSE: 601.31 KG
+Validation MAE: 297.52 KG
+
+RESEARCH CONCLUSION
+-------------------
+⚠️  PARTIAL SUCCESS: R² outside target range
+
+KEY INSIGHTS
+------------
+1. Model explains approximately 28.4% of variance in usable yield
+2. Average prediction error: 297.52 KG
+3. Top predictive features: Crop_Harvested_Kg, Labor_Safe, Est_Field_Size_Ha
+
+FILES GENERATED
+---------------
+1. Model: catboost_usable_yield_model.cbm
+2. Predictions: predictions.csv
+3. Metrics: metrics.csv
+4. Parameters: best_parameters.csv
+5. Feature importance: feature_importance.csv
+6. Visualizations: *.png files
+
+DIRECTORY: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\CatBoost-Tea-Yield-Prediction\Tuning_Results_20251228_164110
+==================================================

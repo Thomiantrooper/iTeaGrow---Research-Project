@@ -1,0 +1,11 @@
+{
+    "trial_id": 3,
+    "status": "COMPLETED",
+    "val_accuracy": 0.9706959706959707,
+    "hyperparameters": {
+        "dropout": 0.8,
+        "weight_decay": 0.00021664539515636318,
+        "lr_head": 0.0004217903374560497,
+        "lr_fine": 4.075770746438632e-05
+    }
+}

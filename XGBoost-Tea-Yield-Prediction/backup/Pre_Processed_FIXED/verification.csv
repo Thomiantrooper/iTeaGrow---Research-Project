@@ -1,0 +1,7 @@
+Parameter,Value
+Mean Log Efficiency,2.9024188480418074
+Mean Labor (train),75.87797074954297
+Mean Labor (test),76.24817518248175
+Expected Yield,1306.4789706655652
+Actual Yield,1406.277177787934
+Bug Status,FIXED

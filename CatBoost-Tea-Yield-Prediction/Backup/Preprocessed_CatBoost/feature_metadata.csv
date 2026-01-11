@@ -1,0 +1,21 @@
+feature_name,feature_type,description
+Division_ID,categorical,Plantation division identifier
+Humidity_Mean_Pct,numerical,Humidity percentage
+Humidity_7Day_Avg,numerical,Humidity 7Day Avg
+Humidity_Std_7Day,numerical,Humidity Std 7Day
+Low_Humidity_Stress,numerical,Low Humidity Stress
+High_Humidity_Stress,numerical,High Humidity Stress
+Optimal_Humidity,numerical,Optimal Humidity
+Temperature_Daily_C,numerical,Temperature in Celsius
+Temperature_Daily_C_7D_Avg,numerical,Temperature Daily C 7D Avg
+Temperature_Daily_C_14D_Avg,numerical,Temperature Daily C 14D Avg
+Temperature_Daily_C_28D_Avg,numerical,Temperature Daily C 28D Avg
+Rainfall_Daily_mm,numerical,Rainfall in mm
+Rainfall_Daily_mm_7D_Avg,numerical,Rainfall Daily mm 7D Avg
+Rainfall_Daily_mm_14D_Avg,numerical,Rainfall Daily mm 14D Avg
+Rainfall_Daily_mm_28D_Avg,numerical,Rainfall Daily mm 28D Avg
+Labor_Total,numerical,Labor workers count
+Labor_7D_Avg,numerical,Labor 7D Avg
+G_Pct,numerical,Good leaf percentage
+Month,numerical,Month of year
+Week_of_Year,numerical,Week of year

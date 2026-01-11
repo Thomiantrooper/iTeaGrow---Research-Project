@@ -1,0 +1,67 @@
+================================================================================
+FINAL RESEARCH REPORT: MobileNetV3_4Class_Tea
+================================================================================
+
+EXPERIMENT ID: 20251214_193619
+MODEL: MobileNetV3Small with research-grade enhancements
+PREPROCESSING: Manual [-1, 1] scaling (x / 127.5) - 1.0
+CONFIGURATION: include_preprocessing=False
+
+TUNING DECK CONFIGURATION:
+  - Learning Rate Stage 1: 0.001
+  - Learning Rate Stage 2: 5e-06
+  - Fine-tune Percent: 40%
+  - Label Smoothing: 0.03
+  - Batch Size: 32
+  - TTA Enabled: True
+  - TTA Samples: 25
+
+RESULTS:
+  Test Accuracy (TTA): 0.5763
+  Bootstrap 95% CI: [0.5425, 0.6112]
+  Micro-average AUC: 0.9070
+  Macro-average AUC: 0.8597
+  Mean Class AUC: 0.8590
+
+CLASS PERFORMANCE:
+  Assamica/matured:
+    - Accuracy: 1.0000
+    - AUC: 0.9994
+    - Precision: 0.8850
+    - Recall: 1.0000
+    - F1-Score: 0.9390
+    - Support: 200 samples
+
+  Assamica/tender:
+    - Accuracy: 0.2450
+    - AUC: 0.7146
+    - Precision: 0.2344
+    - Recall: 0.2450
+    - F1-Score: 0.2396
+    - Support: 200 samples
+
+  DT1/matured:
+    - Accuracy: 0.8600
+    - AUC: 0.9994
+    - Precision: 1.0000
+    - Recall: 0.8600
+    - F1-Score: 0.9247
+    - Support: 200 samples
+
+  DT1/tender:
+    - Accuracy: 0.2000
+    - AUC: 0.7227
+    - Precision: 0.2073
+    - Recall: 0.2000
+    - F1-Score: 0.2036
+    - Support: 200 samples
+
+
+VISUALIZATIONS:
+  Accuracy: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research1\accuracy_plot_20251214_193619.png
+  Loss: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research1\loss_plot_20251214_193619.png
+  Confusion Matrix: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research1\confusion_matrix_20251214_193619.png
+  Confidence Intervals: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research1\confidence_intervals_20251214_193619.png
+  Class Accuracy: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research1\class_accuracy_20251214_193619.png
+  Roc Individual: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research1\roc_individual_20251214_193619.png
+  Roc Average: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research1\roc_average_20251214_193619.png

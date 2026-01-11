@@ -1,0 +1,82 @@
+{
+  "experiment_id": "20251213_012101",
+  "model": "MobileNetV3-Small",
+  "task": "4-class tea leaf maturity classification",
+  "results": {
+    "tta_accuracy": 0.39875,
+    "standard_accuracy": 0.39875,
+    "standard_error": 0.017311428215921413,
+    "classical_95_ci": {
+      "lower": 0.36481960069679403,
+      "upper": 0.43268039930320595
+    },
+    "bootstrap_95_ci": {
+      "lower": 0.365,
+      "upper": 0.43128125
+    },
+    "bootstrap_mean": 0.39855250000000003,
+    "min_class_accuracy": 0.02
+  },
+  "auc_results": {
+    "individual_auc": {
+      "Assamica/matured": 0.99615,
+      "Assamica/tender": 0.689125,
+      "DT1/matured": 0.928275,
+      "DT1/tender": 0.6940333333333334
+    },
+    "micro_auc": 0.8226942708333332,
+    "macro_auc": 0.8277020833333333,
+    "mean_auc": 0.8268958333333334
+  },
+  "class_performance": {
+    "Assamica/matured": {
+      "accuracy": 1.0,
+      "precision": 0.5361930294906166,
+      "recall": 1.0,
+      "f1_score": 0.6980802792321118,
+      "support": 200,
+      "auc": 0.99615
+    },
+    "Assamica/tender": {
+      "accuracy": 0.44,
+      "precision": 0.30985915492957744,
+      "recall": 0.44,
+      "f1_score": 0.36363636363636365,
+      "support": 200,
+      "auc": 0.689125
+    },
+    "DT1/matured": {
+      "accuracy": 0.135,
+      "precision": 1.0,
+      "recall": 0.135,
+      "f1_score": 0.2378854625550661,
+      "support": 200,
+      "auc": 0.928275
+    },
+    "DT1/tender": {
+      "accuracy": 0.02,
+      "precision": 0.034482758620689655,
+      "recall": 0.02,
+      "f1_score": 0.02531645569620253,
+      "support": 200,
+      "auc": 0.6940333333333334
+    }
+  },
+  "stability_config": {
+    "label_smoothing": 0.1,
+    "gradient_clip_norm": 1.0,
+    "dropout_rate": 0.3,
+    "l2_regularization": 0.0005
+  },
+  "plot_paths": {
+    "accuracy": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\accuracy_plot_20251213_012101.png",
+    "loss": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\loss_plot_20251213_012101.png",
+    "confusion_matrix": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\confusion_matrix_20251213_012101.png",
+    "confidence_intervals": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\confidence_intervals_20251213_012101.png",
+    "class_accuracy": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\class_accuracy_20251213_012101.png",
+    "auc_summary": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\auc_summary_20251213_012101.png",
+    "learning_rate": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\learning_rate_20251213_012101.png",
+    "roc_individual": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\roc_individual_20251213_012101.png",
+    "roc_average": "C:\\Users\\HP\\Desktop\\Tea\\iTeaGrow---Research-Project\\MobileNetV3-Tea-Maturity\\plots_research\\roc_average_20251213_012101.png"
+  }
+}

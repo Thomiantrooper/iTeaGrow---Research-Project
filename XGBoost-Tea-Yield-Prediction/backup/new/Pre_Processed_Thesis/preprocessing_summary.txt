@@ -1,0 +1,49 @@
+
+    SUMMARY OF PREPROCESSED DATA
+    ----------------------------
+    Based on: Your successful approach (R² = 0.792 for log efficiency prediction)
+    Framed as: Tea yield prediction system for plantation managers
+    
+    Data Statistics:
+    • Total samples: 5,468
+    • Training samples: 4,376
+    • Validation samples: 544
+    • Test samples: 548
+    • Features: 21
+    • Plantations: 4
+    
+    Target Variables:
+    1. Primary target: Target_Log_Efficiency (log-transformed kg/worker)
+       - Average: 2.902
+       - Range: 2.354 to 4.655
+       - This is what gave you R² = 0.792
+    
+    2. Reference target: Target_Usable_Yield_Kg (raw kg)
+       - Average: 1406.3 kg
+       - Range: 296.6 to 5206.0 kg
+       - For context and presentation
+    
+    Key Features Created:
+    • Humidity features: 6
+    • Temperature features: 3
+    • Rainfall features: 3
+    • Operational features: 3
+    
+    Files Saved:
+    1. Feature matrices: X_train.csv, X_val.csv, X_test.csv
+    2. Log efficiency targets: y_train_log.csv, y_val_log.csv, y_test_log.csv
+    3. Raw yield targets: y_train_kg.csv, y_val_kg.csv, y_test_kg.csv
+    4. Preprocessor: preprocessor.pkl
+    5. Feature metadata: feature_metadata.csv
+    6. Full dataset: full_dataset.csv
+    
+    For Your Thesis:
+    • Use Target_Log_Efficiency for modeling (high accuracy)
+    • Convert predictions back to kg for presentation to managers
+    • Show both log-space (modeling) and kg-space (practical) results
+    
+    Next Steps:
+    1. Run optimal tuning: python optimal_tuning.py
+    2. Expect R² ~ 0.79 based on your previous success
+    3. Present results in kg for plantation managers
+    

@@ -1,0 +1,42 @@
+================================================================================
+FINAL RESEARCH REPORT: MOBILENETV3 TEA MATURITY
+================================================================================
+
+EXPERIMENT ID: 20251213_005742
+MODEL: MobileNetV3-Small with stability fixes
+STABILITY FEATURES:
+  - Label Smoothing: 0.1
+  - Gradient Clipping: 1.0
+  - Gaussian Noise: 0.03
+  - L2 Regularization: 0.0005
+
+RESULTS:
+  Test Accuracy (TTA): 0.5162
+  Bootstrap 95% CI: [0.4813, 0.5513]
+  Micro-average AUC: 0.8545
+  Macro-average AUC: 0.8680
+  Mean Class AUC: 0.8672
+
+CLASS PERFORMANCE:
+  Assamica/matured:
+    - Accuracy: 0.9700
+    - AUC: 0.9788
+    - F1-Score: 0.7390
+
+  Assamica/tender:
+    - Accuracy: 0.6450
+    - AUC: 0.7645
+    - F1-Score: 0.5049
+
+  DT1/matured:
+    - Accuracy: 0.3200
+    - AUC: 0.9828
+    - F1-Score: 0.4830
+
+  DT1/tender:
+    - Accuracy: 0.1300
+    - AUC: 0.7426
+    - F1-Score: 0.1739
+
+RESEARCH ASSESSMENT:
+  ⚠️ ADEQUATE: Consider hyperparameter tuning

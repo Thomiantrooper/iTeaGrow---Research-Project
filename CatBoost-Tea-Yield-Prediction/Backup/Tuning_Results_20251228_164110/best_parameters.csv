@@ -1,0 +1,2 @@
+iterations,learning_rate,depth,l2_leaf_reg,random_strength,min_data_in_leaf,subsample
+1122,0.03099314195165391,4,4.171044082501261,0.5310720173629861,20,0.7776541349134527

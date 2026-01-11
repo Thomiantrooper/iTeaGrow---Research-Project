@@ -1,0 +1,35 @@
+
+XGBOOST TUNING SUMMARY - EXACT CATBOOST MATCH
+===================================================
+Date: 2025-12-29 00:07:22
+
+PREPROCESSING:
+- Features: 44 (identical to CatBoost)
+- Labor scaling: NOT scaled (identical to CatBoost)
+- Target: log_efficiency (identical to CatBoost)
+
+OPTIMIZATION RESULTS:
+- Best trial: #21
+- Best R² (KG): 0.7098
+- Trials run: 50
+
+FINAL MODEL PERFORMANCE:
+- Test R² (KG): 0.7758 (77.6%)
+- Test MAE: 129.5 kg
+- Test RMSE: 318.6 kg
+- Error percentage: 9.1%
+
+COMPARISON WITH CATBOOST:
+- CatBoost R²: 0.7810
+- XGBoost R²: 0.7758
+- Difference: 0.0052
+- Status: ⚠️ BELOW
+
+TOP 3 FEATURES:
+1. Yield_Momentum: 0.2239
+2. Kg_Per_Worker_Potential: 0.2003
+3. Crop_7D_Avg: 0.0521
+
+CONCLUSION:
+XGBoost does not fully match 
+CatBoost performance with identical preprocessing.

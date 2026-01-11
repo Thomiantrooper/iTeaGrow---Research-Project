@@ -1,0 +1,57 @@
+{
+    "training_date": "2025-12-27 13:29:37",
+    "training_samples": 4920,
+    "test_samples": 548,
+    "features_count": 34,
+    "parameters": {
+        "booster": "gbtree",
+        "n_estimators": 200,
+        "learning_rate": 0.06910119138714811,
+        "max_depth": 4,
+        "subsample": 0.876096720350819,
+        "colsample_bytree": 0.7908356244407359,
+        "colsample_bylevel": 0.8901693103851845,
+        "gamma": 0.18803358656816968,
+        "min_child_weight": 1,
+        "reg_alpha": 1.0208330992953605,
+        "reg_lambda": 0.6686893478992896,
+        "n_jobs": -1,
+        "random_state": 42,
+        "objective": "reg:squarederror",
+        "verbosity": 0
+    },
+    "performance": {
+        "test_r2_log": 0.828942358461279,
+        "test_r2_eff": 0.7921945455843682,
+        "test_r2_total": 0.7921945455843682,
+        "test_mae_total": 139.2769232709607,
+        "test_rmse_total": 312.7968453127437,
+        "test_mape_total": 7.707862686051568,
+        "humidity_importance": 0.08109896630048752
+    },
+    "humidity_analysis": {
+        "humidity_features_count": 15,
+        "top_humidity_features": [
+            {
+                "feature": "num__Humidity_7Day_Avg",
+                "importance": 0.008378738537430763
+            },
+            {
+                "feature": "num__Humidity_Volatility",
+                "importance": 0.008377629332244396
+            },
+            {
+                "feature": "num__Cumulative_Humidity_Stress",
+                "importance": 0.007977652363479137
+            },
+            {
+                "feature": "num__Humidity_4wk_Avg",
+                "importance": 0.007927807047963142
+            },
+            {
+                "feature": "num__Humidity_Temp_Ratio",
+                "importance": 0.00789924431592226
+            }
+        ]
+    }
+}

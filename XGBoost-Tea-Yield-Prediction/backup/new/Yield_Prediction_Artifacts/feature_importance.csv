@@ -1,0 +1,35 @@
+Feature,Importance,Display_Name
+num__Labor_Total,0.287755,Labor Total
+num__Yield_Momentum,0.17079122,Yield Momentum
+cat__Division_ID_LN,0.13444068,Division ID LN
+num__Kg_Per_Worker_Potential,0.10679568,Kg Per Worker Potential
+num__Week_of_Year,0.04143862,Week of Year
+num__Prune_Signal,0.027784614,Prune Signal
+cat__Division_ID_LYN,0.027553929,Division ID LYN
+num__Humidity_4wk_Avg,0.014797485,Humidity 4wk Avg
+num__Month,0.013630674,Month
+num__VPD_kPa,0.012917222,VPD kPa
+cat__Division_ID_NC,0.01228239,Division ID NC
+num__Consecutive_Stress_Days,0.012191575,Consecutive Stress Days
+num__G_Pct,0.012127773,G Pct
+num__Humidity_7Day_Avg,0.0104560675,Humidity 7Day Avg
+num__Rainfall_Daily_mm,0.010210881,Rainfall Daily mm
+num__Humidity_Stress_Index,0.008563718,Humidity Stress Index
+num__Temp_4wk_Avg,0.008474056,Temp 4wk Avg
+num__Humidity_Std_7Day,0.008137378,Humidity Std 7Day
+num__Humidity_Deficit,0.008120843,Humidity Deficit
+num__Humidity_Volatility,0.008018966,Humidity Volatility
+num__Humidity_Mean_Pct,0.007779553,Humidity Mean Pct
+num__Humidity_3Day_Avg,0.007708044,Humidity 3Day Avg
+num__Season_Sin,0.007293142,Season Sin
+num__Season_Cos,0.0072568906,Season Cos
+num__Rain_4wk_Sum,0.00720737,Rain 4wk Sum
+num__Cumulative_Humidity_Stress,0.0071493573,Cumulative Humidity Stress
+num__Humidity_Temp_Ratio,0.0067254407,Humidity Temp Ratio
+num__Temperature_Daily_C,0.006351145,Temperature Daily C
+num__Humidity_4wk_Min,0.0060401927,Humidity 4wk Min
+num__Heat_LowHumidity_Interaction,0.0,Heat LowHumidity Interaction
+num__Low_Humidity_Stress,0.0,Low Humidity Stress
+num__Heat_Stress,0.0,Heat Stress
+num__Extreme_Humidity_Stress,0.0,Extreme Humidity Stress
+num__High_Humidity_Stress,0.0,High Humidity Stress

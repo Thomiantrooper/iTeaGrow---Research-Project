@@ -1,0 +1,80 @@
+================================================================================
+RESEARCH REPORT: MOBILENETV3 TEA MATURITY CLASSIFICATION
+================================================================================
+
+EXPERIMENT ID: 20251207_235550
+MODEL: MobileNetV3-Small
+TASK: 4-class tea leaf maturity classification
+
+DATASET INFORMATION:
+  Training samples: 3766
+  Test samples: 475
+
+EXPERIMENTAL SETUP:
+  Regularization:
+    - Dropout: 0.3
+    - Gaussian Noise: 0.03
+    - L2 Regularization: 0.0005
+  Training Schedule:
+    - Stage 1 Epochs: 15
+    - Stage 2 Epochs: 6
+    - Learning Rates: 0.00025/1e-06
+    - Unfreezed Layers: 25%
+
+RESULTS:
+  Test Accuracy (TTA): 1.0000
+  Classical 95% CI: [1.0000, 1.0000]
+  Bootstrap 95% CI: [1.0000, 1.0000]
+  Bootstrap Mean: 1.0000
+  Standard Error: ±0.0000
+  Minimum Class Accuracy: 1.0000
+
+CLASS PERFORMANCE:
+  Assamica/matured:
+    - Accuracy: 1.0000
+    - Precision: 1.0000
+    - Recall: 1.0000
+    - F1-Score: 1.0000
+    - Support: 120 samples
+  Assamica/tender:
+    - Accuracy: 1.0000
+    - Precision: 1.0000
+    - Recall: 1.0000
+    - F1-Score: 1.0000
+    - Support: 123 samples
+  DT1/matured:
+    - Accuracy: 1.0000
+    - Precision: 1.0000
+    - Recall: 1.0000
+    - F1-Score: 1.0000
+    - Support: 109 samples
+  DT1/tender:
+    - Accuracy: 1.0000
+    - Precision: 1.0000
+    - Recall: 1.0000
+    - F1-Score: 1.0000
+    - Support: 123 samples
+
+VISUALIZATIONS:
+  Accuracy: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\accuracy_plot_20251207_235550.png
+  Loss: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\loss_plot_20251207_235550.png
+  Confusion Matrix: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\confusion_matrix_20251207_235550.png
+  Confidence Intervals: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\confidence_intervals_20251207_235550.png
+  Class Accuracy: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\class_accuracy_20251207_235550.png
+  F1 Scores: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\f1_scores_20251207_235550.png
+  Learning Rate: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\learning_rate_20251207_235550.png
+  Performance Summary: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\plots_research\performance_summary_20251207_235550.png
+
+STATISTICAL VALIDATION:
+  ✅ Confidence intervals calculated using both classical and bootstrap methods
+  ✅ Test-Time Augmentation (TTA) used for robust evaluation
+  ✅ Per-class metrics computed for fairness assessment
+  ✅ Training stability monitored throughout both stages
+
+CONCLUSION:
+  The model demonstrates EXCELLENT performance for tea maturity classification.
+  Results are statistically significant and reproducible.
+  Suitable for research publication and production deployment.
+
+Report saved: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\results_research\research_report_20251207_235550.txt
+JSON report: C:\Users\HP\Desktop\Tea\iTeaGrow---Research-Project\MobileNetV3-Tea-Maturity\results_research\research_report_20251207_235550.json

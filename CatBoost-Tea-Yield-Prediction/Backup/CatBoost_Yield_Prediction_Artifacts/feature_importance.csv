@@ -1,0 +1,45 @@
+Feature,Importance,Index,Display_Name
+Yield_Momentum,55.21663456618207,35,Yield Momentum
+Kg_Per_Worker_Potential,21.6943692369466,29,Kg Per Worker Potential
+Crop_7D_Avg,2.3363369763282473,31,Crop 7d Avg
+Calculated_Waste_Pct,1.9369498012442046,34,Calculated Waste Pct
+Total_Waste_Pct,1.738250390317119,33,Total Waste Pct
+Crop_x_G_Pct,1.6933393516505617,40,Crop X G Pct
+Labor_x_Temp,1.449798239418059,41,Labor X Temp
+Crop_Harvested_Kg,1.2518069655066155,30,Crop Harvested Kg
+Rainfall_Daily_mm,1.0191399430739803,18,Rainfall Daily Mm
+Field_Intensity,1.010318977513392,43,Field Intensity
+Labor_Total,0.9583084035112955,27,Labor Total
+Labor_7D_Avg,0.823962829476333,28,Labor 7d Avg
+G_Pct,0.7659872998438658,32,G Pct
+Temperature_28D_Avg,0.6622412102170205,17,Temperature 28d Avg
+Rain_7D_Sum,0.54843705217867,22,Rain 7d Sum
+Humidity_Volatility,0.514665587885076,10,Humidity Volatility
+Humidity_7Day_Avg,0.5129862203505822,6,Humidity 7day Avg
+Humidity_Std_7Day,0.42004202589743256,7,Humidity Std 7day
+Temperature_Daily_C,0.40875151672675986,14,Temperature Daily C
+VPD_kPa,0.3694863153945932,26,Vpd Kpa
+Day_of_Year,0.339679219071936,38,Day Of Year
+Rain_28D_Sum,0.32822623425788083,24,Rain 28d Sum
+Humidity_x_Temp,0.3213796420167689,42,Humidity X Temp
+Rainfall_7D_Avg,0.3062391388645741,19,Rainfall 7d Avg
+Temperature_14D_Avg,0.2988444792015981,16,Temperature 14d Avg
+Division_LN,0.2893561519757663,0,Division Ln
+Week_of_Year,0.28784113473023526,37,Week Of Year
+Humidity_Deficit,0.2840673779382692,4,Humidity Deficit
+Rain_14D_Sum,0.26981247480260917,23,Rain 14d Sum
+Temperature_7D_Avg,0.26513212422926397,15,Temperature 7d Avg
+Rainfall_14D_Avg,0.258267526858931,20,Rainfall 14d Avg
+Humidity_Mean_Pct,0.2566922708182594,3,Humidity Mean Pct
+Month,0.21054724292297983,36,Month
+Rain_4wk_Sum,0.2085495911651783,25,Rain 4wk Sum
+Humidity_3Day_Avg,0.2014823816275959,5,Humidity 3day Avg
+Rainfall_28D_Avg,0.19502427850895512,21,Rainfall 28d Avg
+Is_Weekend,0.1394537390761942,39,Is Weekend
+Humidity_Stress_Index,0.09640187443456613,9,Humidity Stress Index
+Division_LYN,0.03986499446078054,1,Division Lyn
+Division_NC,0.0290531635526983,2,Division Nc
+Consecutive_Stress_Days,0.027837324442425808,8,Consecutive Stress Days
+Is_High_Humidity,0.014434725380056013,12,Is High Humidity
+Is_Low_Humidity,0.0,11,Is Low Humidity
+Extreme_Humidity_Stress,0.0,13,Extreme Humidity Stress

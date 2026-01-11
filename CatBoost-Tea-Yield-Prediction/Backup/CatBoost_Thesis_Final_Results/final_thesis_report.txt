@@ -1,0 +1,6 @@
+
+CATBOOST VS XGBOOST COMPARISON
+------------------------------
+CatBoost R2 (KG): -0.1666
+XGBoost R2 (KG): 0.7920
+Status: Underperforming
