@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # API Gateway - Main entry point
+  # =============================================================================
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/gateway/Dockerfile
+    container_name: tealeaf-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - MODEL_PATH=/app/models/yolov8n_tealeaf.pt
+      - ONNX_MODEL_PATH=/app/models/yolov8n_tealeaf.onnx
+      - USE_ONNX=true
+      - DEVICE=cpu
+      - LOCAL_STORAGE_PATH=/app/storage/local
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
+    volumes:
+      - ./models:/app/models:ro
+      - tealeaf-storage:/app/storage
+      - tealeaf-logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - tealeaf-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # =============================================================================
+  # Redis - Message queue and caching
+  # =============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: tealeaf-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - tealeaf-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # =============================================================================
+  # MinIO - S3-compatible object storage
+  # =============================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: tealeaf-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - tealeaf-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+
+  # =============================================================================
+  # MinIO Client - Initialize buckets
+  # =============================================================================
+  minio-init:
+    image: minio/mc:latest
+    container_name: tealeaf-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin};
+      mc mb --ignore-existing myminio/tea-leaf-images;
+      mc mb --ignore-existing myminio/tea-leaf-models;
+      mc mb --ignore-existing myminio/tea-leaf-exports;
+      mc anonymous set download myminio/tea-leaf-models;
+      echo 'Buckets created successfully';
+      exit 0;
+      "
+    networks:
+      - tealeaf-network
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  tealeaf-network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
+  tealeaf-storage:
+    driver: local
+  tealeaf-logs:
+    driver: local

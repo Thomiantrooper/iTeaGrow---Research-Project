@@ -1,0 +1,45 @@
+# =============================================================================
+# Tea Leaf Disease Detection Platform - Python Dependencies
+# Compatible with Python 3.10+ including 3.13
+# =============================================================================
+
+# Core Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# ML/Deep Learning
+torch>=2.5.0
+torchvision>=0.20.0
+ultralytics>=8.3.0
+onnx>=1.17.0
+onnxruntime>=1.20.0
+
+# Image Processing
+opencv-python-headless>=4.10.0
+Pillow>=11.0.0
+numpy>=2.0.0
+
+# Data Processing
+scikit-learn>=1.6.0
+
+# Storage
+minio>=7.2.0
+boto3>=1.35.0
+
+# Queue/Cache
+redis>=5.0.0
+
+# Security
+cryptography>=44.0.0
+PyJWT>=2.9.0
+python-multipart>=0.0.18
+
+# Utilities
+python-dotenv>=1.0.0
+httpx>=0.28.0
+aiofiles>=24.0.0
+
+# Monitoring
+prometheus-client>=0.21.0

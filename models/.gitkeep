@@ -1,0 +1,4 @@
+# This directory contains model weights
+# Place your trained models here:
+# - yolov8n_tealeaf.pt  (PyTorch model)
+# - yolov8n_tealeaf.onnx (ONNX model)
