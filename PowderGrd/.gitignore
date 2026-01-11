@@ -1,0 +1,32 @@
+# data folder
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+
+# ML models
+*.h5
+*.keras
+saved_models/
+
+# Jupyter
+.ipynb_checkpoints/
+Untitled*.ipynb
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+*.tmp
