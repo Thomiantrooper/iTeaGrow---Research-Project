@@ -43,18 +43,13 @@ disease_env/
 # -----------------------------------------------------------------------------
 # ML/Deep Learning Artifacts
 # -----------------------------------------------------------------------------
-runs/
+# Exclude model weights (large files)
 *.pt
 *.pth
 *.onnx
 *.engine
 *.trt
 *.torchscript
-datasets/
-data/raw/
-data/processed/
-wandb/
-mlruns/
 *.h5
 *.hdf5
 *.pkl
@@ -62,6 +57,29 @@ mlruns/
 checkpoints/
 exports/
 weights/
+
+# Training runs - exclude weights but KEEP graphs/plots
+runs/**/weights/
+runs/**/*.pt
+runs/**/*.cache
+
+# Keep these training artifacts (graphs, results, plots)
+!runs/**/*.png
+!runs/**/*.jpg
+!runs/**/*.csv
+!runs/**/args.yaml
+
+# Other ML artifacts
+datasets/
+data/raw/
+data/processed/
+wandb/
+mlruns/
+
+# -----------------------------------------------------------------------------
+# Dataset (exclude entire raw_data folder)
+# -----------------------------------------------------------------------------
+raw_data/
 
 # -----------------------------------------------------------------------------
 # Environment Variables
@@ -165,6 +183,7 @@ temp/
 *.backup
 cache/
 .cache/
+
 
 # -----------------------------------------------------------------------------
 # MinIO/S3 Local Storage

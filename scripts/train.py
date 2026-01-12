@@ -142,8 +142,14 @@ def validate_dataset(data_path: str) -> dict:
 
     base_path = data_path.parent
     for split in ['train', 'val']:
-        images_path = base_path / data_config[split] / 'images'
-        labels_path = base_path / data_config[split] / 'labels'
+        split_path = Path(data_config[split])
+        # Handle both absolute and relative paths
+        if split_path.is_absolute():
+            images_path = split_path
+            labels_path = split_path.parent / 'labels'
+        else:
+            images_path = base_path / data_config[split] / 'images'
+            labels_path = base_path / data_config[split] / 'labels'
 
         if not images_path.exists():
             raise FileNotFoundError(f"{split} images not found: {images_path}")

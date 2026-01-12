@@ -1,0 +1,82 @@
+name: iteagrow
+description: "iTeaGrow: AI-IoT System for Tea Leaf Monitoring, Fertilization, and Powder Grading"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+  
+  # Routing
+  go_router: ^13.0.0
+  
+  # Database
+  sqflite: ^2.3.2
+  path: ^1.9.0
+  path_provider: ^2.1.2
+  
+  # Security
+  crypto: ^3.0.3
+  
+  # IoT Connectivity
+  flutter_blue_plus: ^1.31.15
+  http: ^1.2.0
+  mqtt_client: ^10.2.0
+  
+  # Machine Learning
+  tflite_flutter: ^0.10.4
+  image_picker: ^1.0.7
+  camera: ^0.10.5+9
+  image: ^4.1.7
+  
+  # Charts & Visualization
+  fl_chart: ^0.66.2
+  
+  # UI Components
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.10+1
+  
+  # Location & Permissions
+  geolocator: ^11.0.0
+  permission_handler: ^11.2.0
+  
+  # Utilities
+  intl: ^0.19.0
+  shared_preferences: ^2.2.2
+  uuid: ^4.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  riverpod_generator: ^2.3.11
+  build_runner: ^2.4.8
+  riverpod_lint: ^2.3.10
+
+flutter:
+  uses-material-design: true
+  
+  generate: true
+  
+  # Uncomment when you add actual assets
+  # assets:
+  #   - assets/images/
+  #   - assets/models/
+  #   - assets/icons/
+  
+  # Uncomment when you add custom fonts
+  # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: assets/fonts/Roboto-Regular.ttf
+  #       - asset: assets/fonts/Roboto-Bold.ttf
+  #         weight: 700
