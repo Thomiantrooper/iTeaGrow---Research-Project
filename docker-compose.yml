@@ -1,9 +1,7 @@
 version: '3.8'
 
 services:
-  # =============================================================================
-  # API Gateway - Main entry point
-  # =============================================================================
+  
   gateway:
     build:
       context: .
@@ -44,9 +42,7 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  # =============================================================================
-  # Redis - Message queue and caching
-  # =============================================================================
+ 
   redis:
     image: redis:7-alpine
     container_name: tealeaf-redis
@@ -64,9 +60,7 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # =============================================================================
-  # MinIO - S3-compatible object storage
-  # =============================================================================
+  
   minio:
     image: minio/minio:latest
     container_name: tealeaf-minio
@@ -88,9 +82,7 @@ services:
       retries: 3
     restart: unless-stopped
 
-  # =============================================================================
-  # MinIO Client - Initialize buckets
-  # =============================================================================
+
   minio-init:
     image: minio/mc:latest
     container_name: tealeaf-minio-init
@@ -110,16 +102,12 @@ services:
     networks:
       - tealeaf-network
 
-# =============================================================================
-# Networks
-# =============================================================================
+
 networks:
   tealeaf-network:
     driver: bridge
 
-# =============================================================================
-# Volumes
-# =============================================================================
+
 volumes:
   redis-data:
     driver: local

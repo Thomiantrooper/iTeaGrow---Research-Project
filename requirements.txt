@@ -1,7 +1,4 @@
-# =============================================================================
-# Tea Leaf Disease Detection Platform - Python Dependencies
-# Compatible with Python 3.10+ including 3.13
-# =============================================================================
+
 
 # Core Framework
 fastapi>=0.115.0

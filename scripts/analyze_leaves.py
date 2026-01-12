@@ -22,9 +22,6 @@ import cv2
 from ultralytics import YOLO
 
 
-# =============================================================================
-# TREATMENT RECOMMENDATIONS DATABASE
-# =============================================================================
 DISEASE_INFO = {
     'blister_blight': {
         'name': 'Blister Blight',
