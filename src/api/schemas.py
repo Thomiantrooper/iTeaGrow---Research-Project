@@ -16,6 +16,7 @@ class DiseaseClass(str, Enum):
     HEALTHY = "healthy"
     RED_RUST = "red_rust"
     BLISTER_BLIGHT = "blister_blight"
+    NOT_A_LEAF = "not_a_leaf"
 
 
 class SeverityLevel(str, Enum):
@@ -75,7 +76,7 @@ class Detection(BaseModel):
 
     detection_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     class_name: DiseaseClass
-    class_id: int = Field(..., ge=0, le=2)
+    class_id: int = Field(..., ge=0, le=3)
     confidence: float = Field(..., ge=0, le=1)
     bounding_box: BoundingBox
     area_percentage: float = Field(..., ge=0, le=100, description="Affected area percentage")

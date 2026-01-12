@@ -35,12 +35,18 @@ class TeaLeafDetector:
     Supports both PyTorch and ONNX Runtime inference backends.
     """
 
-    CLASS_NAMES = ["healthy", "red_rust", "blister_blight"]
+    CLASS_NAMES = ["healthy", "red_rust", "blister_blight", "not_a_leaf"]
     CLASS_MAP = {
         0: DiseaseClass.HEALTHY,
         1: DiseaseClass.RED_RUST,
         2: DiseaseClass.BLISTER_BLIGHT,
+        3: DiseaseClass.NOT_A_LEAF,
     }
+
+    # Minimum green ratio threshold for tea leaf detection
+    MIN_GREEN_RATIO = 0.25
+    # Minimum detections to consider image valid
+    MIN_VALID_DETECTIONS = 1
 
     def __init__(
         self,
@@ -216,7 +222,13 @@ class TeaLeafDetector:
 
         detections = self._postprocess_detections(raw_detections, original_shape)
 
-        summary = self._create_summary(detections)
+        # Check if image contains valid tea leaf detections
+        if not self._is_valid_leaf_image(image, detections):
+            logger.info("Image does not contain valid tea leaf - returning not_a_leaf response")
+            detections = []
+            summary = self._create_not_a_leaf_summary()
+        else:
+            summary = self._create_summary(detections)
 
         processing_time = (time.perf_counter() - start_time) * 1000
         self.total_inferences += 1
@@ -445,6 +457,72 @@ class TeaLeafDetector:
             detections.append(detection)
 
         return detections
+
+    def _is_valid_leaf_image(self, image: np.ndarray, detections: list[Detection]) -> bool:
+        """
+        Check if the image contains a valid tea leaf.
+
+        Uses multiple heuristics:
+        1. Check if model detected any leaf-related objects
+        2. Validate green color content in the image
+        3. Check detection confidence levels
+
+        Args:
+            image: Input image (BGR format)
+            detections: List of Detection objects from the model
+
+        Returns:
+            True if image contains valid tea leaf, False otherwise
+        """
+        # If we have valid detections from the model, consider it a leaf
+        if len(detections) >= self.MIN_VALID_DETECTIONS:
+            # Check if any detection has reasonable confidence
+            high_confidence_detections = [d for d in detections if d.confidence >= 0.3]
+            if high_confidence_detections:
+                return True
+
+        # Check green color content as secondary validation
+        # Convert BGR to RGB for analysis
+        b, g, r = cv2.split(image)
+
+        # Calculate green ratio
+        green_mean = np.mean(g)
+        red_mean = np.mean(r)
+        blue_mean = np.mean(b)
+
+        # Avoid division by zero
+        total = red_mean + blue_mean + 1
+        green_ratio = green_mean / total
+
+        # Check if image has sufficient green content typical of leaves
+        if green_ratio < self.MIN_GREEN_RATIO:
+            logger.debug(f"Low green ratio: {green_ratio:.3f} (threshold: {self.MIN_GREEN_RATIO})")
+            return False
+
+        # If we got here with low green but some detections, still consider valid
+        if len(detections) > 0:
+            return True
+
+        # No detections and low green content - not a leaf
+        return False
+
+    def _create_not_a_leaf_summary(self) -> DetectionSummary:
+        """
+        Create a summary indicating the image does not contain a valid tea leaf.
+
+        Returns:
+            DetectionSummary with not_a_leaf indication
+        """
+        return DetectionSummary(
+            total_leaves_detected=0,
+            healthy_count=0,
+            red_rust_count=0,
+            blister_blight_count=0,
+            overall_health_score=0.0,
+            dominant_disease=DiseaseClass.NOT_A_LEAF,
+            severity_level=SeverityLevel.NONE,
+            requires_immediate_action=False,
+        )
 
     def _create_summary(self, detections: list[Detection]) -> DetectionSummary:
         """
