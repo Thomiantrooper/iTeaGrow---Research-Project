@@ -13,6 +13,9 @@ import '../../../soil_fertilization/presentation/screens/soil_fertilization_scre
 import '../../../powder_grading/presentation/screens/powder_grading_screen.dart';
 import '../../../public/presentation/landing/landing_page.dart';
 import '../../presentation/widgets/weather_risk_card.dart';
+import '../../../iot_connectivity/presentation/widgets/esp32_sensor_card.dart';
+import '../../../iot_connectivity/presentation/providers/esp32_sensor_provider.dart';
+import '../../../iot_connectivity/presentation/screens/iot_devices_screen.dart';
 
 class JarvisFarmerDashboard extends ConsumerStatefulWidget {
   const JarvisFarmerDashboard({super.key});
@@ -456,7 +459,10 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
         icon: Icons.sensors_outlined,
         color: JarvisTheme.info,
         onTap: () {
-          // Navigate to IoT screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const IoTDevicesScreen()),
+          );
         },
       ),
     ];
@@ -537,67 +543,46 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 12),
-          child: Text(
-            'Environmental Status',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: JarvisTheme.textPrimary,
-            ),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Environmental Status',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: JarvisTheme.textPrimary,
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const IoTDevicesScreen()),
+                  );
+                },
+                icon: const Icon(Icons.sensors, size: 16),
+                label: const Text('Manage'),
+                style: TextButton.styleFrom(
+                  foregroundColor: JarvisTheme.teaGreen,
+                ),
+              ),
+            ],
           ),
         ),
-        Row(
-          children: [
-            Expanded(
-              child: HologramMetric(
-                label: 'Temperature',
-                value: '26.5',
-                unit: '°C',
-                icon: Icons.thermostat_outlined,
-                color: Colors.deepOrange,
-                progress: 0.65,
-              ),
-            ),
-            const SizedBox(width: JarvisTheme.spacingMd),
-            Expanded(
-              child: HologramMetric(
-                label: 'Humidity',
-                value: '72',
-                unit: '%',
-                icon: Icons.water_drop_outlined,
-                color: Colors.blue,
-                progress: 0.72,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: JarvisTheme.spacingMd),
-        Row(
-          children: [
-            Expanded(
-              child: HologramMetric(
-                label: 'Soil Moisture',
-                value: '45',
-                unit: '%',
-                icon: Icons.grass_outlined,
-                color: JarvisTheme.earthyBrown,
-                progress: 0.45,
-              ),
-            ),
-            const SizedBox(width: JarvisTheme.spacingMd),
-            Expanded(
-              child: HologramMetric(
-                label: 'Light',
-                value: '850',
-                unit: 'lux',
-                icon: Icons.wb_sunny_outlined,
-                color: JarvisTheme.softGoldDark,
-                progress: 0.7,
-              ),
-            ),
-          ],
+        // ESP32 Live Sensor Card
+        ESP32SensorCard(
+          showConnectionStatus: true,
+          showAirQuality: true,
+          showDiseaseRisk: true,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const IoTDevicesScreen()),
+            );
+          },
         ),
       ],
     );
