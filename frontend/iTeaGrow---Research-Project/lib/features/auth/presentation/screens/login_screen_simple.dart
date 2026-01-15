@@ -49,8 +49,8 @@ class _LoginScreenSimpleState extends ConsumerState<LoginScreenSimple> {
       // Navigation handled by router
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n?.common_error ?? 'Invalid username or password'),
+        const SnackBar(
+          content: Text('Invalid username or password'),
           backgroundColor: AppTheme.statusCritical,
         ),
       );
@@ -78,6 +78,7 @@ class _LoginScreenSimpleState extends ConsumerState<LoginScreenSimple> {
                 ),
                 
                 const SizedBox(height: 24),
+                Container(
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(

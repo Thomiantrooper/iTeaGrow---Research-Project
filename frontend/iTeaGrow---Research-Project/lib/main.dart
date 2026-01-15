@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:iteagrow/core/theme/jarvis_theme.dart';
-import 'package:iteagrow/core/routing/app_router.dart';
+import 'package:iteagrow/core/design_system/design_system.dart';
+import 'package:iteagrow/core/routing/premium_router.dart';
 import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:iteagrow/core/providers/locale_provider.dart';
 
@@ -14,11 +14,17 @@ void main() {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: JarvisTheme.mistWhite,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: TeaColors.white,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
+
+  // Preferred orientations
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   runApp(
     const ProviderScope(
@@ -38,7 +44,7 @@ class ITeaGrowApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);
+    final router = ref.watch(premiumRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(persistentLocaleProvider);
 
@@ -46,9 +52,9 @@ class ITeaGrowApp extends ConsumerWidget {
       title: 'iTeaGrow',
       debugShowCheckedModeBanner: false,
 
-      // Jarvis Theme - Tea Plantation Inspired
-      theme: JarvisTheme.lightTheme,
-      darkTheme: JarvisTheme.darkTheme,
+      // Premium Tea Theme
+      theme: TeaTheme.light,
+      darkTheme: TeaTheme.dark,
       themeMode: themeMode,
 
       // Localization - English, Sinhala, Tamil
@@ -62,7 +68,11 @@ class ITeaGrowApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
 
       routerConfig: router,
+
+      // Scroll behavior for smooth scrolling
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        physics: const BouncingScrollPhysics(),
+      ),
     );
   }
 }
-

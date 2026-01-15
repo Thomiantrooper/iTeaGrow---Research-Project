@@ -143,7 +143,7 @@ class LanguageSelectorDropdown extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentLocale = ref.watch(localeProvider);
+    final currentLocale = ref.watch(persistentLocaleProvider);
     final localizations = AppLocalizations.of(context);
 
     if (localizations == null) {
@@ -160,7 +160,7 @@ class LanguageSelectorDropdown extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (showLabel) ...[
-          Icon(Icons.language, size: 20),
+          const Icon(Icons.language, size: 20),
           const SizedBox(width: 8),
         ],
         DropdownButton<String>(
@@ -173,7 +173,7 @@ class LanguageSelectorDropdown extends ConsumerWidget {
               .toList(),
           onChanged: (value) {
             if (value != null) {
-              ref.read(localeProvider.notifier).state = Locale(value);
+              ref.read(persistentLocaleProvider.notifier).setLocale(Locale(value));
             }
           },
         ),
