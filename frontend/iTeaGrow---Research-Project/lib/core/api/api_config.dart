@@ -1,23 +1,58 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
+
 /// API Configuration for Tea Leaf Disease Detection Backend
 class ApiConfig {
-  // Base URL - Change this to your backend server address
-  // For local development: http://localhost:8000 or http://10.0.2.2:8000 (Android emulator)
-  // For physical device: Use your computer's IP address (e.g., http://192.168.1.100:8000)
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  // Base URL - Automatically detects platform
+  // Web: Uses localhost
+  // Android Emulator: Uses 10.0.2.2
+  // Physical device/iOS: Use your computer's IP address
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:8000';
+    }
+    // For mobile platforms
+    try {
+      if (Platform.isAndroid) {
+        // Android emulator uses 10.0.2.2 to reach host machine
+        return 'http://10.0.2.2:8000';
+      } else if (Platform.isIOS) {
+        // iOS simulator uses localhost
+        return 'http://localhost:8000';
+      }
+    } catch (e) {
+      // Platform not available (web)
+    }
+    return 'http://localhost:8000';
+  }
+
+  // Override URL for custom server (e.g., when using a real device)
+  static String? _customBaseUrl;
+
+  static void setCustomBaseUrl(String url) {
+    _customBaseUrl = url;
+  }
+
+  static String get effectiveBaseUrl => _customBaseUrl ?? baseUrl;
 
   // API Version
   static const String apiVersion = 'v1';
 
   // Full API base path
-  static String get apiBaseUrl => '$baseUrl/api/$apiVersion';
+  static String get apiBaseUrl => '$effectiveBaseUrl/api/$apiVersion';
 
   // Endpoints
   static String get inferenceDetect => '$apiBaseUrl/inference/detect';
   static String get inferenceExplain => '$apiBaseUrl/inference/explain';
   static String get modelInfo => '$apiBaseUrl/inference/model-info';
-  static String get health => '$baseUrl/health';
+  static String get health => '$effectiveBaseUrl/health';
   static String get recommendations => '$apiBaseUrl/recommendations/generate';
   static String get quickRecommendations => '$apiBaseUrl/recommendations/quick';
+
+  // Batch/Cumulative Detection Endpoints
+  static String get batchDetect => '$apiBaseUrl/inference/batch-detect';
+  static String get fieldAnalysis => '$apiBaseUrl/inference/field-analysis';
+  static String get cumulativeScore => '$apiBaseUrl/inference/cumulative-score';
 
   // IoT Endpoints
   static String get iotConditions => '$apiBaseUrl/iot/conditions';
@@ -26,9 +61,10 @@ class ApiConfig {
   // Timeouts (in seconds)
   static const int connectionTimeout = 30;
   static const int receiveTimeout = 60;
+  static const int batchTimeout = 120; // Longer timeout for batch processing
 
   // Headers
   static Map<String, String> get defaultHeaders => {
-    'Accept': 'application/json',
-  };
+        'Accept': 'application/json',
+      };
 }

@@ -115,6 +115,88 @@ class ApiClient {
     }
   }
 
+  /// POST request with multipart form data from file path
+  Future<Map<String, dynamic>> postMultipartFromPath(
+    String url, {
+    required String imagePath,
+    Map<String, String>? fields,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse(url));
+
+      // Add headers
+      request.headers.addAll({...ApiConfig.defaultHeaders, ...?headers});
+
+      // Add image file from path
+      request.files.add(await http.MultipartFile.fromPath(
+        'image',
+        imagePath,
+      ));
+
+      // Add additional fields
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      final streamedResponse = await request.send().timeout(
+        Duration(seconds: ApiConfig.receiveTimeout),
+      );
+      final response = await http.Response.fromStream(streamedResponse);
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw ApiException('No internet connection');
+    } on http.ClientException catch (e) {
+      throw ApiException('Network error: ${e.message}');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Unexpected error: $e');
+    }
+  }
+
+  /// POST request with multiple files from paths (for batch processing)
+  Future<Map<String, dynamic>> postMultipleFilesFromPaths(
+    String url, {
+    required List<String> imagePaths,
+    Map<String, String>? fields,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse(url));
+
+      // Add headers
+      request.headers.addAll({...ApiConfig.defaultHeaders, ...?headers});
+
+      // Add all image files
+      for (int i = 0; i < imagePaths.length; i++) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'images',
+          imagePaths[i],
+        ));
+      }
+
+      // Add additional fields
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      final streamedResponse = await request.send().timeout(
+        Duration(seconds: ApiConfig.batchTimeout),
+      );
+      final response = await http.Response.fromStream(streamedResponse);
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw ApiException('No internet connection');
+    } on http.ClientException catch (e) {
+      throw ApiException('Network error: ${e.message}');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Unexpected error: $e');
+    }
+  }
+
   /// Handle HTTP response
   Map<String, dynamic> _handleResponse(http.Response response) {
     final statusCode = response.statusCode;

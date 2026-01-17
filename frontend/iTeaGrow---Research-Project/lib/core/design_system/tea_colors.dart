@@ -24,6 +24,9 @@ class TeaColors {
   /// Light variant
   static const Color leafLight = Color(0xFF6B9B7A);
 
+  /// Medium variant
+  static const Color leafMedium = Color(0xFF5A8B68);
+
   /// Very light for backgrounds
   static const Color leafPale = Color(0xFFF0F5F1);
 

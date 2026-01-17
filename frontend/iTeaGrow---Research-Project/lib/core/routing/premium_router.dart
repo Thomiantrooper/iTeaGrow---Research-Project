@@ -6,9 +6,16 @@ import '../../features/auth/presentation/screens/premium_login_screen.dart';
 import '../../features/dashboard/presentation/screens/premium_farmer_dashboard.dart';
 import '../../features/dashboard/presentation/screens/manager_dashboard_simple.dart';
 import '../../features/dashboard/presentation/screens/admin_dashboard_simple.dart';
-import '../../features/disease_detection/presentation/screens/enhanced_disease_detection_screen.dart';
+import '../../features/disease_detection/presentation/screens/premium_disease_detection_screen.dart';
 import '../../features/soil_fertilization/presentation/screens/soil_fertilization_screen.dart';
 import '../../features/powder_grading/presentation/screens/powder_grading_screen.dart';
+import '../../features/plants/presentation/screens/premium_plants_screen.dart';
+import '../../features/map/presentation/screens/premium_map_screen.dart';
+import '../../features/settings/presentation/screens/premium_settings_screen.dart';
+import '../../features/profile/presentation/screens/premium_profile_screen.dart';
+import '../../features/iot_connectivity/presentation/screens/premium_iot_screen.dart';
+import '../../features/leaf_maturity/presentation/screens/leaf_maturity_screen.dart';
+import '../../features/yield_prediction/presentation/screens/what_if_simulation_screen.dart';
 import '../../features/auth/data/providers/auth_provider_simple.dart';
 import '../enums/app_enums.dart';
 import '../animations/tea_animations.dart';
@@ -132,7 +139,7 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/disease-detection',
         pageBuilder: (context, state) => _buildPremiumTransition(
-          child: const EnhancedDiseaseDetectionScreen(),
+          child: const PremiumDiseaseDetectionScreen(),
           state: state,
         ),
       ),
@@ -151,6 +158,69 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
         path: '/powder-grading',
         pageBuilder: (context, state) => _buildPremiumTransition(
           child: const PowderGradingScreen(),
+          state: state,
+        ),
+      ),
+
+      // Plants/Growth Monitoring
+      GoRoute(
+        path: '/plants',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const PremiumPlantsScreen(),
+          state: state,
+        ),
+      ),
+
+      // Plantation Map
+      GoRoute(
+        path: '/map',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const PremiumMapScreen(),
+          state: state,
+        ),
+      ),
+
+      // Settings
+      GoRoute(
+        path: '/settings',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const PremiumSettingsScreen(),
+          state: state,
+        ),
+      ),
+
+      // Profile
+      GoRoute(
+        path: '/profile',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const PremiumProfileScreen(),
+          state: state,
+        ),
+      ),
+
+      // IoT Devices
+      GoRoute(
+        path: '/iot-devices',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const PremiumIoTScreen(),
+          state: state,
+        ),
+      ),
+
+      // Leaf Maturity
+      GoRoute(
+        path: '/leaf-maturity',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const LeafMaturityScreen(),
+          state: state,
+        ),
+      ),
+
+      // Yield Prediction
+      GoRoute(
+        path: '/yield-prediction',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const WhatIfSimulationScreen(),
           state: state,
         ),
       ),
