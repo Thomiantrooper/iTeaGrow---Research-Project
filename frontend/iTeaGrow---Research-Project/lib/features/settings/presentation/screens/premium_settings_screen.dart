@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/providers/locale_provider.dart';
-import '../../../auth/data/providers/auth_provider_simple.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 
 /// Premium Settings Screen
 class PremiumSettingsScreen extends ConsumerStatefulWidget {
@@ -560,7 +560,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              ref.read(authStateSimpleProvider.notifier).logout();
+              ref.read(authStateProvider.notifier).logout();
               context.go('/login');
             },
             style: ElevatedButton.styleFrom(

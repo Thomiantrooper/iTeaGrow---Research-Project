@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../../auth/data/providers/auth_provider_simple.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 
 /// Premium Profile Screen
 class PremiumProfileScreen extends ConsumerStatefulWidget {
@@ -26,10 +26,11 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final user = ref.read(authStateSimpleProvider);
+    final authState = ref.read(authStateProvider);
+    final user = authState.user;
     _nameController = TextEditingController(text: user?.fullName ?? 'User');
-    _emailController = TextEditingController(text: 'user@iteagrow.com');
-    _phoneController = TextEditingController(text: '+94 77 123 4567');
+    _emailController = TextEditingController(text: user?.email ?? '');
+    _phoneController = TextEditingController(text: user?.phone ?? '');
     _addressController = TextEditingController(text: 'Uva Province, Sri Lanka');
   }
 
@@ -44,7 +45,8 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authStateSimpleProvider);
+    final authState = ref.watch(authStateProvider);
+    final user = authState.user;
 
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
@@ -532,10 +534,22 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
     }
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isEditing = false);
-      TeaSnackbar.success(context, 'Profile updated successfully!');
+      final authNotifier = ref.read(authStateProvider.notifier);
+
+      final success = await authNotifier.updateProfile(
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim().isNotEmpty ? _emailController.text.trim() : null,
+        phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+      );
+
+      if (success && mounted) {
+        setState(() => _isEditing = false);
+        TeaSnackbar.success(context, 'Profile updated successfully!');
+      } else if (mounted) {
+        TeaSnackbar.error(context, 'Failed to update profile');
+      }
     }
   }
 }

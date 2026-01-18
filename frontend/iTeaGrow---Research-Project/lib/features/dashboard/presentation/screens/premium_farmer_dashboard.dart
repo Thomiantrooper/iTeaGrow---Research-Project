@@ -6,7 +6,7 @@ import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/animations/tea_animations.dart';
 import '../../../../core/providers/global_iot_provider.dart';
-import '../../../auth/data/providers/auth_provider_simple.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 
 /// Premium Farmer Dashboard with 3D hero and modern UI
 class PremiumFarmerDashboard extends ConsumerStatefulWidget {
@@ -44,7 +44,8 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authStateSimpleProvider);
+    final authState = ref.watch(authStateProvider);
+    final user = authState.user;
     final greeting = _getGreeting();
 
     return Scaffold(
@@ -979,7 +980,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  ref.read(authStateSimpleProvider.notifier).logout();
+                  ref.read(authStateProvider.notifier).logout();
                   context.go('/login');
                 },
               ),
