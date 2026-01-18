@@ -165,3 +165,41 @@ certs/
 *.prof
 *.lprof
 profile_output/
+
+# -----------------------------------------------------------------------------
+# Backend Sensitive Files
+# -----------------------------------------------------------------------------
+backend/.env
+backend/.env.local
+backend/.env.production
+backend/secrets/
+backend/*.pem
+backend/*.key
+
+# MongoDB data
+mongodb_data/
+mongo-data/
+
+# JWT Keys
+jwt_secret.txt
+private_key.pem
+public_key.pem
+
+# -----------------------------------------------------------------------------
+# Flutter Build Artifacts
+# -----------------------------------------------------------------------------
+frontend/**/build/
+frontend/**/.dart_tool/
+frontend/**/.flutter-plugins
+frontend/**/.flutter-plugins-dependencies
+frontend/**/.packages
+frontend/**/pubspec.lock
+frontend/**/*.iml
+frontend/**/.idea/
+
+# Flutter generated files
+frontend/**/lib/generated_plugin_registrant.dart
+frontend/**/*.g.dart
+frontend/**/*.freezed.dart
+
+
