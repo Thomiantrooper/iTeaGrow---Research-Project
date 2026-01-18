@@ -245,3 +245,150 @@ async def verify_token(current_user: dict = Depends(get_current_active_user)):
         created_at=current_user["created_at"],
         is_active=current_user.get("is_active", True)
     )
+
+
+# ==================== ADMIN ENDPOINTS ====================
+
+def require_admin(current_user: dict = Depends(get_current_active_user)):
+    """Dependency to check if user is admin"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
+
+
+@router.get("/admin/all", response_model=List[UserResponse])
+async def get_all_users(current_user: dict = Depends(require_admin)):
+    """Get all users (admin only)"""
+    db = get_database()
+
+    users = []
+    async for user in db.users.find().sort("created_at", -1):
+        users.append(UserResponse(
+            id=str(user["_id"]),
+            username=user["username"],
+            full_name=user["full_name"],
+            email=user.get("email"),
+            phone=user.get("phone"),
+            role=user.get("role", "farmer"),
+            language_preference=user.get("language_preference", "en"),
+            created_at=user["created_at"],
+            is_active=user.get("is_active", True)
+        ))
+
+    return users
+
+
+@router.put("/admin/{user_id}/role")
+async def update_user_role(
+    user_id: str,
+    role: str,
+    current_user: dict = Depends(require_admin)
+):
+    """Update a user's role (admin only)"""
+    from bson import ObjectId
+
+    if role not in ["admin", "manager", "farmer"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid role. Must be 'admin', 'manager', or 'farmer'"
+        )
+
+    db = get_database()
+
+    try:
+        result = await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {
+                    "role": role,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+
+        if result.matched_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        return {"message": f"User role updated to {role}"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to update role: {str(e)}"
+        )
+
+
+@router.put("/admin/{user_id}/status")
+async def update_user_status(
+    user_id: str,
+    is_active: bool,
+    current_user: dict = Depends(require_admin)
+):
+    """Activate or deactivate a user (admin only)"""
+    from bson import ObjectId
+
+    db = get_database()
+
+    try:
+        result = await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {
+                    "is_active": is_active,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+
+        if result.matched_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        status_text = "activated" if is_active else "deactivated"
+        return {"message": f"User {status_text}"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to update status: {str(e)}"
+        )
+
+
+@router.delete("/admin/{user_id}")
+async def delete_user(
+    user_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """Delete a user (admin only)"""
+    from bson import ObjectId
+
+    # Prevent admin from deleting themselves
+    if str(current_user["_id"]) == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete your own account"
+        )
+
+    db = get_database()
+
+    try:
+        result = await db.users.delete_one({"_id": ObjectId(user_id)})
+
+        if result.deleted_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        return {"message": "User deleted successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to delete user: {str(e)}"
+        )
