@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
+import '../../../../features/auth/data/providers/auth_provider.dart';
+import '../../../../core/enums/app_enums.dart';
 
 /// Premium Splash Screen with animated tea leaf
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _leafController;
   late AnimationController _progressController;
+  bool _navigated = false;
 
   @override
   void initState() {
@@ -30,12 +34,41 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 2500),
     )..forward();
 
-    // Navigate after animation completes
-    Future.delayed(const Duration(milliseconds: 3000), () {
-      if (mounted) {
-        context.go('/login');
+    // Start navigation check after minimum animation time
+    Future.delayed(const Duration(milliseconds: 2500), _checkAuthAndNavigate);
+  }
+
+  void _checkAuthAndNavigate() {
+    if (!mounted || _navigated) return;
+
+    final authState = ref.read(authStateProvider);
+
+    // Wait for auth to finish loading
+    if (authState.status == AuthStatus.initial || authState.status == AuthStatus.loading) {
+      // Check again after a short delay
+      Future.delayed(const Duration(milliseconds: 500), _checkAuthAndNavigate);
+      return;
+    }
+
+    _navigated = true;
+
+    if (authState.isAuthenticated && authState.user != null) {
+      // Navigate to appropriate dashboard based on role
+      switch (authState.user!.role) {
+        case UserRole.admin:
+          context.go('/dashboard/admin');
+          break;
+        case UserRole.manager:
+          context.go('/dashboard/manager');
+          break;
+        case UserRole.farmer:
+          context.go('/dashboard/farmer');
+          break;
       }
-    });
+    } else {
+      // Navigate to login
+      context.go('/login');
+    }
   }
 
   @override

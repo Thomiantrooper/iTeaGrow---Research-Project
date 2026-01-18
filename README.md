@@ -125,6 +125,7 @@ Objective grading and valuation of processed tea powders to replace subjective a
 ### Backend & Tools
 - Node.js  
 - Firebase  
+- MongoDB
 - Google Cloud Platform  
 - Python (Pandas, NumPy, Scikit-learn)  
 

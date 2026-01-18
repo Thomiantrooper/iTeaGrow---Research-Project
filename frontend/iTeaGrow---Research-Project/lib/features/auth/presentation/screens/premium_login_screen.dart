@@ -7,7 +7,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/validators/tea_validators.dart';
 import '../../../../core/animations/tea_animations.dart';
 import '../../../../core/enums/app_enums.dart';
-import '../../data/providers/auth_provider_simple.dart';
+import '../../data/providers/auth_provider.dart';
 
 /// Premium Login Screen with glass-morphism and animations
 class PremiumLoginScreen extends ConsumerStatefulWidget {
@@ -50,10 +50,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
     setState(() => _isLoading = true);
 
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      final authNotifier = ref.read(authStateSimpleProvider.notifier);
+      final authNotifier = ref.read(authStateProvider.notifier);
       final success = await authNotifier.login(
         _usernameController.text.trim(),
         _passwordController.text,
@@ -61,7 +58,8 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
 
       if (success && mounted) {
         // Navigate based on user role
-        final user = ref.read(authStateSimpleProvider);
+        final authState = ref.read(authStateProvider);
+        final user = authState.user;
         if (user != null) {
           switch (user.role) {
             case UserRole.admin:
@@ -76,8 +74,9 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
           }
         }
       } else if (mounted) {
+        final authState = ref.read(authStateProvider);
         setState(() {
-          _errorMessage = 'Invalid username or password';
+          _errorMessage = authState.errorMessage ?? 'Invalid username or password';
         });
         // Shake animation on error
         _formKey.currentState?.validate();
@@ -391,6 +390,31 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                   _buildSocialButton(Icons.business, 'SSO'),
                 ],
               ).animate().fadeIn(delay: 600.ms, duration: 300.ms),
+
+              const SizedBox(height: TeaSpacing.lg),
+
+              // Create account link
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Don't have an account? ",
+                    style: TeaTypography.bodySmall.copyWith(
+                      color: TeaColors.darkGray,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/register'),
+                    child: Text(
+                      'Create Account',
+                      style: TeaTypography.bodySmall.copyWith(
+                        color: TeaColors.freshLeaf,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ).animate().fadeIn(delay: 700.ms, duration: 300.ms),
             ],
           ),
         ),

@@ -44,12 +44,11 @@ async def register(user: UserCreate):
                     detail="Email already registered"
                 )
 
-        # Create user document
+        # Create user document - only include non-null optional fields
+        # This allows sparse index on email to work properly
         user_doc = {
             "username": user.username,
             "full_name": user.full_name,
-            "email": user.email,
-            "phone": user.phone,
             "role": user.role,
             "language_preference": user.language_preference,
             "hashed_password": get_password_hash(user.password),
@@ -57,6 +56,11 @@ async def register(user: UserCreate):
             "updated_at": datetime.utcnow(),
             "is_active": True
         }
+        # Only add email and phone if they have actual values (not None or empty)
+        if user.email is not None and user.email != "":
+            user_doc["email"] = user.email
+        if user.phone is not None and user.phone != "":
+            user_doc["phone"] = user.phone
 
         result = await db.users.insert_one(user_doc)
         user_doc["_id"] = result.inserted_id

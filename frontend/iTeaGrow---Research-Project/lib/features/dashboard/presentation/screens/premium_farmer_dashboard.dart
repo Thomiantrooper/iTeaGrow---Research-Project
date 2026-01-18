@@ -484,46 +484,56 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TeaSectionHeader(
-              title: 'Today\'s Snapshot',
-              icon: Icons.insights,
-            ),
-            if (hasLiveData)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: TeaSpacing.sm,
-                  vertical: TeaSpacing.xxs,
-                ),
-                decoration: BoxDecoration(
-                  color: TeaColors.healthyGreen.withOpacity(0.1),
-                  borderRadius: TeaRadius.radiusSm,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: TeaColors.healthyGreen,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Live',
-                      style: TeaTypography.labelSmall.copyWith(
-                        color: TeaColors.healthyGreen,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+        // Custom header row with live indicator
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: TeaSpacing.sm),
+          child: Row(
+            children: [
+              Icon(
+                Icons.insights,
+                size: 20,
+                color: TeaColors.freshLeaf,
               ),
-          ],
+              const SizedBox(width: TeaSpacing.sm),
+              Text(
+                'Today\'s Snapshot',
+                style: TeaTypography.titleMedium,
+              ),
+              const Spacer(),
+              if (hasLiveData)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: TeaSpacing.sm,
+                    vertical: TeaSpacing.xxs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: TeaColors.healthyGreen.withOpacity(0.1),
+                    borderRadius: TeaRadius.radiusSm,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: TeaColors.healthyGreen,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Live',
+                        style: TeaTypography.labelSmall.copyWith(
+                          color: TeaColors.healthyGreen,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: TeaSpacing.sm),
         Row(

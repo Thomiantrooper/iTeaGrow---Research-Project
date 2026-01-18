@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/premium_login_screen.dart';
+import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/dashboard/presentation/screens/premium_farmer_dashboard.dart';
 import '../../features/dashboard/presentation/screens/manager_dashboard_simple.dart';
 import '../../features/dashboard/presentation/screens/admin_dashboard_simple.dart';
@@ -16,7 +17,7 @@ import '../../features/profile/presentation/screens/premium_profile_screen.dart'
 import '../../features/iot_connectivity/presentation/screens/premium_iot_screen.dart';
 import '../../features/leaf_maturity/presentation/screens/leaf_maturity_screen.dart';
 import '../../features/yield_prediction/presentation/screens/what_if_simulation_screen.dart';
-import '../../features/auth/data/providers/auth_provider_simple.dart';
+import '../../features/auth/data/providers/auth_provider.dart';
 import '../enums/app_enums.dart';
 import '../animations/tea_animations.dart';
 import '../design_system/design_system.dart';
@@ -58,32 +59,41 @@ CustomTransitionPage<void> _buildPremiumTransition({
 
 /// Premium Router Provider
 final premiumRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateSimpleProvider);
+  final authState = ref.watch(authStateProvider);
+  final isAuthenticated = authState.isAuthenticated;
+  final user = authState.user;
 
   return GoRouter(
     initialLocation: '/splash',
     debugLogDiagnostics: true,
     redirect: (context, state) {
-      final isLoggedIn = authState != null;
       final currentPath = state.matchedLocation;
 
       // Public routes that don't require authentication
-      final publicRoutes = ['/splash', '/login'];
+      final publicRoutes = ['/splash', '/login', '/register'];
       final isPublicRoute = publicRoutes.contains(currentPath);
 
+      // If auth is still loading, let them stay on splash
+      if (authState.status == AuthStatus.initial || authState.status == AuthStatus.loading) {
+        if (currentPath != '/splash') {
+          return '/splash';
+        }
+        return null;
+      }
+
       // If not logged in and trying to access protected route
-      if (!isLoggedIn && !isPublicRoute) {
+      if (!isAuthenticated && !isPublicRoute) {
         return '/login';
       }
 
       // If logged in and on login page, redirect to dashboard
-      if (isLoggedIn && currentPath == '/login') {
-        return _getDashboardRoute(authState.role);
+      if (isAuthenticated && currentPath == '/login') {
+        return _getDashboardRoute(user?.role ?? UserRole.farmer);
       }
 
       // If logged in and on splash, redirect to dashboard
-      if (isLoggedIn && currentPath == '/splash') {
-        return _getDashboardRoute(authState.role);
+      if (isAuthenticated && currentPath == '/splash') {
+        return _getDashboardRoute(user?.role ?? UserRole.farmer);
       }
 
       return null;
@@ -108,6 +118,15 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
+      // Registration Screen
+      GoRoute(
+        path: '/register',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const RegisterScreen(),
+          state: state,
+        ),
+      ),
+
       // Farmer Dashboard
       GoRoute(
         path: '/dashboard/farmer',
@@ -115,6 +134,12 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
           child: const PremiumFarmerDashboard(),
           state: state,
         ),
+      ),
+
+      // Farmer Dashboard alias
+      GoRoute(
+        path: '/farmer-dashboard',
+        redirect: (context, state) => '/dashboard/farmer',
       ),
 
       // Manager Dashboard (using existing)

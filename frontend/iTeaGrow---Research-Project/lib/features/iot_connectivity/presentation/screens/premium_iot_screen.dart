@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/providers/global_iot_provider.dart';
 import '../../data/services/websocket_sensor_service.dart';
 import '../../domain/models/esp32_sensor_data.dart';
+import '../widgets/voice_assistant_panel.dart';
 
 /// Premium IoT Devices Screen with Bluetooth, WiFi, and WebSocket support
 class PremiumIoTScreen extends ConsumerStatefulWidget {
@@ -22,6 +24,7 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
   late TabController _tabController;
   bool _isScanning = false;
   String _connectionType = 'all';
+  bool _showVoiceAssistant = false;
 
   // WebSocket URL controller - initialized from global state
   late TextEditingController _wsUrlController;
@@ -157,6 +160,16 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
           style: TeaTypography.titleLarge.copyWith(color: TeaColors.nearBlack),
         ),
         actions: [
+          // Voice Assistant toggle (web only)
+          if (kIsWeb)
+            IconButton(
+              icon: Icon(
+                _showVoiceAssistant ? Icons.mic_off : Icons.mic,
+                color: _showVoiceAssistant ? TeaColors.alertRust : TeaColors.freshLeaf,
+              ),
+              tooltip: 'Voice Assistant',
+              onPressed: () => setState(() => _showVoiceAssistant = !_showVoiceAssistant),
+            ),
           IconButton(
             icon: Icon(
               _isScanning ? Icons.stop : Icons.refresh,
@@ -223,56 +236,70 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
           ],
         ),
       ),
-      body: Column(
+      body: Row(
         children: [
-          // WebSocket Connection Status Banner (persistent)
-          _buildWebSocketStatusBanner(),
-
-          // Scanning Banner
-          if (_isScanning)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: TeaSpacing.md,
-                vertical: TeaSpacing.sm,
-              ),
-              color: TeaColors.infoSky.withOpacity(0.1),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: TeaColors.infoSky,
-                    ),
-                  ),
-                  const SizedBox(width: TeaSpacing.sm),
-                  Text(
-                    'Scanning for devices...',
-                    style: TeaTypography.bodySmall.copyWith(
-                      color: TeaColors.infoSky,
-                    ),
-                  ),
-                ],
-              ),
-            ).animate().fadeIn(),
-
-          // Device List
+          // Main content
           Expanded(
-            child: filteredDevices.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: TeaSpacing.screenPadding,
-                    itemCount: filteredDevices.length,
-                    itemBuilder: (context, index) {
-                      final device = filteredDevices[index];
-                      return _buildDeviceCard(device)
-                          .animate()
-                          .fadeIn(delay: (index * 100).ms)
-                          .slideX(begin: 0.1, end: 0);
-                    },
-                  ),
+            child: Column(
+              children: [
+                // WebSocket Connection Status Banner (persistent)
+                _buildWebSocketStatusBanner(),
+
+                // Scanning Banner
+                if (_isScanning)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: TeaSpacing.md,
+                      vertical: TeaSpacing.sm,
+                    ),
+                    color: TeaColors.infoSky.withOpacity(0.1),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: TeaColors.infoSky,
+                          ),
+                        ),
+                        const SizedBox(width: TeaSpacing.sm),
+                        Text(
+                          'Scanning for devices...',
+                          style: TeaTypography.bodySmall.copyWith(
+                            color: TeaColors.infoSky,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(),
+
+                // Device List
+                Expanded(
+                  child: filteredDevices.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: TeaSpacing.screenPadding,
+                          itemCount: filteredDevices.length,
+                          itemBuilder: (context, index) {
+                            final device = filteredDevices[index];
+                            return _buildDeviceCard(device)
+                                .animate()
+                                .fadeIn(delay: (index * 100).ms)
+                                .slideX(begin: 0.1, end: 0);
+                          },
+                        ),
+                ),
+              ],
+            ),
           ),
+
+          // Voice Assistant Panel (side panel)
+          if (_showVoiceAssistant && kIsWeb)
+            VoiceAssistantPanel(
+              iotState: globalIoTState,
+              onClose: () => setState(() => _showVoiceAssistant = false),
+            ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.1, end: 0),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
