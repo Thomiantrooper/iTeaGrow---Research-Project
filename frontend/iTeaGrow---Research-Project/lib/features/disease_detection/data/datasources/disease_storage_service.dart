@@ -1,0 +1,315 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:http/http.dart' as http;
+import '../../../../core/api/api_config.dart';
+import '../../domain/entities/disease_detection_result.dart';
+
+/// Service for storing and retrieving disease detection results from MongoDB
+class DiseaseStorageService {
+  static final DiseaseStorageService _instance = DiseaseStorageService._internal();
+  factory DiseaseStorageService() => _instance;
+  DiseaseStorageService._internal();
+
+  final http.Client _client = http.Client();
+
+  /// Save detection result to MongoDB with image
+  Future<Map<String, dynamic>?> saveDetection({
+    required DiseaseDetectionResult result,
+    required String imagePath,
+    String? authToken,
+  }) async {
+    try {
+      // Read image and convert to base64
+      String? imageBase64;
+      if (!kIsWeb) {
+        final file = File(imagePath);
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+          imageBase64 = base64Encode(bytes);
+        }
+      }
+
+      final body = {
+        'image_path': imagePath,
+        'image_data': imageBase64,
+        'disease_name': result.diseaseType,
+        'confidence': result.confidence,
+        'severity': result.severity,
+        'recommendations': result.recommendations,
+        'detections': result.detections?.map((d) => d.toJson()).toList(),
+        'summary': result.summary?.toJson(),
+        'temperature': result.temperature,
+        'humidity': result.humidity,
+        'air_quality': result.airQuality,
+        'processing_time_ms': result.processingTimeMs,
+        'request_id': result.requestId,
+      };
+
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+      if (authToken != null) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      final response = await _client.post(
+        Uri.parse(ApiConfig.diseaseDetections),
+        headers: headers,
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      debugPrint('Error saving detection: ${response.statusCode} - ${response.body}');
+      return null;
+    } catch (e) {
+      debugPrint('Error saving detection: $e');
+      return null;
+    }
+  }
+
+  /// Save detection with image upload (multipart)
+  Future<Map<String, dynamic>?> saveDetectionWithImage({
+    required DiseaseDetectionResult result,
+    required String imagePath,
+    String? authToken,
+  }) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse(ApiConfig.diseaseDetectionsWithImage),
+      );
+
+      // Add headers
+      request.headers['Accept'] = 'application/json';
+      if (authToken != null) {
+        request.headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      // Add image file
+      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+
+      // Add form fields
+      request.fields['disease_name'] = result.diseaseType;
+      request.fields['confidence'] = result.confidence.toString();
+      if (result.severity.isNotEmpty) {
+        request.fields['severity'] = result.severity;
+      }
+      if (result.recommendations.isNotEmpty) {
+        request.fields['recommendations'] = jsonEncode(result.recommendations);
+      }
+      if (result.detections != null) {
+        request.fields['detections'] = jsonEncode(result.detections!.map((d) => d.toJson()).toList());
+      }
+      if (result.summary != null) {
+        request.fields['summary'] = jsonEncode(result.summary!.toJson());
+      }
+      if (result.temperature != null) {
+        request.fields['temperature'] = result.temperature.toString();
+      }
+      if (result.humidity != null) {
+        request.fields['humidity'] = result.humidity.toString();
+      }
+      if (result.airQuality != null) {
+        request.fields['air_quality'] = result.airQuality.toString();
+      }
+      if (result.processingTimeMs != null) {
+        request.fields['processing_time_ms'] = result.processingTimeMs.toString();
+      }
+      if (result.requestId != null) {
+        request.fields['request_id'] = result.requestId!;
+      }
+
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      debugPrint('Error saving detection with image: ${response.statusCode} - ${response.body}');
+      return null;
+    } catch (e) {
+      debugPrint('Error saving detection with image: $e');
+      return null;
+    }
+  }
+
+  /// Get detection history
+  Future<List<DiseaseDetectionResult>> getDetections({
+    int skip = 0,
+    int limit = 50,
+    String? diseaseName,
+    bool includeImage = false,
+    String? authToken,
+  }) async {
+    try {
+      String url = '${ApiConfig.diseaseDetections}?skip=$skip&limit=$limit&include_image=$includeImage';
+      if (diseaseName != null) {
+        url += '&disease_name=$diseaseName';
+      }
+
+      final headers = <String, String>{
+        'Accept': 'application/json',
+      };
+      if (authToken != null) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      final response = await _client.get(
+        Uri.parse(url),
+        headers: headers,
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(response.body);
+        if (data is List) {
+          return data.map((json) => DiseaseDetectionResult.fromStoredJson(json as Map<String, dynamic>)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error getting detections: $e');
+      return [];
+    }
+  }
+
+  /// Get detection statistics
+  Future<Map<String, dynamic>?> getStatistics({String? authToken}) async {
+    try {
+      final headers = <String, String>{
+        'Accept': 'application/json',
+      };
+      if (authToken != null) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      final response = await _client.get(
+        Uri.parse(ApiConfig.diseaseStatistics),
+        headers: headers,
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting statistics: $e');
+      return null;
+    }
+  }
+
+  /// Get detailed statistics for charts
+  Future<Map<String, dynamic>?> getDetailedStatistics({
+    int days = 30,
+    String? authToken,
+  }) async {
+    try {
+      final headers = <String, String>{
+        'Accept': 'application/json',
+      };
+      if (authToken != null) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      final response = await _client.get(
+        Uri.parse('${ApiConfig.diseaseStatisticsDetailed}?days=$days'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting detailed statistics: $e');
+      return null;
+    }
+  }
+
+  /// Get recent detections
+  Future<Map<String, dynamic>?> getRecentDetections({
+    int limit = 10,
+    String? authToken,
+  }) async {
+    try {
+      final headers = <String, String>{
+        'Accept': 'application/json',
+      };
+      if (authToken != null) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      final response = await _client.get(
+        Uri.parse('${ApiConfig.diseaseRecent}?limit=$limit'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting recent detections: $e');
+      return null;
+    }
+  }
+
+  /// Delete a detection
+  Future<bool> deleteDetection(String detectionId, {String? authToken}) async {
+    try {
+      final headers = <String, String>{
+        'Accept': 'application/json',
+      };
+      if (authToken != null) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      final response = await _client.delete(
+        Uri.parse('${ApiConfig.diseaseDetections}/$detectionId'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 30));
+
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
+      debugPrint('Error deleting detection: $e');
+      return false;
+    }
+  }
+
+  void dispose() {
+    _client.close();
+  }
+}
+
+/// Model for stored detection with additional fields
+class StoredDetection {
+  final String id;
+  final String userId;
+  final String? imagePath;
+  final String? imageData;
+  final DiseaseDetectionResult result;
+  final DateTime createdAt;
+
+  StoredDetection({
+    required this.id,
+    required this.userId,
+    this.imagePath,
+    this.imageData,
+    required this.result,
+    required this.createdAt,
+  });
+
+  factory StoredDetection.fromJson(Map<String, dynamic> json) {
+    return StoredDetection(
+      id: json['_id'] ?? json['id'] ?? '',
+      userId: json['user_id'] ?? '',
+      imagePath: json['image_path'],
+      imageData: json['image_data'],
+      result: DiseaseDetectionResult.fromStoredJson(json),
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+    );
+  }
+}

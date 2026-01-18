@@ -58,6 +58,13 @@ class ApiConfig {
   static String get iotConditions => '$apiBaseUrl/iot/conditions';
   static String get iotIngest => '$apiBaseUrl/iot/ingest';
 
+  // Disease Detection Storage Endpoints
+  static String get diseaseDetections => '$effectiveBaseUrl/api/disease/detections';
+  static String get diseaseDetectionsWithImage => '$effectiveBaseUrl/api/disease/detections/with-image';
+  static String get diseaseStatistics => '$effectiveBaseUrl/api/disease/statistics';
+  static String get diseaseStatisticsDetailed => '$effectiveBaseUrl/api/disease/statistics/detailed';
+  static String get diseaseRecent => '$effectiveBaseUrl/api/disease/recent';
+
   // Timeouts (in seconds)
   static const int connectionTimeout = 30;
   static const int receiveTimeout = 60;

@@ -23,6 +23,14 @@ class BoundingBox {
       confidence: (json['confidence'] as num).toDouble(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'x_min': xMin,
+    'y_min': yMin,
+    'x_max': xMax,
+    'y_max': yMax,
+    'confidence': confidence,
+  };
 }
 
 /// Individual detection from the model
@@ -53,6 +61,15 @@ class Detection {
       areaPercentage: (json['area_percentage'] as num).toDouble(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'detection_id': detectionId,
+    'class_name': className,
+    'class_id': classId,
+    'confidence': confidence,
+    'bounding_box': boundingBox.toJson(),
+    'area_percentage': areaPercentage,
+  };
 
   /// Get display-friendly disease name
   String get displayName {
@@ -105,6 +122,17 @@ class DetectionSummary {
       requiresImmediateAction: json['requires_immediate_action'] ?? false,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'total_leaves_detected': totalLeavesDetected,
+    'healthy_count': healthyCount,
+    'red_rust_count': redRustCount,
+    'blister_blight_count': blisterBlightCount,
+    'overall_health_score': overallHealthScore,
+    'dominant_disease': dominantDisease,
+    'severity_level': severityLevel,
+    'requires_immediate_action': requiresImmediateAction,
+  };
 }
 
 class DiseaseDetectionResult {
@@ -255,5 +283,41 @@ class DiseaseDetectionResult {
           w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w
         ).join(' ');
     }
+  }
+
+  /// Convert to JSON for storage
+  Map<String, dynamic> toJson() => {
+    'disease_name': diseaseType,
+    'confidence': confidence,
+    'severity': severity,
+    'recommendations': recommendations,
+    'timestamp': timestamp.toIso8601String(),
+    'temperature': temperature,
+    'humidity': humidity,
+    'air_quality': airQuality,
+    'request_id': requestId,
+    'image_id': imageId,
+    'processing_time_ms': processingTimeMs,
+    'detections': detections?.map((d) => d.toJson()).toList(),
+    'summary': summary?.toJson(),
+  };
+
+  /// Create from stored JSON
+  factory DiseaseDetectionResult.fromStoredJson(Map<String, dynamic> json) {
+    return DiseaseDetectionResult(
+      diseaseType: json['disease_name'] ?? 'Unknown',
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+      severity: json['severity'] ?? 'Low',
+      recommendations: List<String>.from(json['recommendations'] ?? []),
+      timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+      temperature: (json['temperature'] as num?)?.toDouble(),
+      humidity: (json['humidity'] as num?)?.toDouble(),
+      airQuality: (json['air_quality'] as num?)?.toDouble(),
+      requestId: json['request_id'],
+      imageId: json['image_id'],
+      processingTimeMs: (json['processing_time_ms'] as num?)?.toDouble(),
+      detections: (json['detections'] as List?)?.map((d) => Detection.fromJson(d)).toList(),
+      summary: json['summary'] != null ? DetectionSummary.fromJson(json['summary']) : null,
+    );
   }
 }
