@@ -70,10 +70,16 @@ class DiseaseDetectionMLService {
       await initialize();
     }
 
+    print('>>> PREDICT CALLED <<<');
+    print('Backend available: $_isBackendAvailable');
+    print('Image path: $imagePath');
+    print('Is Web: $kIsWeb');
+
     // Try backend API first
     if (_isBackendAvailable) {
       try {
-        return await _predictWithBackend(
+        print('>>> CALLING BACKEND API <<<');
+        final result = await _predictWithBackend(
           imagePath,
           liveTemperature: liveTemperature,
           liveHumidity: liveHumidity,
@@ -83,14 +89,28 @@ class DiseaseDetectionMLService {
           locationLng: locationLng,
           requestExplainability: requestExplainability,
         );
+        print('>>> BACKEND SUCCESS: ${result.diseaseType} <<<');
+        print('>>> Confidence: ${result.confidence} <<<');
+        print('>>> Returning result from predict() <<<');
+        print('');
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        print('!!! RESULT OBJECT CREATED SUCCESSFULLY !!!');
+        print('!!! About to return to caller !!!');
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        print('');
+        return result;
       } on ApiException catch (e) {
-        print('Backend API error: $e - falling back to offline mode');
-      } catch (e) {
-        print('Unexpected error: $e - falling back to offline mode');
+        print('!!! Backend API error: $e - falling back to offline mode');
+      } catch (e, stackTrace) {
+        print('!!! Unexpected error: $e - falling back to offline mode');
+        print('!!! Stack trace: $stackTrace');
       }
+    } else {
+      print('!!! Backend NOT available - using offline mode');
     }
 
     // Offline fallback with dummy data
+    print('>>> USING OFFLINE MODE (FAKE DATA) <<<');
     return _predictOffline(
       imagePath,
       liveTemperature: liveTemperature,
@@ -270,11 +290,23 @@ class DiseaseDetectionMLService {
     if (liveHumidity != null) fields['humidity'] = liveHumidity.toString();
     fields['detect_multiple'] = 'true';
 
-    final response = await _apiClient.postMultipartFromPath(
-      ApiConfig.fieldAnalysis,
-      imagePath: imagePath,
-      fields: fields,
-    );
+    Map<String, dynamic> response;
+
+    if (kIsWeb) {
+      // For web, use multipart request with bytes
+      response = await _postMultipartWeb(
+        ApiConfig.fieldAnalysis,
+        imagePath: imagePath,
+        fields: fields,
+      );
+    } else {
+      // For mobile, use file path
+      response = await _apiClient.postMultipartFromPath(
+        ApiConfig.fieldAnalysis,
+        imagePath: imagePath,
+        fields: fields,
+      );
+    }
 
     return FieldAnalysisResult.fromApiResponse(response);
   }
@@ -480,6 +512,10 @@ class DiseaseDetectionMLService {
     Map<String, String>? fields,
   }) async {
     try {
+      print('>>> _postMultipartWeb CALLED <<<');
+      print('URL: $url');
+      print('Image path: $imagePath');
+
       final request = http.MultipartRequest('POST', Uri.parse(url));
 
       // Add headers
@@ -487,9 +523,13 @@ class DiseaseDetectionMLService {
 
       // For web, we need to fetch the blob and send as bytes
       // The imagePath on web is typically a blob URL from image_picker
+      print('Fetching image from blob URL...');
       final imageResponse = await http.get(Uri.parse(imagePath));
+      print('Image fetch status: ${imageResponse.statusCode}');
+
       if (imageResponse.statusCode == 200) {
         final bytes = imageResponse.bodyBytes;
+        print('Image bytes loaded: ${bytes.length} bytes');
         final filename = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
         request.files.add(http.MultipartFile.fromBytes(
@@ -498,7 +538,7 @@ class DiseaseDetectionMLService {
           filename: filename,
         ));
       } else {
-        throw ApiException('Failed to load image from path');
+        throw ApiException('Failed to load image from path: ${imageResponse.statusCode}');
       }
 
       // Add additional fields
@@ -506,18 +546,23 @@ class DiseaseDetectionMLService {
         request.fields.addAll(fields);
       }
 
+      print('Sending request to backend...');
       final streamedResponse = await request.send().timeout(
         Duration(seconds: ApiConfig.receiveTimeout),
       );
       final response = await http.Response.fromStream(streamedResponse);
 
+      print('Backend response status: ${response.statusCode}');
+      print('Backend response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (response.body.isEmpty) return {};
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
-        throw ApiException('HTTP error: ${response.statusCode}');
+        throw ApiException('HTTP error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
+      print('!!! _postMultipartWeb ERROR: $e');
       if (e is ApiException) rethrow;
       throw ApiException('Web upload error: $e');
     }

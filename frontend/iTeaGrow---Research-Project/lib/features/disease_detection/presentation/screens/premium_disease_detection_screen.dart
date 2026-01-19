@@ -8,7 +8,9 @@ import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/animations/tea_animations.dart';
 import '../../../../core/providers/global_iot_provider.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 import '../../data/datasources/disease_detection_ml_service.dart';
+import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
 
 /// Premium Disease Detection Screen with modern UI
@@ -25,6 +27,7 @@ class _PremiumDiseaseDetectionScreenState
     with SingleTickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
   final DiseaseDetectionMLService _mlService = DiseaseDetectionMLService();
+  final DiseaseStorageService _storageService = DiseaseStorageService();
 
   XFile? _selectedImage;
   Uint8List? _imageBytes;
@@ -34,6 +37,8 @@ class _PremiumDiseaseDetectionScreenState
   bool _showGradCam = false;
   bool _isBackendConnected = false;
   bool _isCheckingConnection = true;
+  bool _savedToDb = false;
+  bool _isSavingToDb = false;
 
   // Detection mode: 'single' for single leaf, 'field' for field/batch analysis
   String _detectionMode = 'single';
@@ -145,9 +150,18 @@ class _PremiumDiseaseDetectionScreenState
   }
 
   Future<void> _analyzeImage() async {
+    print('');
+    print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
+    print('%%%%%%%% PREMIUM_DISEASE_SCREEN _analyzeImage %%%%%%%%%%');
+    print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
+    print('');
+
     if (_selectedImage == null) return;
 
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _savedToDb = false;
+    });
 
     try {
       if (_detectionMode == 'field') {
@@ -158,12 +172,24 @@ class _PremiumDiseaseDetectionScreenState
           liveHumidity: _liveHumidity,
           liveAirQuality: _liveAirQuality,
         );
+
+        print('>>> PREMIUM: Field analysis returned <<<');
+        print('Detected leaves: ${fieldResult.detectedLeafCount}');
+        print('Healthy: ${fieldResult.healthyCount}, Infected: ${fieldResult.infectedCount}');
+        print('Health %: ${fieldResult.healthPercentage}');
+
         setState(() {
           _fieldResult = fieldResult;
           _result = null;
           _isProcessing = false;
           _isBackendConnected = _mlService.isBackendAvailable;
         });
+
+        // Auto-save field analysis to database
+        if (_isBackendConnected) {
+          print('>>> PREMIUM: CALLING _saveFieldAnalysisToDatabase() <<<');
+          _saveFieldAnalysisToDatabase();
+        }
       } else {
         // Single leaf detection
         final result = await _mlService.predict(
@@ -172,16 +198,147 @@ class _PremiumDiseaseDetectionScreenState
           liveHumidity: _liveHumidity,
           liveAirQuality: _liveAirQuality,
         );
+
+        print('>>> PREMIUM: predict() returned <<<');
+        print('Disease: ${result.diseaseType}');
+        print('Confidence: ${result.confidence}');
+
         setState(() {
           _result = result;
           _fieldResult = null;
           _isProcessing = false;
           _isBackendConnected = _mlService.isBackendAvailable;
         });
+
+        // Auto-save to database if backend connected and valid leaf
+        print('>>> PREMIUM: Checking save conditions <<<');
+        print('_isBackendConnected: $_isBackendConnected');
+        print('result.isNotALeaf: ${result.isNotALeaf}');
+
+        if (_isBackendConnected && !result.isNotALeaf) {
+          print('>>> PREMIUM: CALLING _saveToDatabase() <<<');
+          _saveToDatabase();
+        } else {
+          print('>>> PREMIUM: NOT saving to database');
+        }
       }
     } catch (e) {
       setState(() => _isProcessing = false);
       TeaSnackbar.error(context, 'Analysis error: $e');
+    }
+  }
+
+  Future<void> _saveToDatabase() async {
+    print('=== PREMIUM: SAVE TO DATABASE CALLED ===');
+    if (_result == null || _selectedImage == null || _savedToDb) {
+      print('!!! Early return - conditions not met');
+      return;
+    }
+
+    setState(() => _isSavingToDb = true);
+
+    try {
+      // Get auth token from Riverpod state
+      final authState = ref.read(authStateProvider);
+      final authToken = authState.accessToken;
+      print('Auth state: isAuthenticated=${authState.isAuthenticated}');
+      print('Auth token present: ${authToken != null && authToken.isNotEmpty}');
+      print('Image path: ${_selectedImage!.path}');
+
+      if (authToken == null || authToken.isEmpty) {
+        print('!!! No auth token - showing login message');
+        if (mounted) {
+          TeaSnackbar.warning(context, 'Please log in to save scans to database');
+        }
+        setState(() => _isSavingToDb = false);
+        return;
+      }
+
+      print('>>> Calling _storageService.saveDetectionWithImage() <<<');
+      final savedResult = await _storageService.saveDetectionWithImage(
+        result: _result!,
+        imagePath: _selectedImage!.path,
+        authToken: authToken,
+      );
+
+      if (savedResult != null) {
+        print('>>> Detection saved successfully! <<<');
+        print('Saved ID: ${savedResult['_id'] ?? savedResult['id']}');
+        setState(() {
+          _savedToDb = true;
+          _isSavingToDb = false;
+        });
+        if (mounted) {
+          TeaSnackbar.success(context, 'Scan saved to database');
+        }
+      } else {
+        print('!!! Failed to save detection');
+        setState(() => _isSavingToDb = false);
+        if (mounted) {
+          TeaSnackbar.error(context, 'Failed to save scan to database');
+        }
+      }
+    } catch (e) {
+      print('!!! Error saving to database: $e');
+      setState(() => _isSavingToDb = false);
+      if (mounted) {
+        TeaSnackbar.error(context, 'Error saving: $e');
+      }
+    }
+  }
+
+  Future<void> _saveFieldAnalysisToDatabase() async {
+    print('=== PREMIUM: SAVE FIELD ANALYSIS TO DATABASE ===');
+    if (_fieldResult == null || _selectedImage == null || _savedToDb) {
+      print('!!! Early return - conditions not met');
+      return;
+    }
+
+    setState(() => _isSavingToDb = true);
+
+    try {
+      final authState = ref.read(authStateProvider);
+      final authToken = authState.accessToken;
+      print('Auth state: isAuthenticated=${authState.isAuthenticated}');
+
+      if (authToken == null || authToken.isEmpty) {
+        print('!!! No auth token');
+        if (mounted) {
+          TeaSnackbar.warning(context, 'Please log in to save field analysis');
+        }
+        setState(() => _isSavingToDb = false);
+        return;
+      }
+
+      print('>>> Calling _storageService.saveFieldAnalysisWithImage() <<<');
+      final savedResult = await _storageService.saveFieldAnalysisWithImage(
+        result: _fieldResult!,
+        imagePath: _selectedImage!.path,
+        authToken: authToken,
+      );
+
+      if (savedResult != null) {
+        print('>>> Field analysis saved successfully! <<<');
+        setState(() {
+          _savedToDb = true;
+          _isSavingToDb = false;
+        });
+        if (mounted) {
+          TeaSnackbar.success(context, 'Field analysis saved (${_fieldResult!.detectedLeafCount} leaves)');
+        }
+      } else {
+        print('!!! Failed to save field analysis');
+        setState(() => _isSavingToDb = false);
+        if (mounted) {
+          TeaSnackbar.error(context, 'Failed to save field analysis');
+        }
+      }
+    } catch (e) {
+      print('!!! Error saving field analysis: $e');
+      setState(() => _isSavingToDb = false);
+      if (mounted) {
+        TeaSnackbar.error(context, 'Error saving: $e');
+      }
     }
   }
 

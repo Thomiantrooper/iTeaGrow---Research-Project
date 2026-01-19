@@ -169,6 +169,12 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
   }
 
   Future<void> _analyzeImage() async {
+    print('');
+    print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
+    print('@@@@@@@@ DISEASE_DETECTION_SCREEN _analyzeImage @@@@@@@@');
+    print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@');
+    print('');
+    print('>>> _analyzeImage() CALLED <<<');
     if (_selectedImage == null) return;
 
     setState(() => _isProcessing = true);
@@ -176,32 +182,37 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     _pulseController.repeat(reverse: true);
 
     try {
+      print('>>> Calling _mlService.predict() <<<');
       final result = await _mlService.predict(
         _selectedImage!.path,
         liveTemperature: _temp,
         liveHumidity: _humidity,
         liveAirQuality: _airQuality,
       );
+      print('>>> _mlService.predict() RETURNED <<<');
+      print('>>> Result type: ${result.runtimeType}');
 
       _scanAnimationController.stop();
       _scanAnimationController.reset();
       _pulseController.stop();
       _pulseController.reset();
 
+      print('>>> Calling setState <<<');
       setState(() {
         _result = result;
         _isProcessing = false;
         _isBackendConnected = _mlService.isBackendAvailable;
       });
+      print('>>> setState DONE <<<');
 
-      // Debug: Print result info (use debugPrint for web compatibility)
-      debugPrint('=== SCAN RESULT ===');
-      debugPrint('Disease Type: ${result.diseaseType}');
-      debugPrint('Confidence: ${result.confidence}');
-      debugPrint('Is Not A Leaf: ${result.isNotALeaf}');
-      debugPrint('Backend Connected: $_isBackendConnected');
-      debugPrint('Summary: ${result.summary}');
-      debugPrint('===================');
+      // Debug: Print result info
+      print('=== SCAN RESULT ===');
+      print('Disease Type: ${result.diseaseType}');
+      print('Confidence: ${result.confidence}');
+      print('Is Not A Leaf: ${result.isNotALeaf}');
+      print('Backend Connected: $_isBackendConnected');
+      print('Summary: ${result.summary}');
+      print('===================');
 
       // Show result snackbar so user knows scan completed
       if (mounted) {
@@ -215,11 +226,24 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       }
 
       // Auto-save to database if connected and valid leaf
+      print('>>> CHECKING IF SHOULD SAVE <<<');
+      print('_isBackendConnected: $_isBackendConnected');
+      print('result.isNotALeaf: ${result.isNotALeaf}');
+      print('result.diseaseType: ${result.diseaseType}');
+
       if (_isBackendConnected && !result.isNotALeaf) {
-        debugPrint('Attempting to save to database...');
+        print('>>> CALLING _saveToDatabase() <<<');
         _saveToDatabase();
       } else {
-        debugPrint('Not saving: backendConnected=$_isBackendConnected, isNotALeaf=${result.isNotALeaf}');
+        print('!!! NOT SAVING: backendConnected=$_isBackendConnected, isNotALeaf=${result.isNotALeaf}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Not saving: backend=$_isBackendConnected, notLeaf=${result.isNotALeaf}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       _scanAnimationController.stop();
@@ -232,20 +256,26 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
   }
 
   Future<void> _saveToDatabase() async {
-    debugPrint('=== SAVE TO DATABASE CALLED ===');
+    print('=== SAVE TO DATABASE CALLED ===');
+    print('_result: $_result');
+    print('_selectedImage: $_selectedImage');
+    print('_savedToDb: $_savedToDb');
+
     if (_result == null || _selectedImage == null || _savedToDb) {
-      debugPrint('Early return: result=$_result, image=$_selectedImage, savedToDb=$_savedToDb');
+      print('!!! Early return - conditions not met');
       return;
     }
 
     setState(() => _isSavingToDb = true);
+    print('>>> Starting database save process <<<');
 
     try {
       // Get auth token from Riverpod state
       final authState = ref.read(authStateProvider);
       final authToken = authState.accessToken;
-      debugPrint('Auth state: isAuthenticated=${authState.isAuthenticated}, hasToken=${authToken != null}');
-      debugPrint('Image path: ${_selectedImage!.path}');
+      print('Auth state: isAuthenticated=${authState.isAuthenticated}');
+      print('Auth token present: ${authToken != null && authToken.isNotEmpty}');
+      print('Image path: ${_selectedImage!.path}');
 
       // Check if user is logged in
       if (authToken == null || authToken.isEmpty) {

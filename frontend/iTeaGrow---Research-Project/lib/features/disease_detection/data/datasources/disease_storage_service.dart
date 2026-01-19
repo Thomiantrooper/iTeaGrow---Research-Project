@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:http/http.dart' as http;
 import '../../../../core/api/api_config.dart';
 import '../../domain/entities/disease_detection_result.dart';
+import '../datasources/disease_detection_ml_service.dart' show FieldAnalysisResult;
 
 /// Service for storing and retrieving disease detection results from MongoDB
 class DiseaseStorageService {
@@ -164,6 +165,92 @@ class DiseaseStorageService {
       return null;
     } catch (e) {
       debugPrint('Error saving detection with image: $e');
+      return null;
+    }
+  }
+
+  /// Save field analysis result (multiple leaves) with image
+  Future<Map<String, dynamic>?> saveFieldAnalysisWithImage({
+    required FieldAnalysisResult result,
+    required String imagePath,
+    String? authToken,
+  }) async {
+    try {
+      debugPrint('Saving field analysis to: ${ApiConfig.diseaseDetectionsWithImage}');
+
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse(ApiConfig.diseaseDetectionsWithImage),
+      );
+
+      // Add headers
+      request.headers['Accept'] = 'application/json';
+      if (authToken != null && authToken.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      // Add image file - handle web vs mobile
+      if (kIsWeb) {
+        final imageResponse = await http.get(Uri.parse(imagePath));
+        if (imageResponse.statusCode == 200) {
+          final bytes = imageResponse.bodyBytes;
+          final filename = 'field_scan_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          request.files.add(http.MultipartFile.fromBytes(
+            'image',
+            bytes,
+            filename: filename,
+          ));
+        } else {
+          debugPrint('Failed to load image from blob URL');
+          return null;
+        }
+      } else {
+        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      }
+
+      // Store as a summary detection with field analysis data
+      // Use the most common disease as the primary disease type
+      String primaryDisease = 'Field Analysis';
+      double primaryConfidence = result.healthPercentage / 100;
+
+      if (result.diseaseCounts.isNotEmpty) {
+        final sortedDiseases = result.diseaseCounts.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+        primaryDisease = sortedDiseases.first.key;
+        primaryConfidence = sortedDiseases.first.value / result.detectedLeafCount;
+      }
+
+      // Add form fields
+      request.fields['disease_name'] = primaryDisease;
+      request.fields['confidence'] = primaryConfidence.toString();
+      request.fields['severity'] = result.overallStatus;
+      request.fields['recommendations'] = jsonEncode(result.recommendations);
+      request.fields['is_field_analysis'] = 'true';
+      request.fields['detected_leaf_count'] = result.detectedLeafCount.toString();
+      request.fields['healthy_count'] = result.healthyCount.toString();
+      request.fields['infected_count'] = result.infectedCount.toString();
+      request.fields['health_percentage'] = result.healthPercentage.toString();
+      request.fields['disease_counts'] = jsonEncode(result.diseaseCounts);
+
+      if (result.temperature != null) {
+        request.fields['temperature'] = result.temperature.toString();
+      }
+      if (result.humidity != null) {
+        request.fields['humidity'] = result.humidity.toString();
+      }
+
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
+      final response = await http.Response.fromStream(streamedResponse);
+
+      debugPrint('Field analysis save response: ${response.statusCode}');
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint('Field analysis saved successfully!');
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      debugPrint('Error saving field analysis: ${response.statusCode} - ${response.body}');
+      return null;
+    } catch (e) {
+      debugPrint('Error saving field analysis: $e');
       return null;
     }
   }

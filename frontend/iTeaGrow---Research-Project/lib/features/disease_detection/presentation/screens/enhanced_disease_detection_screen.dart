@@ -8,7 +8,9 @@ import '../../../../core/widgets/floating_tea_leaf.dart';
 import '../../../../core/widgets/jarvis_assistant.dart';
 import '../../../../core/services/ai_assistant_service.dart';
 import '../../../../core/services/voice_service.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 import '../../data/datasources/disease_detection_ml_service.dart';
+import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
 
 class EnhancedDiseaseDetectionScreen extends ConsumerStatefulWidget {
@@ -24,6 +26,7 @@ class _EnhancedDiseaseDetectionScreenState
     with TickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
   final DiseaseDetectionMLService _mlService = DiseaseDetectionMLService();
+  final DiseaseStorageService _storageService = DiseaseStorageService();
 
   XFile? _selectedImage;
   Uint8List? _imageBytes;
@@ -32,6 +35,8 @@ class _EnhancedDiseaseDetectionScreenState
   bool _showGradCam = false;
   bool _isBackendConnected = false;
   bool _isCheckingConnection = true;
+  bool _savedToDb = false;
+  bool _isSavingToDb = false;
 
   // Live readings
   double _temp = 26.5;
@@ -97,6 +102,7 @@ class _EnhancedDiseaseDetectionScreenState
           _selectedImage = photo;
           _imageBytes = bytes;
           _result = null;
+          _savedToDb = false;
         });
       }
     } catch (e) {
@@ -119,6 +125,7 @@ class _EnhancedDiseaseDetectionScreenState
           _selectedImage = image;
           _imageBytes = bytes;
           _result = null;
+          _savedToDb = false;
         });
       }
     } catch (e) {
@@ -127,17 +134,33 @@ class _EnhancedDiseaseDetectionScreenState
   }
 
   Future<void> _analyzeImage() async {
+    print('');
+    print('************************************************************');
+    print('******* ENHANCED SCREEN _analyzeImage() STARTED ***********');
+    print('************************************************************');
+    print('');
+
     if (_selectedImage == null) return;
 
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _savedToDb = false;
+    });
     _scanController.repeat();
 
     try {
+      print('>>> EnhancedScreen: Calling _mlService.predict() <<<');
       final result = await _mlService.predict(
         _selectedImage!.path,
         liveTemperature: _temp,
         liveHumidity: _humidity,
       );
+
+      // IMMEDIATELY print after predict returns
+      print('########## PREDICT RETURNED ##########');
+      print('Disease: ${result.diseaseType}');
+      print('Confidence: ${result.confidence}');
+      print('######################################');
 
       setState(() {
         _result = result;
@@ -150,18 +173,107 @@ class _EnhancedDiseaseDetectionScreenState
       // Update AI assistant context
       ref.read(aiAssistantProvider.notifier).updateDiseaseContext(result.diseaseType);
 
-      // Speak result if voice is enabled
-      final voiceService = ref.read(voiceServiceProvider.notifier);
-      if (result.diseaseType != 'Healthy' && !result.isNotALeaf) {
-        voiceService.speak(
-          'I detected ${result.diseaseType} with ${(result.confidence * 100).toStringAsFixed(0)}% confidence. '
-          'The severity is ${result.severity}. Would you like treatment recommendations?',
-        );
+      // Speak result if voice is enabled - SKIP for now to avoid issues
+      // final voiceService = ref.read(voiceServiceProvider.notifier);
+      // if (result.diseaseType != 'Healthy' && !result.isNotALeaf) {
+      //   voiceService.speak(
+      //     'I detected ${result.diseaseType} with ${(result.confidence * 100).toStringAsFixed(0)}% confidence. '
+      //     'The severity is ${result.severity}. Would you like treatment recommendations?',
+      //   );
+      // }
+
+      // Auto-save to database if connected and valid leaf
+      print('########## CHECKING SAVE CONDITIONS ##########');
+      print('_isBackendConnected: $_isBackendConnected');
+      print('result.isNotALeaf: ${result.isNotALeaf}');
+      print('##############################################');
+
+      if (_isBackendConnected && !result.isNotALeaf) {
+        print('########## CALLING SAVE ##########');
+        _saveToDatabase();
+      } else {
+        print('########## NOT SAVING ##########');
       }
     } catch (e) {
       setState(() => _isProcessing = false);
       _scanController.stop();
       _showError('Analysis error: $e');
+    }
+  }
+
+  Future<void> _saveToDatabase() async {
+    print('=== EnhancedScreen: SAVE TO DATABASE CALLED ===');
+    if (_result == null || _selectedImage == null || _savedToDb) {
+      print('!!! Early return - conditions not met');
+      return;
+    }
+
+    setState(() => _isSavingToDb = true);
+
+    try {
+      // Get auth token from Riverpod state
+      final authState = ref.read(authStateProvider);
+      final authToken = authState.accessToken;
+      print('Auth state: isAuthenticated=${authState.isAuthenticated}');
+      print('Auth token present: ${authToken != null && authToken.isNotEmpty}');
+      print('Image path: ${_selectedImage!.path}');
+
+      if (authToken == null || authToken.isEmpty) {
+        print('!!! No auth token - showing login message');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.warning_amber, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Please log in to save scans to database'),
+                ],
+              ),
+              backgroundColor: JarvisTheme.warning,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        setState(() => _isSavingToDb = false);
+        return;
+      }
+
+      print('>>> Calling _storageService.saveDetectionWithImage() <<<');
+      final savedResult = await _storageService.saveDetectionWithImage(
+        result: _result!,
+        imagePath: _selectedImage!.path,
+        authToken: authToken,
+      );
+
+      if (savedResult != null) {
+        print('>>> Detection saved successfully! <<<');
+        setState(() {
+          _savedToDb = true;
+          _isSavingToDb = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Scan saved to database'),
+                ],
+              ),
+              backgroundColor: JarvisTheme.healthy,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else {
+        print('!!! Failed to save detection');
+        setState(() => _isSavingToDb = false);
+      }
+    } catch (e) {
+      print('!!! Error saving to database: $e');
+      setState(() => _isSavingToDb = false);
     }
   }
 
