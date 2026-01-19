@@ -1,37 +1,68 @@
+# =============================================================================
+# Environment variables (SECURITY CRITICAL)
+# =============================================================================
+.env
+.env.*
+*.env
+
+# Allow example env files
+!.env.example
+!backend/.env.example
+
+# =============================================================================
+# Python
+# =============================================================================
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-# Python lib folders (not Flutter lib/)
-/lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
 *.egg-info/
+.eggs/
 .installed.cfg
-*.egg
 MANIFEST
-pip-log.txt
-pip-delete-this-directory.txt
 
+# Virtual environments
 .venv/
 venv/
 ENV/
 env/
-.env/
-.env.example/
-disease_env/
 
+# Python tooling
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+coverage.xml
+htmlcov/
+.hypothesis/
+
+# =============================================================================
+# Logs & runtime files
+# =============================================================================
+logs/
+log/
+*.log
+*.log.*
+*.pid
+
+# =============================================================================
+# Jupyter
+# =============================================================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+Untitled*.ipynb
+
+# =============================================================================
+# Machine Learning / Data
+# =============================================================================
+datasets/
+data/raw/
+data/processed/
+raw_data/
+
+# Model artifacts
+checkpoints/
+exports/
+weights/
 *.pt
 *.pth
 *.onnx
@@ -42,120 +73,51 @@ disease_env/
 *.hdf5
 *.pkl
 *.joblib
-checkpoints/
-exports/
-weights/
 
-# Training runs - exclude weights but KEEP graphs/plots
+# Training runs (keep plots, ignore weights)
 runs/**/weights/
 runs/**/*.pt
 runs/**/*.cache
 
-# Keep these training artifacts (graphs, results, plots)
 !runs/**/*.png
 !runs/**/*.jpg
 !runs/**/*.csv
 !runs/**/args.yaml
 
-# Other ML artifacts
-datasets/
-data/raw/
-data/processed/
+# Experiment tracking
 wandb/
 mlruns/
 
-# -----------------------------------------------------------------------------
-# Dataset (exclude entire raw_data folder)
-# -----------------------------------------------------------------------------
-raw_data/
-
-.env
-.env.local
-.env.development
-.env.production
-.env.*.local
-*.env
-.env.exm
-*.exm
-secrets/
-credentials/
-
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-.project
-.pydevproject
-.settings/
-*.sublime-project
-*.sublime-workspace
-.spyderproject
-.spyproject
-.ropeproject
-
-.ipynb_checkpoints/
-*.ipynb_checkpoints
-Untitled*.ipynb
-
-logs/
-*.log
-log/
-*.log.*
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
+# =============================================================================
+# Docker & containers
+# =============================================================================
 docker-compose.override.yml
 .docker/
 volumes/
-minio-data/
-redis-data/
+
+# Databases & local services
 postgres-data/
-
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-*.lnk
-Desktop.ini
-
-.coverage
-.pytest_cache/
-htmlcov/
-.tox/
-.nox/
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-nosetests.xml
-
-docs/_build/
-site/
-.mkdocs/
-
-tmp/
-temp/
-*.tmp
-*.temp
-*.bak
-*.backup
-cache/
-.cache/
-
-
+redis-data/
+minio-data/
+mongodb_data/
+mongo-data/
 storage/
 minio/
 s3-local/
 
-celerybeat-schedule
-celerybeat.pid
-*.pid
+# =============================================================================
+# Backend sensitive files
+# =============================================================================
+backend/.env
+backend/.env.*
+backend/secrets/
+backend/*.pem
+backend/*.key
 
+# JWT / security keys
+jwt_secret.txt
+private_key.pem
+public_key.pem
 *.pem
 *.key
 *.crt
@@ -165,32 +127,9 @@ celerybeat.pid
 ssl/
 certs/
 
-*.prof
-*.lprof
-profile_output/
-
-# -----------------------------------------------------------------------------
-# Backend Sensitive Files
-# -----------------------------------------------------------------------------
-backend/.env
-backend/.env.local
-backend/.env.production
-backend/secrets/
-backend/*.pem
-backend/*.key
-
-# MongoDB data
-mongodb_data/
-mongo-data/
-
-# JWT Keys
-jwt_secret.txt
-private_key.pem
-public_key.pem
-
-# -----------------------------------------------------------------------------
-# Flutter Build Artifacts
-# -----------------------------------------------------------------------------
+# =============================================================================
+# Frontend (Flutter)
+# =============================================================================
 frontend/**/build/
 frontend/**/.dart_tool/
 frontend/**/.flutter-plugins
@@ -200,9 +139,53 @@ frontend/**/pubspec.lock
 frontend/**/*.iml
 frontend/**/.idea/
 
-# Flutter generated files
+# Generated files
 frontend/**/lib/generated_plugin_registrant.dart
 frontend/**/*.g.dart
 frontend/**/*.freezed.dart
 
+# =============================================================================
+# IDEs & Editors
+# =============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.spyderproject
+.spyproject
+.ropeproject
 
+# =============================================================================
+# OS files
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.lnk
+
+# =============================================================================
+# Docs & builds
+# =============================================================================
+docs/_build/
+site/
+.mkdocs/
+
+# =============================================================================
+# Temp & cache
+# =============================================================================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+cache/
+.cache/
