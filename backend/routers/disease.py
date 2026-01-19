@@ -57,6 +57,13 @@ async def create_detection_with_image(
     processing_time_ms: Optional[float] = Form(None),
     model_version: Optional[str] = Form(None),
     request_id: Optional[str] = Form(None),
+    # Field analysis fields
+    is_field_analysis: Optional[str] = Form(None),  # "true" or "false"
+    detected_leaf_count: Optional[int] = Form(None),
+    healthy_count: Optional[int] = Form(None),
+    infected_count: Optional[int] = Form(None),
+    health_percentage: Optional[float] = Form(None),
+    disease_counts: Optional[str] = Form(None),  # JSON string
     current_user: dict = Depends(get_current_active_user)
 ):
     """Create a new disease detection record with image upload"""
@@ -71,6 +78,7 @@ async def create_detection_with_image(
     recommendations_list = json.loads(recommendations) if recommendations else None
     detections_list = json.loads(detections) if detections else None
     summary_dict = json.loads(summary) if summary else None
+    disease_counts_dict = json.loads(disease_counts) if disease_counts else None
 
     detection_doc = {
         "user_id": str(current_user["_id"]),
@@ -88,7 +96,14 @@ async def create_detection_with_image(
         "processing_time_ms": processing_time_ms,
         "model_version": model_version,
         "request_id": request_id or str(uuid.uuid4()),
-        "created_at": datetime.utcnow()
+        "created_at": datetime.utcnow(),
+        # Field analysis data
+        "is_field_analysis": is_field_analysis == "true" if is_field_analysis else False,
+        "detected_leaf_count": detected_leaf_count,
+        "healthy_count": healthy_count,
+        "infected_count": infected_count,
+        "health_percentage": health_percentage,
+        "disease_counts": disease_counts_dict,
     }
 
     result = await db.disease_detections.insert_one(detection_doc)

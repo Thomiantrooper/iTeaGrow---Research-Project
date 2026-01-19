@@ -98,6 +98,13 @@ class DiseaseDetection(BaseModel):
     model_version: Optional[str] = None
     request_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    # Field analysis data (for multi-leaf scans)
+    is_field_analysis: Optional[bool] = False
+    detected_leaf_count: Optional[int] = None
+    healthy_count: Optional[int] = None
+    infected_count: Optional[int] = None
+    health_percentage: Optional[float] = None
+    disease_counts: Optional[dict] = None
 
     model_config = ConfigDict(populate_by_name=True)
 
