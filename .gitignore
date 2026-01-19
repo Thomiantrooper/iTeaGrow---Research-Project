@@ -1,0 +1,14 @@
+# Local env & tooling
+.env*
+
+
+# Large / generated artifacts
+raw_data/
+runs/
+*.pt
+
+# Installed / generated packages
+backend/
+frontend/
+configs/
+src/
