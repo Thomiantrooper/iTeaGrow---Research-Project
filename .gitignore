@@ -75,6 +75,8 @@ raw_data/
 .env.production
 .env.*.local
 *.env
+.env.exm
+*.exm
 secrets/
 credentials/
 

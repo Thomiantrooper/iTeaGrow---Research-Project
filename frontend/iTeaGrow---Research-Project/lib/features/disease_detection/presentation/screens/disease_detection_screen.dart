@@ -1,22 +1,24 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 import '../../data/datasources/disease_detection_ml_service.dart';
 import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
 import 'scan_history_screen.dart';
 
-class DiseaseDetectionScreen extends StatefulWidget {
+class DiseaseDetectionScreen extends ConsumerStatefulWidget {
   const DiseaseDetectionScreen({super.key});
 
   @override
-  State<DiseaseDetectionScreen> createState() => _DiseaseDetectionScreenState();
+  ConsumerState<DiseaseDetectionScreen> createState() => _DiseaseDetectionScreenState();
 }
 
-class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen>
+class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     with TickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
   final DiseaseDetectionMLService _mlService = DiseaseDetectionMLService();
@@ -192,9 +194,32 @@ class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen>
         _isBackendConnected = _mlService.isBackendAvailable;
       });
 
+      // Debug: Print result info (use debugPrint for web compatibility)
+      debugPrint('=== SCAN RESULT ===');
+      debugPrint('Disease Type: ${result.diseaseType}');
+      debugPrint('Confidence: ${result.confidence}');
+      debugPrint('Is Not A Leaf: ${result.isNotALeaf}');
+      debugPrint('Backend Connected: $_isBackendConnected');
+      debugPrint('Summary: ${result.summary}');
+      debugPrint('===================');
+
+      // Show result snackbar so user knows scan completed
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Detected: ${result.diseaseType} (${(result.confidence * 100).toStringAsFixed(1)}%)'),
+            backgroundColor: result.diseaseType == 'Healthy' ? Colors.green : Colors.orange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
       // Auto-save to database if connected and valid leaf
       if (_isBackendConnected && !result.isNotALeaf) {
+        debugPrint('Attempting to save to database...');
         _saveToDatabase();
+      } else {
+        debugPrint('Not saving: backendConnected=$_isBackendConnected, isNotALeaf=${result.isNotALeaf}');
       }
     } catch (e) {
       _scanAnimationController.stop();
@@ -207,14 +232,46 @@ class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen>
   }
 
   Future<void> _saveToDatabase() async {
-    if (_result == null || _selectedImage == null || _savedToDb) return;
+    debugPrint('=== SAVE TO DATABASE CALLED ===');
+    if (_result == null || _selectedImage == null || _savedToDb) {
+      debugPrint('Early return: result=$_result, image=$_selectedImage, savedToDb=$_savedToDb');
+      return;
+    }
 
     setState(() => _isSavingToDb = true);
 
     try {
+      // Get auth token from Riverpod state
+      final authState = ref.read(authStateProvider);
+      final authToken = authState.accessToken;
+      debugPrint('Auth state: isAuthenticated=${authState.isAuthenticated}, hasToken=${authToken != null}');
+      debugPrint('Image path: ${_selectedImage!.path}');
+
+      // Check if user is logged in
+      if (authToken == null || authToken.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.warning_amber, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Please log in to save scans to database'),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        setState(() => _isSavingToDb = false);
+        return;
+      }
+
       final response = await _storageService.saveDetectionWithImage(
         result: _result!,
         imagePath: _selectedImage!.path,
+        authToken: authToken,
       );
 
       if (response != null) {
@@ -225,8 +282,8 @@ class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen>
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
+            const SnackBar(
+              content: Row(
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
                   SizedBox(width: 8),
@@ -234,6 +291,23 @@ class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen>
                 ],
               ),
               backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else {
+        // Response was null - likely auth or server error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(child: Text('Could not save to database. Check connection or login status.')),
+                ],
+              ),
+              backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -350,13 +424,31 @@ class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen>
                     const SizedBox(height: 20),
                     _buildResultsCard(),
                     const SizedBox(height: 16),
+                    // Always show chart for valid leaf detections
                     if (!_result!.isNotALeaf) ...[
+                      // Chart Section Header
+                      Row(
+                        children: [
+                          Icon(Icons.analytics, color: AppTheme.primaryGreen, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Detection Analysis',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
                       _buildConfidenceChart(),
                       const SizedBox(height: 16),
                     ],
                     _buildRecommendationsCard(),
                     const SizedBox(height: 16),
                     _buildActionButtons(),
+                    const SizedBox(height: 20), // Bottom padding
                   ],
                 ],
               ),
@@ -446,17 +538,27 @@ class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen>
 
     return Stack(
       children: [
-        // Full width image
+        // Full width image - show complete image without cropping
         Container(
           width: double.infinity,
-          constraints: const BoxConstraints(
-            minHeight: 300,
-            maxHeight: 450,
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: Image.memory(
-            _imageBytes!,
-            fit: BoxFit.cover,
-            width: double.infinity,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.memory(
+              _imageBytes!,
+              fit: BoxFit.contain,  // Show full image without cropping
+              width: double.infinity,
+            ),
           ),
         ),
 
@@ -1215,7 +1317,7 @@ class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen>
                       if (_result!.summary != null) ...[
                         const Divider(height: 24),
                         Text(
-                          'Health Score: ${(_result!.summary!.overallHealthScore * 100).toStringAsFixed(0)}%',
+                          'Health Score: ${_result!.summary!.overallHealthScore.toStringAsFixed(0)}%',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

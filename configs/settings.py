@@ -61,7 +61,7 @@ class MinIOSettings(BaseSettings):
 class ModelSettings(BaseSettings):
     """ML model configuration settings."""
 
-    model_path: str = Field(default="models/yolov8n_tealeaf.pt", alias="MODEL_PATH")
+    model_path: str = Field(default="runs/detect/runs/detect/max_accuracy/tealeaf_95/weights/best.pt", alias="MODEL_PATH")
     onnx_path: str = Field(
         default="models/yolov8n_tealeaf.onnx", alias="ONNX_MODEL_PATH"
     )
@@ -69,7 +69,7 @@ class ModelSettings(BaseSettings):
     iou_threshold: float = Field(default=0.45, alias="IOU_THRESHOLD")
     image_size: int = Field(default=640, alias="IMAGE_SIZE")
     device: str = Field(default="cpu", alias="DEVICE")
-    use_onnx: bool = Field(default=True, alias="USE_ONNX")
+    use_onnx: bool = Field(default=False, alias="USE_ONNX")
     use_int8: bool = Field(default=False, alias="USE_INT8")
     max_detections: int = Field(default=100, alias="MAX_DETECTIONS")
 

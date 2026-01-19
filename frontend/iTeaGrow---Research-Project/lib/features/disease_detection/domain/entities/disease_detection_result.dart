@@ -183,11 +183,15 @@ class DiseaseDetectionResult {
         ?.map((d) => Detection.fromJson(d))
         .toList() ?? [];
 
-    // Determine main disease type from summary or first detection
+    // Determine main disease type - prefer direct API field, then summary, then detections
     String diseaseType = 'Healthy';
     double confidence = 0.0;
 
-    if (summary != null && summary.dominantDisease != null) {
+    // First check if API directly provides disease_type and confidence
+    if (json['disease_type'] != null && json['disease_type'] != 'No Detection') {
+      diseaseType = json['disease_type'];
+      confidence = (json['confidence'] as num?)?.toDouble() ?? 0.0;
+    } else if (summary != null && summary.dominantDisease != null) {
       diseaseType = _formatDiseaseName(summary.dominantDisease!);
       // Use highest confidence from detections of this type
       final relevantDetections = detections.where(
@@ -213,9 +217,10 @@ class DiseaseDetectionResult {
       }
     }
 
-    // Map severity from API
-    String severity = 'Low';
-    if (summary != null) {
+    // Map severity from API - prefer direct severity field
+    String severity = json['severity'] ?? 'Low';
+    if (severity == 'None') severity = 'Low';
+    if (summary != null && severity == 'Low') {
       switch (summary.severityLevel) {
         case 'critical':
         case 'high':
@@ -229,9 +234,11 @@ class DiseaseDetectionResult {
       }
     }
 
-    // Generate recommendations based on detection
+    // Use recommendations from API response if available, otherwise generate based on detection
     List<String> recommendations = [];
-    if (diseaseType == 'Not A Leaf') {
+    if (json['recommendations'] != null && (json['recommendations'] as List).isNotEmpty) {
+      recommendations = List<String>.from(json['recommendations']);
+    } else if (diseaseType == 'Not A Leaf') {
       recommendations = [
         'This image does not appear to contain a valid tea leaf',
         'Please capture a clear image of a tea leaf',

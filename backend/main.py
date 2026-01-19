@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database import connect_to_mongo, close_mongo_connection
-from routers import users, disease, iot
+from routers import users, disease, iot, inference
 from config import settings
 
 @asynccontextmanager
@@ -33,6 +33,7 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(disease.router)
 app.include_router(iot.router)
+app.include_router(inference.router)
 
 @app.get("/")
 async def root():

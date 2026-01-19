@@ -181,13 +181,6 @@ class DiseaseDetectionMLService {
     double? locationLng,
     bool requestExplainability = false,
   }) async {
-    // For web, we need to handle file differently
-    if (kIsWeb) {
-      // On web, imagePath might be a blob URL or base64
-      // Handle web-specific image upload
-      throw ApiException('Web upload not yet implemented - use offline mode');
-    }
-
     // Prepare form fields
     final fields = <String, String>{};
     if (plantationId != null) fields['plantation_id'] = plantationId;
@@ -199,12 +192,23 @@ class DiseaseDetectionMLService {
     fields['request_explainability'] = requestExplainability.toString();
     fields['skip_quality_check'] = 'false';
 
-    // Make API call using the ApiClient
-    final response = await _apiClient.postMultipartFromPath(
-      ApiConfig.inferenceDetect,
-      imagePath: imagePath,
-      fields: fields,
-    );
+    Map<String, dynamic> response;
+
+    if (kIsWeb) {
+      // For web, use multipart request with bytes
+      response = await _postMultipartWeb(
+        ApiConfig.inferenceDetect,
+        imagePath: imagePath,
+        fields: fields,
+      );
+    } else {
+      // For mobile, use file path
+      response = await _apiClient.postMultipartFromPath(
+        ApiConfig.inferenceDetect,
+        imagePath: imagePath,
+        fields: fields,
+      );
+    }
 
     // Parse response and add IoT data
     final result = DiseaseDetectionResult.fromApiResponse(response);
@@ -468,6 +472,56 @@ class DiseaseDetectionMLService {
   }
 
   bool get isBackendAvailable => _isBackendAvailable;
+
+  /// Web-specific multipart upload using XFile bytes
+  Future<Map<String, dynamic>> _postMultipartWeb(
+    String url, {
+    required String imagePath,
+    Map<String, String>? fields,
+  }) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse(url));
+
+      // Add headers
+      request.headers.addAll(ApiConfig.defaultHeaders);
+
+      // For web, we need to fetch the blob and send as bytes
+      // The imagePath on web is typically a blob URL from image_picker
+      final imageResponse = await http.get(Uri.parse(imagePath));
+      if (imageResponse.statusCode == 200) {
+        final bytes = imageResponse.bodyBytes;
+        final filename = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        request.files.add(http.MultipartFile.fromBytes(
+          'image',
+          bytes,
+          filename: filename,
+        ));
+      } else {
+        throw ApiException('Failed to load image from path');
+      }
+
+      // Add additional fields
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      final streamedResponse = await request.send().timeout(
+        Duration(seconds: ApiConfig.receiveTimeout),
+      );
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        if (response.body.isEmpty) return {};
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw ApiException('HTTP error: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Web upload error: $e');
+    }
+  }
 }
 
 /// Result for batch detection (multiple images)

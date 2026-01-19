@@ -78,6 +78,9 @@ class DiseaseStorageService {
     String? authToken,
   }) async {
     try {
+      debugPrint('Saving detection to: ${ApiConfig.diseaseDetectionsWithImage}');
+      debugPrint('Auth token present: ${authToken != null}');
+
       final request = http.MultipartRequest(
         'POST',
         Uri.parse(ApiConfig.diseaseDetectionsWithImage),
@@ -85,12 +88,35 @@ class DiseaseStorageService {
 
       // Add headers
       request.headers['Accept'] = 'application/json';
-      if (authToken != null) {
+      if (authToken != null && authToken.isNotEmpty) {
         request.headers['Authorization'] = 'Bearer $authToken';
+        debugPrint('Authorization header added');
+      } else {
+        debugPrint('WARNING: No auth token - request may fail with 401');
       }
 
-      // Add image file
-      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      // Add image file - handle web vs mobile differently
+      if (kIsWeb) {
+        // On web, imagePath is a blob URL - fetch it and send as bytes
+        debugPrint('Web platform detected - fetching blob URL');
+        final imageResponse = await http.get(Uri.parse(imagePath));
+        if (imageResponse.statusCode == 200) {
+          final bytes = imageResponse.bodyBytes;
+          final filename = 'scan_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          request.files.add(http.MultipartFile.fromBytes(
+            'image',
+            bytes,
+            filename: filename,
+          ));
+          debugPrint('Image bytes loaded: ${bytes.length} bytes');
+        } else {
+          debugPrint('Failed to load image from blob URL: ${imageResponse.statusCode}');
+          return null;
+        }
+      } else {
+        // On mobile, use file path directly
+        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      }
 
       // Add form fields
       request.fields['disease_name'] = result.diseaseType;
@@ -126,10 +152,15 @@ class DiseaseStorageService {
       final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
       final response = await http.Response.fromStream(streamedResponse);
 
+      debugPrint('Storage response status: ${response.statusCode}');
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint('Detection saved successfully!');
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
       debugPrint('Error saving detection with image: ${response.statusCode} - ${response.body}');
+      if (response.statusCode == 401) {
+        debugPrint('Authentication failed - user may need to log in');
+      }
       return null;
     } catch (e) {
       debugPrint('Error saving detection with image: $e');
