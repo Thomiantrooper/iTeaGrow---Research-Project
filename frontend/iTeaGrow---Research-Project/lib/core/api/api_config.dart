@@ -57,6 +57,10 @@ class ApiConfig {
   // IoT Endpoints
   static String get iotConditions => '$apiBaseUrl/iot/conditions';
   static String get iotIngest => '$apiBaseUrl/iot/ingest';
+  static String get iotData => '$effectiveBaseUrl/api/iot/data';
+  static String get iotDataLatest => '$effectiveBaseUrl/api/iot/data/latest';
+  static String get iotDevices => '$effectiveBaseUrl/api/iot/devices';
+  static String get iotStatistics => '$effectiveBaseUrl/api/iot/statistics';
 
   // Disease Detection Storage Endpoints
   static String get diseaseDetections => '$effectiveBaseUrl/api/disease/detections';

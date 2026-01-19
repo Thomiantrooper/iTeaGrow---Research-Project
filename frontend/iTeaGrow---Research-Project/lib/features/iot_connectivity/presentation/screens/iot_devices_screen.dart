@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/jarvis_theme.dart';
+import '../../../../core/providers/global_iot_provider.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 import '../../domain/models/iot_models.dart';
 import '../../domain/models/esp32_sensor_data.dart';
 import '../providers/esp32_sensor_provider.dart';
@@ -587,7 +589,7 @@ class _ESP32ConnectionCardState extends ConsumerState<_ESP32ConnectionCard> {
 }
 
 /// Connected Device Card
-class _ConnectedDeviceCard extends StatelessWidget {
+class _ConnectedDeviceCard extends ConsumerWidget {
   final ESP32SensorState state;
   final VoidCallback onDisconnect;
   final VoidCallback onRefresh;
@@ -599,7 +601,11 @@ class _ConnectedDeviceCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final iotState = ref.watch(globalIoTProvider);
+    final authState = ref.watch(authStateProvider);
+    final isAutoStorageEnabled = iotState.isAutoStorageEnabled;
+
     return Card(
       elevation: 0,
       color: JarvisTheme.healthy.withOpacity(0.1),
@@ -609,52 +615,193 @@ class _ConnectedDeviceCard extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: JarvisTheme.healthy.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.bluetooth_connected,
-                color: JarvisTheme.healthy,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    state.connectedDevice?.platformName ?? 'iTeaGrow',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
+            // Device info row
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: JarvisTheme.healthy.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const Text(
-                    'Connected - Receiving data',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: JarvisTheme.healthy,
-                    ),
+                  child: const Icon(
+                    Icons.bluetooth_connected,
+                    color: JarvisTheme.healthy,
+                    size: 24,
                   ),
-                ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.connectedDevice?.platformName ?? 'iTeaGrow',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text(
+                        'Connected - Receiving data',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: JarvisTheme.healthy,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: onRefresh,
+                  icon: const Icon(Icons.refresh, color: JarvisTheme.teaGreen),
+                  tooltip: 'Refresh data',
+                ),
+                IconButton(
+                  onPressed: onDisconnect,
+                  icon: const Icon(Icons.bluetooth_disabled, color: JarvisTheme.critical),
+                  tooltip: 'Disconnect',
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+
+            // Auto-storage toggle row
+            Row(
+              children: [
+                Icon(
+                  Icons.cloud_upload,
+                  color: isAutoStorageEnabled ? JarvisTheme.teaGreen : JarvisTheme.textMuted,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Auto-save to Database',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        isAutoStorageEnabled
+                            ? 'Storing readings every 30 minutes'
+                            : 'Tap to enable automatic storage',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: JarvisTheme.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: isAutoStorageEnabled,
+                  activeColor: JarvisTheme.teaGreen,
+                  onChanged: (value) {
+                    if (value) {
+                      // Enable auto-storage
+                      if (authState.accessToken == null || authState.accessToken!.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please log in to enable auto-storage'),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                        return;
+                      }
+
+                      final deviceId = state.connectedDevice?.platformName ?? 'iTeaGrow-ESP32';
+                      ref.read(globalIoTProvider.notifier).enableAutoStorage(
+                        authToken: authState.accessToken!,
+                        deviceId: deviceId,
+                        onStatusUpdate: (message, isError) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(message),
+                                backgroundColor: isError ? JarvisTheme.critical : JarvisTheme.healthy,
+                              ),
+                            );
+                          }
+                        },
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('IoT auto-storage enabled (every 30 min)'),
+                          backgroundColor: JarvisTheme.healthy,
+                        ),
+                      );
+                    } else {
+                      // Disable auto-storage
+                      ref.read(globalIoTProvider.notifier).disableAutoStorage();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('IoT auto-storage disabled'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+
+            // Buffer info when storage is enabled
+            if (isAutoStorageEnabled) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: JarvisTheme.teaGreen.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.storage, size: 16, color: JarvisTheme.teaGreen),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Buffer: ${iotState.bufferCount} readings',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: JarvisTheme.teaGreen,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () async {
+                        await ref.read(globalIoTProvider.notifier).storeReadingsNow();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Readings stored to database'),
+                              backgroundColor: JarvisTheme.healthy,
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.upload, size: 16),
+                      label: const Text('Store Now', style: TextStyle(fontSize: 12)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: JarvisTheme.teaGreen,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-              onPressed: onRefresh,
-              icon: const Icon(Icons.refresh, color: JarvisTheme.teaGreen),
-              tooltip: 'Refresh data',
-            ),
-            IconButton(
-              onPressed: onDisconnect,
-              icon: const Icon(Icons.bluetooth_disabled, color: JarvisTheme.critical),
-              tooltip: 'Disconnect',
-            ),
+            ],
           ],
         ),
       ),
