@@ -1,0 +1,22 @@
+
+
+# Core Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# ML/Deep Learning (CPU)
+torch>=2.5.0
+torchvision>=0.20.0
+ultralytics>=8.3.0
+onnxruntime>=1.20.0
+
+# Image Processing
+opencv-python-headless>=4.10.0
+Pillow>=11.0.0
+numpy>=2.0.0
+
+# Utilities
+python-multipart>=0.0.18
+httpx>=0.28.0

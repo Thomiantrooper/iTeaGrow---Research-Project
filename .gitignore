@@ -1,0 +1,193 @@
+# =============================================================================
+# Environment variables (SECURITY CRITICAL)
+# =============================================================================
+.env
+.env.*
+*.env
+.env.prod
+
+
+# Allow example env files
+!.env.example
+!backend/.env.example
+
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+.installed.cfg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python tooling
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+coverage.xml
+htmlcov/
+.hypothesis/
+
+# =============================================================================
+# Logs & runtime files
+# =============================================================================
+logs/
+log/
+*.log
+*.log.*
+*.pid
+
+# =============================================================================
+# Jupyter
+# =============================================================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+Untitled*.ipynb
+
+# =============================================================================
+# Machine Learning / Data
+# =============================================================================
+datasets/
+data/raw/
+data/processed/
+raw_data/
+
+# Model artifacts
+checkpoints/
+exports/
+weights/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+*.torchscript
+*.h5
+*.hdf5
+*.pkl
+*.joblib
+
+# Training runs (keep plots, ignore weights)
+runs/**/weights/
+runs/**/*.pt
+runs/**/*.cache
+
+!runs/**/*.png
+!runs/**/*.jpg
+!runs/**/*.csv
+!runs/**/args.yaml
+
+# Experiment tracking
+wandb/
+mlruns/
+
+# =============================================================================
+# Docker & containers
+# =============================================================================
+docker-compose.override.yml
+.docker/
+volumes/
+
+# Databases & local services
+postgres-data/
+redis-data/
+minio-data/
+mongodb_data/
+mongo-data/
+storage/
+minio/
+s3-local/
+
+# =============================================================================
+# Backend sensitive files
+# =============================================================================
+backend/.env
+backend/.env.*
+backend/secrets/
+backend/*.pem
+backend/*.key
+
+# JWT / security keys
+jwt_secret.txt
+private_key.pem
+public_key.pem
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+ssl/
+certs/
+
+# =============================================================================
+# Frontend (Flutter)
+# =============================================================================
+frontend/**/build/
+frontend/**/.dart_tool/
+frontend/**/.flutter-plugins
+frontend/**/.flutter-plugins-dependencies
+frontend/**/.packages
+frontend/**/pubspec.lock
+frontend/**/*.iml
+frontend/**/.idea/
+
+# Generated files
+frontend/**/lib/generated_plugin_registrant.dart
+frontend/**/*.g.dart
+frontend/**/*.freezed.dart
+
+# =============================================================================
+# IDEs & Editors
+# =============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.spyderproject
+.spyproject
+.ropeproject
+
+# =============================================================================
+# OS files
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.lnk
+
+# =============================================================================
+# Docs & builds
+# =============================================================================
+docs/_build/
+site/
+.mkdocs/
+
+# =============================================================================
+# Temp & cache
+# =============================================================================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+cache/
+.cache/

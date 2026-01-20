@@ -1,128 +1,154 @@
-# iTeaGrow: AI-IoT System For Tea Leaf Monitoring, Fertilization, and Powder Grading
+<div align="center">
+
+# 🌱🤖 iTeaGrow  
+### AI–IoT System for Tea Leaf Monitoring, Fertilization & Powder Grading
+
+> **Transforming Sri Lanka’s tea industry with explainable, offline-capable intelligence**
+
+![AI](https://img.shields.io/badge/AI-Computer%20Vision%20%7C%20ML-blue)
+![IoT](https://img.shields.io/badge/IoT-ESP32%20%7C%20Sensors-green)
+![Offline](https://img.shields.io/badge/Mode-Offline%20First-orange)
+![Research](https://img.shields.io/badge/Type-Undergraduate%20Research-purple)
+![License](https://img.shields.io/badge/License-Academic-lightgrey)
+
+</div>
 
 ---
 
-## Project Overview
-
-**iTeaGrow** is an integrated AI–IoT research platform designed to modernize decision-making in the Sri Lankan tea industry.  
-The system replaces subjective, manual assessment practices with **data-driven, explainable, and offline-capable intelligence** across the full tea value chain from field-level leaf plucking to factory-grade yield estimation and market valuation.
-
-The platform combines **computer vision**, **machine learning**, and **edge IoT sensing** to support smallholder farmers, estate supervisors, and factory-level analysts in improving productivity, consistency, and economic outcomes.
+> *“I don’t grind leaves — I grind **data** to extract value.”* ☕
 
 ---
 
-## System Objectives
+## 🌍 Project Overview
 
-- Enable early detection of disease and environmental/soil-related stress
-- Reduce subjectivity in leaf maturity assessment and yield forecasting to improve harvesting quality and factory-usable yield consistency  
-- Provide transparent, data-backed tea powder grading and valuation  
-- Support rural deployments through offline system design  
+**iTeaGrow** is an integrated **AI–IoT research platform** designed to modernize decision-making across the Sri Lankan tea value chain.
 
----
+The system replaces **subjective, manual assessments** with:
 
-## High-Level System Architecture
+- 📊 **Data-driven intelligence**
+- 🔍 **Explainable AI (XAI)**
+- 🌐 **Offline-first rural deployment**
 
-iTeaGrow operates as a **hybrid edge–mobile–cloud architecture**
-<img width="1536" height="1024" alt="HA" src="https://github.com/user-attachments/assets/6a2fac10-94a0-4237-81b6-d8d2de991c8d" />
+From **leaf plucking** to **factory-level tea powder valuation**, iTeaGrow improves **quality consistency, yield accuracy, and economic transparency**.
 
 ---
 
-## Core Research Modules
+## 🎯 System Objectives
 
-### 1. Disease Detection & Environmental Monitoring  
-**Lead: Kajanthan K (IT22197214)**
+✔ Early detection of disease and environmental stress  
+✔ Reduce subjectivity in leaf maturity and yield estimation  
+✔ Objective tea powder grading & market price prediction  
+✔ Offline functionality for remote plantations  
+✔ Multilingual farmer-friendly interfaces  
 
-#### Scope
-Automated detection of visible tea leaf diseases and stress indicators, synchronized with real-time environmental data.
+---
 
-#### Key Capabilities
-- Image-based detection of fungal and nutrient-related diseases  
-- Correlation with temperature, humidity, and soil moisture  
+## 🧠 High-Level Architecture
+
+> **Hybrid Edge – Mobile – Cloud System**
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6a2fac10-94a0-4237-81b6-d8d2de991c8d" width="90%" />
+</p>
+
+---
+
+## 🧩 Core Research Modules
+
+### 🍃 1. Disease Detection & Environmental Monitoring  
+**Lead:** *Kajanthan Kirubakaran (IT22197214)*
+
+- Image-based detection of fungal & nutrient-related diseases  
+- Correlation with temperature, humidity & soil moisture  
 - Actionable treatment recommendations  
 
----
-### 1. Leaf Maturity Detection & Yield Decision Support  
-**Lead: Kanzurrizk M R A (IT22166524)**
-
-#### Scope
-This module addresses inaccuracies in manual leaf grading and traditional yield estimation by integrating **vision-based maturity detection** with **quality-adjusted yield prediction**.
-
-#### Key Capabilities
-- Real-time classification into *Tender*, *Mature*, and *Coarser* stages  
-- Multi-leaf detection using instance segmentation
-- Predicts factory-usable yield using a hybrid machine learning model
-- Supports "What-If" simulations adjusting Good Leaf % for economic forecasting
+**Tech:** CNNs, Sensor Fusion, Grad-CAM
 
 ---
 
-### 3. Growth Analyzer & Fertilization Management  
-**Lead: Ashwin V (IT22204448)**
+### 🌱 2. Leaf Maturity Detection & Yield Decision Support  
+**Lead:** *Kanzurrizk M R A (IT22166524)*
 
-#### Scope
-Data-driven fertilization planning aligned with **Tea Research Institute (TRI)** standards.
+- Classifies leaves as **Tender / Mature / Coarser**  
+- Multi-leaf detection via instance segmentation  
+- Predicts **factory-usable yield**, not raw harvest  
 
-#### Key Capabilities
-- Multi-depth NPK and pH sensing  
-- Rule-based fertilizer recommendation engine  
-- GSM-based SMS alerts for corrective actions  
+**Advanced:** What-if simulations, hybrid ML models, edge inference
 
 ---
 
-### 4. Tea Powder Grading & Market Valuation  
-**Lead: Peiris M. D. T. N. (IT22109448)**
+### 🌾 3. Growth Analyzer & Fertilization Management  
+**Lead:** *Ashwin Visvanathan (IT22204448)*
 
-#### Scope
-Objective grading and valuation of processed tea powders to replace subjective auction-based assessment.
+- Multi-depth NPK & pH sensing  
+- TRI-compliant fertilizer rule engine  
+- GSM-based SMS alerts  
 
-#### Key Capabilities
-- Classification of powder grades (e.g., BOP, BOPF, Dust, PF1)  
+**Design:** Solar-powered, offline IoT nodes
+
+---
+
+### ☕ 4. Tea Powder Grading & Market Valuation  
+**Lead:** *Peiris M. D. T. N. (IT22109408)*
+
+- Classification of tea powder grades (BOP, BOPF, PF1, Dust)  
 - Regression-based market price estimation (Rs/kg)  
-- Analyst dashboards with trend visualization  
+- Analyst dashboards & trend analytics  
 
 ---
 
-## Key Technical Features
+## 🧪 Explainable AI (XAI)
 
-### Explainable AI (XAI)
-- Grad-CAM heatmaps highlight regions influencing model predictions and SHAP to verify the predicted tabular form
-- Improves trust and auditability for supervisors and managers  
+- 🟢 **Grad-CAM** – visual explanation for vision models  
+- 🟢 **SHAP** – interpretable tabular predictions  
 
-### Offline Design
-- All inference and logging functions operate without internet  
-- Designed for remote plantation environments  
-
-### Multilingual User Interface
-- Sinhala, Tamil, and English support  
-
-### Continuous Learning
-- User feedback loop enables periodic dataset refinement  
+> Ensures trust, auditability, and real-world adoption
 
 ---
 
-## Technology Stack
+## 🔌 Offline-First Design
 
-### Hardware
+- All AI inference runs **on-device**
+- Logs stored locally (SQLite / SD Card)
+- Optional cloud sync when connectivity exists  
+
+Built for **remote tea estates** 🌄
+
+---
+
+## 🗣️ Multilingual User Interface
+
+- 🇱🇰 Sinhala  
+- 🇮🇳 Tamil  
+- 🌍 English  
+
+Designed for **farmers, supervisors, and analysts**
+
+---
+
+## ⚙️ Technology Stack
+
+### 🧱 Hardware
 - ESP32-WROOM-32  
-- SIM800L GSM module  
+- SIM800L GSM  
 - NEO-6M GPS  
-- NPK, pH, moisture, temperature sensors  
-- Solar–battery hybrid power system  
+- NPK, pH, Moisture, Temperature Sensors  
+- Solar–Battery Hybrid Power  
 
-### AI / Machine Learning
-- YOLOv8n
-- Random Forest  
-- MobileNetV3
+### 🧠 AI / ML
+- YOLOv8n  
+- MobileNetV3  
 - ShuffleNetV2  
-- XGBoost
-- CatBoost
+- Random Forest  
+- XGBoost / CatBoost  
 - TensorFlow Lite  
 - OpenCV  
 
-### Mobile & Frontend
+### 📱 Mobile & Frontend
 - React Native  
-- SQLite (local storage)  
+- SQLite  
 
-### Backend & Tools
+### 🖥️ Backend & Tools
 - Node.js  
 - Firebase  
 - Google Cloud Platform  
@@ -130,32 +156,64 @@ Objective grading and valuation of processed tea powders to replace subjective a
 
 ---
 
-## Installation & Deployment (High Level)
+## 🚀 Deployment (High Level)
 
-1. **IoT Units**
-   - Flash ESP32 firmware with TRI rule configuration  
-   - Calibrate sensors using standard solutions  
-
-2. **Mobile Application**
-   - Install APK on Android device
-   - Pair with IoT units via Bluetooth  
-
-3. **Data Handling**
-   - Store logs locally on SD card  
-   - Optional cloud sync for analytics  
+1️⃣ Flash ESP32 firmware with TRI rules  
+2️⃣ Calibrate sensors using standard solutions  
+3️⃣ Install Android APK  
+4️⃣ Pair IoT units via Bluetooth  
+5️⃣ Operate fully offline or sync to cloud  
 
 ---
 
-## Contributors
+## 👥 Contributors
 
-- **Kajanthan Kirubakaran (IT22197214)** – Tea Leaf Disease Detection & Environmental Monitoring
-- **Kanzurrizk M R A (IT22166524)** – Tea Leaf Maturity Detection & Yield Decision Support  
-- **Ashwin Visvanathan (IT22204448)** – Soild Monitoring  & Fertilization Management  
-- **Peiris M. D. T. N. (IT22109408)** – Tea Powder Grading & Market Valuation  
+- **Kajanthan Kirubakaran** – Disease Detection & Environmental Monitoring  
+- **Kanzurrizk M R A** – Leaf Maturity & Yield Decision Support  
+- **Ashwin Visvanathan** – Soil Monitoring & Fertilization  
+- **Peiris M. D. T. N.** – Tea Powder Grading & Valuation  
 
 ---
 
-## Research Context
+## 📚 Research Context
 
-This project is developed as part of an undergraduate research initiative focused on applying **AI, IoT, and Explainable ML** to real-world agricultural decision systems in Sri Lanka.
+This project is developed as part of an **undergraduate research initiative** applying:
+
+> **AI • IoT • Explainable Machine Learning**  
+to **real-world agricultural decision systems** in Sri Lanka 🇱🇰
+
+---
+
+<div align="center">
+
+🌱 *From leaf to market — intelligently, transparently, offline.* 🤖  
+
+</div>
+
+<div align="center">
+
+   
+🔮 Upcoming Enhancements — iTeaBot (Next Phase) 📌
+
+</div>
+
+🤖 iTeaBot: Intelligent Assistant (Planned Extension)
+
+                 🚧  iTeaBot — Under Development  🚧
+            ───────────────────────────────────────────
+
+                  🤖
+                ┌───────────────────────┐
+                │  Hi! I’m evolving…    │
+                │ Soon I’ll explain,    │
+                │ predict & guide tea   │
+                │ decisions in real time│
+                └──────────┬────────────┘
+                           │
+                      🤖  iTeaBot
+                           │
+        ───────────────────┼──────────────────────────
+        🌱 Soil   📸 Leaf   🌧️ Climate   📊 Yield   ☕ Powder
+
+
 

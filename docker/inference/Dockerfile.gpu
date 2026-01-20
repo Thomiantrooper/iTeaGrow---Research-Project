@@ -1,0 +1,56 @@
+# Tea Leaf Disease Detection Platform - Inference Service (GPU)
+# CUDA-enabled build for accelerated inference
+
+FROM nvidia/cuda:11.8-cudnn8-runtime-ubuntu22.04 as runtime
+
+LABEL maintainer="Tea Leaf Disease Detection Team"
+LABEL version="1.0.0"
+LABEL description="GPU-accelerated Inference Service with YOLOv8n"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 \
+    python3-pip \
+    python3.10-venv \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean \
+    && ln -s /usr/bin/python3.10 /usr/bin/python
+
+RUN useradd --create-home --shell /bin/bash appuser
+
+WORKDIR /app
+
+COPY requirements-inference-gpu.txt .
+
+RUN pip install --no-cache-dir -r requirements-inference-gpu.txt
+
+COPY configs/ ./configs/
+COPY src/core/ ./src/core/
+COPY src/api/schemas.py ./src/api/
+COPY src/services/inference/ ./src/services/inference/
+COPY models/ ./models/
+
+RUN mkdir -p /app/storage /app/cache \
+    && chown -R appuser:appuser /app
+
+USER appuser
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
+ENV CUDA_VISIBLE_DEVICES=0
+
+EXPOSE 8001
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+CMD ["uvicorn", "src.services.inference.service:app", "--host", "0.0.0.0", "--port", "8001"]
