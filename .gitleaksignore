@@ -1,0 +1,25 @@
+# =============================================================================
+# GITLEAKS IGNORE FILE
+# =============================================================================
+# Patterns for known false positives in secret scanning
+# Format: commit:file:line or fingerprint
+# =============================================================================
+
+# Example entries (uncomment and modify as needed):
+
+# Ignore specific commits with known false positives
+# abc123def456:path/to/file.py:42
+
+# Ignore test fixtures
+# **/tests/fixtures/**
+# **/test_data/**
+
+# Ignore example/sample configuration
+# **/*.example
+# **/sample_config.*
+
+# Ignore documentation with example values
+# **/docs/**
+
+# Known false positives in this repository:
+# (Add specific fingerprints as they're identified)

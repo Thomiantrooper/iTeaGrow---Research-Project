@@ -1,0 +1,279 @@
+# =============================================================================
+# RELEASE WORKFLOW
+# =============================================================================
+# Purpose: Automated release management with changelog generation
+# Triggers: Manual dispatch or push of version tags
+# =============================================================================
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            IS_PRERELEASE="${{ github.event.inputs.prerelease }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            # Check if it's a prerelease (contains alpha, beta, rc)
+            if [[ "$VERSION" =~ (alpha|beta|rc) ]]; then
+              IS_PRERELEASE="true"
+            else
+              IS_PRERELEASE="false"
+            fi
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+
+          echo "## Release Info" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- Pre-release: $IS_PRERELEASE" >> $GITHUB_STEP_SUMMARY
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "::error::Invalid version format: $VERSION"
+            echo "Version must follow semantic versioning (e.g., 1.2.3 or 1.2.3-beta.1)"
+            exit 1
+          fi
+
+
+  build-artifacts:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: [validate]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Build Python package
+        run: |
+          pip install build
+          python -m build || echo "No setup.py/pyproject.toml build configured"
+        continue-on-error: true
+
+      - name: Upload Python artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-dist
+          path: dist/
+          retention-days: 5
+        if: success()
+        continue-on-error: true
+
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [validate]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/gateway
+          tags: |
+            type=semver,pattern={{version}},value=v${{ needs.validate.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ needs.validate.outputs.version }}
+            type=semver,pattern={{major}},value=v${{ needs.validate.outputs.version }}
+            type=raw,value=latest,enable=${{ needs.validate.outputs.is_prerelease == 'false' }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/gateway/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+  changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    needs: [validate]
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            # First release - get all commits
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            # Get commits since last tag
+            COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # Categorize commits
+          FEATURES=$(echo "$COMMITS" | grep -i "^- feat" || true)
+          FIXES=$(echo "$COMMITS" | grep -i "^- fix" || true)
+          DOCS=$(echo "$COMMITS" | grep -i "^- docs" || true)
+          CHORES=$(echo "$COMMITS" | grep -i "^- chore\|^- ci\|^- build" || true)
+          OTHER=$(echo "$COMMITS" | grep -v -i "^- feat\|^- fix\|^- docs\|^- chore\|^- ci\|^- build" || true)
+
+          # Build changelog
+          CHANGELOG="## What's Changed in v${{ needs.validate.outputs.version }}\n\n"
+
+          if [ -n "$FEATURES" ]; then
+            CHANGELOG+="### 🚀 Features\n$FEATURES\n\n"
+          fi
+
+          if [ -n "$FIXES" ]; then
+            CHANGELOG+="### 🐛 Bug Fixes\n$FIXES\n\n"
+          fi
+
+          if [ -n "$DOCS" ]; then
+            CHANGELOG+="### 📚 Documentation\n$DOCS\n\n"
+          fi
+
+          if [ -n "$CHORES" ]; then
+            CHANGELOG+="### 🔧 Maintenance\n$CHORES\n\n"
+          fi
+
+          if [ -n "$OTHER" ]; then
+            CHANGELOG+="### Other Changes\n$OTHER\n\n"
+          fi
+
+          # Add Docker image info
+          CHANGELOG+="### 📦 Docker Images\n"
+          CHANGELOG+="\`\`\`\n"
+          CHANGELOG+="docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/gateway:${{ needs.validate.outputs.version }}\n"
+          CHANGELOG+="\`\`\`\n"
+
+          # Save to output (handle multiline)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [validate, build-artifacts, build-docker, changelog]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+        continue-on-error: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: Release v${{ needs.validate.outputs.version }}
+          body: ${{ needs.changelog.outputs.changelog }}
+          draft: false
+          prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
+          files: |
+            artifacts/**/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  post-release:
+    name: Post-Release Tasks
+    runs-on: ubuntu-latest
+    needs: [validate, release]
+    if: needs.validate.outputs.is_prerelease == 'false'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update version in files
+        run: |
+          # Update version in pyproject.toml if exists
+          if [ -f pyproject.toml ]; then
+            sed -i "s/^version = \".*\"/version = \"${{ needs.validate.outputs.version }}\"/" pyproject.toml
+          fi
+
+          echo "Version updated to ${{ needs.validate.outputs.version }}"
+        continue-on-error: true
+
+      - name: Summary
+        run: |
+          echo "## 🎉 Release v${{ needs.validate.outputs.version }} Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts Published:" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub Release: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.validate.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Image: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/gateway:${{ needs.validate.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
