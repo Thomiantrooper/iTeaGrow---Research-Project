@@ -105,6 +105,16 @@ class DiseaseDetection(BaseModel):
     infected_count: Optional[int] = None
     health_percentage: Optional[float] = None
     disease_counts: Optional[dict] = None
+    # NEW: Location and Device Metadata for production tracking
+    location_lat: Optional[float] = Field(default=None, description="GPS latitude")
+    location_lng: Optional[float] = Field(default=None, description="GPS longitude")
+    location_accuracy: Optional[float] = Field(default=None, description="GPS accuracy in meters")
+    plantation_id: Optional[str] = Field(default=None, description="Reference to plantation")
+    device_type: Optional[str] = Field(default=None, description="Device type (Android/iOS)")
+    device_model: Optional[str] = Field(default=None, description="Device model")
+    app_version: Optional[str] = Field(default=None, description="Mobile app version")
+    image_resolution: Optional[str] = Field(default=None, description="Original image resolution")
+    image_size_kb: Optional[float] = Field(default=None, description="Image file size in KB")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -126,6 +136,16 @@ class DiseaseDetectionCreate(BaseModel):
     processing_time_ms: Optional[float] = None
     model_version: Optional[str] = None
     request_id: Optional[str] = None
+    # NEW: Location and device metadata
+    location_lat: Optional[float] = None
+    location_lng: Optional[float] = None
+    location_accuracy: Optional[float] = None
+    plantation_id: Optional[str] = None
+    device_type: Optional[str] = None
+    device_model: Optional[str] = None
+    app_version: Optional[str] = None
+    image_resolution: Optional[str] = None
+    image_size_kb: Optional[float] = None
 
 # IoT Data Models
 class IoTDataPoint(BaseModel):

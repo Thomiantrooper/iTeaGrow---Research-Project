@@ -17,13 +17,18 @@ class ImageQualityChecker:
 
     def __init__(
         self,
-        min_blur_score: float = 0.3,
-        min_brightness: float = 0.15,
-        max_brightness: float = 0.85,
-        min_contrast: float = 0.2,
+        min_blur_score: float = 0.5,  # Stricter: increased from 0.3 to 0.5
+        min_brightness: float = 0.20,  # Stricter: increased from 0.15 to 0.20
+        max_brightness: float = 0.80,  # Stricter: decreased from 0.85 to 0.80
+        min_contrast: float = 0.25,  # Stricter: increased from 0.2 to 0.25
     ):
         """
-        Initialize quality checker with thresholds.
+        Initialize quality checker with STRICTER production-grade thresholds.
+
+        Production-ready thresholds for real-world tea leaf detection:
+        - Higher blur threshold ensures sharp, detailed images
+        - Tighter brightness range for consistent lighting
+        - Higher contrast for better disease feature visibility
 
         Args:
             min_blur_score: Minimum acceptable blur score (higher = sharper)

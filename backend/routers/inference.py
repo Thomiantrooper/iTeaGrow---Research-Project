@@ -57,16 +57,22 @@ def get_model():
 
 
 def get_severity(confidence: float, disease_name: str) -> str:
-    """Determine severity based on confidence and disease type"""
+    """
+    Determine severity based on confidence and disease type.
+    PRODUCTION-GRADE: Stricter thresholds for real-world accuracy.
+    """
     if disease_name.lower() == "healthy":
         return "None"
 
-    if confidence >= 0.85:
-        return "High"
-    elif confidence >= 0.6:
+    # Stricter thresholds for production use
+    if confidence >= 0.80:  # Increased from 0.85 to 0.80
+        return "Critical" if confidence >= 0.90 else "High"
+    elif confidence >= 0.65:  # Increased from 0.6 to 0.65
         return "Medium"
-    else:
+    elif confidence >= 0.45:  # New tier for low confidence
         return "Low"
+    else:
+        return "Uncertain"  # Below 0.45 is too uncertain for action
 
 
 def get_recommendations(disease_name: str, severity: str) -> List[str]:
