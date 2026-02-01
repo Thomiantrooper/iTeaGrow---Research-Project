@@ -1,7 +1,7 @@
 name: iteagrow
-description: "iTeaGrow: AI-IoT System for Tea Leaf Monitoring, Fertilization, and Powder Grading"
+description: "iTeaGrow: AI-powered Tea Leaf Disease Detection with IoT Integration"
 publish_to: 'none'
-version: 1.0.0+1
+version: 2.0.0+2  # Production-ready version
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
