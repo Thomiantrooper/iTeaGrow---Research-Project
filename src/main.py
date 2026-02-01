@@ -18,7 +18,7 @@ from src.api.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
-from src.api.routes import inference, iot, recommendations, sync, health, feedback
+from src.api.routes import inference, iot, recommendations, sync, health, feedback, chatbot
 
 setup_logging(log_level=settings.log_level, json_format=not settings.debug)
 logger = get_logger(__name__)
@@ -67,6 +67,7 @@ in Sri Lankan plantations using AI-powered image analysis.
 
 ### Features
 - **Disease Detection**: YOLOv8n-based multi-leaf object detection
+- **AI Chatbot**: Tea plantation expert powered by Ollama LLM 🤖
 - **Explainability**: Grad-CAM visual explanations for predictions
 - **IoT Integration**: Environmental sensor data processing
 - **Recommendations**: Rule-based disease management advice
@@ -79,6 +80,7 @@ in Sri Lankan plantations using AI-powered image analysis.
 
 ### API Groups
 - `/api/v1/inference`: Disease detection endpoints
+- `/api/v1/chatbot`: AI tea expert chatbot (NEW!)
 - `/api/v1/iot`: Sensor data ingestion
 - `/api/v1/recommendations`: Treatment recommendations
 - `/api/v1/sync`: Data synchronization
@@ -108,6 +110,7 @@ in Sri Lankan plantations using AI-powered image analysis.
     app.include_router(recommendations.router)
     app.include_router(sync.router)
     app.include_router(feedback.router)
+    app.include_router(chatbot.router)  # Tea plantation expert chatbot
 
     @app.exception_handler(BaseAppException)
     async def app_exception_handler(request: Request, exc: BaseAppException):

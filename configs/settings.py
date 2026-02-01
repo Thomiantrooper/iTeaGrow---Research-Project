@@ -141,6 +141,18 @@ class SecuritySettings(BaseSettings):
     model_config = {"env_prefix": "", "extra": "ignore"}
 
 
+class OllamaSettings(BaseSettings):
+    """Ollama LLM configuration settings."""
+
+    url: str = Field(default="http://localhost:11434", alias="OLLAMA_URL")
+    model: str = Field(default="llama3.2:3b", alias="OLLAMA_MODEL")
+    timeout: int = Field(default=120, alias="OLLAMA_TIMEOUT")
+    temperature: float = Field(default=0.7, alias="OLLAMA_TEMPERATURE")
+    max_tokens: int = Field(default=2048, alias="OLLAMA_MAX_TOKENS")
+
+    model_config = {"env_prefix": "", "extra": "ignore"}
+
+
 class AppSettings(BaseSettings):
     """Main application settings."""
 
@@ -159,6 +171,7 @@ class AppSettings(BaseSettings):
     iot: IoTSettings = Field(default_factory=IoTSettings)
     sync: SyncSettings = Field(default_factory=SyncSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
+    ollama: OllamaSettings = Field(default_factory=OllamaSettings)
 
     model_config = {"env_prefix": "", "extra": "ignore", "env_file": ".env"}
 
