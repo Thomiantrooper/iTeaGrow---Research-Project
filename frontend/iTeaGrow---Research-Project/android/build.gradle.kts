@@ -15,8 +15,24 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+// Fix for plugins that use flutter.compileSdkVersion
+subprojects {
+    afterEvaluate {
+        if (project.hasProperty("android")) {
+            val android = project.extensions.findByName("android")
+            if (android != null) {
+                val androidExt = android as com.android.build.gradle.BaseExtension
+                if (androidExt.compileSdkVersion == null) {
+                    androidExt.compileSdkVersion(34)
+                }
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
