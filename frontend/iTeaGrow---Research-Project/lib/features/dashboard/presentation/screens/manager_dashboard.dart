@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:iteagrow/core/theme/app_theme.dart';
-import 'package:iteagrow/core/widgets/dashboard_card.dart';
 import 'package:iteagrow/features/auth/presentation/providers/auth_provider.dart';
 import 'package:iteagrow/features/public/presentation/landing/landing_page.dart';
 import 'package:iteagrow/features/leaf_maturity/presentation/screens/leaf_maturity_screen.dart';
 import 'package:iteagrow/features/disease_detection/presentation/screens/disease_detection_screen.dart';
 import 'package:iteagrow/features/soil_fertilization/presentation/screens/soil_fertilization_screen.dart';
-import 'package:iteagrow/features/yield_prediction/presentation/screens/what_if_simulation_screen.dart';
+import 'package:iteagrow/features/yield_prediction/presentation/screens/yield_prediction_screen.dart';
 import 'package:iteagrow/features/dashboard/presentation/screens/analytics_screen.dart';
 import 'package:iteagrow/features/powder_grading/presentation/screens/powder_grading_screen.dart';
 
@@ -18,7 +16,7 @@ class ManagerDashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manager Console'),
+        title: const Text('Manager Dashboard'),
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -40,22 +38,23 @@ class ManagerDashboard extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-             UserAccountsDrawerHeader(
+            UserAccountsDrawerHeader(
               accountName: const Text('Estate Manager'),
               accountEmail: const Text('manager@iteagrow.com'),
-              currentAccountPicture: const CircleAvatar(child: Icon(Icons.admin_panel_settings)),
+              currentAccountPicture:
+                  const CircleAvatar(child: Icon(Icons.admin_panel_settings)),
               decoration: BoxDecoration(color: Colors.purple.shade700),
             ),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
               onTap: () {
-                 ref.read(currentUserProvider.notifier).state = null;
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LandingPage()),
-                    (route) => false,
-                  );
+                ref.read(currentUserProvider.notifier).state = null;
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LandingPage()),
+                  (route) => false,
+                );
               },
             ),
           ],
@@ -74,12 +73,12 @@ class ManagerDashboard extends ConsumerWidget {
                   Text(
                     'Strategic Planning',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.purple.shade800,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple.shade800,
+                        ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Hero Row (Fixed Height)
                   SizedBox(
                     height: 180,
@@ -90,19 +89,29 @@ class ManagerDashboard extends ConsumerWidget {
                           child: Card(
                             color: Colors.purple,
                             elevation: 4,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
                             child: InkWell(
                               onTap: () => Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const WhatIfSimulationScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const YieldPredictionScreen()),
                               ),
                               child: const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.query_stats, color: Colors.white, size: 48),
+                                  Icon(Icons.query_stats,
+                                      color: Colors.white, size: 48),
                                   SizedBox(height: 12),
-                                  Text('Yield Prediction', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                  Text('Simulation', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                  Text('Predict Yield',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold)),
+                                  Text('Analysis & Reports',
+                                      style: TextStyle(
+                                          color: Colors.white70, fontSize: 12)),
                                 ],
                               ),
                             ),
@@ -114,19 +123,29 @@ class ManagerDashboard extends ConsumerWidget {
                           child: Card(
                             color: Colors.orange,
                             elevation: 4,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
                             child: InkWell(
                               onTap: () => Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const PowderGradingScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const PowderGradingScreen()),
                               ),
                               child: const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.grade, color: Colors.white, size: 48),
+                                  Icon(Icons.grade,
+                                      color: Colors.white, size: 48),
                                   SizedBox(height: 12),
-                                  Text('In-Depth Grading', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                  Text('Quality Analysis', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                  Text('In-Depth Grading',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold)),
+                                  Text('Quality Analysis',
+                                      style: TextStyle(
+                                          color: Colors.white70, fontSize: 12)),
                                 ],
                               ),
                             ),
@@ -135,15 +154,15 @@ class ManagerDashboard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   Text(
                     'Tools',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.purple.shade800,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple.shade800,
+                        ),
                   ),
                   const SizedBox(height: 12),
 
@@ -156,13 +175,49 @@ class ManagerDashboard extends ConsumerWidget {
                     crossAxisSpacing: 12,
                     childAspectRatio: 2.5,
                     children: [
-                      _buildToolButton(context, 'Full Analytics', Icons.bar_chart, Colors.teal, () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AnalyticsScreen()))),
-                      _buildToolButton(context, 'Disease Reports', Icons.bug_report, Colors.red, () => Navigator.push(context, MaterialPageRoute(builder: (context) => const DiseaseDetectionScreen()))),
-                      _buildToolButton(context, 'Soil Health', Icons.terrain, Colors.brown, () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SoilFertilizationScreen()))),
-                      _buildToolButton(context, 'Leaf Maturity', Icons.eco, Colors.green, () => Navigator.push(context, MaterialPageRoute(builder: (context) => const LeafMaturityScreen()))),
+                      _buildToolButton(
+                          context,
+                          'Full Analytics',
+                          Icons.bar_chart,
+                          Colors.teal,
+                          () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AnalyticsScreen()))),
+                      _buildToolButton(
+                          context,
+                          'Disease Reports',
+                          Icons.bug_report,
+                          Colors.red,
+                          () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const DiseaseDetectionScreen()))),
+                      _buildToolButton(
+                          context,
+                          'Soil Health',
+                          Icons.terrain,
+                          Colors.brown,
+                          () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const SoilFertilizationScreen()))),
+                      _buildToolButton(
+                          context,
+                          'Leaf Maturity',
+                          Icons.eco,
+                          Colors.green,
+                          () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const LeafMaturityScreen()))),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 32),
                 ],
               ),
@@ -173,13 +228,13 @@ class ManagerDashboard extends ConsumerWidget {
     );
   }
 
-
-
-  Widget _buildToolButton(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildToolButton(BuildContext context, String title, IconData icon,
+      Color color, VoidCallback onTap) {
     return OutlinedButton.icon(
       onPressed: onTap,
       icon: Icon(icon, color: color, size: 20),
-      label: Text(title, style: const TextStyle(fontSize: 12, color: Colors.black87)),
+      label: Text(title,
+          style: const TextStyle(fontSize: 12, color: Colors.black87)),
       style: OutlinedButton.styleFrom(
         side: BorderSide(color: color.withOpacity(0.3)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
