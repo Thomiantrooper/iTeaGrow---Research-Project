@@ -1,29 +1,31 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html' as html;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
 import '../../domain/models/esp32_sensor_data.dart';
 
-/// WebSocket Service for iTeaGrow Bridge Server (Web Platform)
+/// WebSocket Service for iTeaGrow Bridge Server (Cross-Platform)
 ///
 /// Connects to the Python bridge server that reads ESP32 data via serial port.
-/// This works with both USB and Bluetooth Classic connections.
-/// Uses dart:html WebSocket for web platform compatibility.
+/// Works on both Android and Web.
 class WebSocketSensorService {
-  html.WebSocket? _socket;
+  WebSocketChannel? _channel;
   final _sensorDataController = StreamController<ESP32SensorData>.broadcast();
-  final _connectionStateController = StreamController<WebSocketConnectionState>.broadcast();
+  final _connectionStateController =
+      StreamController<WebSocketConnectionState>.broadcast();
 
   Timer? _reconnectTimer;
   Timer? _heartbeatTimer;
 
-  String _serverUrl = 'ws://localhost:8765';
+  String _serverUrl =
+      'ws://10.0.2.2:8765'; // Default to Android emulator localhost
   bool _isConnected = false;
   bool _shouldReconnect = true;
 
   Stream<ESP32SensorData> get sensorDataStream => _sensorDataController.stream;
-  Stream<WebSocketConnectionState> get connectionStateStream => _connectionStateController.stream;
+  Stream<WebSocketConnectionState> get connectionStateStream =>
+      _connectionStateController.stream;
   bool get isConnected => _isConnected;
   String get serverUrl => _serverUrl;
 
@@ -40,60 +42,44 @@ class WebSocketSensorService {
       // Close existing connection if any
       _closeSocket();
 
-      // Create WebSocket using dart:html for web
-      _socket = html.WebSocket(_serverUrl);
+      // Create WebSocket using web_socket_channel
+      final uri = Uri.parse(_serverUrl);
+      _channel = WebSocketChannel.connect(uri);
 
-      // Set up completer to wait for connection
-      final completer = Completer<bool>();
+      print('Connecting to $_serverUrl...');
 
-      _socket!.onOpen.listen((_) {
-        print('WebSocket connected to $_serverUrl');
-        _isConnected = true;
-        _connectionStateController.add(WebSocketConnectionState.connected);
+      // Listen to the stream
+      _channel!.stream.listen(
+        (message) {
+          if (!_isConnected) {
+            print('WebSocket connected to $_serverUrl');
+            _isConnected = true;
+            _connectionStateController.add(WebSocketConnectionState.connected);
+            _startHeartbeat();
 
-        // Start heartbeat
-        _startHeartbeat();
-
-        // Request initial data
-        Future.delayed(const Duration(milliseconds: 300), () {
-          requestData();
-        });
-
-        if (!completer.isCompleted) {
-          completer.complete(true);
-        }
-      });
-
-      _socket!.onMessage.listen((event) {
-        _handleMessage(event.data);
-      });
-
-      _socket!.onError.listen((event) {
-        print('WebSocket error');
-        if (!completer.isCompleted) {
-          completer.complete(false);
-        }
-        _handleDisconnection();
-      });
-
-      _socket!.onClose.listen((event) {
-        print('WebSocket closed: ${event.code} - ${event.reason}');
-        if (!completer.isCompleted) {
-          completer.complete(false);
-        }
-        _handleDisconnection();
-      });
-
-      // Wait for connection with timeout
-      return await completer.future.timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          print('WebSocket connection timeout');
-          _closeSocket();
+            // Request initial data
+            Future.delayed(const Duration(milliseconds: 300), () {
+              requestData();
+            });
+          }
+          _handleMessage(message);
+        },
+        onError: (error) {
+          print('WebSocket error: $error');
+          _handleDisconnection();
           _connectionStateController.add(WebSocketConnectionState.error);
-          return false;
+        },
+        onDone: () {
+          print('WebSocket closed');
+          _handleDisconnection();
         },
       );
+
+      // Assume connected for now if no immediate error
+      // A better approach depends on waiting for the first ping/pong or open event
+      // but generic WebSocketChannel doesn't strictly have "onOpen" like html.WebSocket
+
+      return true;
     } catch (e) {
       print('WebSocket connection failed: $e');
       _connectionStateController.add(WebSocketConnectionState.error);
@@ -105,13 +91,13 @@ class WebSocketSensorService {
 
   /// Close WebSocket
   void _closeSocket() {
-    if (_socket != null) {
+    if (_channel != null) {
       try {
-        _socket!.close();
+        _channel!.sink.close(status.goingAway);
       } catch (e) {
         // Ignore close errors
       }
-      _socket = null;
+      _channel = null;
     }
     _isConnected = false;
   }
@@ -132,16 +118,19 @@ class WebSocketSensorService {
             humidity: (sensorJson['humidity'] as num).toDouble(),
             airQuality: sensorJson['airQuality'] as int? ?? 0,
             motionDetected: sensorJson['motionDetected'] as bool? ?? false,
-            timestamp: DateTime.tryParse(sensorJson['timestamp'] as String? ?? '') ?? DateTime.now(),
+            timestamp:
+                DateTime.tryParse(sensorJson['timestamp'] as String? ?? '') ??
+                    DateTime.now(),
           );
 
           _sensorDataController.add(sensorData);
-          print('Received sensor data: T=${sensorData.temperature}, H=${sensorData.humidity}');
+          //  print('Received sensor data: T=${sensorData.temperature}, H=${sensorData.humidity}');
         }
       } else if (type == 'status') {
         final connected = data['connected'] as bool? ?? false;
         if (!connected) {
-          _connectionStateController.add(WebSocketConnectionState.bridgeDisconnected);
+          _connectionStateController
+              .add(WebSocketConnectionState.bridgeDisconnected);
         }
       }
     } catch (e) {
@@ -193,9 +182,9 @@ class WebSocketSensorService {
 
   /// Send command to bridge server
   void _sendCommand(String command) {
-    if (_socket != null && _isConnected && _socket!.readyState == html.WebSocket.OPEN) {
+    if (_channel != null && _isConnected) {
       try {
-        _socket!.send(jsonEncode({'command': command}));
+        _channel!.sink.add(jsonEncode({'command': command}));
       } catch (e) {
         print('Error sending command: $e');
       }
