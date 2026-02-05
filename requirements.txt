@@ -4,7 +4,11 @@
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
 pydantic>=2.5.0
-pydantic-settings>=2.1.0
+pydantic-settings>=2.0.0
+
+# JWT Authentication
+python-jose[cryptography]>=3.3.0
+
 
 # ML/Deep Learning
 torch>=2.5.0
@@ -24,6 +28,7 @@ scikit-learn>=1.6.0
 # Storage
 minio>=7.2.0
 boto3>=1.35.0
+motor>=3.3.0
 
 # Queue/Cache
 redis>=5.0.0

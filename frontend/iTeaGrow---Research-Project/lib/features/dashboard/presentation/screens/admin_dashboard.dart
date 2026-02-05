@@ -100,16 +100,16 @@ class AdminDashboard extends ConsumerWidget {
                     MaterialPageRoute(builder: (context) => const SoilFertilizationScreen()),
                   ),
                 ),
-                DashboardCard(
-                  icon: Icons.trending_up,
-                  title: 'Yield Prediction',
-                  subtitle: 'Independent Module',
-                  color: Colors.purple,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const WhatIfSimulationScreen()),
-                  ),
-                ),
+                // DashboardCard(
+                //   icon: Icons.trending_up,
+                //   title: 'Yield Prediction',
+                //   subtitle: 'Independent Module',
+                //   color: Colors.purple,
+                //   onTap: () => Navigator.push(
+                //     context,
+                //     MaterialPageRoute(builder: (context) => const WhatIfSimulationScreen()),
+                //   ),
+                // ),
                 DashboardCard(
                   icon: Icons.grade,
                   title: 'Powder Grading',

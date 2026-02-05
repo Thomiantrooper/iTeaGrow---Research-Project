@@ -111,53 +111,53 @@ class JarvisTheme {
   // ═══════════════════════════════════════════════════════════════════════════
 
   static List<BoxShadow> get cardShadow => [
-    BoxShadow(
-      color: teaGreenDark.withOpacity(0.08),
-      blurRadius: 20,
-      offset: const Offset(0, 8),
-      spreadRadius: 0,
-    ),
-    BoxShadow(
-      color: Colors.black.withOpacity(0.04),
-      blurRadius: 10,
-      offset: const Offset(0, 4),
-    ),
-  ];
+        BoxShadow(
+          color: teaGreenDark.withOpacity(0.08),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
+          spreadRadius: 0,
+        ),
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ];
 
   static List<BoxShadow> get elevatedShadow => [
-    BoxShadow(
-      color: teaGreenDark.withOpacity(0.15),
-      blurRadius: 30,
-      offset: const Offset(0, 15),
-      spreadRadius: -5,
-    ),
-    BoxShadow(
-      color: Colors.black.withOpacity(0.08),
-      blurRadius: 15,
-      offset: const Offset(0, 8),
-    ),
-  ];
+        BoxShadow(
+          color: teaGreenDark.withOpacity(0.15),
+          blurRadius: 30,
+          offset: const Offset(0, 15),
+          spreadRadius: -5,
+        ),
+        BoxShadow(
+          color: Colors.black.withOpacity(0.08),
+          blurRadius: 15,
+          offset: const Offset(0, 8),
+        ),
+      ];
 
   static List<BoxShadow> get glowShadow => [
-    BoxShadow(
-      color: hologramGreen.withOpacity(0.3),
-      blurRadius: 20,
-      spreadRadius: 2,
-    ),
-    BoxShadow(
-      color: hologramCyan.withOpacity(0.2),
-      blurRadius: 40,
-      spreadRadius: 5,
-    ),
-  ];
+        BoxShadow(
+          color: hologramGreen.withOpacity(0.3),
+          blurRadius: 20,
+          spreadRadius: 2,
+        ),
+        BoxShadow(
+          color: hologramCyan.withOpacity(0.2),
+          blurRadius: 40,
+          spreadRadius: 5,
+        ),
+      ];
 
   static List<BoxShadow> statusGlow(Color color) => [
-    BoxShadow(
-      color: color.withOpacity(0.4),
-      blurRadius: 12,
-      spreadRadius: 2,
-    ),
-  ];
+        BoxShadow(
+          color: color.withOpacity(0.4),
+          blurRadius: 12,
+          spreadRadius: 2,
+        ),
+      ];
 
   // ═══════════════════════════════════════════════════════════════════════════
   // BORDER RADIUS
@@ -245,7 +245,7 @@ class JarvisTheme {
       ),
 
       // Cards
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: mistWhitePure,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -353,7 +353,8 @@ class JarvisTheme {
         selectedColor: teaGreenLight,
         labelStyle: const TextStyle(color: textPrimary),
         secondaryLabelStyle: const TextStyle(color: textOnPrimary),
-        padding: const EdgeInsets.symmetric(horizontal: spacingSm, vertical: spacingXs),
+        padding: const EdgeInsets.symmetric(
+            horizontal: spacingSm, vertical: spacingXs),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusRound),
         ),
@@ -384,7 +385,7 @@ class JarvisTheme {
       ),
 
       // Dialog
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: mistWhitePure,
         elevation: 8,
         shape: RoundedRectangleBorder(
@@ -520,7 +521,6 @@ class JarvisTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-
       colorScheme: const ColorScheme.dark(
         primary: teaGreenLight,
         onPrimary: darkBg,
@@ -533,9 +533,7 @@ class JarvisTheme {
         onSurface: textOnDark,
         error: critical,
       ),
-
       scaffoldBackgroundColor: darkBg,
-
       appBarTheme: AppBarTheme(
         backgroundColor: darkSurface,
         foregroundColor: textOnDark,
@@ -547,15 +545,13 @@ class JarvisTheme {
           ),
         ),
       ),
-
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: darkCard,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
         ),
       ),
-
       fontFamily: 'Poppins',
     );
   }
