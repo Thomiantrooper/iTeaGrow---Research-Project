@@ -4,10 +4,10 @@ import 'dart:io' show Platform;
 /// API Configuration for Tea Leaf Disease Detection Backend
 class ApiConfig {
   // =========================================================================
-  // PRODUCTION URL - Your Railway deployed backend
-  // Update this URL after deploying to Railway
+  // PRODUCTION URL - Railway Disease Detection API
+  // Update after deploying railway-disease-api folder
   // =========================================================================
-  static const String productionBaseUrl = 'https://iteagrow-disease-detection.up.railway.app';
+  static const String productionBaseUrl = 'https://iteagrow-disease-api-production.up.railway.app';
 
   // Set to true to always use production backend (recommended for mobile app)
   static const bool useProductionBackend = true;
