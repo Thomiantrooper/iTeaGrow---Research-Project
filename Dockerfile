@@ -32,8 +32,8 @@ COPY configs/ ./configs/
 COPY src/ ./src/
 COPY backend/ ./backend/
 
-# Copy the trained model
-COPY runs/detect/runs/detect/max_accuracy/tealeaf_95/weights/best.pt ./models/best.pt
+# Copy the trained model (from models/ directory in repo)
+COPY models/best.pt ./models/best.pt
 
 # Create storage directories
 RUN mkdir -p /app/storage /app/cache
