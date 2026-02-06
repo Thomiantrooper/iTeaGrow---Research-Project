@@ -26,7 +26,7 @@ async def connect_to_mongo():
         await db.db.iot_data.create_index("device_id")
         await db.db.iot_data.create_index("timestamp")
 
-        print(f"Connected to MongoDB at {settings.MONGODB_URL}")
+        print("[SUCCESS] Connected to Remote MongoDB (Atlas)")
     except Exception as e:
         print(f"[WARNING] Could not connect to MongoDB: {e}")
         print("[WARNING] Running without database persistence.")

@@ -3,7 +3,7 @@ title Tea Leaf Disease Detection - Starting Services
 
 echo.
 echo ========================================
-echo   Tea Leaf Disease Detection Platform
+echo   iTeaGrow Platform
 echo ========================================
 echo.
 

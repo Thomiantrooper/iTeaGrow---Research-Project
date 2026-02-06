@@ -38,7 +38,7 @@ function Show-Help {
 if ($Help) { Show-Help }
 
 Write-Color "`n========================================" "Cyan"
-Write-Color "  Tea Leaf Disease Detection Platform" "Cyan"
+Write-Color "  iTeaGrow Platform" "Cyan"
 Write-Color "========================================`n" "Cyan"
 
 # Get script directory
