@@ -1,0 +1,21 @@
+# Ignore unnecessary files for Railway deployment
+disease_env/
+frontend/
+.git/
+__pycache__/
+*.pyc
+*.pyo
+.env.local
+.env.development
+*.log
+.vscode/
+.idea/
+*.md
+tests/
+docs/
+notebooks/
+docker/
+runs/detect/runs/train/
+runs/detect/tea_leaf_gpu/
+yolov8n.pt
+yolov8s.pt
