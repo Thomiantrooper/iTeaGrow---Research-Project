@@ -17,6 +17,11 @@ import '../../features/profile/presentation/screens/premium_profile_screen.dart'
 import '../../features/iot_connectivity/presentation/screens/premium_iot_screen.dart';
 import '../../features/leaf_maturity/presentation/screens/leaf_maturity_screen.dart';
 import '../../features/yield_prediction/presentation/screens/yield_prediction_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/help/presentation/screens/help_center_screen.dart';
+import '../../features/activity/presentation/screens/activity_history_screen.dart';
+import '../../features/chatbot/presentation/screens/chatbot_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/data/providers/auth_provider.dart';
 import '../enums/app_enums.dart';
 import '../animations/tea_animations.dart';
@@ -70,7 +75,7 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
       final currentPath = state.matchedLocation;
 
       // Public routes that don't require authentication
-      final publicRoutes = ['/splash', '/login', '/register'];
+      final publicRoutes = ['/splash', '/login', '/register', '/forgot-password'];
       final isPublicRoute = publicRoutes.contains(currentPath);
 
       // If auth is still loading, let them stay on splash
@@ -247,6 +252,51 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
         path: '/yield-prediction',
         pageBuilder: (context, state) => _buildPremiumTransition(
           child: const YieldPredictionScreen(),
+          state: state,
+        ),
+      ),
+
+      // Notifications
+      GoRoute(
+        path: '/notifications',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const NotificationsScreen(),
+          state: state,
+        ),
+      ),
+
+      // Help Center
+      GoRoute(
+        path: '/help-center',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const HelpCenterScreen(),
+          state: state,
+        ),
+      ),
+
+      // Activity History
+      GoRoute(
+        path: '/activity-history',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const ActivityHistoryScreen(),
+          state: state,
+        ),
+      ),
+
+      // Chatbot
+      GoRoute(
+        path: '/chatbot',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const ChatbotScreen(),
+          state: state,
+        ),
+      ),
+
+      // Forgot Password
+      GoRoute(
+        path: '/forgot-password',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const ForgotPasswordScreen(),
           state: state,
         ),
       ),

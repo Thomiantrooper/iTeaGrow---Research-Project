@@ -70,7 +70,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                     icon: Icons.security,
                     title: 'Security',
                     subtitle: 'Two-factor authentication, login history',
-                    onTap: () => TeaSnackbar.info(context, 'Security settings coming soon!'),
+                    onTap: () => context.push('/activity-history'),
                   ),
                 ],
               ),
@@ -234,7 +234,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                     icon: Icons.help_outline,
                     title: 'Help Center',
                     subtitle: 'FAQs and guides',
-                    onTap: () => TeaSnackbar.info(context, 'Help center coming soon!'),
+                    onTap: () => context.push('/help-center'),
                   ),
                   const Divider(height: 1),
                   _buildSettingsTile(
