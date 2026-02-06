@@ -110,7 +110,7 @@ class DiseaseDetectionMLService {
     }
 
     // Offline fallback with dummy data
-    print('>>> USING OFFLINE MODE (FAKE DATA) <<<');
+    print('>>> USING OFFLINE MODE ( DATA) <<<');
     return _predictOffline(
       imagePath,
       liveTemperature: liveTemperature,
