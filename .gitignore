@@ -76,6 +76,9 @@ weights/
 *.pkl
 *.joblib
 
+# EXCEPTION: Production model for Railway deployment
+!models/best.pt
+
 # Training runs (keep plots, ignore weights)
 runs/**/weights/
 runs/**/*.pt

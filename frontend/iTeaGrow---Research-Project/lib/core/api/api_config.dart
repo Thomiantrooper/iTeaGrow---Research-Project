@@ -1,17 +1,29 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'dart:io' show Platform;
 
 /// API Configuration for Tea Leaf Disease Detection Backend
 class ApiConfig {
-  // Base URL - Automatically detects platform
-  // Web: Uses localhost
-  // Android Emulator: Uses 10.0.2.2
-  // Physical device/iOS: Use your computer's IP address
+  // =========================================================================
+  // PRODUCTION URL - Railway Disease Detection API
+  // Update after deploying railway-disease-api folder
+  // =========================================================================
+  static const String productionBaseUrl = 'https://iteagrow-disease-api-production.up.railway.app';
+
+  // Set to true to always use production backend (recommended for mobile app)
+  static const bool useProductionBackend = true;
+
+  // Base URL - Automatically detects platform and mode
   static String get baseUrl {
+    // In release mode or if production backend is enabled, use production URL
+    if (kReleaseMode || useProductionBackend) {
+      return productionBaseUrl;
+    }
+
+    // Development mode - use local backend
     if (kIsWeb) {
       return 'http://localhost:8000';
     }
-    // For mobile platforms
+    // For mobile platforms in debug mode
     try {
       if (Platform.isAndroid) {
         // Android emulator uses 10.0.2.2 to reach host machine

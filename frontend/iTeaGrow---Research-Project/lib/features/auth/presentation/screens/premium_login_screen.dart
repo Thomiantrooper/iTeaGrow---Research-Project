@@ -335,8 +335,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                   // Forgot password
                   TextButton(
                     onPressed: () {
-                      // TODO: Implement forgot password
-                      TeaSnackbar.info(context, 'Coming soon!');
+                      context.push('/forgot-password');
                     },
                     child: Text(
                       'Forgot Password?',

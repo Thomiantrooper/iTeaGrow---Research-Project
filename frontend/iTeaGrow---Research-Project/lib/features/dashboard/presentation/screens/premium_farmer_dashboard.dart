@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/widgets/jarvis_assistant.dart';
 import '../../../../core/animations/tea_animations.dart';
 import '../../../../core/providers/global_iot_provider.dart';
 import '../../../auth/data/providers/auth_provider.dart';
@@ -21,6 +22,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   bool _isScrolled = false;
+  bool _isChatbotActive = false;
 
   @override
   void initState() {
@@ -105,6 +107,16 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
+      floatingActionButton: JarvisFloatingButton(
+        isActive: _isChatbotActive,
+        onPressed: () {
+          setState(() => _isChatbotActive = !_isChatbotActive);
+          context.push('/chatbot');
+        },
+        onLongPress: () {
+          TeaSnackbar.info(context, 'Hold to activate voice assistant');
+        },
+      ),
     );
   }
 
@@ -150,7 +162,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
         TeaIconButton(
           icon: Icons.notifications_outlined,
           onPressed: () {
-            TeaSnackbar.info(context, 'Notifications coming soon!');
+            context.push('/notifications');
           },
           hasBadge: true,
           badgeText: '3',
@@ -602,7 +614,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           icon: Icons.warning_amber_outlined,
           actionLabel: 'See all',
           onAction: () {
-            TeaSnackbar.info(context, 'All alerts coming soon!');
+            context.push('/notifications');
           },
         ),
         const SizedBox(height: TeaSpacing.sm),
@@ -734,7 +746,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           icon: Icons.history,
           actionLabel: 'View all',
           onAction: () {
-            TeaSnackbar.info(context, 'Activity history coming soon!');
+            context.push('/activity-history');
           },
         ),
         const SizedBox(height: TeaSpacing.sm),
@@ -966,7 +978,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                 title: const Text('Help & Support'),
                 onTap: () {
                   Navigator.pop(context);
-                  TeaSnackbar.info(context, 'Help center coming soon!');
+                  context.push('/help-center');
                 },
               ),
               ListTile(
