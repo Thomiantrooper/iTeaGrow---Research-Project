@@ -69,6 +69,22 @@ class ApiConfig {
   static String get diseaseStatisticsDetailed => '$effectiveBaseUrl/api/disease/statistics/detailed';
   static String get diseaseRecent => '$effectiveBaseUrl/api/disease/recent';
 
+  // Yield Prediction API (Railway Production)
+  static const String yieldPredictionBaseUrl =
+      'https://iteagrow-tea-yield-prod.up.railway.app';
+  static String get yieldPredictionHealth => '$yieldPredictionBaseUrl/health';
+  static String get yieldPredictionPredict =>
+      '$yieldPredictionBaseUrl/api/v1/predict';
+  static String get yieldPredictionWeather =>
+      '$yieldPredictionBaseUrl/api/v1/weather';
+  static String get yieldPredictionDatabaseStatus =>
+      '$yieldPredictionBaseUrl/database/status';
+  static String get yieldPredictionRecent =>
+      '$yieldPredictionBaseUrl/database/predictions/recent';
+  static String get yieldPredictionAnalytics =>
+      '$yieldPredictionBaseUrl/database/analytics/summary';
+  static String get yieldPredictionStore => '$apiBaseUrl/yield/records';
+
   // Timeouts (in seconds)
   static const int connectionTimeout = 30;
   static const int receiveTimeout = 60;

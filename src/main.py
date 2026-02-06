@@ -19,7 +19,7 @@ from src.api.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
-from src.api.routes import inference, iot, recommendations, sync, health, feedback, chatbot, bluetooth
+from src.api.routes import inference, iot, recommendations, sync, health, feedback, chatbot, bluetooth, users
 
 setup_logging(log_level=settings.log_level, json_format=not settings.debug)
 logger = get_logger(__name__)
@@ -39,6 +39,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         logger.warning("Application will run without database persistence")
 
     # Load disease detection model
+    try:
+        from src.services.database.mongo_db import connect_to_mongo, close_mongo_connection
+        await connect_to_mongo()
+        logger.info("Connected to MongoDB")
+        
+        # Seed default users
+        from src.services.database.user_db import get_user_db
+        await get_user_db()._seed_default_users()
+        logger.info("Default users seeded")
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {e}")
+
     try:
         from src.services.inference import TeaLeafDetector
         detector = TeaLeafDetector()
@@ -60,7 +72,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
     yield
 
-    # Shutdown
+    await close_mongo_connection()
+
     logger.info("Application shutdown initiated")
 
     # Close MongoDB connection
@@ -123,7 +136,12 @@ in Sri Lankan plantations using AI-powered image analysis.
     app.add_middleware(RequestLoggingMiddleware)
 
     app.include_router(health.router)
+    app.include_router(users.router)
     app.include_router(inference.router)
+    
+    from src.api.routes import yield_routes
+    app.include_router(yield_routes.router)
+    
     app.include_router(iot.router)
     app.include_router(recommendations.router)
     app.include_router(sync.router)

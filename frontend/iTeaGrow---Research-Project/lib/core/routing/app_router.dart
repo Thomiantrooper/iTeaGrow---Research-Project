@@ -13,11 +13,14 @@ import '../../features/disease_detection/presentation/screens/enhanced_disease_d
 import '../../features/auth/data/providers/auth_provider_simple.dart';
 import '../enums/app_enums.dart';
 
+import '../../features/yield_prediction/presentation/screens/yield_prediction_screen.dart';
+
 // Auth state notifier for GoRouter to listen to
 class AuthChangeNotifier extends ChangeNotifier {
   AuthChangeNotifier(this._ref) {
     _ref.listen(authStateSimpleProvider, (previous, next) {
-      debugPrint('AuthChangeNotifier: Auth state changed! previous=$previous, next=$next');
+      debugPrint(
+          'AuthChangeNotifier: Auth state changed! previous=$previous, next=$next');
       notifyListeners();
     });
   }
@@ -42,7 +45,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == '/about' ||
           state.matchedLocation == '/contact';
 
-      debugPrint('ROUTER REDIRECT: location=${state.matchedLocation}, isLoggedIn=$isLoggedIn, user=${user?.username}');
+      debugPrint(
+          'ROUTER REDIRECT: location=${state.matchedLocation}, isLoggedIn=$isLoggedIn, user=${user?.username}');
 
       // If not logged in and trying to access protected route, redirect to login
       if (!isLoggedIn && !isPublicRoute && !isLoggingIn) {
@@ -53,7 +57,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // If logged in and trying to access login, redirect to dashboard
       if (isLoggedIn && isLoggingIn) {
         final dashboardRoute = _getDashboardRoute(user.role);
-        debugPrint('ROUTER: User logged in on login page, redirecting to $dashboardRoute');
+        debugPrint(
+            'ROUTER: User logged in on login page, redirecting to $dashboardRoute');
         return dashboardRoute;
       }
 
@@ -101,6 +106,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/disease-detection',
         builder: (context, state) => const EnhancedDiseaseDetectionScreen(),
+      ),
+
+      // Yield Prediction Routes (Manager Only)
+      GoRoute(
+        path: '/yield-prediction',
+        builder: (context, state) {
+          final user = ref.read(authStateSimpleProvider);
+          if (user?.role != UserRole.manager) {
+            return const LoginScreen();
+          }
+          return const YieldPredictionScreen();
+        },
+        routes: [
+          GoRoute(
+            path: 'results', // sub-route: /yield-prediction/results
+            builder: (context, state) {
+              // We need to pass the result object.
+              // Since GoRouter complicates passing complex objects directly via path,
+              // we will rely on the Provider state which already holds the result.
+              // Alternatively, we could pass it as extra.
+              // For now, let's grab it from the provider in the build method
+              // or check if it's passed via extra.
+
+              // Ideally, we redirect back if no result in provider.
+              return const YieldPredictionScreen(); // Placeholder, logic handled in valid screen
+            },
+            // Note: In our screen implementation we push MaterialPageRoute,
+            // so we might not strictly need this sub-route unless we want deep linking.
+            // But good to have for structure.
+          ),
+        ],
       ),
     ],
   );

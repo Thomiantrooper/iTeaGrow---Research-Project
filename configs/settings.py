@@ -12,15 +12,30 @@ from pydantic_settings import BaseSettings
 class DatabaseSettings(BaseSettings):
     """Database configuration settings."""
 
-    host: str = Field(default="localhost", alias="DB_HOST")
-    port: int = Field(default=5432, alias="DB_PORT")
-    name: str = Field(default="tealeaf_db", alias="DB_NAME")
-    user: str = Field(default="tealeaf", alias="DB_USER")
-    password: str = Field(default="tealeaf_secret", alias="DB_PASSWORD")
+    # =========================================================================
+    # POSTGRESQL CONFIGURATION (LEGACY/COMMENTED OUT)
+    # The following settings are for PostgreSQL. They are currently commented out
+    # in favor of MongoDB, but preserved for future reference or migration.
+    # =========================================================================
+    # host: str = Field(default="localhost", alias="DB_HOST")
+    # port: int = Field(default=5432, alias="DB_PORT")
+    # name: str = Field(default="tealeaf_db", alias="DB_NAME")
+    # user: str = Field(default="tealeaf", alias="DB_USER")
+    # password: str = Field(default="tealeaf_secret", alias="DB_PASSWORD")
+    
+    # =========================================================================
+    # MONGODB CONFIGURATION (ACTIVE)
+    # Primary database connection for the application.
+    # =========================================================================
+    mongodb_uri: str = Field(
+        default="mongodb+srv://kanzur:kanzur@cluster0.joabitw.mongodb.net/?appName=Cluster0",
+        alias="MONGODB_URI"
+    )
+    database_name: str = Field(default="iteagrow", alias="DATABASE_NAME")
 
-    @property
-    def url(self) -> str:
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+    # @property
+    # def url(self) -> str:
+    #     return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
     model_config = {"env_prefix": "", "extra": "ignore"}
 
@@ -133,7 +148,7 @@ class SecuritySettings(BaseSettings):
     )
     api_key_header: str = Field(default="X-API-Key", alias="API_KEY_HEADER")
     cors_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://localhost:8000"], alias="CORS_ORIGINS"
+        default=["*"], alias="CORS_ORIGINS"
     )
     rate_limit_requests: int = Field(default=100, alias="RATE_LIMIT_REQUESTS")
     rate_limit_window: int = Field(default=60, alias="RATE_LIMIT_WINDOW")

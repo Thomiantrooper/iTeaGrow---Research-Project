@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -10,19 +10,26 @@ import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:iteagrow/core/providers/locale_provider.dart';
 import 'package:iteagrow/core/services/local_auth_service.dart';
 import 'package:iteagrow/core/database/database_helper.dart';
+import 'package:iteagrow/core/database/database_initializer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize database factory (conditional for web)
+  initializeDatabaseFactory();
 
   // Initialize SharedPreferences for session persistence
   final sharedPreferences = await SharedPreferences.getInstance();
 
   // Initialize database (creates tables if not exists)
-  // On web, sqflite uses IndexedDB automatically
   try {
+    debugPrint('Initializing database...');
     await DatabaseHelper.instance.database;
+    debugPrint('Database initialized successfully.');
   } catch (e) {
-    debugPrint('Database initialization: $e');
+    debugPrint('Database initialization FAILED: $e');
+    // On web, if DB fails (e.g. strict privacy settings), we should catch and continue
+    // to avoid crashing the whole app logic dependent on await
   }
 
   // Set system UI overlay style for immersive experience

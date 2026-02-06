@@ -5,7 +5,7 @@ import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/premium_login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/dashboard/presentation/screens/premium_farmer_dashboard.dart';
-import '../../features/dashboard/presentation/screens/manager_dashboard_simple.dart';
+import '../../features/dashboard/presentation/screens/manager_dashboard.dart';
 import '../../features/dashboard/presentation/screens/admin_dashboard_simple.dart';
 import '../../features/disease_detection/presentation/screens/premium_disease_detection_screen.dart';
 import '../../features/soil_fertilization/presentation/screens/soil_fertilization_screen.dart';
@@ -16,7 +16,7 @@ import '../../features/settings/presentation/screens/premium_settings_screen.dar
 import '../../features/profile/presentation/screens/premium_profile_screen.dart';
 import '../../features/iot_connectivity/presentation/screens/premium_iot_screen.dart';
 import '../../features/leaf_maturity/presentation/screens/leaf_maturity_screen.dart';
-import '../../features/yield_prediction/presentation/screens/what_if_simulation_screen.dart';
+import '../../features/yield_prediction/presentation/screens/yield_prediction_screen.dart';
 import '../../features/auth/data/providers/auth_provider.dart';
 import '../enums/app_enums.dart';
 import '../animations/tea_animations.dart';
@@ -74,7 +74,8 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
       final isPublicRoute = publicRoutes.contains(currentPath);
 
       // If auth is still loading, let them stay on splash
-      if (authState.status == AuthStatus.initial || authState.status == AuthStatus.loading) {
+      if (authState.status == AuthStatus.initial ||
+          authState.status == AuthStatus.loading) {
         if (currentPath != '/splash') {
           return '/splash';
         }
@@ -146,7 +147,7 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/dashboard/manager',
         pageBuilder: (context, state) => _buildPremiumTransition(
-          child: const ManagerDashboardSimple(),
+          child: const ManagerDashboard(),
           state: state,
         ),
       ),
@@ -245,7 +246,7 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/yield-prediction',
         pageBuilder: (context, state) => _buildPremiumTransition(
-          child: const WhatIfSimulationScreen(),
+          child: const YieldPredictionScreen(),
           state: state,
         ),
       ),

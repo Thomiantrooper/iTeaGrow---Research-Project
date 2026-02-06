@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo  Tea Leaf Disease Detection - Backend
+echo  iTeaGrow - Backend
 echo ========================================
 echo.
 
