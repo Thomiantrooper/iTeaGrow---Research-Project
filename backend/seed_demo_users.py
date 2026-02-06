@@ -7,9 +7,11 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import bcrypt
 from datetime import datetime
 
+from config import settings
+
 # MongoDB connection
-MONGODB_URL = "mongodb://localhost:27017"
-DATABASE_NAME = "iteagrow"
+MONGODB_URL = settings.MONGODB_URL
+DATABASE_NAME = settings.DATABASE_NAME
 
 def get_password_hash(password: str) -> str:
     """Hash a password"""

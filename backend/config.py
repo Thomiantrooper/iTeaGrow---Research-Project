@@ -5,7 +5,7 @@ load_dotenv()
 
 class Settings:
     # MongoDB
-    MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+    MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb+srv://kanzur:kanzur@cluster0.joabitw.mongodb.net/?appName=Cluster0")
     DATABASE_NAME: str = os.getenv("DATABASE_NAME", "iteagrow")
 
     # JWT

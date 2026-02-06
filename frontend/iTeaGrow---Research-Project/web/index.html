@@ -32,7 +32,26 @@
   <title>iteagrow</title>
   <link rel="manifest" href="manifest.json">
 </head>
-<body>
+  <div id="loading" style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; flex-direction: column;">
+    <div style="font-size: 24px; margin-bottom: 20px;">iTeaGrow is Loading...</div>
+    <div id="error-box" style="display: none; background: #ffebee; color: #c62828; padding: 20px; border: 1px solid #ef5350; border-radius: 8px; max-width: 80%; word-break: break-all; margin-top: 20px;">
+      <div style="font-weight: bold; margin-bottom: 10px;">Startup Error Detected:</div>
+      <div id="error-message"></div>
+    </div>
+  </div>
+  <script>
+    window.flutterWebRenderer = "html";
+    window.addEventListener('error', function(event) {
+      document.getElementById('loading').style.display = 'flex';
+      document.getElementById('error-box').style.display = 'block';
+      document.getElementById('error-message').innerText = event.message + '\nat ' + event.filename + ':' + event.lineno;
+    });
+    window.addEventListener('unhandledrejection', function(event) {
+      document.getElementById('loading').style.display = 'flex';
+      document.getElementById('error-box').style.display = 'block';
+      document.getElementById('error-message').innerText = 'Unhandled Promise: ' + event.reason;
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -61,7 +61,7 @@ class TeaTheme {
       ),
 
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: TeaColors.white,
         elevation: 0,
         shadowColor: TeaColors.shadowVale,
@@ -287,7 +287,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: TeaColors.white,
         elevation: 8,
         shadowColor: TeaColors.shadowVale,
@@ -325,7 +325,7 @@ class TeaTheme {
       ),
 
       // Tab Bar Theme
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: TeaColors.freshLeaf,
         unselectedLabelColor: TeaColors.darkGray,
         labelStyle: TeaTypography.labelLarge,
@@ -492,7 +492,7 @@ class TeaTheme {
       ),
 
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: TeaColors.darkCard,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -620,7 +620,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: TeaColors.darkSurface,
         elevation: 8,
         shape: RoundedRectangleBorder(
@@ -663,21 +663,30 @@ class TeaTheme {
 
       // Typography
       textTheme: TextTheme(
-        displayLarge: TeaTypography.displayLarge.copyWith(color: TeaColors.white),
-        displayMedium: TeaTypography.displayMedium.copyWith(color: TeaColors.white),
-        displaySmall: TeaTypography.displaySmall.copyWith(color: TeaColors.white),
-        headlineLarge: TeaTypography.headlineLarge.copyWith(color: TeaColors.white),
-        headlineMedium: TeaTypography.headlineMedium.copyWith(color: TeaColors.white),
-        headlineSmall: TeaTypography.headlineSmall.copyWith(color: TeaColors.white),
+        displayLarge:
+            TeaTypography.displayLarge.copyWith(color: TeaColors.white),
+        displayMedium:
+            TeaTypography.displayMedium.copyWith(color: TeaColors.white),
+        displaySmall:
+            TeaTypography.displaySmall.copyWith(color: TeaColors.white),
+        headlineLarge:
+            TeaTypography.headlineLarge.copyWith(color: TeaColors.white),
+        headlineMedium:
+            TeaTypography.headlineMedium.copyWith(color: TeaColors.white),
+        headlineSmall:
+            TeaTypography.headlineSmall.copyWith(color: TeaColors.white),
         titleLarge: TeaTypography.titleLarge.copyWith(color: TeaColors.white),
         titleMedium: TeaTypography.titleMedium.copyWith(color: TeaColors.white),
         titleSmall: TeaTypography.titleSmall.copyWith(color: TeaColors.white),
         bodyLarge: TeaTypography.bodyLarge.copyWith(color: TeaColors.white),
         bodyMedium: TeaTypography.bodyMedium.copyWith(color: TeaColors.white),
-        bodySmall: TeaTypography.bodySmall.copyWith(color: TeaColors.mediumGray),
+        bodySmall:
+            TeaTypography.bodySmall.copyWith(color: TeaColors.mediumGray),
         labelLarge: TeaTypography.labelLarge.copyWith(color: TeaColors.white),
-        labelMedium: TeaTypography.labelMedium.copyWith(color: TeaColors.mediumGray),
-        labelSmall: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray),
+        labelMedium:
+            TeaTypography.labelMedium.copyWith(color: TeaColors.mediumGray),
+        labelSmall:
+            TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray),
       ),
       fontFamily: TeaTypography.primaryFont,
     );

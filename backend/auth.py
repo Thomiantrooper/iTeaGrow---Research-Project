@@ -62,6 +62,30 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise credentials_exception
 
     db = get_database()
+
+    # MOCK AUTHENTICATION FALLBACK
+    if db is None:
+        mock_users = {
+            "admin": {"id": "mock_admin_id", "role": "admin", "full_name": "Mock Administrator"},
+            "manager": {"id": "mock_manager_id", "role": "manager", "full_name": "Mock Manager"},
+            "farmer": {"id": "mock_farmer_id", "role": "farmer", "full_name": "Mock Farmer"}
+        }
+        
+        if token_data.username in mock_users:
+            user_info = mock_users[token_data.username]
+            print(f"[INFO] Using mock {user_info['role']} user")
+            return {
+                "_id": user_info["id"],
+                "username": token_data.username,
+                "full_name": user_info["full_name"],
+                "email": f"{token_data.username}@example.com",
+                "hashed_password": "mock_hash", # Not checked here (token validation)
+                "role": user_info["role"],
+                "is_active": True,
+                "created_at": datetime.utcnow()
+            }
+        raise credentials_exception
+
     user = await db.users.find_one({"username": token_data.username})
 
     if user is None:
