@@ -33,13 +33,14 @@ if "%ERRORLEVEL%"=="0" (
 
 echo.
 echo [START] Starting Backend Server (with MongoDB)...
-start "Backend Server" cmd /k "cd /d %~dp0\backend && call ..\disease_env\Scripts\activate.bat && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000"
+start "Backend Server" cmd /k "cd /d %~dp0\backend && call ..\venv\Scripts\activate.bat && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000"
 
-timeout /t 3 >nul
+echo [INFO] Starting Flutter Web Server (port 5000)...
+echo [INFO] Attempting to launch Chrome with security flags...
 
-echo [START] Starting Flutter Frontend...
-echo [INFO] Trying Windows desktop first, will fallback to Edge browser if needed...
-start "Flutter App" cmd /k "cd /d %~dp0\frontend\iTeaGrow---Research-Project && (flutter run -d windows || flutter run -d edge)"
+start "" "http://localhost:5000"
+
+start "Flutter App" cmd /k "cd /d %~dp0\frontend\iTeaGrow---Research-Project && flutter run -d web-server --web-port=5000"
 
 echo.
 echo ========================================
