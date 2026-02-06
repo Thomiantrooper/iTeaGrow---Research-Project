@@ -1,51 +1,11 @@
 import 'dart:async';
-import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:web/web.dart' as web;
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/providers/global_iot_provider.dart';
 import '../../data/services/voice_assistant_service.dart';
-
-/// JS interop for SpeechRecognition
-@JS('webkitSpeechRecognition')
-@staticInterop
-class WebkitSpeechRecognition {
-  external factory WebkitSpeechRecognition();
-}
-
-extension WebkitSpeechRecognitionExtension on WebkitSpeechRecognition {
-  external set continuous(bool value);
-  external set interimResults(bool value);
-  external set lang(String value);
-  external set onresult(JSFunction? callback);
-  external set onerror(JSFunction? callback);
-  external set onend(JSFunction? callback);
-  external set onstart(JSFunction? callback);
-  external void start();
-  external void stop();
-  external void abort();
-}
-
-@JS('SpeechRecognition')
-@staticInterop
-class SpeechRecognition {
-  external factory SpeechRecognition();
-}
-
-extension SpeechRecognitionExtension on SpeechRecognition {
-  external set continuous(bool value);
-  external set interimResults(bool value);
-  external set lang(String value);
-  external set onresult(JSFunction? callback);
-  external set onerror(JSFunction? callback);
-  external set onend(JSFunction? callback);
-  external set onstart(JSFunction? callback);
-  external void start();
-  external void stop();
-  external void abort();
-}
+import 'platform_speech.dart';
 
 /// Voice Assistant Panel Widget
 /// A minimal side panel with language selector, speak button, and log area
@@ -78,27 +38,27 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
   StreamSubscription? _connectionSubscription;
 
   // Speech Recognition instance
-  dynamic _recognition;
+  PlatformSpeechRecognizer? _recognizer;
 
   @override
   void initState() {
     super.initState();
     _initializeService();
-    if (kIsWeb) {
-      _initializeSpeechRecognition();
-    }
+    _initializeSpeechRecognition();
   }
 
   void _initializeService() {
     _logSubscription = _service.logStream.listen((entry) {
-      setState(() {
-        _logs.add(entry);
-        _scrollToBottom();
-      });
+      if (mounted) {
+        setState(() {
+          _logs.add(entry);
+          _scrollToBottom();
+        });
+      }
     });
 
     _connectionSubscription = _service.connectionStream.listen((connected) {
-      setState(() => _isMqttConnected = connected);
+      if (mounted) setState(() => _isMqttConnected = connected);
     });
 
     // Auto-connect to MQTT
@@ -118,135 +78,50 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
   }
 
   void _initializeSpeechRecognition() {
-    if (!kIsWeb) return;
-
-    try {
-      // Try webkit first (Chrome, Edge, Safari), then standard
-      try {
-        _recognition = WebkitSpeechRecognition();
-        _speechSupported = true;
-      } catch (e) {
-        try {
-          _recognition = SpeechRecognition();
-          _speechSupported = true;
-        } catch (e2) {
-          _speechSupported = false;
+    _recognizer = PlatformSpeechRecognizer(
+      onResult: (finalTranscript, interimTranscript) {
+        if (mounted) {
+          setState(() {
+            if (finalTranscript.isNotEmpty) {
+              _interimTranscript = finalTranscript;
+              _processVoiceCommand(finalTranscript);
+              _stopListening();
+              _interimTranscript = '';
+            } else {
+              _interimTranscript = interimTranscript;
+            }
+          });
         }
-      }
-
-      if (_speechSupported && _recognition != null) {
-        _setupRecognitionHandlers();
-        _addLocalLog('Voice recognition ready. Press Speak to start.', false);
-      } else {
-        _addLocalLog('Speech recognition not supported. Use text input.', false);
-      }
-    } catch (e) {
-      _speechSupported = false;
-      _addLocalLog('Speech recognition not available: $e', false);
-    }
-  }
-
-  void _setupRecognitionHandlers() {
-    if (_recognition == null) return;
-
-    // Set properties
-    _recognition.continuous = false;
-    _recognition.interimResults = true;
-    _recognition.lang = _selectedLanguage.speechCode;
-
-    // On result callback
-    _recognition.onresult = ((web.SpeechRecognitionEvent event) {
-      _handleSpeechResult(event);
-    }).toJS;
-
-    // On error callback
-    _recognition.onerror = ((web.SpeechRecognitionErrorEvent event) {
-      _handleSpeechError(event);
-    }).toJS;
-
-    // On end callback
-    _recognition.onend = (() {
-      if (mounted) {
-        setState(() => _isListening = false);
-        // Process final transcript if we have one
-        if (_interimTranscript.isNotEmpty) {
-          _processVoiceCommand(_interimTranscript);
-          _interimTranscript = '';
+      },
+      onError: (error) {
+        if (mounted) {
+          setState(() => _isListening = false);
+          _addLocalLog('Error: $error', false);
         }
-      }
-    }).toJS;
-
-    // On start callback
-    _recognition.onstart = (() {
-      if (mounted) {
-        setState(() => _isListening = true);
-        _addLocalLog('Listening... Speak now!', false);
-      }
-    }).toJS;
-  }
-
-  void _handleSpeechResult(web.SpeechRecognitionEvent event) {
-    if (!mounted) return;
-
-    String finalTranscript = '';
-    String interimTranscript = '';
-
-    final results = event.results;
-    for (int i = 0; i < results.length; i++) {
-      final result = results.item(i);
-      if (result != null) {
-        final alternative = result.item(0);
-        if (alternative != null) {
-          final transcript = alternative.transcript;
-          if (result.isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript += transcript;
+      },
+      onStateChanged: (isListening) {
+        if (mounted) {
+          setState(() => _isListening = isListening);
+          if (isListening) {
+            _addLocalLog('Listening... Speak now!', false);
           }
         }
-      }
-    }
+      },
+    );
+
+    _recognizer!.initialize(_selectedLanguage.speechCode);
 
     setState(() {
-      if (finalTranscript.isNotEmpty) {
-        _interimTranscript = finalTranscript;
-      } else if (interimTranscript.isNotEmpty) {
-        _interimTranscript = interimTranscript;
-      }
+      _speechSupported = _recognizer!.isSupported;
     });
 
-    // If we got a final result, process it
-    if (finalTranscript.isNotEmpty) {
-      _stopListening();
-      _processVoiceCommand(finalTranscript);
-      _interimTranscript = '';
+    if (_speechSupported) {
+      _addLocalLog('Voice recognition ready. Press Speak to start.', false);
+    } else {
+      if (kIsWeb) {
+        _addLocalLog('Browser not supported. Use text input.', false);
+      }
     }
-  }
-
-  void _handleSpeechError(web.SpeechRecognitionErrorEvent event) {
-    if (!mounted) return;
-
-    final error = event.error;
-    setState(() => _isListening = false);
-
-    String errorMessage;
-    switch (error) {
-      case 'no-speech':
-        errorMessage = 'No speech detected. Please try again.';
-        break;
-      case 'audio-capture':
-        errorMessage = 'Microphone not available. Check permissions.';
-        break;
-      case 'not-allowed':
-        errorMessage = 'Microphone permission denied. Please allow microphone access.';
-        break;
-      case 'network':
-        errorMessage = 'Network error. Check your connection.';
-        break;
-      default:
-        errorMessage = 'Speech recognition error: $error';
-    }
-    _addLocalLog(errorMessage, false);
   }
 
   @override
@@ -261,23 +136,24 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
   }
 
   void _addLocalLog(String message, bool isUser) {
-    setState(() {
-      _logs.add(VoiceLogEntry(
-        message: message,
-        isUser: isUser,
-        language: _selectedLanguage,
-      ));
-      _scrollToBottom();
-    });
+    if (mounted) {
+      setState(() {
+        _logs.add(VoiceLogEntry(
+          message: message,
+          isUser: isUser,
+          language: _selectedLanguage,
+        ));
+        _scrollToBottom();
+      });
+    }
   }
 
   void _onLanguageChanged(VoiceLanguage? language) {
     if (language != null) {
       setState(() => _selectedLanguage = language);
       _service.setLanguage(language);
-      // Update recognition language
-      if (_recognition != null) {
-        _recognition.lang = language.speechCode;
+      if (_recognizer != null) {
+        _recognizer!.setLanguage(language.speechCode);
       }
     }
   }
@@ -291,23 +167,17 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
   }
 
   void _startListening() {
-    if (!kIsWeb) {
-      _addLocalLog('Voice assistant only works on web', false);
-      return;
-    }
-
-    if (!_speechSupported || _recognition == null) {
-      _addLocalLog('Speech recognition not supported. Use text input below.', false);
+    if (_recognizer == null || !_speechSupported) {
+      _addLocalLog(
+          'Speech recognition not supported. Use text input below.', false);
       return;
     }
 
     try {
       setState(() {
-        _isListening = true;
         _interimTranscript = '';
       });
-      _recognition.lang = _selectedLanguage.speechCode;
-      _recognition.start();
+      _recognizer!.start();
     } catch (e) {
       setState(() => _isListening = false);
       _addLocalLog('Could not start speech recognition: $e', false);
@@ -315,14 +185,12 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
   }
 
   void _stopListening() {
-    if (_recognition != null && _isListening) {
-      try {
-        _recognition.stop();
-      } catch (e) {
-        // Ignore stop errors
-      }
+    if (_recognizer != null) {
+      _recognizer!.stop();
     }
-    setState(() => _isListening = false);
+    if (mounted) {
+      setState(() => _isListening = false);
+    }
   }
 
   void _processVoiceCommand(String text) {
@@ -433,21 +301,8 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
   }
 
   void _speak(String text) {
-    if (!kIsWeb) return;
-
-    try {
-      // Cancel any ongoing speech
-      web.window.speechSynthesis.cancel();
-
-      // Use Web Speech Synthesis API
-      final utterance = web.SpeechSynthesisUtterance(text);
-      utterance.lang = _selectedLanguage.speechCode;
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-      web.window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      // Speech synthesis not available
+    if (_recognizer != null) {
+      _recognizer!.speak(text, _selectedLanguage.speechCode);
     }
   }
 
@@ -573,7 +428,8 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
       decoration: BoxDecoration(
         color: TeaColors.white,
         border: Border(
-          bottom: BorderSide(color: TeaColors.lightGray.withOpacity(0.5), width: 1),
+          bottom:
+              BorderSide(color: TeaColors.lightGray.withOpacity(0.5), width: 1),
         ),
       ),
       child: Row(
@@ -595,7 +451,8 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
                   value: _selectedLanguage,
                   isExpanded: true,
                   icon: Icon(Icons.arrow_drop_down, color: TeaColors.freshLeaf),
-                  style: TeaTypography.bodySmall.copyWith(color: TeaColors.nearBlack),
+                  style: TeaTypography.bodySmall
+                      .copyWith(color: TeaColors.nearBlack),
                   items: VoiceLanguage.values.map((lang) {
                     return DropdownMenuItem(
                       value: lang,
@@ -687,9 +544,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
                   topRight: const Radius.circular(12),
                   bottomLeft: const Radius.circular(12),
                   bottomRight: const Radius.circular(12),
-                  topLeft: log.isUser
-                      ? const Radius.circular(12)
-                      : Radius.zero,
+                  topLeft: log.isUser ? const Radius.circular(12) : Radius.zero,
                 ),
                 border: Border.all(
                   color: log.isUser
@@ -768,7 +623,8 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
       decoration: BoxDecoration(
         color: TeaColors.white,
         border: Border(
-          top: BorderSide(color: TeaColors.lightGray.withOpacity(0.5), width: 1),
+          top:
+              BorderSide(color: TeaColors.lightGray.withOpacity(0.5), width: 1),
         ),
       ),
       child: Row(
@@ -805,93 +661,67 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
           ),
           const SizedBox(width: TeaSpacing.xs),
           IconButton(
+            icon: Icon(Icons.send_rounded, color: TeaColors.freshLeaf),
             onPressed: _handleTextSubmit,
-            icon: Icon(Icons.send, color: TeaColors.freshLeaf),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
           ),
         ],
       ),
     );
   }
 
-  String _getHintText() {
-    switch (_selectedLanguage) {
-      case VoiceLanguage.tamil:
-        return 'வெப்பநிலை என்ன?';
-      case VoiceLanguage.sinhala:
-        return 'උෂ්ණත්වය කීයද?';
-      default:
-        return 'Type or speak a command...';
-    }
-  }
-
-  String _formatTime(DateTime time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
   Widget _buildSpeakButton() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(TeaSpacing.md),
       decoration: BoxDecoration(
         color: TeaColors.white,
         border: Border(
-          top: BorderSide(color: TeaColors.lightGray, width: 1),
+          top:
+              BorderSide(color: TeaColors.lightGray.withOpacity(0.3), width: 1),
         ),
       ),
-      child: GestureDetector(
-        onTap: _toggleListening,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: TeaSpacing.md),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: _isListening
-                  ? [TeaColors.alertRust, TeaColors.warningAmber]
-                  : [TeaColors.freshLeaf, TeaColors.matureLeaf],
-            ),
-            borderRadius: TeaRadius.radiusMd,
-            boxShadow: [
-              BoxShadow(
-                color: (_isListening ? TeaColors.alertRust : TeaColors.freshLeaf)
-                    .withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+      child: SizedBox(
+        height: 44,
+        child: ElevatedButton.icon(
+          onPressed: _speechSupported ? _toggleListening : null,
+          icon: Icon(
+            _isListening ? Icons.stop : Icons.mic,
+            color: Colors.white,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (_isListening)
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: TeaColors.white,
-                  ),
-                )
-              else
-                Icon(
-                  Icons.mic,
-                  color: TeaColors.white,
-                  size: 24,
-                ),
-              const SizedBox(width: TeaSpacing.sm),
-              Text(
-                _isListening ? 'Listening...' : 'Speak',
-                style: TeaTypography.titleSmall.copyWith(
-                  color: TeaColors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          label: Text(
+            _isListening ? 'Stop Listening' : 'Speak',
+            style: TeaTypography.buttonMedium,
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _isListening
+                ? TeaColors.warningAmber
+                : (_speechSupported
+                    ? TeaColors.freshLeaf
+                    : TeaColors.lightGray),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+            ),
+            elevation: 2,
+            textStyle: TeaTypography.buttonMedium,
           ),
         ),
       ),
     );
+  }
+
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _getHintText() {
+    switch (_selectedLanguage) {
+      case VoiceLanguage.tamil:
+        return 'தமிழில் தட்டச்சு செய்யவும்...';
+      case VoiceLanguage.sinhala:
+        return 'සිංහලෙන් ටයිප් කරන්න...';
+      default:
+        return 'Type a command...';
+    }
   }
 }

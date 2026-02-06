@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -10,18 +10,13 @@ import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:iteagrow/core/providers/locale_provider.dart';
 import 'package:iteagrow/core/services/local_auth_service.dart';
 import 'package:iteagrow/core/database/database_helper.dart';
-
-import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:iteagrow/core/database/database_initializer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize database factory for web
-  if (kIsWeb) {
-    debugPrint('Web platform detected. Initializing databaseFactoryFfiWeb...');
-    databaseFactory = databaseFactoryFfiWeb;
-  }
+  // Initialize database factory (conditional for web)
+  initializeDatabaseFactory();
 
   // Initialize SharedPreferences for session persistence
   final sharedPreferences = await SharedPreferences.getInstance();
