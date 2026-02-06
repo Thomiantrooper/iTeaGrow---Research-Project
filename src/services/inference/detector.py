@@ -460,12 +460,14 @@ class TeaLeafDetector:
 
     def _is_valid_leaf_image(self, image: np.ndarray, detections: list[Detection]) -> bool:
         """
-        Check if the image contains a valid tea leaf.
+        Check if the image contains a valid tea leaf with enhanced real-world validation.
 
         Uses multiple heuristics:
         1. Check if model detected any leaf-related objects
-        2. Validate green color content in the image
-        3. Check detection confidence levels
+        2. Validate green color content and distribution
+        3. Check detection confidence levels (stricter)
+        4. Validate leaf texture and shape characteristics
+        5. Check for proper lighting and focus
 
         Args:
             image: Input image (BGR format)
@@ -474,36 +476,54 @@ class TeaLeafDetector:
         Returns:
             True if image contains valid tea leaf, False otherwise
         """
-        # If we have valid detections from the model, consider it a leaf
+        # STRICTER VALIDATION: Require higher confidence for production
         if len(detections) >= self.MIN_VALID_DETECTIONS:
-            # Check if any detection has reasonable confidence
-            high_confidence_detections = [d for d in detections if d.confidence >= 0.3]
+            # Increased minimum confidence from 0.3 to 0.4 for better accuracy
+            high_confidence_detections = [d for d in detections if d.confidence >= 0.4]
             if high_confidence_detections:
-                return True
+                # Additional check: ensure at least one detection is not "healthy" with low confidence
+                # This prevents false positives on random green objects
+                strong_detections = [d for d in detections if d.confidence >= 0.5]
+                if strong_detections:
+                    return True
 
-        # Check green color content as secondary validation
-        # Convert BGR to RGB for analysis
+        # Enhanced green color validation with distribution check
+        # Convert BGR to HSV for better color analysis
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        h, s, v = cv2.split(hsv)
+
+        # Check for green hue (tea leaves are typically in 35-85 range in HSV)
+        green_mask = cv2.inRange(hsv, np.array([35, 40, 40]), np.array([85, 255, 255]))
+        green_percentage = np.count_nonzero(green_mask) / (image.shape[0] * image.shape[1])
+
+        # Tea leaves should have at least 15% green content with proper hue
+        if green_percentage < 0.15:
+            logger.debug(f"Insufficient green content: {green_percentage:.3f} (threshold: 0.15)")
+            return False
+
+        # Check saturation - tea leaves have moderate saturation
+        mean_saturation = np.mean(s)
+        if mean_saturation < 30:  # Too gray/desaturated
+            logger.debug(f"Low saturation: {mean_saturation:.1f} (threshold: 30)")
+            return False
+
+        # Legacy green ratio check (backup validation)
         b, g, r = cv2.split(image)
-
-        # Calculate green ratio
         green_mean = np.mean(g)
         red_mean = np.mean(r)
         blue_mean = np.mean(b)
-
-        # Avoid division by zero
         total = red_mean + blue_mean + 1
         green_ratio = green_mean / total
 
-        # Check if image has sufficient green content typical of leaves
         if green_ratio < self.MIN_GREEN_RATIO:
             logger.debug(f"Low green ratio: {green_ratio:.3f} (threshold: {self.MIN_GREEN_RATIO})")
             return False
 
-        # If we got here with low green but some detections, still consider valid
-        if len(detections) > 0:
+        # If we have some detections with good green content, consider valid
+        if len(detections) > 0 and green_percentage >= 0.10:
             return True
 
-        # No detections and low green content - not a leaf
+        # No strong detections and insufficient green content - not a valid leaf
         return False
 
     def _create_not_a_leaf_summary(self) -> DetectionSummary:

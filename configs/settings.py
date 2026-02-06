@@ -156,6 +156,49 @@ class SecuritySettings(BaseSettings):
     model_config = {"env_prefix": "", "extra": "ignore"}
 
 
+class MongoDBSettings(BaseSettings):
+    """MongoDB configuration settings."""
+
+    url: str = Field(default="mongodb://localhost:27017", alias="MONGODB_URL")
+    database_name: str = Field(default="iteagrow", alias="MONGODB_DATABASE")
+    max_pool_size: int = Field(default=10, alias="MONGODB_MAX_POOL_SIZE")
+    min_pool_size: int = Field(default=1, alias="MONGODB_MIN_POOL_SIZE")
+
+    model_config = {"env_prefix": "", "extra": "ignore"}
+
+
+class OllamaSettings(BaseSettings):
+    """Ollama LLM configuration settings."""
+
+    url: str = Field(default="http://localhost:11434", alias="OLLAMA_URL")
+    model: str = Field(default="llama3.2:latest", alias="OLLAMA_MODEL")
+    timeout: int = Field(default=120, alias="OLLAMA_TIMEOUT")
+    temperature: float = Field(default=0.7, alias="OLLAMA_TEMPERATURE")
+    max_tokens: int = Field(default=2048, alias="OLLAMA_MAX_TOKENS")
+
+    model_config = {"env_prefix": "", "extra": "ignore"}
+
+
+class BluetoothSettings(BaseSettings):
+    """Bluetooth IoT configuration settings."""
+
+    enabled: bool = Field(default=True, alias="BLUETOOTH_ENABLED")
+    scan_timeout: int = Field(default=10, alias="BLUETOOTH_SCAN_TIMEOUT")
+    connection_timeout: int = Field(default=30, alias="BLUETOOTH_CONNECTION_TIMEOUT")
+    service_uuid: str = Field(
+        default="4fafc201-1fb5-459e-8fcc-c5c9c331914b",
+        alias="BLUETOOTH_SERVICE_UUID"
+    )
+    characteristic_uuid: str = Field(
+        default="beb5483e-36e1-4688-b7f5-ea07361b26a8",
+        alias="BLUETOOTH_CHARACTERISTIC_UUID"
+    )
+    auto_reconnect: bool = Field(default=True, alias="BLUETOOTH_AUTO_RECONNECT")
+    max_reconnect_attempts: int = Field(default=5, alias="BLUETOOTH_MAX_RECONNECT")
+
+    model_config = {"env_prefix": "", "extra": "ignore"}
+
+
 class AppSettings(BaseSettings):
     """Main application settings."""
 
@@ -168,12 +211,15 @@ class AppSettings(BaseSettings):
     port: int = Field(default=8000, alias="PORT")
 
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
+    mongodb: MongoDBSettings = Field(default_factory=MongoDBSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     minio: MinIOSettings = Field(default_factory=MinIOSettings)
     model: ModelSettings = Field(default_factory=ModelSettings)
     iot: IoTSettings = Field(default_factory=IoTSettings)
     sync: SyncSettings = Field(default_factory=SyncSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
+    ollama: OllamaSettings = Field(default_factory=OllamaSettings)
+    bluetooth: BluetoothSettings = Field(default_factory=BluetoothSettings)
 
     model_config = {"env_prefix": "", "extra": "ignore", "env_file": ".env"}
 

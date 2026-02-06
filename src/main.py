@@ -13,12 +13,13 @@ from fastapi.openapi.utils import get_openapi
 from configs.settings import settings
 from src.core.logging import setup_logging, get_logger
 from src.core.exceptions import BaseAppException
+from src.core.database import connect_to_mongodb, close_mongodb_connection
 from src.api.middleware import (
     RequestLoggingMiddleware,
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
-from src.api.routes import inference, iot, recommendations, sync, health, feedback, users
+from src.api.routes import inference, iot, recommendations, sync, health, feedback, chatbot, bluetooth, users
 
 setup_logging(log_level=settings.log_level, json_format=not settings.debug)
 logger = get_logger(__name__)
@@ -29,6 +30,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     """Application lifespan manager for startup and shutdown events."""
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
 
+    # Connect to MongoDB
+    try:
+        await connect_to_mongodb()
+        logger.info("MongoDB connected successfully")
+    except Exception as e:
+        logger.warning(f"Failed to connect to MongoDB: {e}")
+        logger.warning("Application will run without database persistence")
+
+    # Load disease detection model
     try:
         from src.services.database.mongo_db import connect_to_mongo, close_mongo_connection
         await connect_to_mongo()
@@ -49,6 +59,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     except Exception as e:
         logger.warning(f"Failed to preload model: {e}")
 
+    # Initialize local storage
     try:
         from src.services.sync import LocalStorageManager
         storage = LocalStorageManager()
@@ -64,6 +75,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     await close_mongo_connection()
 
     logger.info("Application shutdown initiated")
+
+    # Close MongoDB connection
+    try:
+        await close_mongodb_connection()
+    except Exception as e:
+        logger.warning(f"Error closing MongoDB: {e}")
 
     logger.info("Application shutdown complete")
 
@@ -81,6 +98,7 @@ in Sri Lankan plantations using AI-powered image analysis.
 
 ### Features
 - **Disease Detection**: YOLOv8n-based multi-leaf object detection
+- **AI Chatbot**: Tea plantation expert powered by Ollama LLM 🤖
 - **Explainability**: Grad-CAM visual explanations for predictions
 - **IoT Integration**: Environmental sensor data processing
 - **Recommendations**: Rule-based disease management advice
@@ -93,6 +111,7 @@ in Sri Lankan plantations using AI-powered image analysis.
 
 ### API Groups
 - `/api/v1/inference`: Disease detection endpoints
+- `/api/v1/chatbot`: AI tea expert chatbot (NEW!)
 - `/api/v1/iot`: Sensor data ingestion
 - `/api/v1/recommendations`: Treatment recommendations
 - `/api/v1/sync`: Data synchronization
@@ -127,6 +146,8 @@ in Sri Lankan plantations using AI-powered image analysis.
     app.include_router(recommendations.router)
     app.include_router(sync.router)
     app.include_router(feedback.router)
+    app.include_router(chatbot.router)  # Tea plantation expert chatbot
+    app.include_router(bluetooth.router)  # Bluetooth IoT for offline sensor data
 
     @app.exception_handler(BaseAppException)
     async def app_exception_handler(request: Request, exc: BaseAppException):
