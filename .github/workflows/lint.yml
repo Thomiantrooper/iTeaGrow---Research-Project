@@ -1,0 +1,28 @@
+name: Lint
+
+on:
+  push:
+    branches: [main, develop, iTeaGrow-Prod, tea-leaf-detector]
+  pull_request:
+    branches: [main, develop, tea-leaf-detector]
+
+jobs:
+  ruff:
+    name: Ruff Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Run Ruff Linter
+        run: ruff check src/ backend/ --output-format=github || true
+
+      - name: Run Ruff Formatter Check
+        run: ruff format --check src/ backend/ || true
