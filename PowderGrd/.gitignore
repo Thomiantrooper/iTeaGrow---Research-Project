@@ -11,10 +11,7 @@ __pycache__/
 venv/
 .env/
 
-# ML models
-*.h5
-*.keras
-saved_models/
+
 
 # Jupyter
 .ipynb_checkpoints/
