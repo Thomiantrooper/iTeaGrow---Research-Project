@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../api/api_config.dart';
 import 'local_auth_service.dart' show sharedPreferencesProvider;
 
 /// API configuration
@@ -82,7 +82,7 @@ class ApiService {
   }) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        Uri.parse('${ApiConfig.effectiveBaseUrl}$endpoint'),
         headers: _headers,
       );
 
@@ -104,7 +104,7 @@ class ApiService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        Uri.parse('${ApiConfig.effectiveBaseUrl}$endpoint'),
         headers: _headers,
         body: body != null ? jsonEncode(body) : null,
       );
@@ -127,7 +127,7 @@ class ApiService {
   }) async {
     try {
       final response = await http.put(
-        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        Uri.parse('${ApiConfig.effectiveBaseUrl}$endpoint'),
         headers: _headers,
         body: body != null ? jsonEncode(body) : null,
       );
@@ -149,7 +149,7 @@ class ApiService {
   }) async {
     try {
       final response = await http.delete(
-        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        Uri.parse('${ApiConfig.effectiveBaseUrl}$endpoint'),
         headers: _headers,
       );
 

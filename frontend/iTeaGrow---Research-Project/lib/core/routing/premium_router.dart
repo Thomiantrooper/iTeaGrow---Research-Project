@@ -62,16 +62,33 @@ CustomTransitionPage<void> _buildPremiumTransition({
   );
 }
 
-/// Premium Router Provider
-final premiumRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final isAuthenticated = authState.isAuthenticated;
-  final user = authState.user;
+/// ChangeNotifier bridge that triggers GoRouter redirect re-evaluation
+/// when auth state changes, without recreating the entire GoRouter.
+class _AuthChangeNotifier extends ChangeNotifier {
+  _AuthChangeNotifier(Ref ref) {
+    ref.listen<AuthState>(authStateProvider, (previous, next) {
+      // Only notify when auth status actually changes
+      if (previous?.status != next.status) {
+        notifyListeners();
+      }
+    });
+  }
+}
 
-  return GoRouter(
+/// Premium Router Provider - creates GoRouter ONCE and uses
+/// refreshListenable to re-evaluate redirects on auth state changes.
+final premiumRouterProvider = Provider<GoRouter>((ref) {
+  final authNotifier = _AuthChangeNotifier(ref);
+
+  final router = GoRouter(
     initialLocation: '/splash',
     debugLogDiagnostics: true,
+    refreshListenable: authNotifier,
     redirect: (context, state) {
+      // Read current auth state (not watch - we use refreshListenable instead)
+      final authState = ref.read(authStateProvider);
+      final isAuthenticated = authState.isAuthenticated;
+      final user = authState.user;
       final currentPath = state.matchedLocation;
 
       // Public routes that don't require authentication
@@ -87,17 +104,17 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // If not logged in and trying to access protected route
+      // If not logged in and trying to access protected route → go to login
       if (!isAuthenticated && !isPublicRoute) {
         return '/login';
       }
 
-      // If logged in and on login page, redirect to dashboard
+      // If logged in and on login page → go to dashboard
       if (isAuthenticated && currentPath == '/login') {
         return _getDashboardRoute(user?.role ?? UserRole.farmer);
       }
 
-      // If logged in and on splash, redirect to dashboard
+      // If logged in and on splash → go to dashboard
       if (isAuthenticated && currentPath == '/splash') {
         return _getDashboardRoute(user?.role ?? UserRole.farmer);
       }
@@ -308,6 +325,9 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
       state: state,
     ),
   );
+
+  ref.onDispose(router.dispose);
+  return router;
 });
 
 String _getDashboardRoute(UserRole role) {

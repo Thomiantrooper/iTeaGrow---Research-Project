@@ -168,10 +168,10 @@ Designed for **farmers, supervisors, and analysts**
 
 ## 👥 Contributors
 
-- **Kajanthan Kirubakaran** – Disease Detection & Environmental Monitoring  
-- **Kanzurrizk M R A** – Leaf Maturity & Yield Decision Support  
-- **Ashwin Visvanathan** – Soil Monitoring & Fertilization  
-- **Peiris M. D. T. N.** – Tea Powder Grading & Valuation  
+- **Kajanthan Kirubakaran (IT22197214)** – Tea Leaf Disease Detection & Environmental Monitoring
+- **Kanzurrizk M R A (IT22166524)** – Tea Leaf Maturity Detection & Yield Decision Support  
+- **Ashwin Visvanathan (IT22204448)** – Soild Monitoring  & Fertilization Management with enhanced IOT service. 
+- **Peiris M. D. T. N. (IT22109408)** – Tea Powder Grading & Market Valuation  
 
 ---
 

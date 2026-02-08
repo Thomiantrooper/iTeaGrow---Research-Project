@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:iteagrow/features/auth/presentation/providers/auth_provider.dart';
-import 'package:iteagrow/features/public/presentation/landing/landing_page.dart';
+import 'package:go_router/go_router.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 import 'package:iteagrow/features/leaf_maturity/presentation/screens/leaf_maturity_screen.dart';
 import 'package:iteagrow/features/disease_detection/presentation/screens/disease_detection_screen.dart';
 import 'package:iteagrow/features/soil_fertilization/presentation/screens/soil_fertilization_screen.dart';
@@ -48,13 +48,12 @@ class ManagerDashboard extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
-              onTap: () {
-                ref.read(currentUserProvider.notifier).state = null;
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LandingPage()),
-                  (route) => false,
-                );
+              onTap: () async {
+                Navigator.pop(context); // close drawer first
+                await ref.read(authStateProvider.notifier).logout();
+                if (context.mounted) {
+                  context.go('/login');
+                }
               },
             ),
           ],

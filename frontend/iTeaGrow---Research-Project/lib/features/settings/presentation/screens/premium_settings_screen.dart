@@ -19,8 +19,28 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
   bool _darkMode = false;
   bool _autoSync = true;
   bool _hapticFeedback = true;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
   String _selectedLanguage = 'English';
   String _selectedUnit = 'Metric';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final authNotifier = ref.read(authStateProvider.notifier);
+    final available = await authNotifier.isBiometricAvailable();
+    final enabled = authNotifier.isBiometricEnabled;
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = available;
+        _biometricEnabled = enabled;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +92,24 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                     subtitle: 'Two-factor authentication, login history',
                     onTap: () => context.push('/activity-history'),
                   ),
+                  if (_biometricAvailable) ...[
+                    const Divider(height: 1),
+                    _buildSwitchTile(
+                      icon: Icons.fingerprint,
+                      title: 'Biometric Login',
+                      subtitle: _biometricEnabled
+                          ? 'Sign in with fingerprint or face'
+                          : 'Enable fingerprint or face login',
+                      value: _biometricEnabled,
+                      onChanged: (value) {
+                        if (value) {
+                          _showEnableBiometricDialog();
+                        } else {
+                          _disableBiometric();
+                        }
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -546,6 +584,64 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
     );
   }
 
+  void _showEnableBiometricDialog() {
+    final passwordController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enable Biometric Login'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter your password to enable biometric login.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                prefixIcon: Icon(Icons.lock_outline),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final success = await ref
+                  .read(authStateProvider.notifier)
+                  .enableBiometricLogin(passwordController.text);
+              if (mounted) {
+                if (success) {
+                  setState(() => _biometricEnabled = true);
+                  TeaSnackbar.success(context, 'Biometric login enabled!');
+                } else {
+                  final error = ref.read(authStateProvider).errorMessage;
+                  TeaSnackbar.error(context, error ?? 'Failed to enable biometric login');
+                }
+              }
+              passwordController.dispose();
+            },
+            child: const Text('Enable'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _disableBiometric() async {
+    await ref.read(authStateProvider.notifier).disableBiometricLogin();
+    if (mounted) {
+      setState(() => _biometricEnabled = false);
+      TeaSnackbar.info(context, 'Biometric login disabled');
+    }
+  }
+
   void _showLogoutDialog() {
     showDialog(
       context: context,
@@ -558,10 +654,12 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              ref.read(authStateProvider.notifier).logout();
-              context.go('/login');
+              await ref.read(authStateProvider.notifier).logout();
+              if (mounted) {
+                context.go('/login');
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: TeaColors.alertRust,

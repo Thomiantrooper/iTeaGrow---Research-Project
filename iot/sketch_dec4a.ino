@@ -6,7 +6,7 @@
 #include <vector>
 #include <ctype.h>
 
-// Pin definitions
+
 #define RXD2 16
 #define TXD2 17
 #define RE_DE 4
