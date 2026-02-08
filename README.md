@@ -170,7 +170,7 @@ Designed for **farmers, supervisors, and analysts**
 
 - **Kajanthan Kirubakaran** – Disease Detection & Environmental Monitoring  
 - **Kanzurrizk M R A** – Leaf Maturity & Yield Decision Support  
-- **Ashwin Visvanathan** – Soil Monitoring & Fertilization  
+- **Ashwin Visvanathan** – Soil Monitoring & Fertilization with new embeded IOT device 
 - **Peiris M. D. T. N.** – Tea Powder Grading & Valuation  
 
 ---
