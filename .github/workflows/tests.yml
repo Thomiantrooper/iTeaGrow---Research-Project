@@ -2,9 +2,9 @@ name: Run Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, tea-leaf-detector]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, tea-leaf-detector]
 
 jobs:
   backend-tests:
