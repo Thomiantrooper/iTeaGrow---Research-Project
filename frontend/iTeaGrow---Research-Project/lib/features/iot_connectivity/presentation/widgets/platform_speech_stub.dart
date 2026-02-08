@@ -1,7 +1,7 @@
 // This file is platform-specific (Stub for Android/iOS)
 
 typedef SpeechResultCallback = void Function(
-    String finalTranscript, String interimTranscript);
+    String finalTranscript, String interimTranscript,);
 typedef SpeechErrorCallback = void Function(String error);
 typedef SpeechStateCallback = void Function(bool isListening);
 

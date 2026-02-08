@@ -394,7 +394,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: TeaColors.freshLeaf,
+        activeThumbColor: TeaColors.freshLeaf,
       ),
     );
   }
@@ -453,22 +453,22 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Change Password'),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Current Password'),
+              decoration: InputDecoration(labelText: 'Current Password'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             TextField(
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'New Password'),
+              decoration: InputDecoration(labelText: 'New Password'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             TextField(
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Confirm New Password'),
+              decoration: InputDecoration(labelText: 'Confirm New Password'),
             ),
           ],
         ),
@@ -520,12 +520,12 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Send Feedback'),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               maxLines: 4,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Tell us what you think...',
                 border: OutlineInputBorder(),
               ),
@@ -553,21 +553,21 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.eco, color: TeaColors.freshLeaf),
-            const SizedBox(width: 8),
-            const Text('iTeaGrow'),
+            SizedBox(width: 8),
+            Text('iTeaGrow'),
           ],
         ),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Version 1.0.0'),
-            const SizedBox(height: 8),
-            const Text('AI-Powered Tea Plantation Management System'),
-            const SizedBox(height: 16),
+            Text('Version 1.0.0'),
+            SizedBox(height: 8),
+            Text('AI-Powered Tea Plantation Management System'),
+            SizedBox(height: 16),
             Text(
               '© 2024 iTeaGrow Research Project',
               style: TextStyle(color: TeaColors.darkGray),

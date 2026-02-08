@@ -133,7 +133,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.notifications_off_outlined,
               size: 64,
               color: TeaColors.mediumGray,
@@ -234,7 +234,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                             Container(
                               width: 8,
                               height: 8,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: TeaColors.freshLeaf,
                                 shape: BoxShape.circle,
                               ),

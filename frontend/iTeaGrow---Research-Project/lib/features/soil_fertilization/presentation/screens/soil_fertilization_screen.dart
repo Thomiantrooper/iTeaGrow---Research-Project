@@ -207,12 +207,12 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2, color: Colors.white,),
                     )
                   : const Icon(Icons.calculate),
               label: Text(_isCalculating
                   ? 'Calculating...'
-                  : 'Get TRI-Based Recommendation'),
+                  : 'Get TRI-Based Recommendation',),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(16),
               ),
@@ -230,7 +230,7 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
   }
 
   Widget _buildSensorReading(
-      SensorType type, double value, SensorStatus status) {
+      SensorType type, double value, SensorStatus status,) {
     final typeColor = _getSensorTypeColor(type);
     final statusColor = _getSensorStatusColor(status);
 
@@ -295,11 +295,11 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(Icons.science, color: AppTheme.accentAmber, size: 28),
-                const SizedBox(width: 12),
-                const Text(
+                SizedBox(width: 12),
+                Text(
                   'TRI-Based Recommendations',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -309,13 +309,13 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
 
             // NPK Recommendations
             _buildNutrientRecommendation(
-                'Nitrogen (N)', _recommendation!.nitrogenAmount),
+                'Nitrogen (N)', _recommendation!.nitrogenAmount,),
             const SizedBox(height: 12),
             _buildNutrientRecommendation(
-                'Phosphorus (P)', _recommendation!.phosphorusAmount),
+                'Phosphorus (P)', _recommendation!.phosphorusAmount,),
             const SizedBox(height: 12),
             _buildNutrientRecommendation(
-                'Potassium (K)', _recommendation!.potassiumAmount),
+                'Potassium (K)', _recommendation!.potassiumAmount,),
 
             const Divider(height: 24),
 
@@ -323,7 +323,7 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                const Icon(Icons.info_outline, color: Colors.blue, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -358,9 +358,9 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
         Row(
           children: [
             if (needsApplication)
-              Icon(Icons.add_circle, color: AppTheme.statusWarning, size: 20)
+              const Icon(Icons.add_circle, color: AppTheme.statusWarning, size: 20)
             else
-              Icon(Icons.check_circle, color: AppTheme.statusGood, size: 20),
+              const Icon(Icons.check_circle, color: AppTheme.statusGood, size: 20),
             const SizedBox(width: 8),
             Text(
               needsApplication

@@ -70,9 +70,9 @@ class _LoginScreenSimpleState extends ConsumerState<LoginScreenSimple> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Language Selector at the top
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: const [
+                  children: [
                     LanguageSelector(isVertical: false, buttonSize: 36),
                   ],
                 ),

@@ -91,11 +91,11 @@ class ESP32SensorCard extends ConsumerWidget {
                   color: JarvisTheme.info.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(JarvisTheme.radiusSm),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.directions_walk, size: 14, color: JarvisTheme.info),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       'Motion Detected',
                       style: TextStyle(

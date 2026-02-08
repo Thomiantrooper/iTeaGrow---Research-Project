@@ -201,8 +201,8 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           // Enhanced 3D Hero Visualization area
           Container(
             height: 220,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(
                 top: Radius.circular(TeaRadius.lg),
               ),
             ),
@@ -302,7 +302,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                                     ),
                                     child: Center(
                                       child: ShaderMask(
-                                        shaderCallback: (bounds) => LinearGradient(
+                                        shaderCallback: (bounds) => const LinearGradient(
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
                                           colors: [
@@ -328,7 +328,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                                 Container(
                                   width: 8,
                                   height: 8,
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: TeaColors.healthyGreen,
                                   ),
@@ -362,7 +362,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.landscape, size: 16, color: TeaColors.freshLeaf),
+                                  const Icon(Icons.landscape, size: 16, color: TeaColors.freshLeaf),
                                   const SizedBox(width: 6),
                                   Text(
                                     'Estate Summary',
@@ -427,7 +427,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                   ],
                 ),
                 const SizedBox(height: TeaSpacing.md),
-                TeaProgressBar(
+                const TeaProgressBar(
                   value: 0.87,
                   label: 'Overall Health Score',
                   color: TeaColors.healthyGreen,
@@ -502,7 +502,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           padding: const EdgeInsets.symmetric(vertical: TeaSpacing.sm),
           child: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.insights,
                 size: 20,
                 color: TeaColors.freshLeaf,
@@ -529,7 +529,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: TeaColors.healthyGreen,
                         ),
@@ -637,7 +637,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TeaSectionHeader(
+        const TeaSectionHeader(
           title: 'Quick Actions',
           icon: Icons.flash_on_outlined,
         ),
@@ -831,13 +831,13 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
 
   Widget _buildBottomNav() {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: TeaColors.white,
         boxShadow: [
           BoxShadow(
             color: TeaColors.shadowVale,
             blurRadius: 10,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
           ),
         ],
       ),
@@ -986,7 +986,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                   Icons.logout,
                   color: TeaColors.alertRust,
                 ),
-                title: Text(
+                title: const Text(
                   'Log Out',
                   style: TextStyle(color: TeaColors.alertRust),
                 ),

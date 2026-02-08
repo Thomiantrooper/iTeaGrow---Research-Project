@@ -32,7 +32,7 @@ class ApiClient {
             Uri.parse(url),
             headers: {...ApiConfig.defaultHeaders, ...?headers},
           )
-          .timeout(Duration(seconds: ApiConfig.receiveTimeout));
+          .timeout(const Duration(seconds: ApiConfig.receiveTimeout));
 
       return _handleResponse(response);
     } on SocketException {
@@ -62,7 +62,7 @@ class ApiClient {
             },
             body: body != null ? jsonEncode(body) : null,
           )
-          .timeout(Duration(seconds: ApiConfig.receiveTimeout));
+          .timeout(const Duration(seconds: ApiConfig.receiveTimeout));
 
       return _handleResponse(response);
     } on SocketException {
@@ -92,7 +92,7 @@ class ApiClient {
       request.files.add(await http.MultipartFile.fromPath(
         'image',
         imageFile.path,
-      ));
+      ),);
 
       // Add additional fields
       if (fields != null) {
@@ -100,7 +100,7 @@ class ApiClient {
       }
 
       final streamedResponse = await request.send().timeout(
-        Duration(seconds: ApiConfig.receiveTimeout),
+        const Duration(seconds: ApiConfig.receiveTimeout),
       );
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -132,7 +132,7 @@ class ApiClient {
       request.files.add(await http.MultipartFile.fromPath(
         'image',
         imagePath,
-      ));
+      ),);
 
       // Add additional fields
       if (fields != null) {
@@ -140,7 +140,7 @@ class ApiClient {
       }
 
       final streamedResponse = await request.send().timeout(
-        Duration(seconds: ApiConfig.receiveTimeout),
+        const Duration(seconds: ApiConfig.receiveTimeout),
       );
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -173,7 +173,7 @@ class ApiClient {
         request.files.add(await http.MultipartFile.fromPath(
           'images',
           imagePaths[i],
-        ));
+        ),);
       }
 
       // Add additional fields
@@ -182,7 +182,7 @@ class ApiClient {
       }
 
       final streamedResponse = await request.send().timeout(
-        Duration(seconds: ApiConfig.batchTimeout),
+        const Duration(seconds: ApiConfig.batchTimeout),
       );
       final response = await http.Response.fromStream(streamedResponse);
 

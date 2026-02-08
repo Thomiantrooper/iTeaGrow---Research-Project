@@ -437,7 +437,7 @@ class JarvisMessageBubble extends StatelessWidget {
             else
               Text(
                 message,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
                   color: JarvisTheme.textPrimary,
                   height: 1.4,
@@ -447,7 +447,7 @@ class JarvisMessageBubble extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 '${timestamp!.hour.toString().padLeft(2, '0')}:${timestamp!.minute.toString().padLeft(2, '0')}',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 11,
                   color: JarvisTheme.textMuted,
                 ),

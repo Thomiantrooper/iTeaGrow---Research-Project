@@ -7,10 +7,11 @@ class ApiConfig {
   // PRODUCTION URL - Railway Disease Detection API
   // Update after deploying railway-disease-api folder
   // =========================================================================
-  static const String productionBaseUrl = 'https://tea-leaf-disease-api-prod.up.railway.app';
+  static const String productionBaseUrl =
+      'https://tea-leaf-disease-api-prod.up.railway.app';
 
   // Set to true to always use production backend (recommended for mobile app)
-  static const bool useProductionBackend = true;
+  static const bool useProductionBackend = false;
 
   // Base URL - Automatically detects platform and mode
   static String get baseUrl {
@@ -81,7 +82,8 @@ class ApiConfig {
 
   // Bluetooth IoT Endpoints
   static String get bluetoothConfig => '$apiBaseUrl/bluetooth/config';
-  static String get bluetoothRegister => '$apiBaseUrl/bluetooth/devices/register';
+  static String get bluetoothRegister =>
+      '$apiBaseUrl/bluetooth/devices/register';
   static String get bluetoothDevices => '$apiBaseUrl/bluetooth/devices';
   static String get bluetoothData => '$apiBaseUrl/bluetooth/data';
   static String get bluetoothSync => '$apiBaseUrl/bluetooth/sync';
@@ -108,7 +110,8 @@ class ApiConfig {
   // Auth Endpoints
   static String get authLogin => '$effectiveBaseUrl/api/users/login';
   static String get authRegister => '$effectiveBaseUrl/api/users/register';
-  static String get authVerifyToken => '$effectiveBaseUrl/api/users/verify-token';
+  static String get authVerifyToken =>
+      '$effectiveBaseUrl/api/users/verify-token';
   static String get authProfile => '$effectiveBaseUrl/api/users/me';
   static String get authLogout => '$effectiveBaseUrl/api/users/logout';
 
@@ -121,8 +124,10 @@ class ApiConfig {
   static String get syncTrigger => '$apiBaseUrl/sync/trigger';
 
   // Additional Recommendation Endpoints
-  static String get treatmentProtocol => '$apiBaseUrl/recommendations/treatment';
-  static String get fungicideCatalog => '$apiBaseUrl/recommendations/fungicides';
+  static String get treatmentProtocol =>
+      '$apiBaseUrl/recommendations/treatment';
+  static String get fungicideCatalog =>
+      '$apiBaseUrl/recommendations/fungicides';
   static String get costEstimate => '$apiBaseUrl/recommendations/cost-estimate';
 
   // Yield Prediction API (Railway Production)

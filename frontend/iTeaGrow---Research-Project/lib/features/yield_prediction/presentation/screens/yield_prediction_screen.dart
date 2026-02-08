@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../../../../core/services/connectivity_service.dart';
 import '../../data/models/prediction_request_model.dart';
@@ -188,7 +187,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Division Selection
             DropdownButtonFormField<String>(
-              value: _divisionId,
+              initialValue: _divisionId,
               decoration: const InputDecoration(
                 labelText: 'Division',
                 border: OutlineInputBorder(),

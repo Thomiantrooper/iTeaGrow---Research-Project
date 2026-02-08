@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import '../../../../core/theme/jarvis_theme.dart';
 import '../../../../core/widgets/hologram_card.dart';
 import '../../../../core/widgets/floating_tea_leaf.dart';
-import '../../../../core/widgets/jarvis_assistant.dart';
 import '../../../../core/services/ai_assistant_service.dart';
 import '../../../../core/services/voice_service.dart';
 import '../../../auth/data/providers/auth_provider.dart';
@@ -222,8 +221,8 @@ class _EnhancedDiseaseDetectionScreenState
         print('!!! No auth token - showing login message');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
+            const SnackBar(
+              content: Row(
                 children: [
                   Icon(Icons.warning_amber, color: Colors.white),
                   SizedBox(width: 8),
@@ -254,8 +253,8 @@ class _EnhancedDiseaseDetectionScreenState
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
+            const SnackBar(
+              content: Row(
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
                   SizedBox(width: 8),
@@ -415,11 +414,11 @@ class _EnhancedDiseaseDetectionScreenState
             child: const Icon(Icons.sensors, color: Colors.white, size: 20),
           ),
           const SizedBox(width: JarvisTheme.spacingMd),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Live Environment',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -502,14 +501,14 @@ class _EnhancedDiseaseDetectionScreenState
                 color: JarvisTheme.teaGreen.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: DiseaseIndicatorLeaf(
+              child: const DiseaseIndicatorLeaf(
                 diseaseType: 'None',
                 severity: 0,
                 size: 60,
               ),
             ),
             const SizedBox(height: 20),
-            Text(
+            const Text(
               'Capture Tea Leaf',
               style: TextStyle(
                 color: JarvisTheme.teaGreen,
@@ -518,8 +517,8 @@ class _EnhancedDiseaseDetectionScreenState
               ),
             ),
             const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40),
               child: Text(
                 'Take a photo or select from gallery to detect diseases',
                 textAlign: TextAlign.center,
@@ -620,7 +619,7 @@ class _EnhancedDiseaseDetectionScreenState
                         Switch(
                           value: _showGradCam,
                           onChanged: (v) => setState(() => _showGradCam = v),
-                          activeColor: JarvisTheme.hologramGreen,
+                          activeThumbColor: JarvisTheme.hologramGreen,
                           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ],
@@ -666,7 +665,7 @@ class _EnhancedDiseaseDetectionScreenState
                     color: JarvisTheme.teaGreen.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.camera_alt_rounded,
                     color: JarvisTheme.teaGreen,
                     size: 32,
@@ -699,7 +698,7 @@ class _EnhancedDiseaseDetectionScreenState
                     color: JarvisTheme.softGold.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.photo_library_rounded,
                     color: JarvisTheme.softGold,
                     size: 32,
@@ -809,7 +808,7 @@ class _EnhancedDiseaseDetectionScreenState
                   children: [
                     Text(
                       isNotALeaf ? 'Detection Result' : 'Disease Status',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: JarvisTheme.textMuted,
                       ),
@@ -921,11 +920,11 @@ class _EnhancedDiseaseDetectionScreenState
                 borderRadius: BorderRadius.circular(JarvisTheme.radiusMd),
                 border: Border.all(color: JarvisTheme.warning.withOpacity(0.3)),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.info_outline, color: JarvisTheme.warning),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                  SizedBox(width: 12),
+                  Expanded(
                     child: Text(
                       'This is not a valid tea leaf image. Please capture a clear image of a tea leaf.',
                       style: TextStyle(fontSize: 14),
@@ -974,7 +973,7 @@ class _EnhancedDiseaseDetectionScreenState
                   color: JarvisTheme.softGold.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.lightbulb,
                   color: JarvisTheme.softGold,
                   size: 22,
@@ -992,7 +991,7 @@ class _EnhancedDiseaseDetectionScreenState
               const Spacer(),
               // Voice button
               IconButton(
-                icon: Icon(
+                icon: const Icon(
                   Icons.volume_up,
                   color: JarvisTheme.teaGreen,
                 ),
@@ -1015,7 +1014,7 @@ class _EnhancedDiseaseDetectionScreenState
                   Container(
                     width: 28,
                     height: 28,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: JarvisTheme.goldGradient,
                       shape: BoxShape.circle,
                     ),
@@ -1058,7 +1057,7 @@ class _EnhancedDiseaseDetectionScreenState
               label: const Text('View Full Treatment Guide'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: JarvisTheme.teaGreen,
-                side: BorderSide(color: JarvisTheme.teaGreen),
+                side: const BorderSide(color: JarvisTheme.teaGreen),
                 padding: const EdgeInsets.all(14),
               ),
             ),

@@ -67,11 +67,11 @@ class AboutUsPageSimple extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            _FeatureItem(icon: Icons.eco, title: 'AI-powered leaf maturity detection'),
-            _FeatureItem(icon: Icons.sensors, title: 'Real-time IoT sensor monitoring'),
-            _FeatureItem(icon: Icons.health_and_safety, title: 'Disease detection and prevention'),
-            _FeatureItem(icon: Icons.science, title: 'Smart fertilization recommendations'),
-            _FeatureItem(icon: Icons.grade, title: 'Tea powder quality grading'),
+            const _FeatureItem(icon: Icons.eco, title: 'AI-powered leaf maturity detection'),
+            const _FeatureItem(icon: Icons.sensors, title: 'Real-time IoT sensor monitoring'),
+            const _FeatureItem(icon: Icons.health_and_safety, title: 'Disease detection and prevention'),
+            const _FeatureItem(icon: Icons.science, title: 'Smart fertilization recommendations'),
+            const _FeatureItem(icon: Icons.grade, title: 'Tea powder quality grading'),
 
             const SizedBox(height: 32),
 

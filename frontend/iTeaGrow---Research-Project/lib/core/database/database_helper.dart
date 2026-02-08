@@ -261,7 +261,7 @@ class DatabaseHelper {
   }
 
   Future<int> delete(String table, String where,
-      {List<Object?>? whereArgs}) async {
+      {List<Object?>? whereArgs,}) async {
     final db = await database;
     return await db.delete(table, where: where, whereArgs: whereArgs);
   }

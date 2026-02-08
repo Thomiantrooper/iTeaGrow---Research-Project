@@ -1,10 +1,9 @@
 // This file is platform-specific (Web)
-import 'dart:async';
 import 'dart:js_interop';
 import 'package:web/web.dart' as web;
 
 typedef SpeechResultCallback = void Function(
-    String finalTranscript, String interimTranscript);
+    String finalTranscript, String interimTranscript,);
 typedef SpeechErrorCallback = void Function(String error);
 typedef SpeechStateCallback = void Function(bool isListening);
 
@@ -60,18 +59,14 @@ class PlatformSpeechRecognizer {
       final results = event.results;
       for (int i = 0; i < results.length; i++) {
         final result = results.item(i);
-        if (result != null) {
-          final alternative = result.item(0);
-          if (alternative != null) {
-            final transcript = alternative.transcript;
-            if (result.isFinal) {
-              finalT += transcript;
-            } else {
-              interimT += transcript;
-            }
-          }
+        final alternative = result.item(0);
+        final transcript = alternative.transcript;
+        if (result.isFinal) {
+          finalT += transcript;
+        } else {
+          interimT += transcript;
         }
-      }
+                  }
       onResult(finalT, interimT);
     }).toJS;
 

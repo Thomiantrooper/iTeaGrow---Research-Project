@@ -7,20 +7,20 @@ class AnalyticsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Analytics')),
-      body: Center(
+      body: const Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.analytics, size: 100, color: Colors.purple),
-              const SizedBox(height: 24),
-              const Text(
+              Icon(Icons.analytics, size: 100, color: Colors.purple),
+              SizedBox(height: 24),
+              Text(
                 'Analytics Dashboard',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Ready for data visualization and trends',
                 textAlign: TextAlign.center,
               ),

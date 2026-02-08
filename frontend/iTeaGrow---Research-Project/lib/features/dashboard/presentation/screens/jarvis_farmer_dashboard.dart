@@ -14,7 +14,6 @@ import '../../../powder_grading/presentation/screens/powder_grading_screen.dart'
 import '../../../public/presentation/landing/landing_page.dart';
 import '../../presentation/widgets/weather_risk_card.dart';
 import '../../../iot_connectivity/presentation/widgets/esp32_sensor_card.dart';
-import '../../../iot_connectivity/presentation/providers/esp32_sensor_provider.dart';
 import '../../../iot_connectivity/presentation/screens/iot_devices_screen.dart';
 
 class JarvisFarmerDashboard extends ConsumerStatefulWidget {
@@ -151,7 +150,7 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
@@ -614,9 +613,9 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                     // Header
                     Container(
                       padding: const EdgeInsets.all(JarvisTheme.spacingMd),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: JarvisTheme.primaryGradient,
-                        borderRadius: const BorderRadius.vertical(
+                        borderRadius: BorderRadius.vertical(
                           top: Radius.circular(JarvisTheme.radiusXl),
                         ),
                       ),
@@ -683,9 +682,9 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                     // Input
                     Container(
                       padding: const EdgeInsets.all(JarvisTheme.spacingMd),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: JarvisTheme.mistGray,
-                        borderRadius: const BorderRadius.vertical(
+                        borderRadius: BorderRadius.vertical(
                           bottom: Radius.circular(JarvisTheme.radiusXl),
                         ),
                       ),
@@ -797,7 +796,7 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                   Container(
                     width: 60,
                     height: 60,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: JarvisTheme.primaryGradient,
                       shape: BoxShape.circle,
                     ),

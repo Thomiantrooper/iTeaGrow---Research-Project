@@ -20,11 +20,11 @@ class SimpleLandingPage extends ConsumerWidget {
             child: Column(
               children: [
                 // Language Selector at the top
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SizedBox(width: 40), // Spacer for alignment
-                    const LanguageSelector(isVertical: false, buttonSize: 36),
+                    SizedBox(width: 40), // Spacer for alignment
+                    LanguageSelector(isVertical: false, buttonSize: 36),
                   ],
                 ),
                 

@@ -142,7 +142,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
           message: message,
           isUser: isUser,
           language: _selectedLanguage,
-        ));
+        ),);
         _scrollToBottom();
       });
     }
@@ -169,7 +169,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
   void _startListening() {
     if (_recognizer == null || !_speechSupported) {
       _addLocalLog(
-          'Speech recognition not supported. Use text input below.', false);
+          'Speech recognition not supported. Use text input below.', false,);
       return;
     }
 
@@ -310,7 +310,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
   Widget build(BuildContext context) {
     return Container(
       width: 320,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: TeaColors.white,
         border: Border(
           left: BorderSide(color: TeaColors.lightGray, width: 1),
@@ -319,7 +319,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
           BoxShadow(
             color: TeaColors.shadowVale,
             blurRadius: 10,
-            offset: const Offset(-2, 0),
+            offset: Offset(-2, 0),
           ),
         ],
       ),
@@ -351,7 +351,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(TeaSpacing.md),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: TeaColors.leafPale,
         border: Border(
           bottom: BorderSide(color: TeaColors.lightGray, width: 1),
@@ -365,7 +365,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
               color: TeaColors.freshLeaf.withOpacity(0.1),
               borderRadius: TeaRadius.radiusSm,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.record_voice_over,
               color: TeaColors.freshLeaf,
               size: 20,
@@ -434,7 +434,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
       ),
       child: Row(
         children: [
-          Icon(Icons.language, size: 18, color: TeaColors.darkGray),
+          const Icon(Icons.language, size: 18, color: TeaColors.darkGray),
           const SizedBox(width: TeaSpacing.sm),
           Text('Language:', style: TeaTypography.labelMedium),
           const SizedBox(width: TeaSpacing.sm),
@@ -450,7 +450,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
                 child: DropdownButton<VoiceLanguage>(
                   value: _selectedLanguage,
                   isExpanded: true,
-                  icon: Icon(Icons.arrow_drop_down, color: TeaColors.freshLeaf),
+                  icon: const Icon(Icons.arrow_drop_down, color: TeaColors.freshLeaf),
                   style: TeaTypography.bodySmall
                       .copyWith(color: TeaColors.nearBlack),
                   items: VoiceLanguage.values.map((lang) {
@@ -589,7 +589,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
       color: TeaColors.goldenSunlight.withOpacity(0.1),
       child: Row(
         children: [
-          SizedBox(
+          const SizedBox(
             width: 16,
             height: 16,
             child: CircularProgressIndicator(
@@ -639,15 +639,15 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide(color: TeaColors.lightGray),
+                  borderSide: const BorderSide(color: TeaColors.lightGray),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide(color: TeaColors.lightGray),
+                  borderSide: const BorderSide(color: TeaColors.lightGray),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide(color: TeaColors.freshLeaf),
+                  borderSide: const BorderSide(color: TeaColors.freshLeaf),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: TeaSpacing.md,
@@ -661,7 +661,7 @@ class _VoiceAssistantPanelState extends State<VoiceAssistantPanel> {
           ),
           const SizedBox(width: TeaSpacing.xs),
           IconButton(
-            icon: Icon(Icons.send_rounded, color: TeaColors.freshLeaf),
+            icon: const Icon(Icons.send_rounded, color: TeaColors.freshLeaf),
             onPressed: _handleTextSubmit,
           ),
         ],

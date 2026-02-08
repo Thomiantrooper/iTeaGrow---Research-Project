@@ -63,7 +63,7 @@ class AdminDashboardSimple extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: _HealthCard(
@@ -72,7 +72,7 @@ class AdminDashboardSimple extends ConsumerWidget {
                     statusColor: AppTheme.statusGood,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _HealthCard(
                     title: 'IoT Devices',
@@ -85,7 +85,7 @@ class AdminDashboardSimple extends ConsumerWidget {
 
             const SizedBox(height: 12),
 
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: _HealthCard(
@@ -94,7 +94,7 @@ class AdminDashboardSimple extends ConsumerWidget {
                     statusColor: AppTheme.statusGood,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _HealthCard(
                     title: 'ML Models',
@@ -179,19 +179,19 @@ class AdminDashboardSimple extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            _ActivityCard(
+            const _ActivityCard(
               icon: Icons.person_add,
               title: 'New user registered',
               subtitle: 'farmer_john - 2 hours ago',
             ),
             const SizedBox(height: 8),
-            _ActivityCard(
+            const _ActivityCard(
               icon: Icons.devices,
               title: 'IoT device connected',
               subtitle: 'Sensor-NPK-03 - 5 hours ago',
             ),
             const SizedBox(height: 8),
-            _ActivityCard(
+            const _ActivityCard(
               icon: Icons.sync,
               title: 'Data synchronized',
               subtitle: '1,245 records - 1 day ago',

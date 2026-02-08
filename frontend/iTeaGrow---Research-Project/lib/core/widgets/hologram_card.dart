@@ -385,7 +385,7 @@ class HologramMetric extends StatelessWidget {
           // Label
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
               color: JarvisTheme.textMuted,
               fontWeight: FontWeight.w500,

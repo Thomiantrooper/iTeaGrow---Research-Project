@@ -34,7 +34,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       text: "Hello! I'm your Tea Garden Assistant. How can I help you today?\n\nYou can ask me about:\n- Disease detection and treatment\n- Plant care and growth stages\n- Weather and soil conditions\n- Harvest recommendations\n- IoT sensor management",
       isFromUser: false,
       timestamp: DateTime.now(),
-    ));
+    ),);
   }
 
   @override
@@ -176,7 +176,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
                   // Send Button
                   Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: TeaColors.freshLeaf,
                       shape: BoxShape.circle,
                     ),
@@ -215,11 +215,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             bottomLeft: Radius.circular(message.isFromUser ? 16 : 4),
             bottomRight: Radius.circular(message.isFromUser ? 4 : 16),
           ),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               color: TeaColors.shadowVale,
               blurRadius: 4,
-              offset: const Offset(0, 2),
+              offset: Offset(0, 2),
             ),
           ],
         ),
@@ -303,7 +303,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         text: text,
         isFromUser: true,
         timestamp: DateTime.now(),
-      ));
+      ),);
       _messageController.clear();
       _isTyping = true;
     });
@@ -337,7 +337,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             text: botReply.toString(),
             isFromUser: false,
             timestamp: DateTime.now(),
-          ));
+          ),);
         });
       } else {
         // Backend returned an error - fall back to local response
@@ -357,12 +357,12 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         text: _generateResponse(query),
         isFromUser: false,
         timestamp: DateTime.now(),
-      ));
+      ),);
     });
   }
 
   void _simulateVoiceInput() {
-    _messageController.text = "Check my plant health status";
+    _messageController.text = 'Check my plant health status';
     _sendMessage();
   }
 
@@ -382,15 +382,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     final lowerQuery = query.toLowerCase();
 
     if (lowerQuery.contains('disease') || lowerQuery.contains('detect')) {
-      return "To detect leaf diseases, you can use our AI-powered scanner:\n\n1. Go to Disease Detection from the dashboard\n2. Take a clear photo of the affected leaf\n3. Wait for AI analysis\n\nCommon diseases I can identify include Blister Blight, Brown Blight, and Algal Leaf Spot. Would you like me to navigate you to the scanner?";
+      return 'To detect leaf diseases, you can use our AI-powered scanner:\n\n1. Go to Disease Detection from the dashboard\n2. Take a clear photo of the affected leaf\n3. Wait for AI analysis\n\nCommon diseases I can identify include Blister Blight, Brown Blight, and Algal Leaf Spot. Would you like me to navigate you to the scanner?';
     }
 
     if (lowerQuery.contains('harvest') || lowerQuery.contains('when')) {
-      return "Based on your plantation data, here are the harvest recommendations:\n\n- Block B2: Ready now (P+2 stage)\n- Block A1: Ready in 2-3 days\n- Block C3: Ready in 5-7 days\n\nThe optimal harvest time is early morning when moisture content is ideal. Would you like detailed timing for a specific block?";
+      return 'Based on your plantation data, here are the harvest recommendations:\n\n- Block B2: Ready now (P+2 stage)\n- Block A1: Ready in 2-3 days\n- Block C3: Ready in 5-7 days\n\nThe optimal harvest time is early morning when moisture content is ideal. Would you like detailed timing for a specific block?';
     }
 
     if (lowerQuery.contains('soil') || lowerQuery.contains('condition')) {
-      return "For optimal tea growth, maintain these soil conditions:\n\n- pH Level: 4.5 - 5.5 (acidic)\n- Organic matter: > 2%\n- Drainage: Well-drained\n- Temperature: 20-30°C\n\nYour current readings show optimal conditions in most blocks. Block D1 needs attention - nitrogen levels are slightly low.";
+      return 'For optimal tea growth, maintain these soil conditions:\n\n- pH Level: 4.5 - 5.5 (acidic)\n- Organic matter: > 2%\n- Drainage: Well-drained\n- Temperature: 20-30°C\n\nYour current readings show optimal conditions in most blocks. Block D1 needs attention - nitrogen levels are slightly low.';
     }
 
     if (lowerQuery.contains('iot') || lowerQuery.contains('sensor')) {
@@ -398,7 +398,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     }
 
     if (lowerQuery.contains('health') || lowerQuery.contains('status')) {
-      return "Your plantation health overview:\n\n- Overall health score: 87%\n- Healthy plants: 94%\n- Disease detected: 2 blocks (A3, C1)\n- Harvest ready: 3 blocks\n\nI recommend checking Block A3 for blister blight symptoms. Would you like me to schedule a detailed scan?";
+      return 'Your plantation health overview:\n\n- Overall health score: 87%\n- Healthy plants: 94%\n- Disease detected: 2 blocks (A3, C1)\n- Harvest ready: 3 blocks\n\nI recommend checking Block A3 for blister blight symptoms. Would you like me to schedule a detailed scan?';
     }
 
     return "I understand you're asking about \"$query\". Here's what I can help with:\n\n- Disease detection and treatment plans\n- Plant growth monitoring\n- Harvest scheduling\n- Soil and weather analysis\n- IoT device management\n\nCould you please provide more details about what you need?";
@@ -444,7 +444,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 trailing: Switch(
                   value: false,
                   onChanged: (value) {},
-                  activeColor: TeaColors.freshLeaf,
+                  activeThumbColor: TeaColors.freshLeaf,
                 ),
                 onTap: () {},
               ),
@@ -525,7 +525,7 @@ class _BouncingDotState extends State<_BouncingDot>
           child: Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: TeaColors.freshLeaf,
               shape: BoxShape.circle,
             ),

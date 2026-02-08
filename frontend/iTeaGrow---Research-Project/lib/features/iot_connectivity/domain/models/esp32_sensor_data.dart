@@ -50,7 +50,7 @@ class ESP32SensorData {
   DiseaseRisk get diseaseRisk {
     // Blister Blight risk: High humidity (>80%) + Temperature 15-25°C
     if (humidity > 80 && temperature >= 15 && temperature <= 25) {
-      return DiseaseRisk(
+      return const DiseaseRisk(
         disease: 'Blister Blight',
         riskLevel: RiskLevel.high,
         description: 'High humidity and cool temperatures favor Blister Blight',
@@ -66,7 +66,7 @@ class ESP32SensorData {
       );
     }
 
-    return DiseaseRisk(
+    return const DiseaseRisk(
       disease: 'None',
       riskLevel: RiskLevel.low,
       description: 'Environmental conditions are favorable',

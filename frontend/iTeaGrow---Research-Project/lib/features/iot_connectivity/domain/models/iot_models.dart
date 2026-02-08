@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:iteagrow/core/theme/app_theme.dart';
 
 /// IoT Device Model
 class IoTDevice {

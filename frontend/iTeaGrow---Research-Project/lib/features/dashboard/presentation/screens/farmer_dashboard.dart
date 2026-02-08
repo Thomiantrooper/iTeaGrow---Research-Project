@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iteagrow/core/theme/app_theme.dart';
-import 'package:iteagrow/core/widgets/dashboard_card.dart';
 import 'package:iteagrow/features/auth/presentation/providers/auth_provider.dart';
 import 'package:iteagrow/features/public/presentation/landing/landing_page.dart';
 import 'package:iteagrow/features/leaf_maturity/presentation/screens/leaf_maturity_screen.dart';
@@ -97,12 +96,12 @@ class FarmerDashboard extends ConsumerWidget {
                               style: TextStyle(
                                 color: Colors.white, 
                                 fontSize: 24, 
-                                fontWeight: FontWeight.bold
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
                               'Check Maturity', 
-                              style: TextStyle(color: Colors.white70)
+                              style: TextStyle(color: Colors.white70),
                             ),
                           ],
                         ),
