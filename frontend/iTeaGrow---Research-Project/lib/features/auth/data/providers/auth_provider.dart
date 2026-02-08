@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/local_auth_service.dart';
+import '../../../../core/services/google_auth_service.dart';
 import '../repositories/auth_repository.dart';
 import '../../domain/models/user.dart';
 
@@ -50,15 +51,20 @@ final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>(
   (ref) => AuthNotifier(
     ref.read(authRepositoryProvider),
     ref.read(localAuthServiceProvider),
+    ref.read(googleAuthServiceProvider),
   ),
 );
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
   final LocalAuthService _localAuthService;
+  final GoogleAuthService _googleAuthService;
 
-  AuthNotifier(this._authRepository, this._localAuthService)
-      : super(const AuthState()) {
+  AuthNotifier(
+    this._authRepository,
+    this._localAuthService,
+    this._googleAuthService,
+  ) : super(const AuthState()) {
     _initializeAuth();
   }
 
@@ -114,7 +120,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Login with username and password
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(
+    String username,
+    String password, {
+    bool rememberMe = false,
+  }) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
     try {
@@ -125,6 +135,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await _localAuthService.saveSession(
           response.user,
           accessToken: response.accessToken,
+          rememberMe: rememberMe,
         );
 
         state = AuthState(
@@ -153,6 +164,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     await _localAuthService.clearSession();
     await _authRepository.logout();
+    await _googleAuthService.signOut(); // Sign out from Google if signed in
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
@@ -270,6 +282,186 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
 
     return await _authRepository.changePassword(currentUser.id, newPassword);
+  }
+
+  // ========== Biometric Authentication ==========
+
+  /// Login with biometric authentication
+  Future<bool> loginWithBiometrics() async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+
+    try {
+      // Check if biometric is enabled
+      if (!_localAuthService.isBiometricEnabled) {
+        state = const AuthState(
+          status: AuthStatus.error,
+          errorMessage: 'Biometric login is not enabled',
+        );
+        return false;
+      }
+
+      // Authenticate with biometrics
+      final authenticated = await _localAuthService.authenticateWithBiometrics(
+        reason: 'Authenticate to access your iTeaGrow account',
+      );
+
+      if (!authenticated) {
+        state = const AuthState(
+          status: AuthStatus.unauthenticated,
+          errorMessage: 'Biometric authentication failed',
+        );
+        return false;
+      }
+
+      // Get stored credentials
+      final credentials = await _localAuthService.getBiometricCredentials();
+      if (credentials == null) {
+        state = const AuthState(
+          status: AuthStatus.error,
+          errorMessage: 'Biometric credentials not found',
+        );
+        return false;
+      }
+
+      // Login with stored credentials
+      return await login(
+        credentials['username']!,
+        credentials['password']!,
+        rememberMe: true,
+      );
+    } catch (e) {
+      state = AuthState(
+        status: AuthStatus.error,
+        errorMessage: 'Biometric login failed: ${e.toString()}',
+      );
+      return false;
+    }
+  }
+
+  /// Enable biometric login for current user
+  Future<bool> enableBiometricLogin(String password) async {
+    final user = currentUser;
+    if (user == null) return false;
+
+    try {
+      // Verify password first
+      final verified = await _authRepository.login(user.username, password);
+      if (verified == null) {
+        state = state.copyWith(errorMessage: 'Invalid password');
+        return false;
+      }
+
+      // Check if biometric is available
+      final isAvailable = await _localAuthService.isBiometricAvailable();
+      if (!isAvailable) {
+        state = state.copyWith(
+          errorMessage: 'Biometric authentication is not available on this device',
+        );
+        return false;
+      }
+
+      // Authenticate with biometrics to confirm
+      final authenticated = await _localAuthService.authenticateWithBiometrics(
+        reason: 'Authenticate to enable biometric login',
+      );
+
+      if (!authenticated) {
+        state = state.copyWith(errorMessage: 'Biometric authentication failed');
+        return false;
+      }
+
+      // Enable biometric login
+      await _localAuthService.enableBiometricLogin(user.username, password);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        errorMessage: 'Failed to enable biometric login: ${e.toString()}',
+      );
+      return false;
+    }
+  }
+
+  /// Disable biometric login
+  Future<void> disableBiometricLogin() async {
+    await _localAuthService.disableBiometricLogin();
+  }
+
+  /// Check if biometric is available
+  Future<bool> isBiometricAvailable() async {
+    return await _localAuthService.isBiometricAvailable();
+  }
+
+  /// Check if biometric is enabled
+  bool get isBiometricEnabled => _localAuthService.isBiometricEnabled;
+
+  // ========== Google Sign-In ==========
+
+  /// Login with Google Sign-In
+  Future<bool> loginWithGoogle() async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+
+    try {
+      // Sign in with Google
+      final googleAccount = await _googleAuthService.signIn();
+      
+      if (googleAccount == null) {
+        state = const AuthState(
+          status: AuthStatus.unauthenticated,
+          errorMessage: 'Google Sign-In cancelled',
+        );
+        return false;
+      }
+
+      // Get Google ID token for backend verification
+      final idToken = await _googleAuthService.getIdToken();
+      
+      if (idToken == null) {
+        state = const AuthState(
+          status: AuthStatus.error,
+          errorMessage: 'Failed to get Google authentication token',
+        );
+        return false;
+      }
+
+      // TODO: Send idToken to backend for verification and user creation/login
+      // For now, we'll create a mock user from Google account data
+      // In production, you should verify the token with your backend
+      
+      debugPrint('Google Sign-In successful: ${googleAccount.email}');
+      debugPrint('Note: Backend integration required for production use');
+
+      // Mock user creation (replace with actual backend call)
+      state = const AuthState(
+        status: AuthStatus.error,
+        errorMessage: 'Google Sign-In requires backend integration. Please contact support.',
+      );
+      
+      return false;
+
+      // Example of what the backend integration should look like:
+      /*
+      final response = await _authRepository.loginWithGoogle(idToken);
+      if (response != null) {
+        await _localAuthService.saveSession(
+          response.user,
+          accessToken: response.accessToken,
+          rememberMe: true,
+        );
+        state = AuthState(
+          status: AuthStatus.authenticated,
+          user: response.user,
+          accessToken: response.accessToken,
+        );
+        return true;
+      }
+      */
+    } catch (e) {
+      state = AuthState(
+        status: AuthStatus.error,
+        errorMessage: 'Google Sign-In failed: ${e.toString()}',
+      );
+      return false;
+    }
   }
 
   /// Get current user

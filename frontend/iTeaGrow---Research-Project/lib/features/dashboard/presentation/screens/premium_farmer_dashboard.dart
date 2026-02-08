@@ -990,10 +990,12 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                   'Log Out',
                   style: TextStyle(color: TeaColors.alertRust),
                 ),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
-                  ref.read(authStateProvider.notifier).logout();
-                  context.go('/login');
+                  await ref.read(authStateProvider.notifier).logout();
+                  if (context.mounted) {
+                    context.go('/login');
+                  }
                 },
               ),
               const SizedBox(height: TeaSpacing.lg),

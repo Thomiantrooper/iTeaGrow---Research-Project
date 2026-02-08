@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:http/http.dart' as http;
+import '../../../../core/api/api_config.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/jarvis_assistant.dart';
 
@@ -306,20 +309,55 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     });
 
     _scrollToBottom();
+    _fetchBotResponse(text);
+  }
 
-    // Simulate AI response
-    Future.delayed(const Duration(seconds: 1, milliseconds: 500), () {
-      if (mounted) {
+  Future<void> _fetchBotResponse(String userMessage) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.chatbotChat),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'message': userMessage,
+          'language': 'en',
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      if (!mounted) return;
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(response.body);
+        final botReply = data['response'] ?? data['message'] ?? data['answer'] ?? '';
         setState(() {
           _isTyping = false;
           _messages.add(ChatMessage(
-            text: _generateResponse(text),
+            text: botReply.toString(),
             isFromUser: false,
             timestamp: DateTime.now(),
           ));
         });
-        _scrollToBottom();
+      } else {
+        // Backend returned an error - fall back to local response
+        _addLocalResponse(userMessage);
       }
+    } catch (_) {
+      // Network error - fall back to local response
+      if (mounted) _addLocalResponse(userMessage);
+    }
+    _scrollToBottom();
+  }
+
+  void _addLocalResponse(String query) {
+    setState(() {
+      _isTyping = false;
+      _messages.add(ChatMessage(
+        text: _generateResponse(query),
+        isFromUser: false,
+        timestamp: DateTime.now(),
+      ));
     });
   }
 

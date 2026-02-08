@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../auth/data/providers/auth_provider_simple.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 
 class AdminDashboardSimple extends ConsumerWidget {
   const AdminDashboardSimple({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authStateSimpleProvider);
+    final authState = ref.watch(authStateProvider);
+    final user = authState.user;
 
     return Scaffold(
       appBar: AppBar(
@@ -18,9 +19,11 @@ class AdminDashboardSimple extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
-            onPressed: () {
-              ref.read(authStateSimpleProvider.notifier).state = null;
-              context.go('/login');
+            onPressed: () async {
+              await ref.read(authStateProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/login');
+              }
             },
           ),
         ],
