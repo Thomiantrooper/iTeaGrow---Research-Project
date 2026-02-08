@@ -26,8 +26,8 @@ class ApiConfig {
     // For mobile platforms in debug mode
     try {
       if (Platform.isAndroid) {
-        // Android emulator uses 10.0.2.2 to reach host machine
-        return 'http://10.0.2.2:8000';
+        // Use localhost for both emulator and physical device (bridged via ADB reverse)
+        return 'http://localhost:8000';
       } else if (Platform.isIOS) {
         // iOS simulator uses localhost
         return 'http://localhost:8000';
@@ -88,10 +88,14 @@ class ApiConfig {
   static String get bluetoothHealth => '$apiBaseUrl/bluetooth/health';
 
   // Disease Detection Storage Endpoints
-  static String get diseaseDetections => '$effectiveBaseUrl/api/disease/detections';
-  static String get diseaseDetectionsWithImage => '$effectiveBaseUrl/api/disease/detections/with-image';
-  static String get diseaseStatistics => '$effectiveBaseUrl/api/disease/statistics';
-  static String get diseaseStatisticsDetailed => '$effectiveBaseUrl/api/disease/statistics/detailed';
+  static String get diseaseDetections =>
+      '$effectiveBaseUrl/api/disease/detections';
+  static String get diseaseDetectionsWithImage =>
+      '$effectiveBaseUrl/api/disease/detections/with-image';
+  static String get diseaseStatistics =>
+      '$effectiveBaseUrl/api/disease/statistics';
+  static String get diseaseStatisticsDetailed =>
+      '$effectiveBaseUrl/api/disease/statistics/detailed';
   static String get diseaseRecent => '$effectiveBaseUrl/api/disease/recent';
 
   // Chatbot / AI Assistant Endpoints

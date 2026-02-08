@@ -25,13 +25,13 @@ subprojects {
     plugins.withId("com.android.application") {
         val android = extensions.getByName("android") as com.android.build.gradle.BaseExtension
         if (android.compileSdkVersion == null) {
-            android.compileSdkVersion = 34
+            android.compileSdkVersion = "android-34"
         }
     }
     plugins.withId("com.android.library") {
         val android = extensions.getByName("android") as com.android.build.gradle.BaseExtension
         if (android.compileSdkVersion == null) {
-            android.compileSdkVersion = 34
+            android.compileSdkVersion = "android-34"
         }
     }
 }

@@ -93,7 +93,7 @@ class DiseaseDetection(BaseModel):
     temperature: Optional[float] = None
     humidity: Optional[float] = None
     air_quality: Optional[float] = None
-    # Processing metadata
+    # Processing metadata for model
     processing_time_ms: Optional[float] = None
     model_version: Optional[str] = None
     request_id: Optional[str] = None
