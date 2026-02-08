@@ -61,7 +61,7 @@ class TeaTheme {
       ),
 
       // Card Theme
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: TeaColors.white,
         elevation: 0,
         shadowColor: TeaColors.shadowVale,
@@ -287,7 +287,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: TeaColors.white,
         elevation: 8,
         shadowColor: TeaColors.shadowVale,
@@ -325,7 +325,7 @@ class TeaTheme {
       ),
 
       // Tab Bar Theme
-      tabBarTheme: TabBarThemeData(
+      tabBarTheme: TabBarTheme(
         labelColor: TeaColors.freshLeaf,
         unselectedLabelColor: TeaColors.darkGray,
         labelStyle: TeaTypography.labelLarge,
@@ -492,7 +492,7 @@ class TeaTheme {
       ),
 
       // Card Theme
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: TeaColors.darkCard,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -620,7 +620,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: TeaColors.darkSurface,
         elevation: 8,
         shape: RoundedRectangleBorder(
