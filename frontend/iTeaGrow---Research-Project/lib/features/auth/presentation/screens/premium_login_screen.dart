@@ -28,6 +28,14 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
   bool _isLoading = false;
   bool _rememberMe = false;
   String? _errorMessage;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometricAvailability();
+  }
 
   @override
   void dispose() {
@@ -36,6 +44,19 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
     _usernameFocus.dispose();
     _passwordFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkBiometricAvailability() async {
+    final authNotifier = ref.read(authStateProvider.notifier);
+    final available = await authNotifier.isBiometricAvailable();
+    final enabled = authNotifier.isBiometricEnabled;
+    
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = available;
+        _biometricEnabled = enabled;
+      });
+    }
   }
 
   Future<void> _handleLogin() async {
@@ -54,6 +75,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
       final success = await authNotifier.login(
         _usernameController.text.trim(),
         _passwordController.text,
+        rememberMe: _rememberMe,
       );
 
       if (success && mounted) {
@@ -85,6 +107,68 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
       if (mounted) {
         setState(() {
           _errorMessage = 'An error occurred. Please try again.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    setState(() {
+      _errorMessage = null;
+      _isLoading = true;
+    });
+
+    try {
+      final authNotifier = ref.read(authStateProvider.notifier);
+      final success = await authNotifier.loginWithBiometrics();
+
+      if (success && mounted) {
+        // Navigation will be handled by router redirect
+      } else if (mounted) {
+        final authState = ref.read(authStateProvider);
+        setState(() {
+          _errorMessage = authState.errorMessage ?? 'Biometric authentication failed';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Biometric login failed. Please try again.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _errorMessage = null;
+      _isLoading = true;
+    });
+
+    try {
+      final authNotifier = ref.read(authStateProvider.notifier);
+      final success = await authNotifier.loginWithGoogle();
+
+      if (success && mounted) {
+        // Navigation will be handled by router redirect
+      } else if (mounted) {
+        final authState = ref.read(authStateProvider);
+        setState(() {
+          _errorMessage = authState.errorMessage ?? 'Google Sign-In failed';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Google Sign-In failed. Please try again.';
         });
       }
     } finally {
@@ -359,6 +443,19 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                 onPressed: _isLoading ? null : _handleLogin,
               ).animate().fadeIn(delay: 400.ms, duration: 300.ms).slideY(begin: 0.1, end: 0),
 
+              // Biometric login button (if enabled)
+              if (_biometricAvailable && _biometricEnabled) ...[
+                const SizedBox(height: TeaSpacing.md),
+                TeaButton.secondary(
+                  label: 'Sign In with Biometrics',
+                  icon: Icons.fingerprint,
+                  isLoading: _isLoading,
+                  isFullWidth: true,
+                  size: TeaButtonSize.large,
+                  onPressed: _isLoading ? null : _handleBiometricLogin,
+                ).animate().fadeIn(delay: 450.ms, duration: 300.ms).slideY(begin: 0.1, end: 0),
+              ],
+
               const SizedBox(height: TeaSpacing.lg),
 
               // Divider
@@ -425,9 +522,15 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
     return Tooltip(
       message: 'Sign in with $label',
       child: InkWell(
-        onTap: () {
-          TeaSnackbar.info(context, '$label sign in coming soon!');
-        },
+        onTap: _isLoading
+            ? null
+            : () {
+                if (label == 'Google') {
+                  _handleGoogleSignIn();
+                } else {
+                  TeaSnackbar.info(context, '$label sign in coming soon!');
+                }
+              },
         borderRadius: TeaRadius.radiusSm,
         child: Container(
           padding: const EdgeInsets.all(TeaSpacing.smd),
@@ -438,7 +541,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
           child: Icon(
             icon,
             size: 24,
-            color: TeaColors.darkGray,
+            color: _isLoading ? TeaColors.mediumGray : TeaColors.darkGray,
           ),
         ),
       ),

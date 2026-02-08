@@ -27,6 +27,9 @@ dependencies:
 
   # Security
   crypto: ^3.0.3
+  local_auth: ^2.2.0
+  flutter_secure_storage: ^9.0.0
+  google_sign_in: ^6.2.1
 
   # IoT Connectivity
   flutter_blue_plus: 1.32.12  # Pinned to stable version for Android build
