@@ -27,7 +27,7 @@ android {
         applicationId = "com.iteagrow.disease_detection"
 
         // Android versions
-        minSdk = 24  // Android 7.0 (Nougat) - wider compatibility
+        minSdk = 26  // Android 8.0 (Oreo) - required by tflite_flutter
         targetSdk = 34  // Android 14 - latest stable
 
         // App version

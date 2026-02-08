@@ -11,14 +11,15 @@ class ApiConfig {
   // For local development:
   // - Web: http://localhost:8000
   // - Android emulator: http://10.0.2.2:8000
+  // - Android emulator: http://localhost:8000
   // - iOS simulator: http://localhost:8000
   // - Physical device: http://<your-ip>:8000
   static String get baseUrl {
     if (kIsWeb) {
       return 'http://localhost:8000';
     }
-    // For Android emulator
-    return 'http://10.0.2.2:8000';
+    // Use localhost for physical devices (via ADB reverse) or emulator
+    return 'http://localhost:8000';
   }
 }
 
@@ -172,9 +173,8 @@ class ApiService {
 
     if (isSuccess) {
       try {
-        final dynamic data = response.body.isNotEmpty
-            ? jsonDecode(response.body)
-            : null;
+        final dynamic data =
+            response.body.isNotEmpty ? jsonDecode(response.body) : null;
 
         return ApiResponse(
           success: true,
@@ -192,7 +192,8 @@ class ApiService {
       String errorMessage = 'Request failed';
       try {
         final errorData = jsonDecode(response.body);
-        errorMessage = errorData['detail'] ?? errorData['message'] ?? errorMessage;
+        errorMessage =
+            errorData['detail'] ?? errorData['message'] ?? errorMessage;
       } catch (_) {}
 
       return ApiResponse(

@@ -34,7 +34,7 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     language_preference: str = "en"
     is_active: bool = True
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
