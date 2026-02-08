@@ -1,0 +1,48 @@
+version: '3.8'
+
+# GPU-enabled Docker Compose configuration
+# Use: docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up
+
+services:
+  # Override gateway to use GPU inference
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/inference/Dockerfile.gpu
+    environment:
+      - DEVICE=cuda
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Dedicated GPU inference worker (optional)
+  inference-worker:
+    build:
+      context: .
+      dockerfile: docker/inference/Dockerfile.gpu
+    container_name: tealeaf-inference-gpu
+    environment:
+      - DEVICE=cuda
+      - CUDA_VISIBLE_DEVICES=0
+      - REDIS_HOST=redis
+      - MODEL_PATH=/app/models/yolov8n_tealeaf.pt
+      - USE_ONNX=false
+    volumes:
+      - ./models:/app/models:ro
+    depends_on:
+      - redis
+    networks:
+      - tealeaf-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped

@@ -1,0 +1,21 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Settings:
+    # MongoDB
+    MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb+srv://kanzur:kanzur@cluster0.joabitw.mongodb.net/?appName=Cluster0")
+    DATABASE_NAME: str = os.getenv("DATABASE_NAME", "iteagrow")
+
+    # JWT
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "43200"))  # 30 days
+
+    # Server
+    HOST: str = os.getenv("HOST", "0.0.0.0")
+    PORT: int = int(os.getenv("PORT", "8000"))
+    DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
+
+settings = Settings()
