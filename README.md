@@ -150,7 +150,7 @@ Objective grading and valuation of processed tea powders to replace subjective a
 
 - **Kajanthan Kirubakaran (IT22197214)** – Tea Leaf Disease Detection & Environmental Monitoring
 - **Kanzurrizk M R A (IT22166524)** – Tea Leaf Maturity Detection & Yield Decision Support  
-- **Ashwin Visvanathan (IT22204448)** – Soild Monitoring  & Fertilization Management  
+- **Ashwin Visvanathan (IT22204448)** – Soild Monitoring  & Fertilization Management with enhanced IOT service. 
 - **Peiris M. D. T. N. (IT22109408)** – Tea Powder Grading & Market Valuation  
 
 ---
