@@ -62,7 +62,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 color: TeaColors.freshLeaf.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.lock_reset,
                 size: 64,
                 color: TeaColors.freshLeaf,
@@ -104,15 +104,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               fillColor: TeaColors.white,
               border: OutlineInputBorder(
                 borderRadius: TeaRadius.radiusMd,
-                borderSide: BorderSide(color: TeaColors.lightGray),
+                borderSide: const BorderSide(color: TeaColors.lightGray),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: TeaRadius.radiusMd,
-                borderSide: BorderSide(color: TeaColors.lightGray),
+                borderSide: const BorderSide(color: TeaColors.lightGray),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: TeaRadius.radiusMd,
-                borderSide: BorderSide(color: TeaColors.freshLeaf, width: 2),
+                borderSide: const BorderSide(color: TeaColors.freshLeaf, width: 2),
               ),
             ),
             validator: (value) {
@@ -185,7 +185,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             color: TeaColors.healthyGreen.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(
+          child: const Icon(
             Icons.mark_email_read_outlined,
             size: 80,
             color: TeaColors.healthyGreen,
@@ -270,7 +270,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             onPressed: () => context.go('/login'),
             style: OutlinedButton.styleFrom(
               foregroundColor: TeaColors.freshLeaf,
-              side: BorderSide(color: TeaColors.freshLeaf),
+              side: const BorderSide(color: TeaColors.freshLeaf),
               padding: const EdgeInsets.symmetric(vertical: TeaSpacing.md),
               shape: RoundedRectangleBorder(
                 borderRadius: TeaRadius.radiusMd,

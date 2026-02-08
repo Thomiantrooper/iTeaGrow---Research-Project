@@ -206,7 +206,7 @@ class TeaColors {
       case 'healthy':
         return healthyGreen;
       case 'low':
-        return Color(0xFFCDDC39);
+        return const Color(0xFFCDDC39);
       case 'medium':
       case 'moderate':
         return warningAmber;

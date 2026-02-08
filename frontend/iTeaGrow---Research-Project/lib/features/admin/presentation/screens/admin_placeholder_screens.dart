@@ -376,20 +376,20 @@ class DeviceManagementScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Device Management')),
-      body: Center(
+      body: const Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.devices, size: 100, color: Colors.purple),
-              const SizedBox(height: 24),
-              const Text(
+              Icon(Icons.devices, size: 100, color: Colors.purple),
+              SizedBox(height: 24),
+              Text(
                 'Device Management',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Admin only - Configure IoT devices',
                 textAlign: TextAlign.center,
               ),
@@ -408,20 +408,20 @@ class SystemConfigScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('System Configuration')),
-      body: Center(
+      body: const Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.settings, size: 100, color: Colors.orange),
-              const SizedBox(height: 24),
-              const Text(
+              Icon(Icons.settings, size: 100, color: Colors.orange),
+              SizedBox(height: 24),
+              Text(
                 'System Configuration',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Admin only - System settings and thresholds',
                 textAlign: TextAlign.center,
               ),
@@ -440,20 +440,20 @@ class DataSyncScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Data Synchronization')),
-      body: Center(
+      body: const Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.sync, size: 100, color: Colors.teal),
-              const SizedBox(height: 24),
-              const Text(
+              Icon(Icons.sync, size: 100, color: Colors.teal),
+              SizedBox(height: 24),
+              Text(
                 'Data Synchronization',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Admin only - Sync data to cloud',
                 textAlign: TextAlign.center,
               ),
@@ -472,20 +472,20 @@ class SystemLogsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('System Logs')),
-      body: Center(
+      body: const Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.description, size: 100, color: Colors.grey),
-              const SizedBox(height: 24),
-              const Text(
+              Icon(Icons.description, size: 100, color: Colors.grey),
+              SizedBox(height: 24),
+              Text(
                 'System Logs',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Admin only - View system activity logs',
                 textAlign: TextAlign.center,
               ),

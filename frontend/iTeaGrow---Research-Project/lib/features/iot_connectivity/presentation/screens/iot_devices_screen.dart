@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/jarvis_theme.dart';
 import '../../../../core/providers/global_iot_provider.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 import '../../domain/models/iot_models.dart';
-import '../../domain/models/esp32_sensor_data.dart';
 import '../providers/esp32_sensor_provider.dart';
 import '../../data/services/esp32_bluetooth_service.dart';
 import '../widgets/esp32_sensor_card.dart';
@@ -251,7 +249,7 @@ class _IoTDevicesScreenState extends ConsumerState<IoTDevicesScreen> {
                         );
                       },
                     ),
-                  )),
+                  ),),
           ],
         ),
       ),
@@ -400,18 +398,18 @@ class _ESP32ConnectionCardState extends ConsumerState<_ESP32ConnectionCard> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Connect to iTeaGrow',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         'Via USB/Bluetooth using bridge server',
                         style: TextStyle(
@@ -478,8 +476,8 @@ class _ESP32ConnectionCardState extends ConsumerState<_ESP32ConnectionCard> {
             Row(
               children: [
                 Expanded(child: Divider(color: JarvisTheme.textMuted.withOpacity(0.3))),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'OR',
                     style: TextStyle(
@@ -517,7 +515,7 @@ class _ESP32ConnectionCardState extends ConsumerState<_ESP32ConnectionCard> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Note: BLE scanning only works with BLE devices.\nYour ESP32 uses Bluetooth Classic - use Bridge instead.',
               style: TextStyle(
                 fontSize: 11,
@@ -695,7 +693,7 @@ class _ConnectedDeviceCard extends ConsumerWidget {
                         isAutoStorageEnabled
                             ? 'Storing readings every 30 minutes'
                             : 'Tap to enable automatic storage',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           color: JarvisTheme.textMuted,
                         ),
@@ -705,7 +703,7 @@ class _ConnectedDeviceCard extends ConsumerWidget {
                 ),
                 Switch(
                   value: isAutoStorageEnabled,
-                  activeColor: JarvisTheme.teaGreen,
+                  activeThumbColor: JarvisTheme.teaGreen,
                   onChanged: (value) {
                     if (value) {
                       // Enable auto-storage

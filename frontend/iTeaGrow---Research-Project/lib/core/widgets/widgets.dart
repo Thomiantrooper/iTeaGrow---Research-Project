@@ -1,6 +1,6 @@
 /// Tea Plantation UI Widgets
 /// Export all custom widgets
-library tea_widgets;
+library;
 
 // Buttons
 export 'buttons/tea_button.dart';

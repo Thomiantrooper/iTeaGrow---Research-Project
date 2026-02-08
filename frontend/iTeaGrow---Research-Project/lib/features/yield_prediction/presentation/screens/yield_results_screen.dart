@@ -71,15 +71,16 @@ class YieldResultsScreen extends StatelessWidget {
                 // Find max yield to highlight
                 double maxYield = 0;
                 for (var p in result.dailyPredictions) {
-                  if (p.predictedYieldKg > maxYield)
+                  if (p.predictedYieldKg > maxYield) {
                     maxYield = p.predictedYieldKg;
+                  }
                 }
                 final isHighest = prediction.predictedYieldKg == maxYield;
 
                 return Padding(
                   padding: EdgeInsets.only(
                       bottom:
-                          index == result.dailyPredictions.length - 1 ? 0 : 12),
+                          index == result.dailyPredictions.length - 1 ? 0 : 12,),
                   child: _buildDailyCard(context, prediction, isHighest),
                 );
               },
@@ -209,21 +210,22 @@ class YieldResultsScreen extends StatelessWidget {
                     reservedSize: 40, // FIXED: Match LineChart's left spacer
                     interval: maxYield / 4,
                     getTitlesWidget: (value, meta) {
-                      if (value == 0)
+                      if (value == 0) {
                         return const Text('0',
-                            style: TextStyle(color: Colors.grey, fontSize: 10));
+                            style: TextStyle(color: Colors.grey, fontSize: 10),);
+                      }
                       return Text('${value.toInt()}',
                           style: const TextStyle(
                               color: Colors.green,
                               fontSize: 10,
-                              fontWeight: FontWeight.bold));
-                    }),
+                              fontWeight: FontWeight.bold,),);
+                    },),
               ),
               rightTitles: AxisTitles(
                 sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 60, // FIXED: Match LineChart's right titles
-                    getTitlesWidget: (v, m) => const Text('')), // Spacer
+                    getTitlesWidget: (v, m) => const Text(''),), // Spacer
               ),
               topTitles:
                   const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -263,8 +265,9 @@ class YieldResultsScreen extends StatelessWidget {
                 getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                   return touchedBarSpots.map((barSpot) {
                     final index = barSpot.x.toInt();
-                    if (index < 0 || index >= result.dailyPredictions.length)
+                    if (index < 0 || index >= result.dailyPredictions.length) {
                       return null;
+                    }
 
                     final data = result.dailyPredictions[index];
                     // De-normalize temp
@@ -288,7 +291,7 @@ class YieldResultsScreen extends StatelessWidget {
                 sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 40, // FIXED: Match BarChart
-                    getTitlesWidget: (v, m) => const Text('')), // Spacer
+                    getTitlesWidget: (v, m) => const Text(''),), // Spacer
               ),
               rightTitles: AxisTitles(
                 sideTitles: SideTitles(
@@ -395,7 +398,7 @@ class YieldResultsScreen extends StatelessWidget {
                   sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 40, // FIXED: Explicitly set
-                      getTitlesWidget: (v, m) => const Text(''))), // Spacer
+                      getTitlesWidget: (v, m) => const Text(''),),), // Spacer
               rightTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
@@ -454,8 +457,9 @@ class YieldResultsScreen extends StatelessWidget {
                 getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                   return touchedBarSpots.map((barSpot) {
                     final index = barSpot.x.toInt();
-                    if (index < 0 || index >= result.dailyPredictions.length)
+                    if (index < 0 || index >= result.dailyPredictions.length) {
                       return null;
+                    }
 
                     final data = result.dailyPredictions[index];
                     final rain = data.weather.rainfall;
@@ -483,14 +487,14 @@ class YieldResultsScreen extends StatelessWidget {
                           style: const TextStyle(
                               color: Colors.green,
                               fontSize: 10,
-                              fontWeight: FontWeight.bold));
-                    }),
+                              fontWeight: FontWeight.bold,),);
+                    },),
               ),
               rightTitles: AxisTitles(
                   sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 60, // FIXED: Match BarChart's 60
-                      getTitlesWidget: (v, m) => const Text(''))), // Spacer
+                      getTitlesWidget: (v, m) => const Text(''),),), // Spacer
               bottomTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
@@ -549,7 +553,7 @@ class YieldResultsScreen extends StatelessWidget {
               return BarTooltipItem(
                 'Log Eff: ${rod.toY.toStringAsFixed(2)}',
                 const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+                    color: Colors.white, fontWeight: FontWeight.bold,),
               );
             },
           ),
@@ -799,7 +803,7 @@ class YieldResultsScreen extends StatelessWidget {
   }
 
   Widget _buildDailyCard(
-      BuildContext context, DailyPrediction prediction, bool isHighestYield) {
+      BuildContext context, DailyPrediction prediction, bool isHighestYield,) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -949,7 +953,7 @@ class YieldResultsScreen extends StatelessWidget {
   }
 
   Widget _buildWeatherItem(
-      IconData icon, String label, String value, Color color) {
+      IconData icon, String label, String value, Color color,) {
     return Column(
       children: [
         Icon(icon, size: 20, color: color),
@@ -988,14 +992,14 @@ class YieldResultsScreen extends StatelessWidget {
   }
 
   Future<void> _generateAndSharePdf(
-      BuildContext context, YieldPredictionResult result) async {
+      BuildContext context, YieldPredictionResult result,) async {
     final doc = pw.Document();
     final font = await PdfGoogleFonts.openSansRegular();
     final fontBold = await PdfGoogleFonts.openSansBold();
 
     // 1. Define Brand Color (TeaColors.freshLeaf = 0xFF4A7C59)
-    final teaGreen = PdfColor.fromInt(0xFF4A7C59);
-    final lightGreen = PdfColor.fromInt(0xFFE8F0E9); // Mist green background
+    final teaGreen = const PdfColor.fromInt(0xFF4A7C59);
+    final lightGreen = const PdfColor.fromInt(0xFFE8F0E9); // Mist green background
 
     // 2. Find Best Harvest Day(s)
     double maxYield = -1;
@@ -1022,24 +1026,24 @@ class YieldResultsScreen extends StatelessWidget {
             children: [
               pw.Text('Yield Prediction Report',
                   style: pw.TextStyle(
-                      font: fontBold, fontSize: 24, color: teaGreen)),
+                      font: fontBold, fontSize: 24, color: teaGreen,),),
               pw.PdfLogo(),
             ],
           ),
         ),
         footer: (context) => pw.Footer(
           leading: pw.Text('iTeaGrow - Smart Tea Management',
-              style: pw.TextStyle(font: font, fontSize: 10, color: teaGreen)),
+              style: pw.TextStyle(font: font, fontSize: 10, color: teaGreen),),
           trailing: pw.Text(
               'Page ${context.pageNumber} of ${context.pagesCount}',
               style: pw.TextStyle(
-                  font: font, fontSize: 10, color: PdfColors.grey)),
+                  font: font, fontSize: 10, color: PdfColors.grey,),),
         ),
         build: (context) => [
           pw.SizedBox(height: 10),
           pw.Text('Generated on: ${DateTime.now().toString().split('.')[0]}',
               style: pw.TextStyle(
-                  font: font, fontSize: 10, color: PdfColors.grey700)),
+                  font: font, fontSize: 10, color: PdfColors.grey700,),),
           pw.SizedBox(height: 20),
 
           // Summary Section
@@ -1055,24 +1059,24 @@ class YieldResultsScreen extends StatelessWidget {
               children: [
                 pw.Text('Executive Summary',
                     style: pw.TextStyle(
-                        font: fontBold, fontSize: 16, color: teaGreen)),
+                        font: fontBold, fontSize: 16, color: teaGreen,),),
                 pw.Divider(color: teaGreen),
                 _buildPdfSummaryRow(
                     'Total Predicted Yield',
                     '${result.summary.totalPredictedYield.toStringAsFixed(2)} kg',
                     font,
-                    fontBold),
+                    fontBold,),
                 _buildPdfSummaryRow(
                     'Average Daily Yield',
                     '${result.summary.averageDailyYield.toStringAsFixed(2)} kg',
                     font,
-                    fontBold),
+                    fontBold,),
                 _buildPdfSummaryRow('Highest Yield Day', bestDayStr, font,
                     fontBold, // Highlighted
-                    valueColor: teaGreen),
+                    valueColor: teaGreen,),
                 if (result.summary.weatherSource != null)
                   _buildPdfSummaryRow('Weather Source',
-                      '${result.summary.weatherSource}', font, fontBold),
+                      '${result.summary.weatherSource}', font, fontBold,),
               ],
             ),
           ),
@@ -1091,7 +1095,7 @@ class YieldResultsScreen extends StatelessWidget {
                 children: [
                   pw.Text('Input Parameters',
                       style: pw.TextStyle(
-                          font: fontBold, fontSize: 14, color: teaGreen)),
+                          font: fontBold, fontSize: 14, color: teaGreen,),),
                   pw.Divider(color: PdfColors.grey300),
                   pw.Row(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -1101,17 +1105,17 @@ class YieldResultsScreen extends StatelessWidget {
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
                             _buildPdfSummaryRow('Division',
-                                predictionRequest!.divisionId, font, fontBold),
+                                predictionRequest!.divisionId, font, fontBold,),
                             _buildPdfSummaryRow(
                                 'Labor Total',
                                 predictionRequest!.laborTotal.toString(),
                                 font,
-                                fontBold),
+                                fontBold,),
                             _buildPdfSummaryRow(
                                 'Field Size',
                                 '${predictionRequest!.fieldSizeHa} ha',
                                 font,
-                                fontBold),
+                                fontBold,),
                           ],
                         ),
                       ),
@@ -1124,17 +1128,17 @@ class YieldResultsScreen extends StatelessWidget {
                                 'Crop Harvested',
                                 '${predictionRequest!.cropHarvestedKg} kg',
                                 font,
-                                fontBold),
+                                fontBold,),
                             _buildPdfSummaryRow(
                                 'Grades (G/C/D)',
                                 '${predictionRequest!.gPct}% / ${predictionRequest!.cPct}% / ${predictionRequest!.dPct}%',
                                 font,
-                                fontBold),
+                                fontBold,),
                             _buildPdfSummaryRow(
                                 'Prediction Days',
                                 '${predictionRequest!.predictionDays} days',
                                 font,
-                                fontBold),
+                                fontBold,),
                           ],
                         ),
                       ),
@@ -1150,17 +1154,17 @@ class YieldResultsScreen extends StatelessWidget {
           // Table Section
           pw.Text('Daily Forecast Breakdown',
               style:
-                  pw.TextStyle(font: fontBold, fontSize: 18, color: teaGreen)),
+                  pw.TextStyle(font: fontBold, fontSize: 18, color: teaGreen),),
           pw.SizedBox(height: 10),
           pw.Table.fromTextArray(
             context: context,
             headerStyle: pw.TextStyle(
-                font: fontBold, color: PdfColors.white, fontSize: 11),
+                font: fontBold, color: PdfColors.white, fontSize: 11,),
             cellStyle: pw.TextStyle(font: font, fontSize: 10),
             headerDecoration: pw.BoxDecoration(color: teaGreen),
             rowDecoration: const pw.BoxDecoration(
                 border:
-                    pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300))),
+                    pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300)),),
             headers: ['Date', 'Yield (kg)', 'Rain (mm)', 'Temp (°C)'],
             data: result.dailyPredictions.map((p) {
               // Format temp to match screen logic
@@ -1182,12 +1186,12 @@ class YieldResultsScreen extends StatelessWidget {
     );
 
     await Printing.sharePdf(
-        bytes: await doc.save(), filename: 'yield_prediction_report.pdf');
+        bytes: await doc.save(), filename: 'yield_prediction_report.pdf',);
   }
 
   pw.Widget _buildPdfSummaryRow(
       String label, String value, pw.Font font, pw.Font fontBold,
-      {PdfColor? valueColor}) {
+      {PdfColor? valueColor,}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 4),
       child: pw.Row(
@@ -1196,7 +1200,7 @@ class YieldResultsScreen extends StatelessWidget {
           pw.Text(label, style: pw.TextStyle(font: font)),
           pw.Text(value,
               style: pw.TextStyle(
-                  font: fontBold, color: valueColor ?? PdfColors.black)),
+                  font: fontBold, color: valueColor ?? PdfColors.black,),),
         ],
       ),
     );

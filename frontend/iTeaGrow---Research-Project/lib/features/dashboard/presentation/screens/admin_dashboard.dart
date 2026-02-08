@@ -7,7 +7,6 @@ import 'package:iteagrow/features/public/presentation/landing/landing_page.dart'
 import 'package:iteagrow/features/leaf_maturity/presentation/screens/leaf_maturity_screen.dart';
 import 'package:iteagrow/features/disease_detection/presentation/screens/disease_detection_screen.dart';
 import 'package:iteagrow/features/soil_fertilization/presentation/screens/soil_fertilization_screen.dart';
-import 'package:iteagrow/features/yield_prediction/presentation/screens/what_if_simulation_screen.dart';
 import 'package:iteagrow/features/dashboard/presentation/screens/analytics_screen.dart';
 import 'package:iteagrow/features/powder_grading/presentation/screens/powder_grading_screen.dart';
 import 'package:iteagrow/features/admin/presentation/screens/admin_placeholder_screens.dart';

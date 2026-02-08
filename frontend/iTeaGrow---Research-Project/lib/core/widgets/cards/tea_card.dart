@@ -330,11 +330,11 @@ class _TeaCardState extends State<TeaCard>
             color: TeaColors.white.withOpacity(0.5),
             width: 1.5,
           ),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               color: TeaColors.shadowVale,
               blurRadius: 16,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),

@@ -324,7 +324,7 @@ class VoiceAssistantService {
       message: message,
       isUser: isUser,
       language: language ?? _currentLanguage,
-    ));
+    ),);
   }
 
   /// Clean up resources

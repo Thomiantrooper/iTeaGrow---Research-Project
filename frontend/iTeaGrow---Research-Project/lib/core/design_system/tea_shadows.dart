@@ -31,10 +31,10 @@ class TeaShadows {
 
   /// Subtle shadow for cards at rest
   static List<BoxShadow> get cardShadow => [
-    BoxShadow(
+    const BoxShadow(
       color: TeaColors.shadowVale,
       blurRadius: 8,
-      offset: const Offset(0, 2),
+      offset: Offset(0, 2),
       spreadRadius: 0,
     ),
     BoxShadow(
@@ -47,32 +47,32 @@ class TeaShadows {
 
   /// Medium shadow for elevated cards
   static List<BoxShadow> get cardShadowMedium => [
-    BoxShadow(
+    const BoxShadow(
       color: TeaColors.shadowVale,
       blurRadius: 12,
-      offset: const Offset(0, 4),
+      offset: Offset(0, 4),
       spreadRadius: 0,
     ),
-    BoxShadow(
+    const BoxShadow(
       color: TeaColors.deepShadow,
       blurRadius: 32,
-      offset: const Offset(0, 12),
+      offset: Offset(0, 12),
       spreadRadius: -8,
     ),
   ];
 
   /// Strong shadow for highly elevated cards
   static List<BoxShadow> get cardShadowStrong => [
-    BoxShadow(
+    const BoxShadow(
       color: TeaColors.deepShadow,
       blurRadius: 20,
-      offset: const Offset(0, 8),
+      offset: Offset(0, 8),
       spreadRadius: 0,
     ),
-    BoxShadow(
+    const BoxShadow(
       color: TeaColors.deepShadow,
       blurRadius: 48,
-      offset: const Offset(0, 20),
+      offset: Offset(0, 20),
       spreadRadius: -8,
     ),
   ];

@@ -41,8 +41,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please accept the terms and conditions'),
+        const SnackBar(
+          content: Text('Please accept the terms and conditions'),
           backgroundColor: TeaColors.alertRust,
         ),
       );
@@ -129,7 +129,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [TeaColors.freshLeaf, TeaColors.matureLeaf],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -182,11 +182,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       decoration: BoxDecoration(
         color: TeaColors.white,
         borderRadius: TeaRadius.radiusLg,
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: TeaColors.shadowVale,
             blurRadius: 20,
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -303,7 +303,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   color: TeaColors.mediumGray,
                 ),
                 onPressed: () => setState(
-                    () => _obscureConfirmPassword = !_obscureConfirmPassword),
+                    () => _obscureConfirmPassword = !_obscureConfirmPassword,),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -422,15 +422,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: TeaRadius.radiusMd,
-          borderSide: BorderSide(color: TeaColors.freshLeaf, width: 2),
+          borderSide: const BorderSide(color: TeaColors.freshLeaf, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: TeaRadius.radiusMd,
-          borderSide: BorderSide(color: TeaColors.alertRust, width: 1),
+          borderSide: const BorderSide(color: TeaColors.alertRust, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: TeaRadius.radiusMd,
-          borderSide: BorderSide(color: TeaColors.alertRust, width: 2),
+          borderSide: const BorderSide(color: TeaColors.alertRust, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: TeaSpacing.md,

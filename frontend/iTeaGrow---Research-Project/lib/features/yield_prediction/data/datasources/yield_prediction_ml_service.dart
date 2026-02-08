@@ -39,7 +39,7 @@ class YieldPredictionApiService {
     try {
       final response = await _client
           .get(Uri.parse(ApiConfig.yieldPredictionHealth))
-          .timeout(Duration(seconds: ApiConfig.connectionTimeout));
+          .timeout(const Duration(seconds: ApiConfig.connectionTimeout));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -54,7 +54,7 @@ class YieldPredictionApiService {
 
   /// Get yield prediction from API
   Future<PredictionResponseModel> getPrediction(
-      PredictionRequestModel request) async {
+      PredictionRequestModel request,) async {
     try {
       // Validate request
       if (!request.isValid()) {
@@ -73,7 +73,7 @@ class YieldPredictionApiService {
             },
             body: jsonEncode(request.toJson()),
           )
-          .timeout(Duration(seconds: ApiConfig.receiveTimeout));
+          .timeout(const Duration(seconds: ApiConfig.receiveTimeout));
 
       // Parse response
       if (response.statusCode == 200) {
@@ -115,7 +115,7 @@ class YieldPredictionApiService {
 
   /// Save prediction to local backend (MongoDB)
   Future<void> savePrediction(
-      PredictionRequestModel request, PredictionResponseModel response) async {
+      PredictionRequestModel request, PredictionResponseModel response,) async {
     try {
       // Get token from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
@@ -145,7 +145,7 @@ class YieldPredictionApiService {
         print('✅ Prediction saved to MongoDB successfully');
       } else {
         print(
-            '⚠️ Failed to save prediction: ${apiResponse.statusCode} - ${apiResponse.body}');
+            '⚠️ Failed to save prediction: ${apiResponse.statusCode} - ${apiResponse.body}',);
       }
     } catch (e) {
       print('⚠️ Error saving prediction to DB: $e');
@@ -157,7 +157,7 @@ class YieldPredictionApiService {
     try {
       final response = await _client
           .get(Uri.parse('${ApiConfig.yieldPredictionWeather}?days=$days'))
-          .timeout(Duration(seconds: ApiConfig.connectionTimeout));
+          .timeout(const Duration(seconds: ApiConfig.connectionTimeout));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -176,7 +176,7 @@ class YieldPredictionApiService {
     try {
       final response = await _client
           .get(Uri.parse('${ApiConfig.yieldPredictionRecent}?limit=$limit'))
-          .timeout(Duration(seconds: ApiConfig.connectionTimeout));
+          .timeout(const Duration(seconds: ApiConfig.connectionTimeout));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -194,7 +194,7 @@ class YieldPredictionApiService {
     try {
       final response = await _client
           .get(Uri.parse(ApiConfig.yieldPredictionAnalytics))
-          .timeout(Duration(seconds: ApiConfig.connectionTimeout));
+          .timeout(const Duration(seconds: ApiConfig.connectionTimeout));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -211,7 +211,7 @@ class YieldPredictionApiService {
     try {
       final response = await _client
           .get(Uri.parse(ApiConfig.yieldPredictionDatabaseStatus))
-          .timeout(Duration(seconds: ApiConfig.connectionTimeout));
+          .timeout(const Duration(seconds: ApiConfig.connectionTimeout));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);

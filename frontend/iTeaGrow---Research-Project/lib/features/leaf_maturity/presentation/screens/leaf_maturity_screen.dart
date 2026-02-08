@@ -149,7 +149,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                            strokeWidth: 2, color: Colors.white,),
                       )
                     : const Icon(Icons.analytics),
                 label: Text(_isProcessing ? 'Analyzing...' : 'Analyze Leaf'),
@@ -188,7 +188,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.add_photo_alternate,
-              size: 64, color: Colors.grey.shade600),
+              size: 64, color: Colors.grey.shade600,),
           const SizedBox(height: 16),
           Text(
             'No image selected',
@@ -267,7 +267,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
                   Switch(
                     value: _showGradCam,
                     onChanged: (value) => setState(() => _showGradCam = value),
-                    activeColor: AppTheme.accentAmber,
+                    activeThumbColor: AppTheme.accentAmber,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ],
@@ -285,11 +285,11 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(Icons.check_circle, color: AppTheme.statusGood, size: 28),
-                const SizedBox(width: 12),
-                const Text(
+                SizedBox(width: 12),
+                Text(
                   'Analysis Complete',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
@@ -432,11 +432,11 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(Icons.trending_up, color: AppTheme.primaryGreen),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   'Yield Prediction',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),

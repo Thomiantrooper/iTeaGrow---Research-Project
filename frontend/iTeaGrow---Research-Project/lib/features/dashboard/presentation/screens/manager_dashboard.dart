@@ -89,28 +89,28 @@ class ManagerDashboard extends ConsumerWidget {
                             color: Colors.purple,
                             elevation: 4,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
+                                borderRadius: BorderRadius.circular(16),),
                             child: InkWell(
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        const YieldPredictionScreen()),
+                                        const YieldPredictionScreen(),),
                               ),
                               child: const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.query_stats,
-                                      color: Colors.white, size: 48),
+                                      color: Colors.white, size: 48,),
                                   SizedBox(height: 12),
                                   Text('Predict Yield',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.bold)),
+                                          fontWeight: FontWeight.bold,),),
                                   Text('Analysis & Reports',
                                       style: TextStyle(
-                                          color: Colors.white70, fontSize: 12)),
+                                          color: Colors.white70, fontSize: 12,),),
                                 ],
                               ),
                             ),
@@ -123,28 +123,28 @@ class ManagerDashboard extends ConsumerWidget {
                             color: Colors.orange,
                             elevation: 4,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
+                                borderRadius: BorderRadius.circular(16),),
                             child: InkWell(
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        const PowderGradingScreen()),
+                                        const PowderGradingScreen(),),
                               ),
                               child: const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.grade,
-                                      color: Colors.white, size: 48),
+                                      color: Colors.white, size: 48,),
                                   SizedBox(height: 12),
                                   Text('In-Depth Grading',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.bold)),
+                                          fontWeight: FontWeight.bold,),),
                                   Text('Quality Analysis',
                                       style: TextStyle(
-                                          color: Colors.white70, fontSize: 12)),
+                                          color: Colors.white70, fontSize: 12,),),
                                 ],
                               ),
                             ),
@@ -183,7 +183,7 @@ class ManagerDashboard extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      const AnalyticsScreen()))),
+                                      const AnalyticsScreen(),),),),
                       _buildToolButton(
                           context,
                           'Disease Reports',
@@ -193,7 +193,7 @@ class ManagerDashboard extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      const DiseaseDetectionScreen()))),
+                                      const DiseaseDetectionScreen(),),),),
                       _buildToolButton(
                           context,
                           'Soil Health',
@@ -203,7 +203,7 @@ class ManagerDashboard extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      const SoilFertilizationScreen()))),
+                                      const SoilFertilizationScreen(),),),),
                       _buildToolButton(
                           context,
                           'Leaf Maturity',
@@ -213,7 +213,7 @@ class ManagerDashboard extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      const LeafMaturityScreen()))),
+                                      const LeafMaturityScreen(),),),),
                     ],
                   ),
 
@@ -228,12 +228,12 @@ class ManagerDashboard extends ConsumerWidget {
   }
 
   Widget _buildToolButton(BuildContext context, String title, IconData icon,
-      Color color, VoidCallback onTap) {
+      Color color, VoidCallback onTap,) {
     return OutlinedButton.icon(
       onPressed: onTap,
       icon: Icon(icon, color: color, size: 20),
       label: Text(title,
-          style: const TextStyle(fontSize: 12, color: Colors.black87)),
+          style: const TextStyle(fontSize: 12, color: Colors.black87),),
       style: OutlinedButton.styleFrom(
         side: BorderSide(color: color.withOpacity(0.3)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

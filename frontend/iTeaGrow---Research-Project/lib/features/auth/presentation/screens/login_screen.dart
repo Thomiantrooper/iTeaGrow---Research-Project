@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iteagrow/core/theme/app_theme.dart';
 import 'package:iteagrow/core/enums/app_enums.dart';
-import 'package:iteagrow/features/auth/data/providers/auth_provider_simple.dart';
+import 'package:iteagrow/features/auth/data/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -24,15 +24,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
     final success =
-        ref.read(authStateSimpleProvider.notifier).login(username, password);
+        await ref.read(authStateProvider.notifier).login(username, password);
 
-    if (success) {
-      final user = ref.read(authStateSimpleProvider);
+    if (success && mounted) {
+      final user = ref.read(authStateProvider).user;
 
       // Show welcome message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -109,9 +109,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   prefixIcon: const Icon(Icons.lock),
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword
-                        ? Icons.visibility
-                        : Icons.visibility_off),
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
                     onPressed: () =>
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
@@ -134,8 +136,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 child: const Column(
                   children: [
-                    Text('Demo Credentials:',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Demo Credentials:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     SizedBox(height: 8),
                     Text('admin / admin123'),
                     Text('manager / manager123'),

@@ -111,21 +111,21 @@ class FarmerDashboardSimple extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            _SensorCard(
+            const _SensorCard(
               title: 'Soil Moisture',
               value: '65%',
               status: 'Optimal',
               statusColor: AppTheme.statusGood,
             ),
             const SizedBox(height: 8),
-            _SensorCard(
+            const _SensorCard(
               title: 'pH Level',
               value: '5.8',
               status: 'Good',
               statusColor: AppTheme.statusGood,
             ),
             const SizedBox(height: 8),
-            _SensorCard(
+            const _SensorCard(
               title: 'Temperature',
               value: '24°C',
               status: 'Optimal',
@@ -143,13 +143,13 @@ class FarmerDashboardSimple extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            _AlertCard(
+            const _AlertCard(
               message: 'Fertilization recommended based on NPK levels',
               severity: 'Info',
               severityColor: Colors.blue,
             ),
             const SizedBox(height: 8),
-            _AlertCard(
+            const _AlertCard(
               message: 'Optimal conditions for leaf harvesting',
               severity: 'Info',
               severityColor: Colors.blue,

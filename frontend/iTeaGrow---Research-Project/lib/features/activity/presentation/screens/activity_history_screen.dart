@@ -123,7 +123,7 @@ class _ActivityHistoryScreenState extends ConsumerState<ActivityHistoryScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.history,
             size: 64,
             color: TeaColors.mediumGray,
@@ -186,7 +186,7 @@ class _ActivityHistoryScreenState extends ConsumerState<ActivityHistoryScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.access_time,
                         size: 14,
                         color: TeaColors.mediumGray,
@@ -222,7 +222,7 @@ class _ActivityHistoryScreenState extends ConsumerState<ActivityHistoryScreen> {
               ),
             ),
             if (activity.route != null)
-              Icon(
+              const Icon(
                 Icons.chevron_right,
                 color: TeaColors.mediumGray,
               ),
@@ -271,7 +271,7 @@ class _ActivityHistoryScreenState extends ConsumerState<ActivityHistoryScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: TeaColors.freshLeaf,
             ),
           ),

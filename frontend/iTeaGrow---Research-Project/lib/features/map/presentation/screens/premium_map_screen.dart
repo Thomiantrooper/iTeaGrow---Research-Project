@@ -219,7 +219,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen> {
                         block.id,
                         block.name,
                         _getBlockColor(block),
-                      )),
+                      ),),
                 ],
               ),
             ),

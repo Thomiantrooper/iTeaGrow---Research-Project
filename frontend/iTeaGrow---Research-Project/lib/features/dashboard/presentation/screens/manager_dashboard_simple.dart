@@ -60,7 +60,7 @@ class ManagerDashboardSimple extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: _MetricCard(
@@ -70,7 +70,7 @@ class ManagerDashboardSimple extends ConsumerWidget {
                     trendUp: true,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _MetricCard(
                     title: 'Good Leaf %',
@@ -156,14 +156,14 @@ class ManagerDashboardSimple extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            _SensorCard(
+            const _SensorCard(
               title: 'NPK Levels',
               value: 'N:45 P:32 K:28',
               status: 'Balanced',
               statusColor: AppTheme.statusGood,
             ),
             const SizedBox(height: 8),
-            _SensorCard(
+            const _SensorCard(
               title: 'Soil Moisture',
               value: '65%',
               status: 'Optimal',

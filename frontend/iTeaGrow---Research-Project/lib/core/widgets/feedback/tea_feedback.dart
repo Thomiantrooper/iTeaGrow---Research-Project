@@ -276,7 +276,7 @@ class TeaEmptyState extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(TeaSpacing.lg),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: TeaColors.leafPale,
                 shape: BoxShape.circle,
               ),

@@ -1,5 +1,6 @@
 /// Barrel file for Jarvis-inspired UI components and services
 /// Import this file to access all enhanced features
+library;
 
 // Theme
 export 'theme/jarvis_theme.dart';

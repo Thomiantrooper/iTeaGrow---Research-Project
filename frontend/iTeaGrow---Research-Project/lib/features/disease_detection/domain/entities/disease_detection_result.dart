@@ -82,7 +82,7 @@ class Detection {
         return 'Blister Blight';
       default:
         return className.replaceAll('_', ' ').split(' ').map((w) =>
-          w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w
+          w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
         ).join(' ');
     }
   }
@@ -195,11 +195,11 @@ class DiseaseDetectionResult {
       diseaseType = _formatDiseaseName(summary.dominantDisease!);
       // Use highest confidence from detections of this type
       final relevantDetections = detections.where(
-        (d) => d.className == summary.dominantDisease
+        (d) => d.className == summary.dominantDisease,
       );
       if (relevantDetections.isNotEmpty) {
         confidence = relevantDetections.map((d) => d.confidence).reduce(
-          (a, b) => a > b ? a : b
+          (a, b) => a > b ? a : b,
         );
       }
     } else if (detections.isNotEmpty) {
@@ -207,7 +207,7 @@ class DiseaseDetectionResult {
       final nonHealthy = detections.where((d) => d.className != 'healthy').toList();
       if (nonHealthy.isNotEmpty) {
         final topDetection = nonHealthy.reduce(
-          (a, b) => a.confidence > b.confidence ? a : b
+          (a, b) => a.confidence > b.confidence ? a : b,
         );
         diseaseType = topDetection.displayName;
         confidence = topDetection.confidence;
@@ -287,7 +287,7 @@ class DiseaseDetectionResult {
         return 'Not A Leaf';
       default:
         return name.replaceAll('_', ' ').split(' ').map((w) =>
-          w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w
+          w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
         ).join(' ');
     }
   }

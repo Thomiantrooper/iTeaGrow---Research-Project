@@ -61,7 +61,7 @@ class TeaTheme {
       ),
 
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: TeaColors.white,
         elevation: 0,
         shadowColor: TeaColors.shadowVale,
@@ -287,7 +287,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: TeaColors.white,
         elevation: 8,
         shadowColor: TeaColors.shadowVale,
@@ -313,11 +313,11 @@ class TeaTheme {
       ),
 
       // Drawer Theme
-      drawerTheme: DrawerThemeData(
+      drawerTheme: const DrawerThemeData(
         backgroundColor: TeaColors.white,
         elevation: 16,
         shadowColor: TeaColors.shadowVale,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.horizontal(
             right: Radius.circular(TeaRadius.xl),
           ),
@@ -325,7 +325,7 @@ class TeaTheme {
       ),
 
       // Tab Bar Theme
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: TeaColors.freshLeaf,
         unselectedLabelColor: TeaColors.darkGray,
         labelStyle: TeaTypography.labelLarge,
@@ -492,7 +492,7 @@ class TeaTheme {
       ),
 
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: TeaColors.darkCard,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -620,7 +620,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: TeaColors.darkSurface,
         elevation: 8,
         shape: RoundedRectangleBorder(

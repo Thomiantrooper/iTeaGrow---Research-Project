@@ -80,7 +80,7 @@ class TeaAnimations {
         ).animate(CurvedAnimation(
           parent: animation,
           curve: enter,
-        )),
+        ),),
         child: child,
       ),
     );
@@ -101,7 +101,7 @@ class TeaAnimations {
         ).animate(CurvedAnimation(
           parent: animation,
           curve: enter,
-        )),
+        ),),
         child: child,
       ),
     );
@@ -122,7 +122,7 @@ class TeaAnimations {
         ).animate(CurvedAnimation(
           parent: animation,
           curve: enter,
-        )),
+        ),),
         child: child,
       ),
     );
@@ -297,7 +297,7 @@ class _BreathingAnimationState extends State<BreathingAnimation>
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
-    ));
+    ),);
   }
 
   @override
