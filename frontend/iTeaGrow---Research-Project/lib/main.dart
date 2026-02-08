@@ -22,15 +22,12 @@ void main() async {
   final sharedPreferences = await SharedPreferences.getInstance();
 
   // Initialize database (creates tables if not exists)
-  try {
-    debugPrint('Initializing database...');
-    await DatabaseHelper.instance.database;
+  // We use unawaited or a separate task to avoid hanging the app startup on web
+  DatabaseHelper.instance.database.then((_) {
     debugPrint('Database initialized successfully.');
-  } catch (e) {
+  }).catchError((e) {
     debugPrint('Database initialization FAILED: $e');
-    // On web, if DB fails (e.g. strict privacy settings), we should catch and continue
-    // to avoid crashing the whole app logic dependent on await
-  }
+  });
 
   // Set system UI overlay style for immersive experience
   SystemChrome.setSystemUIOverlayStyle(

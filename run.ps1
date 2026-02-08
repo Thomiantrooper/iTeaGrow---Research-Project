@@ -38,7 +38,7 @@ function Show-Help {
 if ($Help) { Show-Help }
 
 Write-Color "`n========================================" "Cyan"
-Write-Color "  Tea Leaf Disease Detection Platform" "Cyan"
+Write-Color "  iTeaGrow Platform" "Cyan"
 Write-Color "========================================`n" "Cyan"
 
 # Get script directory
@@ -47,6 +47,10 @@ Set-Location $scriptDir
 
 # Check if MongoDB is running
 function Start-MongoDB {
+    Write-Color "[INFO] Using Remote MongoDB Configuration (Atlas)" "Green"
+    # Local check skipped as we are using remote DB
+    
+    <# LEGACY LOCAL MONGODB CHECK
     if ($SkipMongo) {
         Write-Color "[SKIP] MongoDB check skipped" "Yellow"
         return
@@ -85,6 +89,7 @@ function Start-MongoDB {
     } catch {
         Write-Color "[WARN] MongoDB check failed: $_" "Yellow"
     }
+    #>
 }
 
 # Check if Ollama is running
@@ -103,24 +108,28 @@ function Start-Ollama {
         }
     } catch {
         Write-Color "[INFO] Ollama not responding. Attempting to start..." "Yellow"
-
-        try {
-            Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 3
-            Write-Color "[OK] Ollama started" "Green"
-        } catch {
-            Write-Color "[WARN] Could not start Ollama. Please start it manually." "Yellow"
-            Write-Host "       Run: ollama serve"
+        
+        # Try to find Ollama in PATH
+        if (Get-Command ollama -ErrorAction SilentlyContinue) {
+             try {
+                Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
+                Start-Sleep -Seconds 3
+                Write-Color "[OK] Ollama started" "Green"
+            } catch {
+                Write-Color "[WARN] Could not start Ollama. Please start it manually." "Yellow"
+            }
+        } else {
+             Write-Color "[WARN] Ollama not found in PATH. Please install or start manually." "Yellow"
         }
     }
 }
 
 # Start Backend
 function Start-Backend {
-    Write-Host "`n[START] Starting Backend Server (with MongoDB)..."
+    Write-Host "`n[START] Starting Backend Server (Remote MongoDB)..."
 
     # Activate virtual environment if exists
-    $venvPath = Join-Path $scriptDir "disease_env\Scripts\Activate.ps1"
+    $venvPath = Join-Path $scriptDir "venv\Scripts\Activate.ps1"
     $backendDir = Join-Path $scriptDir "backend"
 
     if (Test-Path $venvPath) {
@@ -129,6 +138,9 @@ function Start-Backend {
 
     # Start uvicorn from backend directory
     $backendCmd = "python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000"
+    if ($env:MONGODB_URL) {
+         # Pass config if needed, though config.py handles it
+    }
     Write-Color "[INFO] Running: $backendCmd" "Gray"
 
     if ($FrontendOnly) {
@@ -157,11 +169,20 @@ function Start-Frontend {
         return
     }
 
-    # Start Flutter (try Windows first, fallback to Edge)
-    Write-Host "[INFO] Starting Flutter (Windows desktop or Edge fallback)..."
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$flutterDir'; flutter run -d windows; if (`$LASTEXITCODE -ne 0) { flutter run -d edge }"
+    # Start Flutter (Web Server Mode)
+    Write-Host "[INFO] Starting Flutter Web Server (port 5000)..."
+    Write-Host "[INFO] A separate Chrome window will open shortly."
 
-    Write-Color "[OK] Flutter frontend starting..." "Green"
+    # Launch default browser after delay
+    Start-Job -ScriptBlock {
+        Start-Sleep -Seconds 10
+        Start-Process "http://localhost:5000"
+    } | Out-Null
+
+    # Run flutter web server
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$flutterDir'; flutter run -d web-server --web-port=5000"
+
+    Write-Color "[OK] Flutter web server starting..." "Green"
 }
 
 # Main execution
@@ -184,7 +205,7 @@ Write-Host ""
 Write-Host "Services:"
 Write-Host "  - Backend API:  http://localhost:8000"
 Write-Host "  - API Docs:     http://localhost:8000/docs"
-Write-Host "  - MongoDB:      mongodb://localhost:27017"
+Write-Host "  - MongoDB:      Remote Atlas Cluster"
 Write-Host "  - Ollama:       http://localhost:11434"
 Write-Host ""
 Write-Color "Press Ctrl+C in each window to stop services" "Yellow"
