@@ -6,6 +6,8 @@ class LeafMaturityResult {
   final Map<String, double> speciesProbabilities;
   final Map<String, double> maturityProbabilities;
   final DateTime timestamp;
+  final double rawConfidence;
+  final String? heatmapPath; // Path to the generated Grad-CAM heatmap overlay
 
   LeafMaturityResult({
     required this.species,
@@ -15,5 +17,7 @@ class LeafMaturityResult {
     required this.speciesProbabilities,
     required this.maturityProbabilities,
     required this.timestamp,
+    required this.rawConfidence,
+    this.heatmapPath,
   });
 }

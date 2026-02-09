@@ -58,6 +58,10 @@
         android:hardwareAccelerated="true"
         android:largeHeap="true">
 
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -83,6 +87,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2"/>
+
+        <!-- MultiDex support -->
+        <meta-data
+            android:name="androidx.multidex.MultiDex"
+            android:value="androidx.startup" />
     </application>
 
     <!-- Package visibility queries -->

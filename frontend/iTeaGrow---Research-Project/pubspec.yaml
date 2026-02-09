@@ -37,8 +37,8 @@ dependencies:
   mqtt_client: ^10.2.0
   web_socket_channel: ^2.4.0
 
-  # Machine Learning
-  tflite_flutter: 0.10.4  # Pinned for build compatibility
+  tflite_flutter: ^0.11.0  # Updated for Dart SDK compatibility
+  pytorch_lite: ^4.2.5
   image_picker: ^1.0.7
   camera: 0.10.5+9  # Pinned for Android build compatibility
   image: ^4.1.7
