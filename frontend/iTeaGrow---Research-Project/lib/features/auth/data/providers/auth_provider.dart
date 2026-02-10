@@ -4,6 +4,7 @@ import '../../../../core/services/local_auth_service.dart';
 import '../../../../core/services/google_auth_service.dart';
 import '../repositories/auth_repository.dart';
 import '../../domain/models/user.dart';
+import '../../../../core/enums/app_enums.dart';
 
 /// Authentication state enum for better state management
 enum AuthStatus {
@@ -423,38 +424,35 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return false;
       }
 
-      // TODO: Send idToken to backend for verification and user creation/login
-      // For now, we'll create a mock user from Google account data
-      // In production, you should verify the token with your backend
-      
       debugPrint('Google Sign-In successful: ${googleAccount.email}');
-      debugPrint('Note: Backend integration required for production use');
 
-      // Mock user creation (replace with actual backend call)
-      state = const AuthState(
-        status: AuthStatus.error,
-        errorMessage: 'Google Sign-In requires backend integration. Please contact support.',
+      // Create a local User from Google account data
+      final user = User(
+        id: 'google_${googleAccount.id}',
+        username: googleAccount.email.split('@').first,
+        fullName: googleAccount.displayName ?? googleAccount.email.split('@').first,
+        role: UserRole.farmer,
+        languagePreference: 'en',
+        email: googleAccount.email,
+        createdAt: DateTime.now(),
+        isActive: true,
       );
-      
-      return false;
 
-      // Example of what the backend integration should look like:
-      /*
-      final response = await _authRepository.loginWithGoogle(idToken);
-      if (response != null) {
-        await _localAuthService.saveSession(
-          response.user,
-          accessToken: response.accessToken,
-          rememberMe: true,
-        );
-        state = AuthState(
-          status: AuthStatus.authenticated,
-          user: response.user,
-          accessToken: response.accessToken,
-        );
-        return true;
-      }
-      */
+      // Save session locally with Google ID token
+      await _localAuthService.saveSession(
+        user,
+        accessToken: idToken,
+        rememberMe: true,
+      );
+
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        user: user,
+        accessToken: idToken,
+      );
+
+      debugPrint('Google user session saved: ${user.username}');
+      return true;
     } catch (e) {
       state = AuthState(
         status: AuthStatus.error,

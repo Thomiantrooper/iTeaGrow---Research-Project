@@ -240,9 +240,10 @@ class DiseaseDetectionResult {
       recommendations = List<String>.from(json['recommendations']);
     } else if (diseaseType == 'Not A Leaf') {
       recommendations = [
-        'This image does not appear to contain a valid tea leaf',
-        'Please capture a clear image of a tea leaf',
-        'Ensure the leaf is well-lit and in focus',
+        'The scanned image does not appear to be a tea leaf. It may be a hand, fabric, surface, soil, or other non-leaf object.',
+        'Please position a single tea leaf clearly in the camera frame',
+        'Ensure the leaf is well-lit, in focus, and fills most of the image',
+        'Avoid backgrounds with clutter or other objects',
         'Try again with a proper tea leaf image',
       ];
     } else if (diseaseType == 'Healthy') {

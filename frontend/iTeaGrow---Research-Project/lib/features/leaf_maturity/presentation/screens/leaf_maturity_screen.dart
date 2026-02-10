@@ -263,7 +263,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
                   Switch(
                     value: _showGradCam,
                     onChanged: (value) => setState(() => _showGradCam = value),
-                    activeThumbColor: AppTheme.accentAmber,
+                    thumbColor: WidgetStatePropertyAll(AppTheme.accentAmber),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ],

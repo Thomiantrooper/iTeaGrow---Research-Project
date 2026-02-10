@@ -928,7 +928,7 @@ class _PremiumDiseaseDetectionScreenState
                       child: Switch(
                         value: _showGradCam,
                         onChanged: (value) => setState(() => _showGradCam = value),
-                        activeThumbColor: TeaColors.goldenSunlight,
+                        thumbColor: WidgetStatePropertyAll(TeaColors.goldenSunlight),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
@@ -1034,9 +1034,9 @@ class _PremiumDiseaseDetectionScreenState
     String statusTitle;
 
     if (isNotALeaf) {
-      statusColor = TeaColors.mediumGray;
-      statusIcon = Icons.error_outline;
-      statusTitle = 'Invalid Image';
+      statusColor = TeaColors.warningAmber;
+      statusIcon = Icons.image_not_supported;
+      statusTitle = 'Not a Tea Leaf';
     } else if (isHealthy) {
       statusColor = TeaColors.healthyGreen;
       statusIcon = Icons.check_circle;
@@ -1099,16 +1099,29 @@ class _PremiumDiseaseDetectionScreenState
                   color: TeaColors.warningAmber.withOpacity(0.3),
                 ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.info_outline, color: TeaColors.warningAmber, size: 22),
-                  const SizedBox(width: TeaSpacing.smd),
-                  Expanded(
-                    child: Text(
-                      'This is not a valid tea leaf image. Please submit a clear image of a tea leaf for disease detection.',
-                      style: TeaTypography.bodySmall.copyWith(
-                        color: TeaColors.warningAmber,
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: TeaColors.warningAmber, size: 22),
+                      const SizedBox(width: TeaSpacing.smd),
+                      Expanded(
+                        child: Text(
+                          'This image does not contain a recognizable tea leaf.',
+                          style: TeaTypography.bodyMedium.copyWith(
+                            color: TeaColors.warningAmber,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: TeaSpacing.smd),
+                  Text(
+                    'It may be a hand, fabric, surface, soil, or other non-leaf object. Please scan a clear tea leaf image for accurate disease detection.',
+                    style: TeaTypography.bodySmall.copyWith(
+                      color: TeaColors.darkGray,
                     ),
                   ),
                 ],

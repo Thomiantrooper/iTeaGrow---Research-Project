@@ -6,12 +6,14 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Uncomment after placing google-services.json in android/app/
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.iteagrow.disease_detection"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35
+    ndkVersion = "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -28,7 +30,7 @@ android {
 
         // Android versions
         minSdk = 26  // Android 8.0 (Oreo) - required by tflite_flutter
-        targetSdk = 34  // Android 14 - latest stable
+        targetSdk = 35  // Android 15
 
         // App version
         versionCode = flutter.versionCode
@@ -43,11 +45,6 @@ android {
     }
 
     signingConfigs {
-        // Debug signing (for development)
-        getByName("debug") {
-            storeFile = file("debug.keystore")
-        }
-
         // Release signing (for production)
         create("release") {
             // Read from local.properties or environment variables
@@ -69,7 +66,6 @@ android {
 
     buildTypes {
         getByName("debug") {
-            applicationIdSuffix = ".debug"
             isDebuggable = true
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("debug")
