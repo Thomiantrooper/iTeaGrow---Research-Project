@@ -1,0 +1,52 @@
+.tea-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: -1;
+  background-color: #0f2011; /* Deep dark green base */
+  overflow: hidden;
+}
+
+.gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(46, 125, 50, 0.2) 0%, rgba(15, 32, 17, 0.8) 100%);
+  pointer-events: none;
+}
+
+.leaf-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  opacity: 0.1;
+}
+
+/* Abstract stylized leaf shapes using CSS gradients */
+.layer-1 {
+  background-image: 
+    radial-gradient(ellipse at 80% 20%, #4caf50 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, #2e7d32 0%, transparent 60%);
+  animation: float 20s ease-in-out infinite alternate;
+}
+
+.layer-2 {
+  background-image: 
+    radial-gradient(circle at 10% 10%, #81c784 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, #1b5e20 0%, transparent 40%);
+  animation: float 25s ease-in-out infinite alternate-reverse;
+  opacity: 0.15;
+}
+
+@keyframes float {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
