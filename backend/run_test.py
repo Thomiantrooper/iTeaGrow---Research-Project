@@ -28,7 +28,8 @@ ALGORITHM = "HS256"
 @app.on_event("startup")
 async def startup():
     global client, db
-    client = AsyncIOMotorClient("mongodb://localhost:27017")
+    from config import settings
+    client = AsyncIOMotorClient(settings.MONGODB_URL)
     db = client["iteagrow"]
     print("Connected to MongoDB")
 
