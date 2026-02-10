@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
-import '../../../../core/theme/app_theme.dart';
 import '../../data/datasources/powder_grading_ml_service.dart';
 import '../../domain/entities/powder_grading_result.dart';
 
@@ -146,7 +145,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                            strokeWidth: 2, color: Colors.white,),
                       )
                     : const Icon(Icons.grade),
                 label: Text(_isProcessing ? 'Grading...' : 'Grade Powder'),
@@ -183,7 +182,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.add_photo_alternate,
-              size: 64, color: Colors.grey.shade600),
+              size: 64, color: Colors.grey.shade600,),
           const SizedBox(height: 16),
           Text(
             'No image selected',
@@ -273,7 +272,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
                 Text(
                   '${_result!.qualityScore.toStringAsFixed(1)}/100',
                   style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
+                      fontSize: 18, fontWeight: FontWeight.bold,),
                 ),
               ],
             ),
@@ -311,7 +310,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
             Row(
               children: [
                 Icon(Icons.attach_money,
-                    color: Colors.green.shade700, size: 28),
+                    color: Colors.green.shade700, size: 28,),
                 const SizedBox(width: 12),
                 const Text(
                   'Market Value Analysis',
@@ -344,7 +343,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Price Change (7 days)',
-                    style: TextStyle(fontSize: 14)),
+                    style: TextStyle(fontSize: 14),),
                 Row(
                   children: [
                     Icon(
@@ -410,7 +409,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
                       Row(
                         children: [
                           Icon(Icons.location_on,
-                              size: 16, color: Colors.grey.shade600),
+                              size: 16, color: Colors.grey.shade600,),
                           const SizedBox(width: 8),
                           Text(entry.key),
                         ],
@@ -421,7 +420,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
                       ),
                     ],
                   ),
-                )),
+                ),),
           ],
         ),
       ),

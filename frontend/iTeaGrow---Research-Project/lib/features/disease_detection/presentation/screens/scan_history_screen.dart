@@ -655,12 +655,12 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.check_circle, size: 18, color: AppTheme.primaryGreen),
+                                const Icon(Icons.check_circle, size: 18, color: AppTheme.primaryGreen),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text(r)),
                               ],
                             ),
-                          )),
+                          ),),
                         ]),
                       ],
                     ],

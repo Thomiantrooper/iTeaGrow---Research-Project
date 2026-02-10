@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'dart:typed_data';
 import '../../../../core/theme/app_theme.dart';
-import '../../data/datasources/leaf_maturity_ml_service.dart';
+import '../../data/datasources/leaf_maturity_pytorch_service.dart';
 import '../../domain/entities/leaf_maturity_result.dart';
 
 class LeafMaturityScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class LeafMaturityScreen extends StatefulWidget {
 
 class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
   final ImagePicker _picker = ImagePicker();
-  final LeafMaturityMLService _mlService = LeafMaturityMLService();
+  final LeafMaturityPyTorchService _mlService = LeafMaturityPyTorchService();
 
   XFile? _selectedImage;
   Uint8List? _imageBytes;
@@ -76,7 +77,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      final result = await _mlService.predict(_selectedImage!.path);
+      final result = await _mlService.predict(_selectedImage!);
       setState(() {
         _result = result;
         _isProcessing = false;
@@ -149,7 +150,9 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Icon(Icons.analytics),
                 label: Text(_isProcessing ? 'Analyzing...' : 'Analyze Leaf'),
@@ -187,8 +190,11 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.add_photo_alternate,
-              size: 64, color: Colors.grey.shade600),
+          Icon(
+            Icons.add_photo_alternate,
+            size: 64,
+            color: Colors.grey.shade600,
+          ),
           const SizedBox(height: 16),
           Text(
             'No image selected',
@@ -226,23 +232,13 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
             fit: BoxFit.cover,
           ),
         ),
-        if (_showGradCam && _result != null)
+        if (_showGradCam && _result != null && _result!.heatmapPath != null)
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      Colors.red.withOpacity(0.5),
-                      Colors.yellow.withOpacity(0.5),
-                      Colors.transparent,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
+              child: Image.file(
+                File(_result!.heatmapPath!),
+                fit: BoxFit.cover,
               ),
             ),
           ),
@@ -267,7 +263,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
                   Switch(
                     value: _showGradCam,
                     onChanged: (value) => setState(() => _showGradCam = value),
-                    activeColor: AppTheme.accentAmber,
+                    activeThumbColor: AppTheme.accentAmber,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ],
@@ -285,11 +281,11 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(Icons.check_circle, color: AppTheme.statusGood, size: 28),
-                const SizedBox(width: 12),
-                const Text(
+                SizedBox(width: 12),
+                Text(
                   'Analysis Complete',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
@@ -432,11 +428,11 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(Icons.trending_up, color: AppTheme.primaryGreen),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   'Yield Prediction',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),

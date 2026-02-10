@@ -8,7 +8,6 @@ import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/providers/global_iot_provider.dart';
 import '../../data/services/websocket_sensor_service.dart';
-import '../../domain/models/esp32_sensor_data.dart';
 import '../widgets/voice_assistant_panel.dart';
 
 /// Premium IoT Devices Screen with Bluetooth, WiFi, and WebSocket support
@@ -996,7 +995,7 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.bluetooth, color: TeaColors.infoSky),
+              leading: const Icon(Icons.bluetooth, color: TeaColors.infoSky),
               title: const Text('Bluetooth Device'),
               subtitle: const Text('ESP32, Arduino BLE'),
               onTap: () {
@@ -1005,7 +1004,7 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
               },
             ),
             ListTile(
-              leading: Icon(Icons.wifi, color: TeaColors.freshLeaf),
+              leading: const Icon(Icons.wifi, color: TeaColors.freshLeaf),
               title: const Text('WiFi Device'),
               subtitle: const Text('ESP32 WiFi, Raspberry Pi'),
               onTap: () {
@@ -1014,7 +1013,7 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
               },
             ),
             ListTile(
-              leading: Icon(Icons.cloud, color: TeaColors.goldenSunlight),
+              leading: const Icon(Icons.cloud, color: TeaColors.goldenSunlight),
               title: const Text('WebSocket Connection'),
               subtitle: const Text('iTeaGrow Bridge Server'),
               onTap: () {
@@ -1070,18 +1069,18 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('WiFi Configuration'),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'IP Address',
                 hintText: '192.168.1.100',
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Port',
                 hintText: '80',
               ),
@@ -1111,11 +1110,11 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.cloud, color: TeaColors.goldenSunlight),
-            const SizedBox(width: 12),
-            const Text('WebSocket Connection'),
+            SizedBox(width: 12),
+            Text('WebSocket Connection'),
           ],
         ),
         content: Column(
@@ -1149,7 +1148,7 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: TeaColors.infoSky, size: 18),
+                  const Icon(Icons.info_outline, color: TeaColors.infoSky, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

@@ -254,7 +254,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
           ? category.faqs
           : category.faqs.where((faq) =>
               faq.question.toLowerCase().contains(_searchQuery) ||
-              faq.answer.toLowerCase().contains(_searchQuery)).toList();
+              faq.answer.toLowerCase().contains(_searchQuery),).toList();
 
       if (filteredFaqs.isEmpty && _searchQuery.isNotEmpty) continue;
 
@@ -273,7 +273,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
             padding: const EdgeInsets.all(TeaSpacing.xl),
             child: Column(
               children: [
-                Icon(Icons.search_off, size: 48, color: TeaColors.mediumGray),
+                const Icon(Icons.search_off, size: 48, color: TeaColors.mediumGray),
                 const SizedBox(height: TeaSpacing.md),
                 Text(
                   'No results found',

@@ -1,4 +1,3 @@
-import 'dart:math';
 import '../../domain/entities/fertilizer_recommendation.dart';
 
 class FertilizerMLService {

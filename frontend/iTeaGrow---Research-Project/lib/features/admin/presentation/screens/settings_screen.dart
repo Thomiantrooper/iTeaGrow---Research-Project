@@ -49,7 +49,7 @@ class SettingsScreen extends ConsumerWidget {
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
-                  Center(
+                  const Center(
                     child: LanguageSelector(
                       isVertical: true,
                       buttonSize: 50,

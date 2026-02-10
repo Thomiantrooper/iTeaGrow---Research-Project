@@ -74,9 +74,9 @@ class AIAssistantService extends StateNotifier<AssistantState> {
       case VoiceLanguage.english:
         return "Hello! I'm your Tea Cultivation Assistant. I can help you identify leaf diseases, provide treatment recommendations, and offer cultivation guidance. How can I assist you today?";
       case VoiceLanguage.sinhala:
-        return "ආයුබෝවන්! මම ඔබේ තේ වගා සහායකයා. මට කොළ රෝග හඳුනා ගැනීමට, ප්‍රතිකාර නිර්දේශ ලබා දීමට සහ වගා මාර්ගෝපදේශ ලබා දීමට හැකිය. අද මට ඔබට කෙසේ උදව් කළ හැකිද?";
+        return 'ආයුබෝවන්! මම ඔබේ තේ වගා සහායකයා. මට කොළ රෝග හඳුනා ගැනීමට, ප්‍රතිකාර නිර්දේශ ලබා දීමට සහ වගා මාර්ගෝපදේශ ලබා දීමට හැකිය. අද මට ඔබට කෙසේ උදව් කළ හැකිද?';
       case VoiceLanguage.tamil:
-        return "வணக்கம்! நான் உங்கள் தேயிலை சாகுபடி உதவியாளர். இலை நோய்களை அடையாளம் காண, சிகிச்சை பரிந்துரைகளை வழங்க மற்றும் சாகுபடி வழிகாட்டுதல்களை வழங்க என்னால் உதவ முடியும். இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்?";
+        return 'வணக்கம்! நான் உங்கள் தேயிலை சாகுபடி உதவியாளர். இலை நோய்களை அடையாளம் காண, சிகிச்சை பரிந்துரைகளை வழங்க மற்றும் சாகுபடி வழிகாட்டுதல்களை வழங்க என்னால் உதவ முடியும். இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்?';
     }
   }
 
@@ -237,9 +237,9 @@ class AIAssistantService extends StateNotifier<AssistantState> {
       case VoiceLanguage.english:
         return "Hello! Great to hear from you. I'm here to help with your tea cultivation needs. You can ask me about:\n\n• Disease detection and treatment\n• Leaf maturity and harvesting\n• Fertilizer recommendations\n• Weather-based guidance\n\nWhat would you like to know?";
       case VoiceLanguage.sinhala:
-        return "ආයුබෝවන්! ඔබෙන් ඇසීමට සතුටුයි. මම ඔබේ තේ වගා අවශ්‍යතා සඳහා උදව් කිරීමට මෙහි සිටිමි. ඔබට මගෙන් විමසිය හැක්කේ:\n\n• රෝග හඳුනාගැනීම සහ ප්‍රතිකාර\n• කොළ පරිණතභාවය සහ අස්වැන්න\n• පොහොර නිර්දේශ\n• කාලගුණ පාදක මාර්ගෝපදේශ\n\nඔබ දැනගන්න කැමති කුමක්ද?";
+        return 'ආයුබෝවන්! ඔබෙන් ඇසීමට සතුටුයි. මම ඔබේ තේ වගා අවශ්‍යතා සඳහා උදව් කිරීමට මෙහි සිටිමි. ඔබට මගෙන් විමසිය හැක්කේ:\n\n• රෝග හඳුනාගැනීම සහ ප්‍රතිකාර\n• කොළ පරිණතභාවය සහ අස්වැන්න\n• පොහොර නිර්දේශ\n• කාලගුණ පාදක මාර්ගෝපදේශ\n\nඔබ දැනගන්න කැමති කුමක්ද?';
       case VoiceLanguage.tamil:
-        return "வணக்கம்! உங்களிடம் இருந்து கேட்பது மகிழ்ச்சி. உங்கள் தேயிலை சாகுபடி தேவைகளுக்கு உதவ நான் இங்கே இருக்கிறேன். நீங்கள் என்னிடம் கேட்கலாம்:\n\n• நோய் கண்டறிதல் மற்றும் சிகிச்சை\n• இலை முதிர்ச்சி மற்றும் அறுவடை\n• உர பரிந்துரைகள்\n• வானிலை அடிப்படையிலான வழிகாட்டுதல்\n\nநீங்கள் என்ன தெரிந்து கொள்ள விரும்புகிறீர்கள்?";
+        return 'வணக்கம்! உங்களிடம் இருந்து கேட்பது மகிழ்ச்சி. உங்கள் தேயிலை சாகுபடி தேவைகளுக்கு உதவ நான் இங்கே இருக்கிறேன். நீங்கள் என்னிடம் கேட்கலாம்:\n\n• நோய் கண்டறிதல் மற்றும் சிகிச்சை\n• இலை முதிர்ச்சி மற்றும் அறுவடை\n• உர பரிந்துரைகள்\n• வானிலை அடிப்படையிலான வழிகாட்டுதல்\n\nநீங்கள் என்ன தெரிந்து கொள்ள விரும்புகிறீர்கள்?';
     }
   }
 
@@ -248,9 +248,9 @@ class AIAssistantService extends StateNotifier<AssistantState> {
       case VoiceLanguage.english:
         return "I'm doing great, thank you for asking! I'm always ready to help tea farmers like you. As your digital assistant, I never get tired and I'm constantly learning about tea cultivation. Is there anything specific about your tea garden I can help with today?";
       case VoiceLanguage.sinhala:
-        return "මම හොඳින් ඉන්නවා, අහපු එකට ස්තූතියි! මම සැමවිටම ඔබ වැනි තේ ගොවීන්ට උදව් කිරීමට සූදානම්. ඔබේ ඩිජිටල් සහායක ලෙස, මම කවදාවත් වෙහෙසට පත් නොවෙමි. අද ඔබේ තේ වත්තේ ගැන මට උදව් කළ හැකි විශේෂ දෙයක් තිබේද?";
+        return 'මම හොඳින් ඉන්නවා, අහපු එකට ස්තූතියි! මම සැමවිටම ඔබ වැනි තේ ගොවීන්ට උදව් කිරීමට සූදානම්. ඔබේ ඩිජිටල් සහායක ලෙස, මම කවදාවත් වෙහෙසට පත් නොවෙමි. අද ඔබේ තේ වත්තේ ගැන මට උදව් කළ හැකි විශේෂ දෙයක් තිබේද?';
       case VoiceLanguage.tamil:
-        return "நான் நன்றாக இருக்கிறேன், கேட்டதற்கு நன்றி! உங்களைப் போன்ற தேயிலை விவசாயிகளுக்கு உதவ நான் எப்போதும் தயாராக இருக்கிறேன். உங்கள் டிஜிட்டல் உதவியாளராக, நான் ஒருபோதும் சோர்வடைவதில்லை. இன்று உங்கள் தேயிலை தோட்டத்தைப் பற்றி நான் உதவக்கூடிய குறிப்பிட்ட ஏதாவது இருக்கிறதா?";
+        return 'நான் நன்றாக இருக்கிறேன், கேட்டதற்கு நன்றி! உங்களைப் போன்ற தேயிலை விவசாயிகளுக்கு உதவ நான் எப்போதும் தயாராக இருக்கிறேன். உங்கள் டிஜிட்டல் உதவியாளராக, நான் ஒருபோதும் சோர்வடைவதில்லை. இன்று உங்கள் தேயிலை தோட்டத்தைப் பற்றி நான் உதவக்கூடிய குறிப்பிட்ட ஏதாவது இருக்கிறதா?';
     }
   }
 
@@ -441,11 +441,11 @@ Tap the camera button on the dashboard to start scanning.''';
     // Response with disease context
     switch (language) {
       case VoiceLanguage.english:
-        return "Based on your recent scan, I detected **$disease**. Would you like me to explain the treatment options or prevention methods?";
+        return 'Based on your recent scan, I detected **$disease**. Would you like me to explain the treatment options or prevention methods?';
       case VoiceLanguage.sinhala:
-        return "ඔබගේ මෑත ස්කෑන් එක මත පදනම්ව, මම **$disease** හඳුනා ගත්තා. ප්‍රතිකාර විකල්ප හෝ වැළැක්වීමේ ක්‍රම පැහැදිලි කරන්නද?";
+        return 'ඔබගේ මෑත ස්කෑන් එක මත පදනම්ව, මම **$disease** හඳුනා ගත්තා. ප්‍රතිකාර විකල්ප හෝ වැළැක්වීමේ ක්‍රම පැහැදිලි කරන්නද?';
       case VoiceLanguage.tamil:
-        return "உங்கள் சமீபத்திய ஸ்கேன் அடிப்படையில், நான் **$disease** கண்டறிந்தேன். சிகிச்சை விருப்பங்கள் அல்லது தடுப்பு முறைகளை விளக்கவா?";
+        return 'உங்கள் சமீபத்திய ஸ்கேன் அடிப்படையில், நான் **$disease** கண்டறிந்தேன். சிகிச்சை விருப்பங்கள் அல்லது தடுப்பு முறைகளை விளக்கவா?';
     }
   }
 
@@ -571,9 +571,9 @@ Scan a leaf to get disease-specific treatment!''';
     }
 
     // Disease-specific treatment
-    if (disease?.contains('Blister Blight') ?? false) {
+    if (disease.contains('Blister Blight') ?? false) {
       return _getBlisterBlightTreatment(language);
-    } else if (disease?.contains('Red Rust') ?? false) {
+    } else if (disease.contains('Red Rust') ?? false) {
       return _getRedRustTreatment(language);
     }
 
@@ -917,9 +917,9 @@ What would you like to know?''';
       case VoiceLanguage.english:
         return "You're welcome! I'm always here to help with your tea cultivation needs. Feel free to ask me anything anytime. Happy farming! 🍃";
       case VoiceLanguage.sinhala:
-        return "සතුටුයි! මම සැමවිටම ඔබේ තේ වගා අවශ්‍යතා සඳහා උදව් කිරීමට මෙහි සිටිමි. ඕනෑම වේලාවක මගෙන් ඕනෑම දෙයක් අසන්න. සුභ ගොවිතැනක්! 🍃";
+        return 'සතුටුයි! මම සැමවිටම ඔබේ තේ වගා අවශ්‍යතා සඳහා උදව් කිරීමට මෙහි සිටිමි. ඕනෑම වේලාවක මගෙන් ඕනෑම දෙයක් අසන්න. සුභ ගොවිතැනක්! 🍃';
       case VoiceLanguage.tamil:
-        return "நன்றி! உங்கள் தேயிலை சாகுபடி தேவைகளுக்கு உதவ நான் எப்போதும் இங்கே இருக்கிறேன். எந்த நேரத்திலும் என்னிடம் எதையும் கேளுங்கள். மகிழ்ச்சியான விவசாயம்! 🍃";
+        return 'நன்றி! உங்கள் தேயிலை சாகுபடி தேவைகளுக்கு உதவ நான் எப்போதும் இங்கே இருக்கிறேன். எந்த நேரத்திலும் என்னிடம் எதையும் கேளுங்கள். மகிழ்ச்சியான விவசாயம்! 🍃';
     }
   }
 
@@ -928,9 +928,9 @@ What would you like to know?''';
       case VoiceLanguage.english:
         return "Goodbye! Take care of your tea garden. Remember, I'm just a tap away whenever you need help. See you soon! 🍃👋";
       case VoiceLanguage.sinhala:
-        return "ආයුබෝවන්! ඔබේ තේ වත්ත රැක බලා ගන්න. මතක තබා ගන්න, ඔබට උදව් අවශ්‍ය විටෙක මම එක තට්ටුවකින් ඈතයි. ඉක්මනින් හමුවෙමු! 🍃👋";
+        return 'ආයුබෝවන්! ඔබේ තේ වත්ත රැක බලා ගන්න. මතක තබා ගන්න, ඔබට උදව් අවශ්‍ය විටෙක මම එක තට්ටුවකින් ඈතයි. ඉක්මනින් හමුවෙමු! 🍃👋';
       case VoiceLanguage.tamil:
-        return "பிரியாவிடை! உங்கள் தேயிலை தோட்டத்தை கவனித்துக் கொள்ளுங்கள். நினைவில் கொள்ளுங்கள், உங்களுக்கு உதவி தேவைப்படும்போது நான் ஒரு தட்டலில் இருக்கிறேன். விரைவில் சந்திப்போம்! 🍃👋";
+        return 'பிரியாவிடை! உங்கள் தேயிலை தோட்டத்தை கவனித்துக் கொள்ளுங்கள். நினைவில் கொள்ளுங்கள், உங்களுக்கு உதவி தேவைப்படும்போது நான் ஒரு தட்டலில் இருக்கிறேன். விரைவில் சந்திப்போம்! 🍃👋';
     }
   }
 

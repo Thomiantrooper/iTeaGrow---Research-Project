@@ -100,7 +100,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
         SnackBar(
           content: Text(isConnected
               ? 'Connected to backend server'
-              : 'Backend not available - using offline mode'),
+              : 'Backend not available - using offline mode',),
           backgroundColor: isConnected ? Colors.green : Colors.orange,
         ),
       );
@@ -459,7 +459,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                       // Chart Section Header
                       Row(
                         children: [
-                          Icon(Icons.analytics, color: AppTheme.primaryGreen, size: 20),
+                          const Icon(Icons.analytics, color: AppTheme.primaryGreen, size: 20),
                           const SizedBox(width: 8),
                           Text(
                             'Detection Analysis',
@@ -525,14 +525,14 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
               color: AppTheme.primaryGreen.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.eco_outlined,
               size: 64,
               color: AppTheme.primaryGreen,
             ),
           ),
           const SizedBox(height: 24),
-          Text(
+          const Text(
             'Scan Tea Leaf',
             style: TextStyle(
               color: AppTheme.primaryGreen,
@@ -635,7 +635,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            SizedBox(
+                            const SizedBox(
                               width: 60,
                               height: 60,
                               child: CircularProgressIndicator(
@@ -646,7 +646,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                               ),
                             ),
                             const SizedBox(height: 16),
-                            Text(
+                            const Text(
                               'Analyzing Leaf...',
                               style: TextStyle(
                                 fontSize: 18,
@@ -717,7 +717,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                       Switch(
                         value: _showGradCam,
                         onChanged: (value) => setState(() => _showGradCam = value),
-                        activeColor: AppTheme.accentAmber,
+                        activeThumbColor: AppTheme.accentAmber,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ],
@@ -848,7 +848,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                   Container(width: 1, height: 50, color: Colors.grey.shade300),
                   _buildLiveReadingItem(
                     Icons.air,
-                    '${_airQuality.toStringAsFixed(0)}',
+                    _airQuality.toStringAsFixed(0),
                     'AQI',
                     _getAirQualityColor(_airQuality),
                   ),
@@ -886,7 +886,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
             ),
           ),
           const SizedBox(width: 6),
-          Text(
+          const Text(
             'LIVE',
             style: TextStyle(
               color: AppTheme.statusGood,
@@ -949,7 +949,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
             label: const Text('Gallery', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primaryGreen,
-              side: BorderSide(color: AppTheme.primaryGreen, width: 2),
+              side: const BorderSide(color: AppTheme.primaryGreen, width: 2),
               padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -1281,11 +1281,11 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.pie_chart, color: AppTheme.primaryGreen),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'Detection Analysis',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
@@ -1348,7 +1348,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                         const Divider(height: 24),
                         Text(
                           'Health Score: ${_result!.summary!.overallHealthScore.toStringAsFixed(0)}%',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: AppTheme.primaryGreen,
@@ -1485,7 +1485,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                   ),
                 ],
               ),
-            )),
+            ),),
           ],
         ),
       ),
@@ -1502,7 +1502,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
             label: const Text('New Scan'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primaryGreen,
-              side: BorderSide(color: AppTheme.primaryGreen, width: 2),
+              side: const BorderSide(color: AppTheme.primaryGreen, width: 2),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

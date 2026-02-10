@@ -1,4 +1,5 @@
 /// Response models for Tea Yield Prediction API
+library;
 
 /// Main prediction response wrapper
 class PredictionResponseModel {
@@ -154,7 +155,7 @@ class PredictionSummaryModel {
   });
 
   factory PredictionSummaryModel.fromJson(Map<String, dynamic> json,
-      {int rootDays = 0}) {
+      {int rootDays = 0,}) {
     return PredictionSummaryModel(
       totalPredictedYield:
           (json['total_predicted_yield'] ?? json['total_yield_kg'] ?? 0)

@@ -49,7 +49,7 @@ CustomTransitionPage<void> _buildPremiumTransition({
             ).animate(CurvedAnimation(
               parent: animation,
               curve: TeaAnimations.enter,
-            )),
+            ),),
             child: child,
           ),
         );

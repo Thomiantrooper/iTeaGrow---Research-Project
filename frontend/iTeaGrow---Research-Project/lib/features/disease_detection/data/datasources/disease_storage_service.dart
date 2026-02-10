@@ -108,7 +108,7 @@ class DiseaseStorageService {
             'image',
             bytes,
             filename: filename,
-          ));
+          ),);
           debugPrint('Image bytes loaded: ${bytes.length} bytes');
         } else {
           debugPrint('Failed to load image from blob URL: ${imageResponse.statusCode}');
@@ -199,7 +199,7 @@ class DiseaseStorageService {
             'image',
             bytes,
             filename: filename,
-          ));
+          ),);
         } else {
           debugPrint('Failed to load image from blob URL');
           return null;

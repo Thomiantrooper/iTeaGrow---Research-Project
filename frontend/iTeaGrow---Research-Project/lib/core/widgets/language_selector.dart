@@ -43,7 +43,7 @@ class LanguageSelector extends ConsumerWidget {
                     ref.read(persistentLocaleProvider.notifier).setLocale(Locale(lang.$1));
                   },
                   size: buttonSize,
-                ))
+                ),)
             .toList()
             .asMap()
             .entries
@@ -69,7 +69,7 @@ class LanguageSelector extends ConsumerWidget {
                   ref.read(persistentLocaleProvider.notifier).setLocale(Locale(lang.$1));
                 },
                 size: buttonSize,
-              ))
+              ),)
           .toList()
           .asMap()
           .entries
@@ -169,7 +169,7 @@ class LanguageSelectorDropdown extends ConsumerWidget {
               .map((e) => DropdownMenuItem(
                     value: e.key,
                     child: Text(e.value),
-                  ))
+                  ),)
               .toList(),
           onChanged: (value) {
             if (value != null) {

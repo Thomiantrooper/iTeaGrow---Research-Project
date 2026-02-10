@@ -10,7 +10,7 @@ import '../../features/dashboard/presentation/screens/jarvis_farmer_dashboard.da
 import '../../features/dashboard/presentation/screens/manager_dashboard.dart';
 import '../../features/dashboard/presentation/screens/admin_dashboard.dart';
 import '../../features/disease_detection/presentation/screens/enhanced_disease_detection_screen.dart';
-import '../../features/auth/data/providers/auth_provider_simple.dart';
+import '../../features/auth/data/providers/auth_provider.dart';
 import '../enums/app_enums.dart';
 
 import '../../features/yield_prediction/presentation/screens/yield_prediction_screen.dart';
@@ -18,9 +18,9 @@ import '../../features/yield_prediction/presentation/screens/yield_prediction_sc
 // Auth state notifier for GoRouter to listen to
 class AuthChangeNotifier extends ChangeNotifier {
   AuthChangeNotifier(this._ref) {
-    _ref.listen(authStateSimpleProvider, (previous, next) {
+    _ref.listen(authStateProvider, (previous, next) {
       debugPrint(
-          'AuthChangeNotifier: Auth state changed! previous=$previous, next=$next');
+          'AuthChangeNotifier: Auth state changed! status=${next.status}, user=${next.user?.username}');
       notifyListeners();
     });
   }
@@ -38,8 +38,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: authChangeNotifier,
     redirect: (context, state) {
-      final user = ref.read(authStateSimpleProvider);
-      final isLoggedIn = user != null;
+      final authState = ref.read(authStateProvider);
+      final isLoggedIn = authState.isAuthenticated;
+      final user = authState.user;
       final isLoggingIn = state.matchedLocation == '/login';
       final isPublicRoute = state.matchedLocation == '/' ||
           state.matchedLocation == '/about' ||
@@ -55,7 +56,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // If logged in and trying to access login, redirect to dashboard
-      if (isLoggedIn && isLoggingIn) {
+      if (isLoggedIn && isLoggingIn && user != null) {
         final dashboardRoute = _getDashboardRoute(user.role);
         debugPrint(
             'ROUTER: User logged in on login page, redirecting to $dashboardRoute');
@@ -112,7 +113,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/yield-prediction',
         builder: (context, state) {
-          final user = ref.read(authStateSimpleProvider);
+          final user = ref.read(authStateProvider).user;
           if (user?.role != UserRole.manager) {
             return const LoginScreen();
           }

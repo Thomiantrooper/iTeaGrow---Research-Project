@@ -5,24 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_config.dart';
 import 'local_auth_service.dart' show sharedPreferencesProvider;
 
-/// API configuration
-class ApiConfig {
-  // Change this to your backend URL
-  // For local development:
-  // - Web: http://localhost:8000
-  // - Android emulator: http://10.0.2.2:8000
-  // - Android emulator: http://localhost:8000
-  // - iOS simulator: http://localhost:8000
-  // - Physical device: http://<your-ip>:8000
-  static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:8000';
-    }
-    // Use localhost for physical devices (via ADB reverse) or emulator
-    return 'http://localhost:8000';
-  }
-}
-
 /// API response wrapper
 class ApiResponse<T> {
   final bool success;

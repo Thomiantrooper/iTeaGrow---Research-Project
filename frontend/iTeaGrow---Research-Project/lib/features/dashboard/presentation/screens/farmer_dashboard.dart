@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iteagrow/core/theme/app_theme.dart';
-import 'package:iteagrow/core/widgets/dashboard_card.dart';
 import 'package:iteagrow/features/auth/presentation/providers/auth_provider.dart';
 import 'package:iteagrow/features/public/presentation/landing/landing_page.dart';
 import 'package:iteagrow/features/leaf_maturity/presentation/screens/leaf_maturity_screen.dart';
@@ -45,12 +44,12 @@ class FarmerDashboard extends ConsumerWidget {
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
               onTap: () {
-                 ref.read(currentUserProvider.notifier).state = null;
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LandingPage()),
-                    (route) => false,
-                  );
+                ref.read(currentUserProvider.notifier).state = null;
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LandingPage()),
+                  (route) => false,
+                );
               },
             ),
           ],
@@ -69,49 +68,52 @@ class FarmerDashboard extends ConsumerWidget {
                   Text(
                     'Primary Actions',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryGreen,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryGreen,
+                        ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Primary Action 1: Leaf Analysis (Hero Card - Fixed convenient height)
+
+                  // Primary Action 1: Leaf Maturity Analysis (Hero Card - Fixed convenient height)
                   SizedBox(
                     height: 220, // Large touch target but not screen-dependent
                     child: Card(
                       elevation: 4,
                       color: AppTheme.primaryGreen,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                       child: InkWell(
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const LeafMaturityScreen()),
+                          MaterialPageRoute(
+                              builder: (context) => const LeafMaturityScreen()),
                         ),
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.camera_alt, color: Colors.white, size: 64),
+                            Icon(Icons.eco, color: Colors.white, size: 64),
                             SizedBox(height: 12),
                             Text(
-                              'Capture Leaf',
+                              'Leaf Maturity',
                               style: TextStyle(
-                                color: Colors.white, 
-                                fontSize: 24, 
-                                fontWeight: FontWeight.bold
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
-                              'Check Maturity', 
-                              style: TextStyle(color: Colors.white70)
+                              'Scan & Analyze Tea Leaves',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 14),
                             ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Secondary Actions Row
                   Row(
                     children: [
@@ -125,7 +127,9 @@ class FarmerDashboard extends ConsumerWidget {
                             AppTheme.statusCritical,
                             () => Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const DiseaseDetectionScreen()),
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const DiseaseDetectionScreen()),
                             ),
                           ),
                         ),
@@ -141,7 +145,9 @@ class FarmerDashboard extends ConsumerWidget {
                             Colors.brown,
                             () => Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const SoilFertilizationScreen()),
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const SoilFertilizationScreen()),
                             ),
                           ),
                         ),
@@ -157,14 +163,17 @@ class FarmerDashboard extends ConsumerWidget {
                             Colors.orange,
                             () => Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const PowderGradingScreen(showMarketData: false)),
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const PowderGradingScreen(
+                                          showMarketData: false)),
                             ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  
+
                   // Extra padding for bottom scrolling
                   const SizedBox(height: 32),
                 ],
@@ -176,9 +185,8 @@ class FarmerDashboard extends ConsumerWidget {
     );
   }
 
-
-
-  Widget _buildActionCard(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionCard(BuildContext context, String title, IconData icon,
+      Color color, VoidCallback onTap) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

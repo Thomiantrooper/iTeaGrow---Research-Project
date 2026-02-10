@@ -218,7 +218,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: LinearProgressIndicator(
                   value: _progressController.value,
                   backgroundColor: TeaColors.lightGray,
-                  valueColor: AlwaysStoppedAnimation(
+                  valueColor: const AlwaysStoppedAnimation(
                     TeaColors.freshLeaf,
                   ),
                   minHeight: 4,

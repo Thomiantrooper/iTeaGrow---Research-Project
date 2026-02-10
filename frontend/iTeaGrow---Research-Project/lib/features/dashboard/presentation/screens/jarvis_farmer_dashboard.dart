@@ -14,7 +14,6 @@ import '../../../powder_grading/presentation/screens/powder_grading_screen.dart'
 import '../../../public/presentation/landing/landing_page.dart';
 import '../../presentation/widgets/weather_risk_card.dart';
 import '../../../iot_connectivity/presentation/widgets/esp32_sensor_card.dart';
-import '../../../iot_connectivity/presentation/providers/esp32_sensor_provider.dart';
 import '../../../iot_connectivity/presentation/screens/iot_devices_screen.dart';
 
 class JarvisFarmerDashboard extends ConsumerStatefulWidget {
@@ -97,7 +96,17 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                         const WeatherRiskCard(),
                         const SizedBox(height: JarvisTheme.spacingLg),
 
-                        // Primary Action - Leaf Capture
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4, bottom: 12),
+                          child: Text(
+                            'Crop Insights',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: JarvisTheme.textPrimary,
+                            ),
+                          ),
+                        ),
                         _buildPrimaryAction(context),
                         const SizedBox(height: JarvisTheme.spacingLg),
 
@@ -151,7 +160,7 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
@@ -370,17 +379,17 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
-                            'Primary Action',
+                            'MATURITY ANALYSIS',
                             style: TextStyle(
-                              color: Colors.white70,
+                              color: Colors.white,
                               fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                         const SizedBox(height: 12),
                         const Text(
-                          'Capture Leaf',
+                          'Leaf Maturity',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 28,
@@ -389,7 +398,7 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                         ),
                         const SizedBox(height: 4),
                         const Text(
-                          'Check maturity & quality',
+                          'Check leaf quality and maturity',
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -405,7 +414,7 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.camera_alt_rounded,
+                      Icons.center_focus_strong,
                       color: Colors.white,
                       size: 48,
                     ),
@@ -428,7 +437,8 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
         color: JarvisTheme.critical,
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const EnhancedDiseaseDetectionScreen()),
+          MaterialPageRoute(
+              builder: (_) => const EnhancedDiseaseDetectionScreen()),
         ),
       ),
       _QuickAction(
@@ -614,9 +624,9 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                     // Header
                     Container(
                       padding: const EdgeInsets.all(JarvisTheme.spacingMd),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: JarvisTheme.primaryGradient,
-                        borderRadius: const BorderRadius.vertical(
+                        borderRadius: BorderRadius.vertical(
                           top: Radius.circular(JarvisTheme.radiusXl),
                         ),
                       ),
@@ -683,9 +693,9 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                     // Input
                     Container(
                       padding: const EdgeInsets.all(JarvisTheme.spacingMd),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: JarvisTheme.mistGray,
-                        borderRadius: const BorderRadius.vertical(
+                        borderRadius: BorderRadius.vertical(
                           bottom: Radius.circular(JarvisTheme.radiusXl),
                         ),
                       ),
@@ -740,7 +750,8 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                           ),
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: const Icon(Icons.send, color: JarvisTheme.teaGreen),
+                            icon: const Icon(Icons.send,
+                                color: JarvisTheme.teaGreen),
                             onPressed: () {
                               final text = _messageController.text;
                               if (text.isNotEmpty) {
@@ -797,11 +808,12 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
                   Container(
                     width: 60,
                     height: 60,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: JarvisTheme.primaryGradient,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.person, color: Colors.white, size: 30),
+                    child:
+                        const Icon(Icons.person, color: Colors.white, size: 30),
                   ),
                   const SizedBox(width: JarvisTheme.spacingMd),
                   const Expanded(
@@ -830,29 +842,34 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
             const Divider(),
             // Menu items
             ListTile(
-              leading: const Icon(Icons.dashboard_outlined, color: JarvisTheme.teaGreen),
+              leading: const Icon(Icons.dashboard_outlined,
+                  color: JarvisTheme.teaGreen),
               title: const Text('Dashboard'),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
-              leading: const Icon(Icons.history_outlined, color: JarvisTheme.teaGreen),
+              leading: const Icon(Icons.history_outlined,
+                  color: JarvisTheme.teaGreen),
               title: const Text('Scan History'),
               onTap: () {},
             ),
             ListTile(
-              leading: const Icon(Icons.settings_outlined, color: JarvisTheme.teaGreen),
+              leading: const Icon(Icons.settings_outlined,
+                  color: JarvisTheme.teaGreen),
               title: const Text('Settings'),
               onTap: () {},
             ),
             ListTile(
-              leading: const Icon(Icons.help_outline, color: JarvisTheme.teaGreen),
+              leading:
+                  const Icon(Icons.help_outline, color: JarvisTheme.teaGreen),
               title: const Text('Help & Support'),
               onTap: () {},
             ),
             const Spacer(),
             ListTile(
               leading: const Icon(Icons.logout, color: JarvisTheme.critical),
-              title: const Text('Logout', style: TextStyle(color: JarvisTheme.critical)),
+              title: const Text('Logout',
+                  style: TextStyle(color: JarvisTheme.critical)),
               onTap: () {
                 ref.read(currentUserProvider.notifier).state = null;
                 Navigator.pushAndRemoveUntil(

@@ -36,6 +36,7 @@ android {
 
         // Enable multidex for large apps
         multiDexEnabled = true
+        multiDexEnabled = true
 
         // Production metadata
         setProperty("archivesBaseName", "iTeaGrow-v$versionName")
@@ -100,8 +101,39 @@ android {
         checkReleaseBuilds = true
         abortOnError = false
     }
+
+    // CRITICAL: Prevent compression of TFLite models
+    // Required for Flex delegates and XNNPack
+    aaptOptions {
+        noCompress("tflite")
+        noCompress("lite")
+    }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // =========================================
+    // PYTORCH MOBILE DEPENDENCIES
+    // =========================================
+    // Plugin 'pytorch_lite' manages its own dependencies (pytorch_android 2.1.0)
+    // Removed manual entries to avoid JNI conflicts
+
+    // =========================================
+    // TENSORFLOW LITE DEPENDENCIES (CRITICAL)
+    // =========================================
+
+    // 1. CORE TFLite runtime (REQUIRED)
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+
+    // 2. Flex ops support (REQUIRED for ShuffleNetV2)
+    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0")
+
+    // 3. Support library for easier preprocessing (OPTIONAL but recommended)
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+
+    // 4. Multidex for large apps
+    implementation("androidx.multidex:multidex:2.0.1")
 }

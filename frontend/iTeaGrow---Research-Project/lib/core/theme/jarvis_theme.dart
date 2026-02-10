@@ -224,20 +224,20 @@ class JarvisTheme {
       scaffoldBackgroundColor: mistWhite,
 
       // AppBar
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: teaGreen,
         foregroundColor: textOnPrimary,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           fontFamily: 'Poppins',
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textOnPrimary,
           letterSpacing: 0.5,
         ),
-        iconTheme: const IconThemeData(color: textOnPrimary),
-        shape: const RoundedRectangleBorder(
+        iconTheme: IconThemeData(color: textOnPrimary),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             bottom: Radius.circular(radiusLg),
           ),
@@ -245,7 +245,7 @@ class JarvisTheme {
       ),
 
       // Cards
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: mistWhitePure,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -354,7 +354,9 @@ class JarvisTheme {
         labelStyle: const TextStyle(color: textPrimary),
         secondaryLabelStyle: const TextStyle(color: textOnPrimary),
         padding: const EdgeInsets.symmetric(
-            horizontal: spacingSm, vertical: spacingXs),
+          horizontal: spacingSm,
+          vertical: spacingXs,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusRound),
         ),
@@ -385,7 +387,7 @@ class JarvisTheme {
       ),
 
       // Dialog
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: mistWhitePure,
         elevation: 8,
         shape: RoundedRectangleBorder(
@@ -534,18 +536,18 @@ class JarvisTheme {
         error: critical,
       ),
       scaffoldBackgroundColor: darkBg,
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: darkSurface,
         foregroundColor: textOnDark,
         elevation: 0,
         centerTitle: true,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             bottom: Radius.circular(radiusLg),
           ),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: darkCard,
         elevation: 0,
         shape: RoundedRectangleBorder(

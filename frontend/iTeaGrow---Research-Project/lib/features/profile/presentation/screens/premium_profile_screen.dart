@@ -74,7 +74,7 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -121,7 +121,7 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
                                   shape: BoxShape.circle,
                                   boxShadow: TeaShadows.buttonShadow,
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                   Icons.camera_alt,
                                   size: 20,
                                   color: TeaColors.freshLeaf,
@@ -211,7 +211,7 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
                 const SizedBox(height: TeaSpacing.lg),
 
                 // Achievements Section
-                TeaSectionHeader(
+                const TeaSectionHeader(
                   title: 'Achievements',
                   icon: Icons.emoji_events_outlined,
                 ),
@@ -221,7 +221,7 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
                 const SizedBox(height: TeaSpacing.lg),
 
                 // Activity Summary
-                TeaSectionHeader(
+                const TeaSectionHeader(
                   title: 'Activity Summary',
                   icon: Icons.insights,
                 ),
@@ -428,8 +428,8 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
                 ),
               ),
               if (isEarned)
-                Padding(
-                  padding: const EdgeInsets.only(top: TeaSpacing.xs),
+                const Padding(
+                  padding: EdgeInsets.only(top: TeaSpacing.xs),
                   child: Icon(
                     Icons.verified,
                     color: TeaColors.healthyGreen,

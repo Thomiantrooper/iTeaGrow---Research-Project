@@ -757,7 +757,7 @@ class _PremiumDiseaseDetectionScreenState
                 Expanded(
                   child: _buildEnvReading(
                     Icons.air,
-                    '${airQuality.toStringAsFixed(0)}',
+                    airQuality.toStringAsFixed(0),
                     'AQI',
                     _getAirQualityColor(airQuality),
                   ),
@@ -823,7 +823,7 @@ class _PremiumDiseaseDetectionScreenState
                   shape: BoxShape.circle,
                   boxShadow: TeaShadows.glowPrimary,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.eco,
                   size: 56,
                   color: TeaColors.freshLeaf,
@@ -857,7 +857,7 @@ class _PremiumDiseaseDetectionScreenState
   Widget _buildImagePreview() {
     if (_imageBytes == null) {
       return TeaCard.elevated(
-        child: SizedBox(
+        child: const SizedBox(
           height: 300,
           child: Center(
             child: CircularProgressIndicator(color: TeaColors.freshLeaf),
@@ -928,7 +928,7 @@ class _PremiumDiseaseDetectionScreenState
                       child: Switch(
                         value: _showGradCam,
                         onChanged: (value) => setState(() => _showGradCam = value),
-                        activeColor: TeaColors.goldenSunlight,
+                        activeThumbColor: TeaColors.goldenSunlight,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
@@ -947,7 +947,7 @@ class _PremiumDiseaseDetectionScreenState
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 60,
                       height: 60,
                       child: CircularProgressIndicator(
@@ -1101,7 +1101,7 @@ class _PremiumDiseaseDetectionScreenState
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: TeaColors.warningAmber, size: 22),
+                  const Icon(Icons.info_outline, color: TeaColors.warningAmber, size: 22),
                   const SizedBox(width: TeaSpacing.smd),
                   Expanded(
                     child: Text(
@@ -1180,7 +1180,7 @@ class _PremiumDiseaseDetectionScreenState
               const SizedBox(height: TeaSpacing.lg),
               Row(
                 children: [
-                  Icon(Icons.eco, color: TeaColors.freshLeaf, size: 18),
+                  const Icon(Icons.eco, color: TeaColors.freshLeaf, size: 18),
                   const SizedBox(width: TeaSpacing.xs),
                   Text(
                     'Environmental Factors at Analysis',
@@ -1341,7 +1341,7 @@ class _PremiumDiseaseDetectionScreenState
                       ),
                     ],
                   ),
-                )),
+                ),),
           ],
         ),
       ),
@@ -1476,7 +1476,7 @@ class _PremiumDiseaseDetectionScreenState
                           Container(
                             width: 12,
                             height: 12,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: TeaColors.alertRust,
                               shape: BoxShape.circle,
                             ),
@@ -1504,7 +1504,7 @@ class _PremiumDiseaseDetectionScreenState
                       ),
                     ],
                   ),
-                )),
+                ),),
           ],
 
           const SizedBox(height: TeaSpacing.md),
@@ -1638,7 +1638,7 @@ class _PremiumDiseaseDetectionScreenState
                       ),
                     ],
                   ),
-                )),
+                ),),
           ],
         ),
       ),

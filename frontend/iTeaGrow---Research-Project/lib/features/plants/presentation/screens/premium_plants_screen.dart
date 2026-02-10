@@ -149,7 +149,7 @@ class _PremiumPlantsScreenState extends ConsumerState<PremiumPlantsScreen>
 
           const SizedBox(height: TeaSpacing.lg),
 
-          TeaSectionHeader(
+          const TeaSectionHeader(
             title: 'Growth Stages Overview',
             icon: Icons.timeline,
           ),
@@ -257,7 +257,7 @@ class _PremiumPlantsScreenState extends ConsumerState<PremiumPlantsScreen>
                   ],
                 ),
                 const SizedBox(height: TeaSpacing.md),
-                TeaProgressBar(
+                const TeaProgressBar(
                   value: 0.87,
                   color: TeaColors.healthyGreen,
                   showPercentage: false,
@@ -268,7 +268,7 @@ class _PremiumPlantsScreenState extends ConsumerState<PremiumPlantsScreen>
 
           const SizedBox(height: TeaSpacing.lg),
 
-          TeaSectionHeader(
+          const TeaSectionHeader(
             title: 'Health Distribution',
             icon: Icons.pie_chart_outline,
           ),
@@ -390,7 +390,7 @@ class _PremiumPlantsScreenState extends ConsumerState<PremiumPlantsScreen>
 
           const SizedBox(height: TeaSpacing.lg),
 
-          TeaSectionHeader(
+          const TeaSectionHeader(
             title: 'Block-wise Maturity',
             icon: Icons.grid_view,
           ),
@@ -770,7 +770,7 @@ class _PremiumPlantsScreenState extends ConsumerState<PremiumPlantsScreen>
             Text('Filter Plants', style: TeaTypography.titleLarge),
             const SizedBox(height: TeaSpacing.md),
             Text('Coming soon - filter by growth stage, health, and more.',
-                style: TeaTypography.bodyMedium),
+                style: TeaTypography.bodyMedium,),
             const SizedBox(height: TeaSpacing.xl),
           ],
         ),

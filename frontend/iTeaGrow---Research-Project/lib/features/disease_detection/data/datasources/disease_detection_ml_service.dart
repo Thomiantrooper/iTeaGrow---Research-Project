@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:typed_data';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_config.dart';
 import '../../../../core/api/api_exceptions.dart';
@@ -382,7 +381,7 @@ class DiseaseDetectionMLService {
         diseaseType: disease,
         confidence: confidence,
         severity: confidence > 0.85 ? 'High' : (confidence > 0.7 ? 'Medium' : 'Low'),
-      ));
+      ),);
     }
 
     final totalCount = imagePaths.length;
@@ -536,7 +535,7 @@ class DiseaseDetectionMLService {
           'image',
           bytes,
           filename: filename,
-        ));
+        ),);
       } else {
         throw ApiException('Failed to load image from path: ${imageResponse.statusCode}');
       }
@@ -548,7 +547,7 @@ class DiseaseDetectionMLService {
 
       print('Sending request to backend...');
       final streamedResponse = await request.send().timeout(
-        Duration(seconds: ApiConfig.receiveTimeout),
+        const Duration(seconds: ApiConfig.receiveTimeout),
       );
       final response = await http.Response.fromStream(streamedResponse);
 

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/models/iot_models.dart';
 import '../../domain/models/esp32_sensor_data.dart';
 
 /// ESP32 Bluetooth Service for iTeaGrow Environmental Monitor

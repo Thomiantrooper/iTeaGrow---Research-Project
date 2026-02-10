@@ -4,13 +4,23 @@ import 'dart:io' show Platform;
 /// API Configuration for Tea Leaf Disease Detection Backend
 class ApiConfig {
   // =========================================================================
-  // PRODUCTION URL - Railway Disease Detection API
-  // Update after deploying railway-disease-api folder
+  // FUTURE PRODUCTION URL - Main Backend Railway (Not Yet Deployed)
+  // This will be for auth, users, storage, IoT when deployed to production
   // =========================================================================
-  static const String productionBaseUrl = 'https://tea-leaf-disease-api-prod.up.railway.app';
+  static const String productionBaseUrl =
+      'https://iteagrow-main-prod.up.railway.app'; // TODO: Update when deployed
+
+  // =========================================================================
+  // DISEASE ML INFERENCE - Railway Production (ACTIVE)
+  // Only for disease detection inference endpoints
+  // =========================================================================
+  static const String diseaseInferenceBaseUrl =
+      'https://tea-leaf-disease-api-prod.up.railway.app';
 
   // Set to true to always use production backend (recommended for mobile app)
-  static const bool useProductionBackend = true;
+  // NOTE: This only affects main backend (auth, storage, IoT)
+  // Disease ML and Yield Prediction use their own separate URLs
+  static const bool useProductionBackend = false;
 
   // Base URL - Automatically detects platform and mode
   static String get baseUrl {
@@ -53,13 +63,21 @@ class ApiConfig {
   // Full API base path
   static String get apiBaseUrl => '$effectiveBaseUrl/api/$apiVersion';
 
-  // Endpoints
-  static String get inferenceDetect => '$apiBaseUrl/inference/detect';
-  static String get inferenceExplain => '$apiBaseUrl/inference/explain';
-  static String get modelInfo => '$apiBaseUrl/inference/model-info';
+  // Disease inference uses Railway (always has model loaded)
+  static String get diseaseInferenceApiUrl =>
+      '$diseaseInferenceBaseUrl/api/$apiVersion';
+
+  // Inference Endpoints - Use Railway Disease API
+  static String get inferenceDetect =>
+      '$diseaseInferenceApiUrl/inference/detect';
+  static String get inferenceExplain =>
+      '$diseaseInferenceApiUrl/inference/explain';
+  static String get modelInfo => '$diseaseInferenceApiUrl/inference/model-info';
   static String get health => '$effectiveBaseUrl/health';
-  static String get recommendations => '$apiBaseUrl/recommendations/generate';
-  static String get quickRecommendations => '$apiBaseUrl/recommendations/quick';
+  static String get recommendations =>
+      '$diseaseInferenceApiUrl/recommendations/generate';
+  static String get quickRecommendations =>
+      '$diseaseInferenceApiUrl/recommendations/quick';
 
   // Batch/Cumulative Detection Endpoints
   static String get batchDetect => '$apiBaseUrl/inference/batch';
@@ -81,7 +99,8 @@ class ApiConfig {
 
   // Bluetooth IoT Endpoints
   static String get bluetoothConfig => '$apiBaseUrl/bluetooth/config';
-  static String get bluetoothRegister => '$apiBaseUrl/bluetooth/devices/register';
+  static String get bluetoothRegister =>
+      '$apiBaseUrl/bluetooth/devices/register';
   static String get bluetoothDevices => '$apiBaseUrl/bluetooth/devices';
   static String get bluetoothData => '$apiBaseUrl/bluetooth/data';
   static String get bluetoothSync => '$apiBaseUrl/bluetooth/sync';
@@ -108,7 +127,8 @@ class ApiConfig {
   // Auth Endpoints
   static String get authLogin => '$effectiveBaseUrl/api/users/login';
   static String get authRegister => '$effectiveBaseUrl/api/users/register';
-  static String get authVerifyToken => '$effectiveBaseUrl/api/users/verify-token';
+  static String get authVerifyToken =>
+      '$effectiveBaseUrl/api/users/verify-token';
   static String get authProfile => '$effectiveBaseUrl/api/users/me';
   static String get authLogout => '$effectiveBaseUrl/api/users/logout';
 
@@ -121,8 +141,10 @@ class ApiConfig {
   static String get syncTrigger => '$apiBaseUrl/sync/trigger';
 
   // Additional Recommendation Endpoints
-  static String get treatmentProtocol => '$apiBaseUrl/recommendations/treatment';
-  static String get fungicideCatalog => '$apiBaseUrl/recommendations/fungicides';
+  static String get treatmentProtocol =>
+      '$apiBaseUrl/recommendations/treatment';
+  static String get fungicideCatalog =>
+      '$apiBaseUrl/recommendations/fungicides';
   static String get costEstimate => '$apiBaseUrl/recommendations/cost-estimate';
 
   // Yield Prediction API (Railway Production)

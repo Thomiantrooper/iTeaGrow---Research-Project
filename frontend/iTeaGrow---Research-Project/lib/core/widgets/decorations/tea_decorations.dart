@@ -492,7 +492,7 @@ class TeaStatusBadge extends StatelessWidget {
     );
 
     if (pulsing) {
-      return _PulsingWidget(child: badge, color: color);
+      return _PulsingWidget(color: color, child: badge);
     }
 
     return badge;

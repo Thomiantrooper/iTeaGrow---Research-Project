@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/validators/tea_validators.dart';
-import '../../../../core/animations/tea_animations.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../data/providers/auth_provider.dart';
 

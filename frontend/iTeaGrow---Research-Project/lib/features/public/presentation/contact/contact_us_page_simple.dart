@@ -33,7 +33,7 @@ class _ContactUsPageSimpleState extends State<ContactUsPageSimple> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _ContactInfoCard(
+            const _ContactInfoCard(
               icon: Icons.email_outlined,
               title: 'Email',
               value: 'info@iteagrow.lk',
@@ -41,7 +41,7 @@ class _ContactUsPageSimpleState extends State<ContactUsPageSimple> {
 
             const SizedBox(height: 16),
 
-            _ContactInfoCard(
+            const _ContactInfoCard(
               icon: Icons.phone_outlined,
               title: 'Phone',
               value: '+94 XX XXX XXXX',
@@ -49,7 +49,7 @@ class _ContactUsPageSimpleState extends State<ContactUsPageSimple> {
 
             const SizedBox(height: 16),
 
-            _ContactInfoCard(
+            const _ContactInfoCard(
               icon: Icons.location_on_outlined,
               title: 'Address',
               value: 'Tea Research Institute\nTalawakelle, Sri Lanka',

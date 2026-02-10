@@ -113,7 +113,7 @@ class _WeatherRiskCardState extends State<WeatherRiskCard>
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        const Text(
                           'Risk',
                           style: TextStyle(
                             fontSize: 12,
@@ -137,7 +137,7 @@ class _WeatherRiskCardState extends State<WeatherRiskCard>
               // Weather icon
               Column(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.cloud,
                     color: JarvisTheme.textMuted,
                     size: 32,
@@ -181,7 +181,7 @@ class _WeatherRiskCardState extends State<WeatherRiskCard>
                 Expanded(
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.wb_cloudy_outlined,
                         size: 16,
                         color: JarvisTheme.textMuted,
@@ -233,7 +233,7 @@ class _WeatherRiskCardState extends State<WeatherRiskCard>
                 Expanded(
                   child: Text(
                     _riskData.recommendation,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
                       color: JarvisTheme.textPrimary,
                       height: 1.4,
@@ -453,7 +453,7 @@ class SeasonalPlanningCard extends StatelessWidget {
                     ),
                   ],
                 ),
-              )),
+              ),),
         ],
       ),
     );
