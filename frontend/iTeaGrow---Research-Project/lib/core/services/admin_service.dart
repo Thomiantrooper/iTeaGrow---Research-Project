@@ -89,6 +89,99 @@ class AdminService {
       return false;
     }
   }
+
+  /// Get all registered Bluetooth devices
+  Future<Map<String, dynamic>?> getBluetoothDevices() async {
+    try {
+      final response = await _apiService.get<Map<String, dynamic>>(
+        '/api/v1/bluetooth/devices',
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+      return response.success ? response.data : null;
+    } catch (e) {
+      debugPrint('Error getting BLE devices: $e');
+      return null;
+    }
+  }
+
+  /// Get all registered WiFi devices
+  Future<Map<String, dynamic>?> getWifiDevices() async {
+    try {
+      final response = await _apiService.get<Map<String, dynamic>>(
+        '/api/v1/wifi/devices',
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+      return response.success ? response.data : null;
+    } catch (e) {
+      debugPrint('Error getting WiFi devices: $e');
+      return null;
+    }
+  }
+
+  /// Get Bluetooth configuration
+  Future<Map<String, dynamic>?> getBluetoothConfig() async {
+    try {
+      final response = await _apiService.get<Map<String, dynamic>>(
+        '/api/v1/bluetooth/config',
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+      return response.success ? response.data : null;
+    } catch (e) {
+      debugPrint('Error getting BLE config: $e');
+      return null;
+    }
+  }
+
+  /// Get data sync status
+  Future<Map<String, dynamic>?> getSyncStatus() async {
+    try {
+      final response = await _apiService.get<Map<String, dynamic>>(
+        '/api/v1/sync/status',
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+      return response.success ? response.data : null;
+    } catch (e) {
+      debugPrint('Error getting sync status: $e');
+      return null;
+    }
+  }
+
+  /// Trigger manual data sync
+  Future<Map<String, dynamic>?> triggerSync() async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        '/api/v1/sync/trigger',
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+      return response.success ? response.data : null;
+    } catch (e) {
+      debugPrint('Error triggering sync: $e');
+      return null;
+    }
+  }
+
+  /// Get recent system activity
+  Future<List<dynamic>?> getRecentActivity() async {
+    try {
+      final response = await _apiService.get<Map<String, dynamic>>(
+        '/api/disease/recent',
+        fromJson: (data) => data as Map<String, dynamic>,
+      );
+      if (response.success && response.data != null) {
+        final detections = response.data!['detections'] as List? ?? [];
+        return detections.map((d) => {
+          'type': 'scan',
+          'action': 'Disease scan: ${d['disease_name'] ?? 'Unknown'}',
+          'user': d['user_id'] ?? 'Unknown',
+          'timestamp': d['created_at'] ?? 'Unknown',
+        }).toList();
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting recent activity: $e');
+      return null;
+    }
+  }
 }
 
 /// Provider for AdminService

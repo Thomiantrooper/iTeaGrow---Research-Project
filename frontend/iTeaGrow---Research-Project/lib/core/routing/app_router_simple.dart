@@ -8,6 +8,13 @@ import '../../features/auth/presentation/screens/login_screen_simple.dart';
 import '../../features/dashboard/presentation/screens/farmer_dashboard_simple.dart';
 import '../../features/dashboard/presentation/screens/manager_dashboard_simple.dart';
 import '../../features/dashboard/presentation/screens/admin_dashboard_simple.dart';
+import '../../features/dashboard/presentation/screens/analytics_dashboard_screen.dart';
+import '../../features/disease_detection/presentation/screens/disease_detection_screen.dart';
+import '../../features/disease_detection/presentation/screens/scan_history_screen.dart';
+import '../../features/iot_connectivity/presentation/screens/iot_devices_screen.dart';
+import '../../features/reports/presentation/screens/reports_list_screen.dart';
+import '../../features/reports/presentation/screens/report_preview_screen.dart';
+import '../../features/admin/presentation/screens/admin_placeholder_screens.dart';
 import '../../features/auth/data/providers/auth_provider_simple.dart';
 import '../enums/app_enums.dart';
 
@@ -89,9 +96,65 @@ final appRouterSimpleProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/dashboard/farmer/scan',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const DiseaseDetectionScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/farmer/history',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const ScanHistoryScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/farmer/devices',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const IoTDevicesScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/farmer/reports',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const ReportsListScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
         path: '/dashboard/manager',
         pageBuilder: (context, state) => _buildFastTransition(
           child: const ManagerDashboardSimple(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/manager/analytics',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const AnalyticsDashboardScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/manager/disease',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const DiseaseDetectionScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/manager/reports',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const ReportsListScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/manager/history',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const ScanHistoryScreen(),
           state: state,
         ),
       ),
@@ -101,6 +164,58 @@ final appRouterSimpleProvider = Provider<GoRouter>((ref) {
           child: const AdminDashboardSimple(),
           state: state,
         ),
+      ),
+      GoRoute(
+        path: '/dashboard/admin/users',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const UserManagementScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/admin/devices',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const DeviceManagementScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/admin/config',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const SystemConfigScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/admin/sync',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const DataSyncScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/admin/logs',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const SystemLogsScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/dashboard/admin/analytics',
+        pageBuilder: (context, state) => _buildFastTransition(
+          child: const AnalyticsDashboardScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/reports/preview/:id',
+        pageBuilder: (context, state) {
+          final detectionId = state.pathParameters['id'] ?? '';
+          return _buildFastTransition(
+            child: ReportPreviewScreen(detectionId: detectionId),
+            state: state,
+          );
+        },
       ),
     ],
   );

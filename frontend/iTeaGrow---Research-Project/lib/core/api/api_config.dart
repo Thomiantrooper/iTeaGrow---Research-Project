@@ -107,6 +107,36 @@ class ApiConfig {
   static String get bluetoothSync => '$apiBaseUrl/bluetooth/sync';
   static String get bluetoothHealth => '$apiBaseUrl/bluetooth/health';
 
+  // WiFi IoT Endpoints
+  static String get wifiDiscover => '$apiBaseUrl/wifi/discover';
+  static String get wifiRegister => '$apiBaseUrl/wifi/devices/register';
+  static String get wifiDevices => '$apiBaseUrl/wifi/devices';
+  static String get wifiData => '$apiBaseUrl/wifi/data';
+  static String get wifiBatch => '$apiBaseUrl/wifi/batch';
+  static String get wifiHealth => '$apiBaseUrl/wifi/health';
+
+  // Analytics Endpoints
+  static String get analyticsOverview =>
+      '$effectiveBaseUrl/api/analytics/overview';
+  static String get analyticsDiseaseTrends =>
+      '$effectiveBaseUrl/api/analytics/disease-trends';
+  static String get analyticsDiseaseDistribution =>
+      '$effectiveBaseUrl/api/analytics/disease-distribution';
+  static String get analyticsRecovery =>
+      '$effectiveBaseUrl/api/analytics/recovery-tracking';
+  static String get analyticsUserStats =>
+      '$effectiveBaseUrl/api/analytics/user-stats';
+  static String get analyticsYearlyAnalysis =>
+      '$effectiveBaseUrl/api/analytics/yearly-analysis';
+
+  // Report Endpoints
+  static String reportData(String detectionId) =>
+      '$effectiveBaseUrl/api/reports/$detectionId';
+  static String get reportHistory =>
+      '$effectiveBaseUrl/api/reports/user/history';
+  static String get reportSummary =>
+      '$effectiveBaseUrl/api/reports/summary/range';
+
   // Disease Detection Storage Endpoints
   static String get diseaseDetections =>
       '$effectiveBaseUrl/api/disease/detections';
