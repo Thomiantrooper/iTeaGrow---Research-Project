@@ -444,7 +444,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 trailing: Switch(
                   value: false,
                   onChanged: (value) {},
-                  activeThumbColor: TeaColors.freshLeaf,
+                  thumbColor: WidgetStatePropertyAll(TeaColors.freshLeaf),
                 ),
                 onTap: () {},
               ),

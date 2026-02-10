@@ -394,7 +394,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeThumbColor: TeaColors.freshLeaf,
+        thumbColor: WidgetStatePropertyAll(TeaColors.freshLeaf),
       ),
     );
   }

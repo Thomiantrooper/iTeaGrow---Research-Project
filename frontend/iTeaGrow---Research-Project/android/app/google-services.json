@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "383234839155",
+    "project_id": "iteagrow-c7863",
+    "storage_bucket": "iteagrow-c7863.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:383234839155:android:ca521ffe9402c4a090d006",
+        "android_client_info": {
+          "package_name": "com.iteagrow.disease_detection"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuxoGaGh_iybVbE7n9us7vvJ-eQrSrgCU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../../core/api/api_client.dart';
@@ -25,9 +25,9 @@ class DiseaseDetectionMLService {
     _isBackendAvailable = await checkBackendConnection();
 
     if (_isBackendAvailable) {
-      print('Backend API connected at ${ApiConfig.effectiveBaseUrl}');
+      debugPrint('Disease inference API connected at ${ApiConfig.diseaseInferenceBaseUrl}');
     } else {
-      print('Backend not available at ${ApiConfig.effectiveBaseUrl} - using offline mode');
+      debugPrint('Disease inference API not available at ${ApiConfig.diseaseInferenceBaseUrl} - using offline mode');
     }
 
     _isInitialized = true;
@@ -36,18 +36,18 @@ class DiseaseDetectionMLService {
   /// Check if the backend server is reachable
   Future<bool> checkBackendConnection() async {
     try {
-      final healthUrl = ApiConfig.health;
-      print('Checking backend at: $healthUrl');
+      final healthUrl = ApiConfig.diseaseInferenceHealth;
+      debugPrint('Checking disease inference backend at: $healthUrl');
 
       final response = await http
           .get(Uri.parse(healthUrl))
           .timeout(const Duration(seconds: 5));
 
       _isBackendAvailable = response.statusCode == 200;
-      print('Backend health check: ${response.statusCode} - Available: $_isBackendAvailable');
+      debugPrint('Disease inference health check: ${response.statusCode} - Available: $_isBackendAvailable');
       return _isBackendAvailable;
     } catch (e) {
-      print('Backend connection check failed: $e');
+      debugPrint('Backend connection check failed: $e');
       _isBackendAvailable = false;
       return false;
     }
@@ -69,15 +69,15 @@ class DiseaseDetectionMLService {
       await initialize();
     }
 
-    print('>>> PREDICT CALLED <<<');
-    print('Backend available: $_isBackendAvailable');
-    print('Image path: $imagePath');
-    print('Is Web: $kIsWeb');
+    debugPrint('>>> PREDICT CALLED <<<');
+    debugPrint('Backend available: $_isBackendAvailable');
+    debugPrint('Image path: $imagePath');
+    debugPrint('Is Web: $kIsWeb');
 
     // Try backend API first
     if (_isBackendAvailable) {
       try {
-        print('>>> CALLING BACKEND API <<<');
+        debugPrint('>>> CALLING BACKEND API <<<');
         final result = await _predictWithBackend(
           imagePath,
           liveTemperature: liveTemperature,
@@ -88,28 +88,28 @@ class DiseaseDetectionMLService {
           locationLng: locationLng,
           requestExplainability: requestExplainability,
         );
-        print('>>> BACKEND SUCCESS: ${result.diseaseType} <<<');
-        print('>>> Confidence: ${result.confidence} <<<');
-        print('>>> Returning result from predict() <<<');
-        print('');
-        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-        print('!!! RESULT OBJECT CREATED SUCCESSFULLY !!!');
-        print('!!! About to return to caller !!!');
-        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-        print('');
+        debugPrint('>>> BACKEND SUCCESS: ${result.diseaseType} <<<');
+        debugPrint('>>> Confidence: ${result.confidence} <<<');
+        debugPrint('>>> Returning result from predict() <<<');
+        debugPrint('');
+        debugPrint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        debugPrint('!!! RESULT OBJECT CREATED SUCCESSFULLY !!!');
+        debugPrint('!!! About to return to caller !!!');
+        debugPrint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        debugPrint('');
         return result;
       } on ApiException catch (e) {
-        print('!!! Backend API error: $e - falling back to offline mode');
+        debugPrint('!!! Backend API error: $e - falling back to offline mode');
       } catch (e, stackTrace) {
-        print('!!! Unexpected error: $e - falling back to offline mode');
-        print('!!! Stack trace: $stackTrace');
+        debugPrint('!!! Unexpected error: $e - falling back to offline mode');
+        debugPrint('!!! Stack trace: $stackTrace');
       }
     } else {
-      print('!!! Backend NOT available - using offline mode');
+      debugPrint('!!! Backend NOT available - using offline mode');
     }
 
     // Offline fallback with dummy data
-    print('>>> USING OFFLINE MODE ( DATA) <<<');
+    debugPrint('>>> USING OFFLINE MODE ( DATA) <<<');
     return _predictOffline(
       imagePath,
       liveTemperature: liveTemperature,
@@ -142,7 +142,7 @@ class DiseaseDetectionMLService {
           fieldId: fieldId,
         );
       } catch (e) {
-        print('Batch backend error: $e - using offline mode');
+        debugPrint('Batch backend error: $e - using offline mode');
       }
     }
 
@@ -177,7 +177,7 @@ class DiseaseDetectionMLService {
           blockId: blockId,
         );
       } catch (e) {
-        print('Field analysis backend error: $e - using offline mode');
+        debugPrint('Field analysis backend error: $e - using offline mode');
       }
     }
 
@@ -321,7 +321,7 @@ class DiseaseDetectionMLService {
     await Future.delayed(const Duration(seconds: 2));
 
     // Generate dummy results
-    final diseases = ['Healthy', 'Red Rust', 'Blister Blight', 'Gray Blight', 'Anthracnose'];
+    final diseases = ['Healthy', 'Red Rust', 'Blister Blight'];
     final random = Random();
     final diseaseType = diseases[random.nextInt(diseases.length)];
     final confidence = 0.7 + random.nextDouble() * 0.25;
@@ -358,7 +358,7 @@ class DiseaseDetectionMLService {
     await Future.delayed(Duration(seconds: imagePaths.length));
 
     final random = Random();
-    final diseases = ['Healthy', 'Red Rust', 'Blister Blight', 'Gray Blight'];
+    final diseases = ['Healthy', 'Red Rust', 'Blister Blight'];
     final results = <SingleLeafResult>[];
 
     int healthyCount = 0;
@@ -420,7 +420,7 @@ class DiseaseDetectionMLService {
     final infectedCount = detectedLeaves - healthyCount;
     final healthPercentage = (healthyCount / detectedLeaves) * 100;
 
-    final diseases = ['Red Rust', 'Blister Blight', 'Gray Blight'];
+    final diseases = ['Red Rust', 'Blister Blight'];
     final diseaseCounts = <String, int>{};
     var remaining = infectedCount;
     for (final disease in diseases) {
@@ -487,7 +487,7 @@ class DiseaseDetectionMLService {
     try {
       return await _apiClient.get(ApiConfig.modelInfo);
     } catch (e) {
-      print('Failed to get model info: $e');
+      debugPrint('Failed to get model info: $e');
       return null;
     }
   }
@@ -495,9 +495,9 @@ class DiseaseDetectionMLService {
   /// Check backend health status
   Future<Map<String, dynamic>?> getHealthStatus() async {
     try {
-      return await _apiClient.get(ApiConfig.health);
+      return await _apiClient.get(ApiConfig.diseaseInferenceHealth);
     } catch (e) {
-      print('Failed to get health status: $e');
+      debugPrint('Failed to get health status: $e');
       return null;
     }
   }
@@ -511,9 +511,9 @@ class DiseaseDetectionMLService {
     Map<String, String>? fields,
   }) async {
     try {
-      print('>>> _postMultipartWeb CALLED <<<');
-      print('URL: $url');
-      print('Image path: $imagePath');
+      debugPrint('>>> _postMultipartWeb CALLED <<<');
+      debugPrint('URL: $url');
+      debugPrint('Image path: $imagePath');
 
       final request = http.MultipartRequest('POST', Uri.parse(url));
 
@@ -522,13 +522,13 @@ class DiseaseDetectionMLService {
 
       // For web, we need to fetch the blob and send as bytes
       // The imagePath on web is typically a blob URL from image_picker
-      print('Fetching image from blob URL...');
+      debugPrint('Fetching image from blob URL...');
       final imageResponse = await http.get(Uri.parse(imagePath));
-      print('Image fetch status: ${imageResponse.statusCode}');
+      debugPrint('Image fetch status: ${imageResponse.statusCode}');
 
       if (imageResponse.statusCode == 200) {
         final bytes = imageResponse.bodyBytes;
-        print('Image bytes loaded: ${bytes.length} bytes');
+        debugPrint('Image bytes loaded: ${bytes.length} bytes');
         final filename = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
         request.files.add(http.MultipartFile.fromBytes(
@@ -545,14 +545,14 @@ class DiseaseDetectionMLService {
         request.fields.addAll(fields);
       }
 
-      print('Sending request to backend...');
+      debugPrint('Sending request to backend...');
       final streamedResponse = await request.send().timeout(
         const Duration(seconds: ApiConfig.receiveTimeout),
       );
       final response = await http.Response.fromStream(streamedResponse);
 
-      print('Backend response status: ${response.statusCode}');
-      print('Backend response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
+      debugPrint('Backend response status: ${response.statusCode}');
+      debugPrint('Backend response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (response.body.isEmpty) return {};
@@ -561,7 +561,7 @@ class DiseaseDetectionMLService {
         throw ApiException('HTTP error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('!!! _postMultipartWeb ERROR: $e');
+      debugPrint('!!! _postMultipartWeb ERROR: $e');
       if (e is ApiException) rethrow;
       throw ApiException('Web upload error: $e');
     }

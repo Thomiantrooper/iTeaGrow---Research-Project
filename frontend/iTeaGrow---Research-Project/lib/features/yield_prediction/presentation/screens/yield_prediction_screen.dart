@@ -187,7 +187,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Division Selection
             DropdownButtonFormField<String>(
-              initialValue: _divisionId,
+              value: _divisionId,
               decoration: const InputDecoration(
                 labelText: 'Division',
                 border: OutlineInputBorder(),

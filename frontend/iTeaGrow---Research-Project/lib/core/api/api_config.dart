@@ -74,6 +74,7 @@ class ApiConfig {
       '$diseaseInferenceApiUrl/inference/explain';
   static String get modelInfo => '$diseaseInferenceApiUrl/inference/model-info';
   static String get health => '$effectiveBaseUrl/health';
+  static String get diseaseInferenceHealth => '$diseaseInferenceBaseUrl/health';
   static String get recommendations =>
       '$diseaseInferenceApiUrl/recommendations/generate';
   static String get quickRecommendations =>
