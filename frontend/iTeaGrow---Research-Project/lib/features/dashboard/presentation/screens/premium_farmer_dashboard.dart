@@ -1019,6 +1019,22 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.history),
+                title: const Text('Scan History'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/scan-history');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.description),
+                title: const Text('Reports'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/reports');
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.settings_outlined),
                 title: const Text('Settings'),
                 onTap: () {

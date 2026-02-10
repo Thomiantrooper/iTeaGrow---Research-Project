@@ -115,7 +115,7 @@ class _AnalyticsDashboardScreenState
       children: [
         _SummaryCard(
           title: 'Total Scans',
-          value: '${overview?['total_detections'] ?? 0}',
+          value: '${overview?['total_scans'] ?? 0}',
           icon: Icons.document_scanner,
           color: Colors.blue,
         ),
@@ -134,7 +134,7 @@ class _AnalyticsDashboardScreenState
         ),
         _SummaryCard(
           title: 'Active Devices',
-          value: '${overview?['active_devices'] ?? 0}',
+          value: '${overview?['total_devices'] ?? 0}',
           icon: Icons.sensors,
           color: Colors.teal,
         ),

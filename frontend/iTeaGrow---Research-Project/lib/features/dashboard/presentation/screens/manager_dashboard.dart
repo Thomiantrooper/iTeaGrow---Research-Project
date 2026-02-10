@@ -428,6 +428,31 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
             ),
           ),
           ListTile(
+            leading: const Icon(Icons.analytics, color: TeaColors.freshLeaf),
+            title: const Text('Analytics Dashboard'),
+            onTap: () {
+              Navigator.pop(context);
+              context.push('/dashboard/admin/analytics');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.history, color: Colors.blue),
+            title: const Text('Scan History'),
+            onTap: () {
+              Navigator.pop(context);
+              context.push('/scan-history');
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.description, color: Colors.orange.shade700),
+            title: const Text('Reports'),
+            onTap: () {
+              Navigator.pop(context);
+              context.push('/reports');
+            },
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.logout, color: TeaColors.alertRust),
             title: const Text('Logout',
                 style: TextStyle(color: TeaColors.alertRust)),
