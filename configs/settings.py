@@ -159,7 +159,7 @@ class SecuritySettings(BaseSettings):
 class MongoDBSettings(BaseSettings):
     """MongoDB configuration settings."""
 
-    url: str = Field(default="mongodb://localhost:27017", alias="MONGODB_URL")
+    url: str = Field(default="mongodb+srv://kanzur:kanzur@cluster0.joabitw.mongodb.net/?appName=Cluster0", alias="MONGODB_URL")
     database_name: str = Field(default="iteagrow", alias="MONGODB_DATABASE")
     max_pool_size: int = Field(default=10, alias="MONGODB_MAX_POOL_SIZE")
     min_pool_size: int = Field(default=1, alias="MONGODB_MIN_POOL_SIZE")
