@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/data/providers/auth_provider.dart';
+import '../providers/analytics_provider.dart';
 
 class ManagerDashboard extends ConsumerStatefulWidget {
   const ManagerDashboard({super.key});
@@ -21,6 +22,10 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    Future.microtask(() {
+      ref.read(analyticsProvider.notifier).loadOverview();
+      ref.read(analyticsProvider.notifier).loadUserStats();
+    });
   }
 
   void _onScroll() {
@@ -62,6 +67,8 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
                     const SizedBox(height: TeaSpacing.md),
                     _buildStatsOverview(),
                     const SizedBox(height: TeaSpacing.lg),
+                    _buildTeamActivity(),
+                    const SizedBox(height: TeaSpacing.lg),
                     _buildStrategicPlanning(),
                     const SizedBox(height: TeaSpacing.lg),
                     _buildManagementTools(),
@@ -77,16 +84,16 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
         currentIndex: 0,
         items: const [
           TeaNavItem(icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, label: 'Home'),
+          TeaNavItem(icon: Icons.people_outlined, activeIcon: Icons.people, label: 'Users'),
           TeaNavItem(icon: Icons.analytics_outlined, activeIcon: Icons.analytics, label: 'Analytics'),
-          TeaNavItem(icon: Icons.description_outlined, activeIcon: Icons.description, label: 'Reports'),
           TeaNavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
         ],
         onTap: (index) {
           switch (index) {
             case 1:
-              context.push('/dashboard/admin/analytics');
+              context.push('/dashboard/manager/users');
             case 2:
-              context.push('/reports');
+              context.push('/dashboard/admin/analytics');
             case 3:
               context.push('/profile');
           }
@@ -128,9 +135,12 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
       ),
       actions: [
         TeaIconButton(
-          icon: Icons.search,
-          onPressed: () {},
-          tooltip: 'Search',
+          icon: Icons.refresh,
+          onPressed: () {
+            ref.read(analyticsProvider.notifier).loadOverview();
+            ref.read(analyticsProvider.notifier).loadUserStats();
+          },
+          tooltip: 'Refresh',
         ),
         TeaIconButton(
           icon: Icons.notifications_outlined,
@@ -145,30 +155,176 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
   }
 
   Widget _buildStatsOverview() {
-    return Row(
+    final analytics = ref.watch(analyticsProvider);
+    final overview = analytics.overview;
+    final isLoading = analytics.isLoading && overview == null;
+
+    if (isLoading) {
+      return Column(
+        children: [
+          Row(
+            children: [
+              const Expanded(child: TeaShimmer(width: double.infinity, height: 90)),
+              const SizedBox(width: TeaSpacing.smd),
+              const Expanded(child: TeaShimmer(width: double.infinity, height: 90)),
+            ],
+          ),
+          const SizedBox(height: TeaSpacing.smd),
+          Row(
+            children: [
+              const Expanded(child: TeaShimmer(width: double.infinity, height: 90)),
+              const SizedBox(width: TeaSpacing.smd),
+              const Expanded(child: TeaShimmer(width: double.infinity, height: 90)),
+            ],
+          ),
+        ],
+      );
+    }
+
+    return Column(
       children: [
-        Expanded(
-          child: TeaMetricCard(
-            label: 'Total Yield',
-            value: '4.2',
-            unit: ' Tons',
-            icon: Icons.inventory_2_outlined,
-            iconColor: TeaColors.matureLeaf,
-            trend: '+12%',
-            isPositiveTrend: true,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Total Users',
+                value: '${overview?['total_users'] ?? 0}',
+                icon: Icons.people_outlined,
+                iconColor: TeaColors.infoSky,
+              ),
+            ),
+            const SizedBox(width: TeaSpacing.smd),
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Total Scans',
+                value: '${overview?['total_scans'] ?? 0}',
+                icon: Icons.document_scanner_outlined,
+                iconColor: TeaColors.matureLeaf,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: TeaSpacing.smd),
-        Expanded(
-          child: TeaMetricCard(
-            label: 'Avg Quality',
-            value: 'A+',
-            icon: Icons.verified_outlined,
-            iconColor: TeaColors.healthyGreen,
-          ),
+        const SizedBox(height: TeaSpacing.smd),
+        Row(
+          children: [
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Health Rate',
+                value: '${((overview?['health_rate'] ?? 0) as num).toStringAsFixed(1)}%',
+                icon: Icons.health_and_safety_outlined,
+                iconColor: TeaColors.healthyGreen,
+              ),
+            ),
+            const SizedBox(width: TeaSpacing.smd),
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Scans (7d)',
+                value: '${overview?['recent_scans_7d'] ?? 0}',
+                icon: Icons.trending_up,
+                iconColor: TeaColors.warmAmber,
+              ),
+            ),
+          ],
         ),
       ],
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildTeamActivity() {
+    final analytics = ref.watch(analyticsProvider);
+    final userStats = analytics.userStats;
+    final topScanners = (userStats?['top_scanners'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TeaSectionHeader(
+          title: 'Team Activity',
+          icon: Icons.group_outlined,
+          actionLabel: 'View All',
+          onAction: () => context.push('/dashboard/manager/users'),
+        ),
+        const SizedBox(height: TeaSpacing.smd),
+        if (topScanners.isEmpty)
+          TeaCard.elevated(
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: TeaColors.infoSky.withOpacity(0.12),
+                    borderRadius: TeaRadius.radiusMd,
+                  ),
+                  child: const Icon(Icons.people_outlined, color: TeaColors.infoSky, size: 22),
+                ),
+                const SizedBox(width: TeaSpacing.smd),
+                Expanded(
+                  child: Text(
+                    'Loading team data...',
+                    style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          SizedBox(
+            height: 110,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: topScanners.length > 5 ? 5 : topScanners.length,
+              separatorBuilder: (_, __) => const SizedBox(width: TeaSpacing.smd),
+              itemBuilder: (context, index) {
+                final scanner = topScanners[index];
+                final name = scanner['full_name'] ?? 'Unknown';
+                final scanCount = scanner['scan_count'] ?? 0;
+                final initials = _getInitials(name);
+
+                return SizedBox(
+                  width: 100,
+                  child: TeaCard.elevated(
+                    padding: const EdgeInsets.all(TeaSpacing.smd),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: TeaColors.freshLeaf.withOpacity(0.15),
+                          child: Text(
+                            initials,
+                            style: TeaTypography.labelMedium.copyWith(
+                              color: TeaColors.matureLeaf,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: TeaSpacing.xs),
+                        Text(
+                          name.split(' ').first,
+                          style: TeaTypography.labelSmall.copyWith(fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '$scanCount scans',
+                          style: TeaTypography.labelSmall.copyWith(
+                            color: TeaColors.darkGray,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    )
+        .animate()
+        .fadeIn(delay: 50.ms, duration: 400.ms)
+        .slideY(begin: 0.1, end: 0);
   }
 
   Widget _buildStrategicPlanning() {
@@ -297,5 +453,13 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
         .animate()
         .fadeIn(delay: 200.ms, duration: 400.ms)
         .slideY(begin: 0.1, end: 0);
+  }
+
+  String _getInitials(String name) {
+    final parts = name.split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name.isNotEmpty ? name[0].toUpperCase() : 'U';
   }
 }
