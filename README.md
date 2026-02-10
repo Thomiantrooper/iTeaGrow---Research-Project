@@ -59,8 +59,10 @@ cd iTeaGrow-Web-Application
 
 ### 2. Repositories & Branch Management
 This project is maintained across two repositories:
-1.  **Main Repo**: [kanzur/iTeaGrow-Web-Application](https://github.com/kanzur/iTeaGrow-Web-Application) (Branch: `main`)
-2.  **Research Repo**: [Thomiantrooper/iTeaGrow---Research-Project](https://github.com/Thomiantrooper/iTeaGrow---Research-Project) (Branch: `iTeaGrow-Web-Application`)
+1.  **Main Deployment Repo**: [kanzur/iTeaGrow-Web-Application](https://github.com/kanzur/iTeaGrow-Web-Application) (Branch: `main`)
+    -   *Used for Railway deployment.*
+2.  **Research Tracking Repo**: [Thomiantrooper/iTeaGrow---Research-Project](https://github.com/Thomiantrooper/iTeaGrow---Research-Project) (Branch: `iTeaGrow-Web-Application`)
+    -   *Used for research tracking purposes.*
 
 **To push changes to BOTH repositories simultaneously:**
 ```bash
