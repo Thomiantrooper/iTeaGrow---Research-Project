@@ -85,6 +85,16 @@
 -keep class com.juul.kable.** { *; }
 -dontwarn com.juul.kable.**
 
+# TensorFlow Lite
+-keep class org.tensorflow.lite.** { *; }
+-keep class org.tensorflow.lite.gpu.** { *; }
+-dontwarn org.tensorflow.lite.**
+-dontwarn org.tensorflow.lite.gpu.**
+
+# Google Play Core (for deferred components)
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
+
 # =============================================================================
 # OPTIMIZATION
 # =============================================================================

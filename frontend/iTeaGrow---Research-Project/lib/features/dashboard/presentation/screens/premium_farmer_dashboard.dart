@@ -90,8 +90,10 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
 
                     const SizedBox(height: TeaSpacing.lg),
 
-                    // Quick Actions
+                    // Quick Actions (Unified Premium Grid)
                     _buildQuickActions(),
+
+                    const SizedBox(height: TeaSpacing.lg),
 
                     const SizedBox(height: TeaSpacing.lg),
 
@@ -294,7 +296,8 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                                       color: TeaColors.white,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: TeaColors.freshLeaf.withOpacity(0.3),
+                                          color: TeaColors.freshLeaf
+                                              .withOpacity(0.3),
                                           blurRadius: 20,
                                           spreadRadius: 2,
                                         ),
@@ -302,7 +305,8 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                                     ),
                                     child: Center(
                                       child: ShaderMask(
-                                        shaderCallback: (bounds) => const LinearGradient(
+                                        shaderCallback: (bounds) =>
+                                            const LinearGradient(
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
                                           colors: [
@@ -362,7 +366,8 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.landscape, size: 16, color: TeaColors.freshLeaf),
+                                  const Icon(Icons.landscape,
+                                      size: 16, color: TeaColors.freshLeaf),
                                   const SizedBox(width: 6),
                                   Text(
                                     'Estate Summary',
@@ -373,10 +378,14 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                                 ],
                               ),
                               const Divider(height: TeaSpacing.md),
-                              _buildMiniStat('Active Blocks', '12', TeaColors.freshLeaf),
-                              _buildMiniStat('Healthy Plants', '87%', TeaColors.healthyGreen),
-                              _buildMiniStat('Harvest Ready', '3 Blocks', TeaColors.goldenSunlight),
-                              _buildMiniStat('Alerts', '2', TeaColors.warningAmber),
+                              _buildMiniStat(
+                                  'Active Blocks', '12', TeaColors.freshLeaf),
+                              _buildMiniStat('Healthy Plants', '87%',
+                                  TeaColors.healthyGreen),
+                              _buildMiniStat('Harvest Ready', '3 Blocks',
+                                  TeaColors.goldenSunlight),
+                              _buildMiniStat(
+                                  'Alerts', '2', TeaColors.warningAmber),
                             ],
                           ),
                         ),
@@ -476,19 +485,15 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     final hasLiveData = iotState.hasData;
 
     // Get temperature value
-    final temperature = hasLiveData
-        ? iotState.temperature.toStringAsFixed(1)
-        : '24';
+    final temperature =
+        hasLiveData ? iotState.temperature.toStringAsFixed(1) : '24';
 
     // Get humidity value
-    final humidity = hasLiveData
-        ? iotState.humidity.toStringAsFixed(0)
-        : '78';
+    final humidity = hasLiveData ? iotState.humidity.toStringAsFixed(0) : '78';
 
     // Get air quality label
-    final airQuality = hasLiveData
-        ? _getAirQualityLabel(iotState.airQuality)
-        : 'Good';
+    final airQuality =
+        hasLiveData ? _getAirQualityLabel(iotState.airQuality) : 'Good';
 
     final airQualityColor = hasLiveData
         ? _getAirQualityColor(iotState.airQuality)
@@ -643,48 +648,63 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
         ),
         const SizedBox(height: TeaSpacing.sm),
         GridView.count(
-          crossAxisCount: 3,
+          crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: TeaSpacing.sm,
           crossAxisSpacing: TeaSpacing.sm,
-          childAspectRatio: 0.95,
+          childAspectRatio: 1.3,
           children: [
-            _buildQuickActionItem(
-              icon: Icons.camera_alt_outlined,
-              label: 'Scan Leaf',
-              color: TeaColors.freshLeaf,
+            _buildPremiumActionCard(
+              title: 'Leaf Maturity',
+              subtitle: 'Check quality',
+              tag: 'MATURITY',
+              icon: Icons.center_focus_strong,
+              gradient: [
+                TeaColors.freshLeaf,
+                TeaColors.matureLeaf.withOpacity(0.8)
+              ],
+              onTap: () => context.push('/leaf-maturity'),
+            ),
+            _buildPremiumActionCard(
+              title: 'Disease Scan',
+              subtitle: 'Plant health',
+              tag: 'DIAGNOSIS',
+              icon: Icons.bug_report_outlined,
+              gradient: [Colors.red.shade700, Colors.red.shade400],
               onTap: () => context.push('/disease-detection'),
             ),
-            _buildQuickActionItem(
+            _buildPremiumActionCard(
+              title: 'Growth',
+              subtitle: 'Block progress',
+              tag: 'ANALYSIS',
               icon: Icons.grass_outlined,
-              label: 'Growth',
-              color: TeaColors.leafLight,
+              gradient: [TeaColors.leafLight, TeaColors.freshLeaf],
               onTap: () => context.push('/plants'),
             ),
-            _buildQuickActionItem(
+            _buildPremiumActionCard(
+              title: 'IoT Sensors',
+              subtitle: 'Real-time data',
+              tag: 'LIVE',
               icon: Icons.sensors,
-              label: 'IoT',
-              color: TeaColors.goldenSunlight,
+              gradient: [TeaColors.infoSky, Colors.blue.shade400],
               onTap: () => context.push('/iot-devices'),
             ),
-            _buildQuickActionItem(
+            _buildPremiumActionCard(
+              title: 'Soil Test',
+              subtitle: 'Nutrient check',
+              tag: 'SOIL',
               icon: Icons.science_outlined,
-              label: 'Soil Test',
-              color: TeaColors.richSoil,
+              gradient: [TeaColors.richSoil, Colors.brown.shade400],
               onTap: () => context.push('/soil-fertilization'),
             ),
-            _buildQuickActionItem(
+            _buildPremiumActionCard(
+              title: 'Quality',
+              subtitle: 'Powder grade',
+              tag: 'GRADING',
               icon: Icons.grade_outlined,
-              label: 'Quality',
-              color: TeaColors.warmAmber,
+              gradient: [TeaColors.warmAmber, TeaColors.goldenSunlight],
               onTap: () => context.push('/powder-grading'),
-            ),
-            _buildQuickActionItem(
-              icon: Icons.map_outlined,
-              label: 'Map',
-              color: TeaColors.infoSky,
-              onTap: () => context.push('/map'),
             ),
           ],
         ),
@@ -692,47 +712,80 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     );
   }
 
-  Widget _buildQuickActionItem({
+  Widget _buildPremiumActionCard({
+    required String title,
+    required String subtitle,
+    required String tag,
     required IconData icon,
-    required String label,
-    required Color color,
+    required List<Color> gradient,
     required VoidCallback onTap,
   }) {
     return TeaCard.elevated(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(
-        horizontal: TeaSpacing.xs,
-        vertical: TeaSpacing.sm,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(TeaSpacing.sm),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: TeaRadius.radiusSm,
-              ),
+      padding: EdgeInsets.zero,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: TeaRadius.radiusMd,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: gradient,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -10,
+              bottom: -10,
               child: Icon(
                 icon,
-                color: color,
-                size: 22,
+                size: 70,
+                color: Colors.white.withOpacity(0.15),
               ),
             ),
-          ),
-          const SizedBox(height: TeaSpacing.xs),
-          Text(
-            label,
-            style: TeaTypography.labelSmall.copyWith(
-              fontWeight: FontWeight.w500,
+            Padding(
+              padding: const EdgeInsets.all(TeaSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      tag,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: TeaTypography.titleSmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TeaTypography.labelSmall.copyWith(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
