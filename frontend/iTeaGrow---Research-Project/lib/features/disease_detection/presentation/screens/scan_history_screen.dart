@@ -286,8 +286,8 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () {
-                    if (detection.id != null) {
-                      context.push('/reports/preview/${detection.id}');
+                    if (detection.dbId != null) {
+                      context.push('/reports/preview/${detection.dbId}');
                     }
                   },
                 ),

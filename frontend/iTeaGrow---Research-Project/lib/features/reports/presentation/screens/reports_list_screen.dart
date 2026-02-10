@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 
 class ReportsListScreen extends ConsumerStatefulWidget {
   const ReportsListScreen({super.key});
@@ -16,6 +17,13 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
   List<Map<String, dynamic>> _detections = [];
   bool _isLoading = true;
   String? _error;
+  bool _showAllReports = false;
+
+  bool get _isAdminOrManager {
+    final authState = ref.read(authStateProvider);
+    final role = authState.user?.role.name ?? 'farmer';
+    return role == 'admin' || role == 'manager';
+  }
 
   @override
   void initState() {
@@ -31,8 +39,11 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
 
     try {
       final apiService = ref.read(apiServiceProvider);
+      final endpoint = (_isAdminOrManager && _showAllReports)
+          ? '/api/reports/admin/all'
+          : '/api/reports/user/history';
       final response = await apiService.get<Map<String, dynamic>>(
-        '/api/reports/user/history',
+        endpoint,
         fromJson: (data) => data as Map<String, dynamic>,
       );
 
@@ -57,8 +68,17 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reports'),
+        title: Text(_showAllReports ? 'All Reports' : 'My Reports'),
         actions: [
+          if (_isAdminOrManager)
+            IconButton(
+              icon: Icon(_showAllReports ? Icons.person : Icons.people),
+              tooltip: _showAllReports ? 'My Reports' : 'All Reports',
+              onPressed: () {
+                setState(() => _showAllReports = !_showAllReports);
+                _loadDetections();
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadDetections,
@@ -217,7 +237,9 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      formattedDate,
+                      _showAllReports && detection['farmer_name'] != null
+                          ? '$formattedDate - ${detection['farmer_name']}'
+                          : formattedDate,
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppTheme.textSecondary,

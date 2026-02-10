@@ -79,7 +79,7 @@ async def get_analytics_overview(
 @router.get("/disease-trends")
 async def get_disease_trends(
     days: int = Query(90, ge=7, le=365),
-    interval: str = Query("daily", regex="^(daily|weekly|monthly)$"),
+    interval: str = Query("daily", pattern="^(daily|weekly|monthly)$"),
     current_user: dict = Depends(require_admin_or_manager)
 ):
     """Get disease detection trends over time for line/bar charts."""

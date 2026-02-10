@@ -135,7 +135,60 @@ async def get_user_report_history(
             "has_image": doc.get("image_data") is not None,
         })
 
-    return {"total": total, "skip": skip, "limit": limit, "records": records}
+    return {"total": total, "skip": skip, "limit": limit, "detections": records}
+
+
+@router.get("/admin/all")
+async def get_all_reports_admin(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    disease_name: Optional[str] = None,
+    days: int = Query(90, ge=1, le=365),
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get all detection reports across all users (admin/manager only)."""
+    if current_user.get("role") not in ("admin", "manager"):
+        raise HTTPException(status_code=403, detail="Admin or Manager access required")
+
+    db = get_database()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Database not available")
+
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    query = {"created_at": {"$gte": cutoff}}
+    if disease_name:
+        query["disease_name"] = {"$regex": disease_name, "$options": "i"}
+
+    cursor = db.disease_detections.find(
+        query, {"image_data": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit)
+
+    total = await db.disease_detections.count_documents(query)
+
+    records = []
+    async for doc in cursor:
+        # Fetch user info
+        username = "Unknown"
+        try:
+            user = await db.users.find_one({"_id": ObjectId(doc.get("user_id", ""))})
+            if user:
+                username = user.get("full_name") or user.get("username", "Unknown")
+        except Exception:
+            pass
+
+        records.append({
+            "_id": str(doc["_id"]),
+            "id": str(doc["_id"]),
+            "disease_name": doc.get("disease_name"),
+            "confidence": doc.get("confidence"),
+            "severity": doc.get("severity"),
+            "created_at": doc.get("created_at", "").isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at", "")),
+            "user_id": doc.get("user_id"),
+            "farmer_name": username,
+            "has_image": doc.get("image_data") is not None,
+        })
+
+    return {"total": total, "skip": skip, "limit": limit, "detections": records}
 
 
 @router.get("/summary/range")
