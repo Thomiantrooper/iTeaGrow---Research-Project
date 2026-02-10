@@ -150,6 +150,7 @@ class DiseaseDetectionResult {
   // API response data
   final String? requestId;
   final String? imageId;
+  final String? dbId; // MongoDB _id for report generation
   final double? processingTimeMs;
   final List<Detection>? detections;
   final DetectionSummary? summary;
@@ -168,6 +169,7 @@ class DiseaseDetectionResult {
     this.airQuality,
     this.requestId,
     this.imageId,
+    this.dbId,
     this.processingTimeMs,
     this.detections,
     this.summary,
@@ -270,6 +272,7 @@ class DiseaseDetectionResult {
       timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
       requestId: json['request_id'],
       imageId: json['image_id'],
+      dbId: json['_id'] ?? json['id'] ?? json['db_id'],
       processingTimeMs: (json['processing_time_ms'] as num?)?.toDouble(),
       detections: detections,
       summary: summary,
@@ -305,6 +308,7 @@ class DiseaseDetectionResult {
     'air_quality': airQuality,
     'request_id': requestId,
     'image_id': imageId,
+    'db_id': dbId,
     'processing_time_ms': processingTimeMs,
     'detections': detections?.map((d) => d.toJson()).toList(),
     'summary': summary?.toJson(),
@@ -323,6 +327,7 @@ class DiseaseDetectionResult {
       airQuality: (json['air_quality'] as num?)?.toDouble(),
       requestId: json['request_id'],
       imageId: json['image_id'],
+      dbId: json['_id'] ?? json['id'] ?? json['db_id'],
       processingTimeMs: (json['processing_time_ms'] as num?)?.toDouble(),
       detections: (json['detections'] as List?)?.map((d) => Detection.fromJson(d)).toList(),
       summary: json['summary'] != null ? DetectionSummary.fromJson(json['summary']) : null,

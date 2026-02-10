@@ -369,31 +369,227 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   }
 }
 
-class DeviceManagementScreen extends StatelessWidget {
+class DeviceManagementScreen extends ConsumerStatefulWidget {
   const DeviceManagementScreen({super.key});
 
   @override
+  ConsumerState<DeviceManagementScreen> createState() =>
+      _DeviceManagementScreenState();
+}
+
+class _DeviceManagementScreenState
+    extends ConsumerState<DeviceManagementScreen> {
+  List<Map<String, dynamic>> _bleDevices = [];
+  List<Map<String, dynamic>> _wifiDevices = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDevices();
+  }
+
+  Future<void> _loadDevices() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final apiService = ref.read(adminServiceProvider);
+      // Load BLE devices
+      try {
+        final bleResponse = await apiService.getBluetoothDevices();
+        _bleDevices =
+            List<Map<String, dynamic>>.from(bleResponse?['devices'] ?? []);
+      } catch (_) {
+        _bleDevices = [];
+      }
+
+      // Load WiFi devices
+      try {
+        final wifiResponse = await apiService.getWifiDevices();
+        _wifiDevices =
+            List<Map<String, dynamic>>.from(wifiResponse?['devices'] ?? []);
+      } catch (_) {
+        _wifiDevices = [];
+      }
+    } catch (e) {
+      _error = 'Failed to load devices: $e';
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Device Management')),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.devices, size: 100, color: Colors.purple),
-              SizedBox(height: 24),
-              Text(
-                'Device Management',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Admin only - Configure IoT devices',
-                textAlign: TextAlign.center,
-              ),
-            ],
+      appBar: AppBar(
+        title: const Text('Device Management'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadDevices,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(_error!),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadDevices,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Summary
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  children: [
+                                    const Icon(Icons.bluetooth,
+                                        color: Colors.blue, size: 32),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${_bleDevices.length}',
+                                      style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const Text('BLE Devices',
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  children: [
+                                    const Icon(Icons.wifi,
+                                        color: Colors.green, size: 32),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${_wifiDevices.length}',
+                                      style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const Text('WiFi Devices',
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // BLE Devices
+                      const Text(
+                        'Bluetooth Devices',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      if (_bleDevices.isEmpty)
+                        const Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child:
+                                Center(child: Text('No BLE devices registered')),
+                          ),
+                        )
+                      else
+                        ..._bleDevices.map((d) => _buildDeviceCard(
+                              d,
+                              Icons.bluetooth,
+                              Colors.blue,
+                            )),
+                      const SizedBox(height: 24),
+                      // WiFi Devices
+                      const Text(
+                        'WiFi Devices',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      if (_wifiDevices.isEmpty)
+                        const Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Center(
+                                child: Text('No WiFi devices registered')),
+                          ),
+                        )
+                      else
+                        ..._wifiDevices.map((d) => _buildDeviceCard(
+                              d,
+                              Icons.wifi,
+                              Colors.green,
+                            )),
+                    ],
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildDeviceCard(
+      Map<String, dynamic> device, IconData icon, Color color) {
+    final isActive = device['is_active'] == true;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon, color: color),
+        title: Text(device['device_name'] ?? device['device_id'] ?? 'Unknown'),
+        subtitle: Text(
+          'ID: ${device['device_id'] ?? 'N/A'}\n'
+          'Last seen: ${device['last_seen'] ?? 'Unknown'}',
+        ),
+        isThreeLine: true,
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color:
+                (isActive ? Colors.green : Colors.red).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            isActive ? 'Active' : 'Inactive',
+            style: TextStyle(
+              color: isActive ? Colors.green : Colors.red,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -401,98 +597,431 @@ class DeviceManagementScreen extends StatelessWidget {
   }
 }
 
-class SystemConfigScreen extends StatelessWidget {
+class SystemConfigScreen extends ConsumerStatefulWidget {
   const SystemConfigScreen({super.key});
 
   @override
+  ConsumerState<SystemConfigScreen> createState() =>
+      _SystemConfigScreenState();
+}
+
+class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
+  Map<String, dynamic>? _bluetoothConfig;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConfig();
+  }
+
+  Future<void> _loadConfig() async {
+    setState(() => _isLoading = true);
+    try {
+      final apiService = ref.read(adminServiceProvider);
+      _bluetoothConfig = await apiService.getBluetoothConfig();
+    } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('System Configuration')),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.settings, size: 100, color: Colors.orange),
-              SizedBox(height: 24),
-              Text(
-                'System Configuration',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Admin only - System settings and thresholds',
-                textAlign: TextAlign.center,
-              ),
-            ],
+      appBar: AppBar(
+        title: const Text('System Configuration'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadConfig,
           ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'IoT Sensor Thresholds',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildConfigCard(
+                      'Temperature Range', '10.0 - 35.0', 'Celsius', Icons.thermostat),
+                  _buildConfigCard(
+                      'Humidity Range', '20.0 - 100.0', '%', Icons.water_drop),
+                  _buildConfigCard('Soil Moisture Range', '0.0 - 100.0', '%',
+                      Icons.grass),
+                  _buildConfigCard('Light Range', '0 - 100,000', 'lux',
+                      Icons.light_mode),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Bluetooth Configuration',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_bluetoothConfig != null) ...[
+                    _buildConfigCard(
+                      'Service UUID',
+                      _bluetoothConfig!['service_uuid'] ?? 'N/A',
+                      '',
+                      Icons.bluetooth,
+                    ),
+                    _buildConfigCard(
+                      'Scan Timeout',
+                      '${_bluetoothConfig!['scan_timeout'] ?? 10}',
+                      'seconds',
+                      Icons.timer,
+                    ),
+                    _buildConfigCard(
+                      'Auto Reconnect',
+                      _bluetoothConfig!['auto_reconnect'] == true
+                          ? 'Enabled'
+                          : 'Disabled',
+                      '',
+                      Icons.autorenew,
+                    ),
+                  ] else
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('Bluetooth config unavailable'),
+                      ),
+                    ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'ML Model Settings',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildConfigCard('Confidence Threshold', '0.25', '',
+                      Icons.speed),
+                  _buildConfigCard(
+                      'IOU Threshold', '0.45', '', Icons.crop_square),
+                  _buildConfigCard(
+                      'Image Size', '640x640', 'px', Icons.image),
+                  _buildConfigCard(
+                      'Disease Classes',
+                      'Healthy, Red Rust, Blister Blight',
+                      '',
+                      Icons.category),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildConfigCard(
+      String title, String value, String unit, IconData icon) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.orange),
+        title: Text(title),
+        trailing: Text(
+          unit.isNotEmpty ? '$value $unit' : value,
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 }
 
-class DataSyncScreen extends StatelessWidget {
+class DataSyncScreen extends ConsumerStatefulWidget {
   const DataSyncScreen({super.key});
 
   @override
+  ConsumerState<DataSyncScreen> createState() => _DataSyncScreenState();
+}
+
+class _DataSyncScreenState extends ConsumerState<DataSyncScreen> {
+  Map<String, dynamic>? _syncStatus;
+  bool _isLoading = true;
+  bool _isSyncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSyncStatus();
+  }
+
+  Future<void> _loadSyncStatus() async {
+    setState(() => _isLoading = true);
+    try {
+      final apiService = ref.read(adminServiceProvider);
+      _syncStatus = await apiService.getSyncStatus();
+    } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _triggerSync() async {
+    setState(() => _isSyncing = true);
+    try {
+      final apiService = ref.read(adminServiceProvider);
+      await apiService.triggerSync();
+      await _loadSyncStatus();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sync completed successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sync failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+    if (mounted) setState(() => _isSyncing = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Data Synchronization')),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.sync, size: 100, color: Colors.teal),
-              SizedBox(height: 24),
-              Text(
-                'Data Synchronization',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Admin only - Sync data to cloud',
-                textAlign: TextAlign.center,
-              ),
-            ],
+      appBar: AppBar(
+        title: const Text('Data Synchronization'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadSyncStatus,
           ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Sync status card
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Icon(
+                            _isSyncing ? Icons.sync : Icons.cloud_done,
+                            size: 64,
+                            color: _isSyncing ? Colors.orange : Colors.green,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _isSyncing ? 'Syncing...' : 'Sync Status',
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _syncStatus?['status'] ?? 'Unknown',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: _syncStatus?['status'] == 'synced'
+                                  ? Colors.green
+                                  : Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          if (_syncStatus?['last_sync'] != null)
+                            Text(
+                              'Last sync: ${_syncStatus!['last_sync']}',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
+                            ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.sync),
+                              label: Text(
+                                  _isSyncing ? 'Syncing...' : 'Sync Now'),
+                              onPressed: _isSyncing ? null : _triggerSync,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Sync Details',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildSyncDetail(
+                      'Pending Records',
+                      '${_syncStatus?['pending_count'] ?? 0}',
+                      Icons.pending_actions),
+                  _buildSyncDetail(
+                      'Synced Records',
+                      '${_syncStatus?['synced_count'] ?? 0}',
+                      Icons.check_circle),
+                  _buildSyncDetail(
+                      'Failed Records',
+                      '${_syncStatus?['failed_count'] ?? 0}',
+                      Icons.error),
+                  _buildSyncDetail(
+                      'Database',
+                      _syncStatus?['database_status'] ?? 'Connected',
+                      Icons.storage),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildSyncDetail(String title, String value, IconData icon) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.teal),
+        title: Text(title),
+        trailing: Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
       ),
     );
   }
 }
 
-class SystemLogsScreen extends StatelessWidget {
+class SystemLogsScreen extends ConsumerStatefulWidget {
   const SystemLogsScreen({super.key});
+
+  @override
+  ConsumerState<SystemLogsScreen> createState() => _SystemLogsScreenState();
+}
+
+class _SystemLogsScreenState extends ConsumerState<SystemLogsScreen> {
+  List<Map<String, dynamic>> _logs = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLogs();
+  }
+
+  Future<void> _loadLogs() async {
+    setState(() => _isLoading = true);
+    try {
+      final apiService = ref.read(adminServiceProvider);
+      final response = await apiService.getRecentActivity();
+      _logs = List<Map<String, dynamic>>.from(response ?? []);
+    } catch (_) {
+      _logs = [];
+    }
+    if (mounted) setState(() => _isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('System Logs')),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.description, size: 100, color: Colors.grey),
-              SizedBox(height: 24),
-              Text(
-                'System Logs',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Admin only - View system activity logs',
-                textAlign: TextAlign.center,
-              ),
-            ],
+      appBar: AppBar(
+        title: const Text('System Logs'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadLogs,
           ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _logs.isEmpty
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.description_outlined,
+                          size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('No activity logs available',
+                          style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: () async => _loadLogs(),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _logs.length,
+                    itemBuilder: (context, index) {
+                      final log = _logs[index];
+                      return _buildLogCard(log);
+                    },
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildLogCard(Map<String, dynamic> log) {
+    final type = log['type'] ?? 'info';
+    final iconData = _getLogIcon(type);
+    final color = _getLogColor(type);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withOpacity(0.1),
+          child: Icon(iconData, color: color, size: 20),
+        ),
+        title: Text(
+          log['action'] ?? log['message'] ?? 'Unknown activity',
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        subtitle: Text(
+          '${log['user'] ?? 'System'} - ${log['timestamp'] ?? 'Unknown time'}',
+          style: const TextStyle(fontSize: 12),
         ),
       ),
     );
+  }
+
+  IconData _getLogIcon(String type) {
+    switch (type) {
+      case 'scan':
+        return Icons.document_scanner;
+      case 'auth':
+        return Icons.login;
+      case 'device':
+        return Icons.devices;
+      case 'sync':
+        return Icons.sync;
+      case 'error':
+        return Icons.error;
+      default:
+        return Icons.info;
+    }
+  }
+
+  Color _getLogColor(String type) {
+    switch (type) {
+      case 'scan':
+        return Colors.blue;
+      case 'auth':
+        return Colors.purple;
+      case 'device':
+        return Colors.teal;
+      case 'sync':
+        return Colors.green;
+      case 'error':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }

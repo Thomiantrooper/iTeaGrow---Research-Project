@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  iteagrow-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iteagrow-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=${MONGODB_URL:-mongodb+srv://kanzur:kanzur@cluster0.joabitw.mongodb.net/?appName=Cluster0}
+      - DATABASE_NAME=${DATABASE_NAME:-iteagrow}
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this-in-production}
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=false
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

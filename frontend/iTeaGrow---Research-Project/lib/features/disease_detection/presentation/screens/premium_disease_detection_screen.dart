@@ -39,6 +39,7 @@ class _PremiumDiseaseDetectionScreenState
   bool _isCheckingConnection = true;
   bool _savedToDb = false;
   bool _isSavingToDb = false;
+  String? _savedDetectionId;
 
   // Detection mode: 'single' for single leaf, 'field' for field/batch analysis
   String _detectionMode = 'single';
@@ -161,6 +162,7 @@ class _PremiumDiseaseDetectionScreenState
     setState(() {
       _isProcessing = true;
       _savedToDb = false;
+      _savedDetectionId = null;
     });
 
     try {
@@ -185,11 +187,9 @@ class _PremiumDiseaseDetectionScreenState
           _isBackendConnected = _mlService.isBackendAvailable;
         });
 
-        // Auto-save field analysis to database
-        if (_isBackendConnected) {
-          print('>>> PREMIUM: CALLING _saveFieldAnalysisToDatabase() <<<');
-          _saveFieldAnalysisToDatabase();
-        }
+        // Auto-save field analysis to database (save to local backend regardless of inference backend status)
+        print('>>> PREMIUM: CALLING _saveFieldAnalysisToDatabase() <<<');
+        _saveFieldAnalysisToDatabase();
       } else {
         // Single leaf detection
         final result = await _mlService.predict(
@@ -210,16 +210,15 @@ class _PremiumDiseaseDetectionScreenState
           _isBackendConnected = _mlService.isBackendAvailable;
         });
 
-        // Auto-save to database if backend connected and valid leaf
+        // Auto-save to database if valid leaf (save to local backend regardless of inference backend status)
         print('>>> PREMIUM: Checking save conditions <<<');
-        print('_isBackendConnected: $_isBackendConnected');
         print('result.isNotALeaf: ${result.isNotALeaf}');
 
-        if (_isBackendConnected && !result.isNotALeaf) {
+        if (!result.isNotALeaf) {
           print('>>> PREMIUM: CALLING _saveToDatabase() <<<');
           _saveToDatabase();
         } else {
-          print('>>> PREMIUM: NOT saving to database');
+          print('>>> PREMIUM: NOT saving - not a leaf');
         }
       }
     } catch (e) {
@@ -267,6 +266,7 @@ class _PremiumDiseaseDetectionScreenState
         setState(() {
           _savedToDb = true;
           _isSavingToDb = false;
+          _savedDetectionId = savedResult['_id']?.toString() ?? savedResult['id']?.toString();
         });
         if (mounted) {
           TeaSnackbar.success(context, 'Scan saved to database');
@@ -398,6 +398,10 @@ class _PremiumDiseaseDetectionScreenState
                       _buildResultsCard(),
                       const SizedBox(height: TeaSpacing.md),
                       _buildRecommendationsCard(),
+                      if (_savedToDb && _savedDetectionId != null) ...[
+                        const SizedBox(height: TeaSpacing.md),
+                        _buildPostScanActions(),
+                      ],
                     ],
 
                     // Field/Cumulative Results
@@ -1359,6 +1363,44 @@ class _PremiumDiseaseDetectionScreenState
         ),
       ),
     ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildPostScanActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => context.push('/reports/preview/$_savedDetectionId'),
+            icon: const Icon(Icons.picture_as_pdf, size: 18),
+            label: const Text('Generate Report'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: TeaColors.freshLeaf,
+              side: const BorderSide(color: TeaColors.freshLeaf),
+              padding: const EdgeInsets.symmetric(vertical: TeaSpacing.smd),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(TeaRadius.md),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: TeaSpacing.sm),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => context.push('/scan-history'),
+            icon: const Icon(Icons.history, size: 18),
+            label: const Text('Scan History'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: TeaColors.darkGray,
+              side: const BorderSide(color: TeaColors.mediumGray),
+              padding: const EdgeInsets.symmetric(vertical: TeaSpacing.smd),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(TeaRadius.md),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ).animate().fadeIn(delay: 300.ms, duration: 400.ms);
   }
 
   /// Field/Cumulative Results Card for batch analysis

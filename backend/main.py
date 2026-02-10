@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database import connect_to_mongo, close_mongo_connection
-from routers import users, disease, iot, inference, chatbot, bluetooth
+from routers import users, disease, iot, inference, chatbot, bluetooth, analytics, reports, wifi_devices
 from config import settings
 
 @asynccontextmanager
@@ -36,6 +36,9 @@ app.include_router(iot.router)
 app.include_router(inference.router)
 app.include_router(chatbot.router)  # AI Tea Expert chatbot
 app.include_router(bluetooth.router)  # Bluetooth IoT for offline sensors
+app.include_router(analytics.router)  # Admin analytics and statistics
+app.include_router(reports.router)    # Report generation data
+app.include_router(wifi_devices.router)  # WiFi IoT device communication
 
 @app.get("/")
 async def root():

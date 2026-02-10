@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
@@ -279,7 +280,17 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                     ],
                   ),
                 const SizedBox(width: 8),
-                Icon(Icons.chevron_right, color: Colors.grey.shade400),
+                IconButton(
+                  icon: Icon(Icons.picture_as_pdf, color: Colors.green.shade400, size: 20),
+                  tooltip: 'Generate Report',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    if (detection.dbId != null) {
+                      context.push('/reports/preview/${detection.dbId}');
+                    }
+                  },
+                ),
               ],
             ),
           ),

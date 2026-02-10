@@ -23,6 +23,11 @@ import '../../features/activity/presentation/screens/activity_history_screen.dar
 import '../../features/chatbot/presentation/screens/chatbot_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/data/providers/auth_provider.dart';
+import '../../features/admin/presentation/screens/admin_placeholder_screens.dart';
+import '../../features/dashboard/presentation/screens/analytics_dashboard_screen.dart';
+import '../../features/reports/presentation/screens/reports_list_screen.dart';
+import '../../features/reports/presentation/screens/report_preview_screen.dart';
+import '../../features/disease_detection/presentation/screens/scan_history_screen.dart';
 import '../enums/app_enums.dart';
 import '../animations/tea_animations.dart';
 import '../design_system/design_system.dart';
@@ -316,6 +321,94 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
           child: const ForgotPasswordScreen(),
           state: state,
         ),
+      ),
+
+      // ── Admin Sub-Routes ──────────────────────────────────────
+
+      // Admin: User Management
+      GoRoute(
+        path: '/dashboard/admin/users',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const UserManagementScreen(),
+          state: state,
+        ),
+      ),
+
+      // Admin: Device Management
+      GoRoute(
+        path: '/dashboard/admin/devices',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const DeviceManagementScreen(),
+          state: state,
+        ),
+      ),
+
+      // Admin: System Configuration
+      GoRoute(
+        path: '/dashboard/admin/config',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const SystemConfigScreen(),
+          state: state,
+        ),
+      ),
+
+      // Admin: Data Sync
+      GoRoute(
+        path: '/dashboard/admin/sync',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const DataSyncScreen(),
+          state: state,
+        ),
+      ),
+
+      // Admin: System Logs
+      GoRoute(
+        path: '/dashboard/admin/logs',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const SystemLogsScreen(),
+          state: state,
+        ),
+      ),
+
+      // Admin/Manager: Analytics Dashboard
+      GoRoute(
+        path: '/dashboard/admin/analytics',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const AnalyticsDashboardScreen(),
+          state: state,
+        ),
+      ),
+
+      // ── Reports & History Routes ──────────────────────────────
+
+      // Scan History
+      GoRoute(
+        path: '/scan-history',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const ScanHistoryScreen(),
+          state: state,
+        ),
+      ),
+
+      // Reports List
+      GoRoute(
+        path: '/reports',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const ReportsListScreen(),
+          state: state,
+        ),
+      ),
+
+      // Report Preview (with detection ID parameter)
+      GoRoute(
+        path: '/reports/preview/:id',
+        pageBuilder: (context, state) {
+          final detectionId = state.pathParameters['id'] ?? '';
+          return _buildPremiumTransition(
+            child: ReportPreviewScreen(detectionId: detectionId),
+            state: state,
+          );
+        },
       ),
     ],
 

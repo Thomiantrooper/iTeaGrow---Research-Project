@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop, iTeaGrow-Prod, tea-leaf-detector]
   pull_request:
-    branches: [main, develop, tea-leaf-detector]
+    branches: [main, develop, iTeaGrow-Prod, tea-leaf-detector]
 
 jobs:
   ruff:

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import '../core/api/api_config.dart';
 
 /// Bluetooth IoT Service for Tea Plantation Sensors
 ///
@@ -41,14 +42,12 @@ class BluetoothIoTService {
   final List<SensorData> _offlineQueue = [];
   static const int maxOfflineRecords = 1000;
 
-  // Backend URL
-  String _backendUrl = 'http://localhost:8000';
+  // Backend URL - uses API config for proper URL resolution
+  String _backendUrl = '';
 
   /// Initialize the service
   Future<void> initialize({String? backendUrl}) async {
-    if (backendUrl != null) {
-      _backendUrl = backendUrl;
-    }
+    _backendUrl = backendUrl ?? ApiConfig.effectiveBaseUrl;
 
     // Load offline queue from storage
     await _loadOfflineQueue();
