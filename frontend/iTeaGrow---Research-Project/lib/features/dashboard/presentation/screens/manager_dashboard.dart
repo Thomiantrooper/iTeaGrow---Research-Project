@@ -73,7 +73,25 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
           ),
         ],
       ),
-      drawer: _buildDrawer(ref),
+      bottomNavigationBar: TeaBottomNavBar(
+        currentIndex: 0,
+        items: const [
+          TeaNavItem(icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, label: 'Home'),
+          TeaNavItem(icon: Icons.analytics_outlined, activeIcon: Icons.analytics, label: 'Analytics'),
+          TeaNavItem(icon: Icons.description_outlined, activeIcon: Icons.description, label: 'Reports'),
+          TeaNavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 1:
+              context.push('/dashboard/admin/analytics');
+            case 2:
+              context.push('/reports');
+            case 3:
+              context.push('/profile');
+          }
+        },
+      ),
     );
   }
 
@@ -101,7 +119,7 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
                 Text(
                   userName,
                   style: TeaTypography.headlineMedium
-                      .copyWith(color: Colors.purple.shade900),
+                      .copyWith(color: TeaColors.matureLeaf),
                 ),
               ],
             ),
@@ -135,12 +153,12 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
             value: '4.2',
             unit: ' Tons',
             icon: Icons.inventory_2_outlined,
-            iconColor: Colors.purple,
+            iconColor: TeaColors.matureLeaf,
             trend: '+12%',
             isPositiveTrend: true,
           ),
         ),
-        const SizedBox(width: TeaSpacing.sm),
+        const SizedBox(width: TeaSpacing.smd),
         Expanded(
           child: TeaMetricCard(
             label: 'Avg Quality',
@@ -161,25 +179,31 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
           title: 'Strategic Planning',
           icon: Icons.auto_graph_outlined,
         ),
-        const SizedBox(height: TeaSpacing.sm),
+        const SizedBox(height: TeaSpacing.smd),
         Row(
           children: [
             Expanded(
-              child: _buildHeroAction(
+              child: TeaImageCard(
                 title: 'Predict Yield',
                 subtitle: 'AI Projections',
-                icon: Icons.query_stats,
-                gradient: [Colors.purple.shade700, Colors.purple.shade400],
+                tag: 'FORECAST',
+                fallbackIcon: Icons.query_stats,
+                gradientColors: [TeaColors.matureLeaf, TeaColors.freshLeaf],
+                height: 160,
+                borderRadius: TeaRadius.radiusLg,
                 onTap: () => context.push('/yield-prediction'),
               ),
             ),
-            const SizedBox(width: TeaSpacing.sm),
+            const SizedBox(width: TeaSpacing.smd),
             Expanded(
-              child: _buildHeroAction(
+              child: TeaImageCard(
                 title: 'Quality Audit',
                 subtitle: 'Powder Grading',
-                icon: Icons.grade,
-                gradient: [Colors.orange.shade700, Colors.orange.shade400],
+                tag: 'GRADING',
+                fallbackIcon: Icons.grade,
+                gradientColors: [TeaColors.warningAmber, TeaColors.goldenSunlight],
+                height: 160,
+                borderRadius: TeaRadius.radiusLg,
                 onTap: () => context.push('/powder-grading'),
               ),
             ),
@@ -192,67 +216,6 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
         .slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildHeroAction({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required List<Color> gradient,
-    required VoidCallback onTap,
-  }) {
-    return TeaCard.elevated(
-      onTap: onTap,
-      padding: EdgeInsets.zero,
-      child: Container(
-        height: 160,
-        decoration: BoxDecoration(
-          borderRadius: TeaRadius.radiusMd,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradient,
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: Icon(
-                icon,
-                size: 80,
-                color: Colors.white.withOpacity(0.15),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(TeaSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, color: Colors.white, size: 32),
-                  const SizedBox(height: 12),
-                  Text(
-                    title,
-                    style: TeaTypography.titleMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TeaTypography.labelSmall.copyWith(
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildManagementTools() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,64 +224,70 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
           title: 'Quick Actions',
           icon: Icons.flash_on_outlined,
         ),
-        const SizedBox(height: TeaSpacing.sm),
+        const SizedBox(height: TeaSpacing.smd),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: TeaSpacing.sm,
-          crossAxisSpacing: TeaSpacing.sm,
-          childAspectRatio: 1.3,
+          mainAxisSpacing: TeaSpacing.smd,
+          crossAxisSpacing: TeaSpacing.smd,
+          childAspectRatio: 1.2,
           children: [
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Leaf Maturity',
               subtitle: 'Check quality',
               tag: 'MATURITY',
-              icon: Icons.center_focus_strong,
-              gradient: [
+              fallbackIcon: Icons.center_focus_strong,
+              gradientColors: [
                 TeaColors.freshLeaf,
-                TeaColors.matureLeaf.withOpacity(0.8)
+                TeaColors.matureLeaf.withOpacity(0.8),
               ],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/leaf-maturity'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Disease Scan',
               subtitle: 'Plant health',
               tag: 'DIAGNOSIS',
-              icon: Icons.bug_report_outlined,
-              gradient: [Colors.red.shade700, Colors.red.shade400],
+              fallbackIcon: Icons.bug_report_outlined,
+              gradientColors: [TeaColors.alertRust, const Color(0xFFEF5350)],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/disease-detection'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Growth',
               subtitle: 'Block progress',
               tag: 'ANALYSIS',
-              icon: Icons.grass_outlined,
-              gradient: [TeaColors.leafLight, TeaColors.freshLeaf],
+              fallbackIcon: Icons.grass_outlined,
+              gradientColors: [TeaColors.leafLight, TeaColors.freshLeaf],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/plants'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'IoT Sensors',
               subtitle: 'Real-time data',
               tag: 'LIVE',
-              icon: Icons.sensors,
-              gradient: [TeaColors.infoSky, Colors.blue.shade400],
+              fallbackIcon: Icons.sensors,
+              gradientColors: [TeaColors.infoSky, const Color(0xFF42A5F5)],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/iot-devices'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Soil Test',
               subtitle: 'Nutrient check',
               tag: 'SOIL',
-              icon: Icons.science_outlined,
-              gradient: [TeaColors.richSoil, Colors.brown.shade400],
+              fallbackIcon: Icons.science_outlined,
+              gradientColors: [TeaColors.richSoil, const Color(0xFF8D6E63)],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/soil-fertilization'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Quality',
               subtitle: 'Powder grade',
               tag: 'GRADING',
-              icon: Icons.grade_outlined,
-              gradient: [TeaColors.warmAmber, TeaColors.goldenSunlight],
+              fallbackIcon: Icons.grade_outlined,
+              gradientColors: [TeaColors.warmAmber, TeaColors.goldenSunlight],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/powder-grading'),
             ),
           ],
@@ -328,141 +297,5 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
         .animate()
         .fadeIn(delay: 200.ms, duration: 400.ms)
         .slideY(begin: 0.1, end: 0);
-  }
-
-  Widget _buildPremiumActionCard({
-    required String title,
-    required String subtitle,
-    required String tag,
-    required IconData icon,
-    required List<Color> gradient,
-    required VoidCallback onTap,
-  }) {
-    return TeaCard.elevated(
-      onTap: onTap,
-      padding: EdgeInsets.zero,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: TeaRadius.radiusMd,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradient,
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: Icon(
-                icon,
-                size: 70,
-                color: Colors.white.withOpacity(0.15),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(TeaSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      tag,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: TeaTypography.titleSmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TeaTypography.labelSmall.copyWith(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer(WidgetRef ref) {
-    return Drawer(
-      backgroundColor: TeaColors.mistGreen,
-      child: Column(
-        children: [
-          UserAccountsDrawerHeader(
-            accountName: const Text('Estate Manager'),
-            accountEmail: const Text('manager@iteagrow.com'),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.white.withOpacity(0.2),
-              child: const Icon(Icons.admin_panel_settings,
-                  color: Colors.white, size: 40),
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.purple.shade800, Colors.purple.shade400],
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.analytics, color: TeaColors.freshLeaf),
-            title: const Text('Analytics Dashboard'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/dashboard/admin/analytics');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.history, color: Colors.blue),
-            title: const Text('Scan History'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/scan-history');
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.description, color: Colors.orange.shade700),
-            title: const Text('Reports'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/reports');
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: TeaColors.alertRust),
-            title: const Text('Logout',
-                style: TextStyle(color: TeaColors.alertRust)),
-            onTap: () async {
-              await ref.read(authStateProvider.notifier).logout();
-              if (mounted) context.go('/login');
-            },
-          ),
-        ],
-      ),
-    );
   }
 }

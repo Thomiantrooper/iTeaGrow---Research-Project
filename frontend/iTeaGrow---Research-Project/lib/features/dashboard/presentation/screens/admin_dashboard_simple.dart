@@ -1,353 +1,420 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/design_system/design_system.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 
-class AdminDashboardSimple extends ConsumerWidget {
+class AdminDashboardSimple extends ConsumerStatefulWidget {
   const AdminDashboardSimple({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminDashboardSimple> createState() =>
+      _AdminDashboardSimpleState();
+}
+
+class _AdminDashboardSimpleState extends ConsumerState<AdminDashboardSimple> {
+  final ScrollController _scrollController = ScrollController();
+  bool _isScrolled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.offset > 50 && !_isScrolled) {
+      setState(() => _isScrolled = true);
+    } else if (_scrollController.offset <= 50 && _isScrolled) {
+      setState(() => _isScrolled = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () async {
-              await ref.read(authStateProvider.notifier).logout();
-              if (context.mounted) {
-                context.go('/login');
-              }
-            },
+      backgroundColor: TeaColors.mistGreen,
+      body: Stack(
+        children: [
+          const FloatingLeavesBackground(
+            leafCount: 4,
+            opacity: 0.06,
+            child: SizedBox.expand(),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome, ${user?.fullName ?? "Administrator"}!',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('System Administration', style: TextStyle(color: AppTheme.textSecondary)),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            Text(
-              'System Health',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-
-            const SizedBox(height: 16),
-
-            const Row(
-              children: [
-                Expanded(
-                  child: _HealthCard(
-                    title: 'Database',
-                    status: 'Online',
-                    statusColor: AppTheme.statusGood,
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _HealthCard(
-                    title: 'IoT Devices',
-                    status: '12 Active',
-                    statusColor: AppTheme.statusGood,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            const Row(
-              children: [
-                Expanded(
-                  child: _HealthCard(
-                    title: 'Data Sync',
-                    status: 'Synced',
-                    statusColor: AppTheme.statusGood,
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _HealthCard(
-                    title: 'ML Models',
-                    status: 'Loaded',
-                    statusColor: AppTheme.statusGood,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            Text(
-              'Administration Tools',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-
-            const SizedBox(height: 16),
-
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              children: [
-                _AdminCard(
-                  icon: Icons.people,
-                  title: 'User Management',
-                  subtitle: 'Roles & Permissions',
-                  color: Colors.blue,
-                  onTap: () => context.push('/dashboard/admin/users'),
-                ),
-                _AdminCard(
-                  icon: Icons.devices,
-                  title: 'Device Management',
-                  subtitle: 'IoT Configuration',
-                  color: Colors.purple,
-                  onTap: () => context.push('/dashboard/admin/devices'),
-                ),
-                _AdminCard(
-                  icon: Icons.settings,
-                  title: 'System Config',
-                  subtitle: 'Thresholds & Rules',
-                  color: Colors.orange,
-                  onTap: () => context.push('/dashboard/admin/config'),
-                ),
-                _AdminCard(
-                  icon: Icons.sync,
-                  title: 'Data Sync',
-                  subtitle: 'Cloud Backup',
-                  color: Colors.teal,
-                  onTap: () => context.push('/dashboard/admin/sync'),
-                ),
-                _AdminCard(
-                  icon: Icons.description,
-                  title: 'System Logs',
-                  subtitle: 'Audit Trail',
-                  color: Colors.grey,
-                  onTap: () => context.push('/dashboard/admin/logs'),
-                ),
-                _AdminCard(
-                  icon: Icons.analytics,
-                  title: 'Analytics',
-                  subtitle: 'Dashboard & Charts',
-                  color: AppTheme.primaryGreen,
-                  onTap: () => context.push('/dashboard/admin/analytics'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            Text(
-              'Recent Activity',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-
-            const SizedBox(height: 16),
-
-            const _ActivityCard(
-              icon: Icons.person_add,
-              title: 'New user registered',
-              subtitle: 'farmer_john - 2 hours ago',
-            ),
-            const SizedBox(height: 8),
-            const _ActivityCard(
-              icon: Icons.devices,
-              title: 'IoT device connected',
-              subtitle: 'Sensor-NPK-03 - 5 hours ago',
-            ),
-            const SizedBox(height: 8),
-            const _ActivityCard(
-              icon: Icons.sync,
-              title: 'Data synchronized',
-              subtitle: '1,245 records - 1 day ago',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AdminCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _AdminCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 40, color: color),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppTheme.textSecondary,
+          CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              _buildSliverAppBar(user?.fullName ?? 'Administrator'),
+              SliverPadding(
+                padding: TeaSpacing.screenPaddingHorizontal,
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: TeaSpacing.md),
+                    _buildWelcomeCard(user?.fullName ?? 'Administrator'),
+                    const SizedBox(height: TeaSpacing.lg),
+                    _buildSystemHealth(),
+                    const SizedBox(height: TeaSpacing.lg),
+                    _buildAdminTools(),
+                    const SizedBox(height: TeaSpacing.lg),
+                    _buildRecentActivity(),
+                    const SizedBox(height: TeaSpacing.xxl),
+                  ]),
                 ),
               ),
             ],
           ),
-        ),
+        ],
+      ),
+      bottomNavigationBar: TeaBottomNavBar(
+        currentIndex: 0,
+        items: const [
+          TeaNavItem(icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, label: 'Home'),
+          TeaNavItem(icon: Icons.analytics_outlined, activeIcon: Icons.analytics, label: 'Analytics'),
+          TeaNavItem(icon: Icons.people_outline, activeIcon: Icons.people, label: 'Users'),
+          TeaNavItem(icon: Icons.settings_outlined, activeIcon: Icons.settings, label: 'Settings'),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 1:
+              context.push('/dashboard/admin/analytics');
+            case 2:
+              context.push('/dashboard/admin/users');
+            case 3:
+              context.push('/dashboard/admin/config');
+          }
+        },
       ),
     );
   }
-}
 
-class _HealthCard extends StatelessWidget {
-  final String title;
-  final String status;
-  final Color statusColor;
-
-  const _HealthCard({
-    required this.title,
-    required this.status,
-    required this.statusColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-            const SizedBox(height: 8),
-            Row(
+  Widget _buildSliverAppBar(String userName) {
+    return SliverAppBar(
+      expandedHeight: 120,
+      floating: true,
+      pinned: true,
+      elevation: _isScrolled ? 2 : 0,
+      backgroundColor: _isScrolled ? TeaColors.white : Colors.transparent,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          padding: const EdgeInsets.fromLTRB(
+              TeaSpacing.md, 0, TeaSpacing.md, TeaSpacing.md),
+          child: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
                 Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                  ),
+                  'Admin Panel',
+                  style: TeaTypography.bodyMedium
+                      .copyWith(color: TeaColors.darkGray),
+                ),
+                Text(
+                  userName,
+                  style: TeaTypography.headlineMedium
+                      .copyWith(color: TeaColors.matureLeaf),
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
+      actions: [
+        TeaIconButton(
+          icon: Icons.notifications_outlined,
+          onPressed: () {},
+          hasBadge: true,
+          badgeText: '3',
+          tooltip: 'Notifications',
+        ),
+        TeaIconButton(
+          icon: Icons.logout,
+          onPressed: () async {
+            await ref.read(authStateProvider.notifier).logout();
+            if (mounted) context.go('/login');
+          },
+          tooltip: 'Logout',
+        ),
+        const SizedBox(width: TeaSpacing.sm),
+      ],
     );
   }
-}
 
-class _ActivityCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  const _ActivityCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+  Widget _buildWelcomeCard(String name) {
+    return TeaCard.elevated(
+      padding: EdgeInsets.zero,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: TeaRadius.radiusLg,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [TeaColors.matureLeaf, TeaColors.freshLeaf],
+          ),
+        ),
+        padding: const EdgeInsets.all(TeaSpacing.lg),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: AppTheme.primaryGreen, size: 20),
-            ),
-            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    'Welcome back,',
+                    style: TeaTypography.bodyMedium.copyWith(
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    name,
+                    style: TeaTypography.headlineSmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'System Administration',
+                    style: TeaTypography.labelMedium.copyWith(
+                      color: Colors.white.withOpacity(0.7),
+                    ),
                   ),
                 ],
               ),
             ),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.15),
+              ),
+              child: const Icon(
+                Icons.admin_panel_settings,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
           ],
         ),
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildSystemHealth() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const TeaSectionHeader(
+          title: 'System Health',
+          icon: Icons.monitor_heart_outlined,
+        ),
+        const SizedBox(height: TeaSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Database',
+                value: 'Online',
+                icon: Icons.storage_outlined,
+                iconColor: TeaColors.healthyGreen,
+              ),
+            ),
+            const SizedBox(width: TeaSpacing.smd),
+            Expanded(
+              child: TeaMetricCard(
+                label: 'IoT Devices',
+                value: '12',
+                unit: ' Active',
+                icon: Icons.sensors_outlined,
+                iconColor: TeaColors.infoSky,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: TeaSpacing.smd),
+        Row(
+          children: [
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Data Sync',
+                value: 'Synced',
+                icon: Icons.cloud_done_outlined,
+                iconColor: TeaColors.freshLeaf,
+              ),
+            ),
+            const SizedBox(width: TeaSpacing.smd),
+            Expanded(
+              child: TeaMetricCard(
+                label: 'ML Models',
+                value: 'Loaded',
+                icon: Icons.psychology_outlined,
+                iconColor: TeaColors.goldenSunlight,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildAdminTools() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const TeaSectionHeader(
+          title: 'Administration Tools',
+          icon: Icons.build_outlined,
+        ),
+        const SizedBox(height: TeaSpacing.smd),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: TeaSpacing.smd,
+          crossAxisSpacing: TeaSpacing.smd,
+          childAspectRatio: 1.2,
+          children: [
+            TeaImageCard(
+              title: 'User Management',
+              subtitle: 'Roles & Permissions',
+              tag: 'USERS',
+              fallbackIcon: Icons.people,
+              gradientColors: [TeaColors.infoSky, const Color(0xFF42A5F5)],
+              borderRadius: TeaRadius.radiusLg,
+              onTap: () => context.push('/dashboard/admin/users'),
+            ),
+            TeaImageCard(
+              title: 'Device Management',
+              subtitle: 'IoT Configuration',
+              tag: 'DEVICES',
+              fallbackIcon: Icons.devices,
+              gradientColors: const [Color(0xFF7B1FA2), Color(0xFFAB47BC)],
+              borderRadius: TeaRadius.radiusLg,
+              onTap: () => context.push('/dashboard/admin/devices'),
+            ),
+            TeaImageCard(
+              title: 'System Config',
+              subtitle: 'Thresholds & Rules',
+              tag: 'CONFIG',
+              fallbackIcon: Icons.settings,
+              gradientColors: [TeaColors.warningAmber, TeaColors.goldenSunlight],
+              borderRadius: TeaRadius.radiusLg,
+              onTap: () => context.push('/dashboard/admin/config'),
+            ),
+            TeaImageCard(
+              title: 'Data Sync',
+              subtitle: 'Cloud Backup',
+              tag: 'SYNC',
+              fallbackIcon: Icons.sync,
+              gradientColors: const [Color(0xFF00897B), Color(0xFF4DB6AC)],
+              borderRadius: TeaRadius.radiusLg,
+              onTap: () => context.push('/dashboard/admin/sync'),
+            ),
+            TeaImageCard(
+              title: 'System Logs',
+              subtitle: 'Audit Trail',
+              tag: 'LOGS',
+              fallbackIcon: Icons.description,
+              gradientColors: [TeaColors.darkGray, TeaColors.mediumGray],
+              borderRadius: TeaRadius.radiusLg,
+              onTap: () => context.push('/dashboard/admin/logs'),
+            ),
+            TeaImageCard(
+              title: 'Analytics',
+              subtitle: 'Dashboard & Charts',
+              tag: 'DATA',
+              fallbackIcon: Icons.analytics,
+              gradientColors: [TeaColors.freshLeaf, TeaColors.matureLeaf],
+              borderRadius: TeaRadius.radiusLg,
+              onTap: () => context.push('/dashboard/admin/analytics'),
+            ),
+          ],
+        ),
+      ],
+    ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildRecentActivity() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const TeaSectionHeader(
+          title: 'Recent Activity',
+          icon: Icons.history_outlined,
+        ),
+        const SizedBox(height: TeaSpacing.sm),
+        _buildActivityItem(
+          icon: Icons.person_add,
+          title: 'New user registered',
+          subtitle: 'farmer_john - 2 hours ago',
+          color: TeaColors.infoSky,
+        ),
+        const SizedBox(height: TeaSpacing.sm),
+        _buildActivityItem(
+          icon: Icons.sensors,
+          title: 'IoT device connected',
+          subtitle: 'Sensor-NPK-03 - 5 hours ago',
+          color: TeaColors.freshLeaf,
+        ),
+        const SizedBox(height: TeaSpacing.sm),
+        _buildActivityItem(
+          icon: Icons.cloud_sync,
+          title: 'Data synchronized',
+          subtitle: '1,245 records - 1 day ago',
+          color: TeaColors.goldenSunlight,
+        ),
+      ],
+    ).animate().fadeIn(delay: 300.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildActivityItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return TeaCard.elevated(
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: TeaRadius.radiusMd,
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: TeaSpacing.smd),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TeaTypography.titleSmall),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TeaTypography.labelSmall.copyWith(
+                    color: TeaColors.darkGray,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: TeaColors.mediumGray, size: 20),
+        ],
       ),
     );
   }

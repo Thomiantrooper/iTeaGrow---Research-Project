@@ -108,7 +108,25 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: TeaBottomNavBar(
+        currentIndex: 0,
+        items: const [
+          TeaNavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
+          TeaNavItem(icon: Icons.eco_outlined, activeIcon: Icons.eco, label: 'Plants'),
+          TeaNavItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Map'),
+          TeaNavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 1:
+              context.push('/plants');
+            case 2:
+              context.push('/map');
+            case 3:
+              context.push('/profile');
+          }
+        },
+      ),
       floatingActionButton: JarvisFloatingButton(
         isActive: _isChatbotActive,
         onPressed: () {
@@ -646,147 +664,75 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           title: 'Quick Actions',
           icon: Icons.flash_on_outlined,
         ),
-        const SizedBox(height: TeaSpacing.sm),
+        const SizedBox(height: TeaSpacing.smd),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: TeaSpacing.sm,
-          crossAxisSpacing: TeaSpacing.sm,
-          childAspectRatio: 1.3,
+          mainAxisSpacing: TeaSpacing.smd,
+          crossAxisSpacing: TeaSpacing.smd,
+          childAspectRatio: 1.2,
           children: [
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Leaf Maturity',
               subtitle: 'Check quality',
               tag: 'MATURITY',
-              icon: Icons.center_focus_strong,
-              gradient: [
+              fallbackIcon: Icons.center_focus_strong,
+              gradientColors: [
                 TeaColors.freshLeaf,
-                TeaColors.matureLeaf.withOpacity(0.8)
+                TeaColors.matureLeaf.withOpacity(0.8),
               ],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/leaf-maturity'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Disease Scan',
               subtitle: 'Plant health',
               tag: 'DIAGNOSIS',
-              icon: Icons.bug_report_outlined,
-              gradient: [Colors.red.shade700, Colors.red.shade400],
+              fallbackIcon: Icons.bug_report_outlined,
+              gradientColors: [Colors.red.shade700, Colors.red.shade400],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/disease-detection'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Growth',
               subtitle: 'Block progress',
               tag: 'ANALYSIS',
-              icon: Icons.grass_outlined,
-              gradient: [TeaColors.leafLight, TeaColors.freshLeaf],
+              fallbackIcon: Icons.grass_outlined,
+              gradientColors: [TeaColors.leafLight, TeaColors.freshLeaf],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/plants'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'IoT Sensors',
               subtitle: 'Real-time data',
               tag: 'LIVE',
-              icon: Icons.sensors,
-              gradient: [TeaColors.infoSky, Colors.blue.shade400],
+              fallbackIcon: Icons.sensors,
+              gradientColors: [TeaColors.infoSky, Colors.blue.shade400],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/iot-devices'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Soil Test',
               subtitle: 'Nutrient check',
               tag: 'SOIL',
-              icon: Icons.science_outlined,
-              gradient: [TeaColors.richSoil, Colors.brown.shade400],
+              fallbackIcon: Icons.science_outlined,
+              gradientColors: [TeaColors.richSoil, Colors.brown.shade400],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/soil-fertilization'),
             ),
-            _buildPremiumActionCard(
+            TeaImageCard(
               title: 'Quality',
               subtitle: 'Powder grade',
               tag: 'GRADING',
-              icon: Icons.grade_outlined,
-              gradient: [TeaColors.warmAmber, TeaColors.goldenSunlight],
+              fallbackIcon: Icons.grade_outlined,
+              gradientColors: [TeaColors.warmAmber, TeaColors.goldenSunlight],
+              borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/powder-grading'),
             ),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildPremiumActionCard({
-    required String title,
-    required String subtitle,
-    required String tag,
-    required IconData icon,
-    required List<Color> gradient,
-    required VoidCallback onTap,
-  }) {
-    return TeaCard.elevated(
-      onTap: onTap,
-      padding: EdgeInsets.zero,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: TeaRadius.radiusMd,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradient,
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: Icon(
-                icon,
-                size: 70,
-                color: Colors.white.withOpacity(0.15),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(TeaSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      tag,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: TeaTypography.titleSmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TeaTypography.labelSmall.copyWith(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -878,103 +824,6 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: TeaColors.white,
-        boxShadow: [
-          BoxShadow(
-            color: TeaColors.shadowVale,
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: TeaSpacing.md,
-            vertical: TeaSpacing.sm,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home,
-                label: 'Home',
-                isActive: true,
-                onTap: () {},
-              ),
-              _buildNavItem(
-                icon: Icons.eco_outlined,
-                activeIcon: Icons.eco,
-                label: 'Plants',
-                isActive: false,
-                onTap: () => context.push('/plants'),
-              ),
-              _buildNavItem(
-                icon: Icons.map_outlined,
-                activeIcon: Icons.map,
-                label: 'Map',
-                isActive: false,
-                onTap: () => context.push('/map'),
-              ),
-              _buildNavItem(
-                icon: Icons.person_outline,
-                activeIcon: Icons.person,
-                label: 'Profile',
-                isActive: false,
-                onTap: () => context.push('/profile'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: TeaSpacing.md,
-          vertical: TeaSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isActive ? TeaColors.leafPale : Colors.transparent,
-          borderRadius: TeaRadius.radiusRound,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              color: isActive ? TeaColors.freshLeaf : TeaColors.darkGray,
-              size: 24,
-            ),
-            const SizedBox(height: TeaSpacing.xxs),
-            Text(
-              label,
-              style: TeaTypography.labelSmall.copyWith(
-                color: isActive ? TeaColors.freshLeaf : TeaColors.darkGray,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
