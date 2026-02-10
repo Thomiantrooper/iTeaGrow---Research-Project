@@ -53,19 +53,31 @@ iTeaGrow-Web-Application/
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/kanzur/iTeaGrow-Web-Application.git
 cd iTeaGrow-Web-Application
 ```
 
-### 2. Install Dependencies (One-Step)
+### 2. Repositories & Branch Management
+This project is maintained across two repositories:
+1.  **Main Repo**: [kanzur/iTeaGrow-Web-Application](https://github.com/kanzur/iTeaGrow-Web-Application) (Branch: `main`)
+2.  **Research Repo**: [Thomiantrooper/iTeaGrow---Research-Project](https://github.com/Thomiantrooper/iTeaGrow---Research-Project) (Branch: `iTeaGrow-Web-Application`)
+
+**To push changes to BOTH repositories simultaneously:**
+```bash
+npm run push-all
+```
+*This command pushes your local `main` branch to both remotes automatically.*
+
+### 3. Install Dependencies (One-Step)
 We've provided a helper script to install dependencies for the root, backend, and frontend in one go:
 ```bash
 npm run setup
 ```
 *Alternatively, you can install them manually by running `npm install` in the root, `backend/`, and `frontend/` directories respectively.*
 
-### 3. Environment Setup
-- **Backend**: Create `backend/.env` with:
+### 4. Environment Setup
+**Note:** `.env` files are currently included in the repository for ease of setup.
+- **Backend**: `backend/.env` is pre-configured.
   ```env
   PORT=5000
   MONGODB_URI=your_mongodb_connection_string
@@ -75,7 +87,7 @@ npm run setup
   VITE_API_URL=http://localhost:5000/api
   ```
 
-### 4. Run the Application
+### 5. Run the Application
 
 **Option A: Run Full Stack (Recommended)**
 Run both frontend and backend concurrently:
