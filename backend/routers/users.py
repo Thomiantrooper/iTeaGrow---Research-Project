@@ -290,9 +290,19 @@ def require_admin(current_user: dict = Depends(get_current_active_user)):
     return current_user
 
 
+def require_admin_or_manager(current_user: dict = Depends(get_current_active_user)):
+    """Dependency to check if user is admin or manager"""
+    if current_user.get("role") not in ("admin", "manager"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin or Manager access required"
+        )
+    return current_user
+
+
 @router.get("/admin/all", response_model=List[UserResponse])
-async def get_all_users(current_user: dict = Depends(require_admin)):
-    """Get all users (admin only)"""
+async def get_all_users(current_user: dict = Depends(require_admin_or_manager)):
+    """Get all users (admin and manager)"""
     db = get_database()
 
     users = []

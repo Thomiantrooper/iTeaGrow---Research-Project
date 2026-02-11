@@ -491,14 +491,20 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
               // Create account link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    "Don't have an account? ",
-                    style: TeaTypography.bodySmall.copyWith(
-                      color: TeaColors.darkGray,
+                  Flexible(
+                    child: Text(
+                      "Don't have an account? ",
+                      style: TeaTypography.bodySmall.copyWith(
+                        color: TeaColors.darkGray,
+                      ),
                     ),
                   ),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: TeaSpacing.sm),
+                    ),
                     onPressed: () => context.push('/register'),
                     child: Text(
                       'Create Account',

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
+import '../../../../core/design_system/tea_colors.dart';
+import '../../../../core/design_system/tea_typography.dart';
+import '../../../../core/design_system/tea_spacing.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../data/models/prediction_request_model.dart';
 import '../providers/yield_prediction_provider.dart';
@@ -105,10 +108,10 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: TeaColors.alertRust,
         action: SnackBarAction(
           label: 'Dismiss',
-          textColor: Colors.white,
+          textColor: TeaColors.white,
           onPressed: () {},
         ),
       ),
@@ -134,8 +137,8 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                       ? Icons.cloud_done
                       : Icons.cloud_off,
                   color: predictionState.isApiHealthy
-                      ? Colors.green
-                      : Colors.orange,
+                      ? TeaColors.healthyGreen
+                      : TeaColors.warningAmber,
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -157,17 +160,17 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
             if (connectivityStatus.value == false &&
                 !predictionState.isApiHealthy)
               Card(
-                color: Colors.orange.shade100,
+                color: TeaColors.warningAmber.withOpacity(0.2),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      const Icon(Icons.wifi_off, color: Colors.orange),
+                      const Icon(Icons.wifi_off, color: TeaColors.warningAmber),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
                           'No internet connection. Please connect to use yield prediction.',
-                          style: TextStyle(color: Colors.black87),
+                          style: TextStyle(color: TeaColors.nearBlack),
                         ),
                       ),
                       TextButton.icon(
@@ -175,7 +178,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                         icon: const Icon(Icons.refresh, size: 16),
                         label: const Text('Retry'),
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.orange.shade900,
+                          foregroundColor: TeaColors.warmAmber,
                         ),
                       ),
                     ],
@@ -365,13 +368,13 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: (_totalPercentage - 100).abs() < 0.1
-                    ? Colors.green.shade50
-                    : Colors.orange.shade50,
+                    ? TeaColors.leafPale
+                    : TeaColors.warningAmber.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: (_totalPercentage - 100).abs() < 0.1
-                      ? Colors.green
-                      : Colors.orange,
+                      ? TeaColors.healthyGreen
+                      : TeaColors.warningAmber,
                 ),
               ),
               child: Row(
@@ -383,8 +386,8 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: (_totalPercentage - 100).abs() < 0.1
-                          ? Colors.green
-                          : Colors.orange,
+                          ? TeaColors.healthyGreen
+                          : TeaColors.warningAmber,
                     ),
                   ),
                 ],
@@ -396,7 +399,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   'Percentages must sum to 100%',
-                  style: TextStyle(color: Colors.orange.shade700, fontSize: 12),
+                  style: TextStyle(color: TeaColors.warningAmber, fontSize: 12),
                 ),
               ),
 
@@ -442,7 +445,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                       width: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: TeaColors.white,
                       ),
                     )
                   : const Text(

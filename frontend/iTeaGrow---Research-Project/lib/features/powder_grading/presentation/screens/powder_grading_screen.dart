@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
+import '../../../../core/design_system/tea_colors.dart';
+import '../../../../core/design_system/tea_typography.dart';
+import '../../../../core/design_system/tea_spacing.dart';
 import '../../data/datasources/powder_grading_ml_service.dart';
 import '../../domain/entities/powder_grading_result.dart';
 
@@ -85,7 +88,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: TeaColors.alertRust),
     );
   }
 
@@ -145,7 +148,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white,),
+                            strokeWidth: 2, color: TeaColors.white,),
                       )
                     : const Icon(Icons.grade),
                 label: Text(_isProcessing ? 'Grading...' : 'Grade Powder'),
@@ -174,19 +177,19 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
     return Container(
       height: 300,
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: TeaColors.lightGray,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade400, width: 2),
+        border: Border.all(color: TeaColors.mediumGray, width: 2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.add_photo_alternate,
-              size: 64, color: Colors.grey.shade600,),
+              size: 64, color: TeaColors.darkGray,),
           const SizedBox(height: 16),
           Text(
             'No image selected',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+            style: TextStyle(color: TeaColors.darkGray, fontSize: 16),
           ),
         ],
       ),
@@ -198,7 +201,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
       return Container(
         height: 300,
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color: TeaColors.lightGray,
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Center(
@@ -279,7 +282,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
             const SizedBox(height: 8),
             LinearProgressIndicator(
               value: _result!.qualityScore / 100,
-              backgroundColor: Colors.grey.shade300,
+              backgroundColor: TeaColors.lightGray,
               valueColor: AlwaysStoppedAnimation<Color>(gradeColor),
               minHeight: 8,
             ),
@@ -287,7 +290,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
             const SizedBox(height: 16),
             Text(
               'Graded at: ${_formatTime(_result!.timestamp)}',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 12, color: TeaColors.darkGray),
             ),
           ],
         ),
@@ -298,10 +301,10 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
   Widget _buildMarketAnalysis() {
     final trendColor = _getTrendColor(_result!.marketTrend);
     final priceChangeColor =
-        _result!.priceChange >= 0 ? Colors.green : Colors.red;
+        _result!.priceChange >= 0 ? TeaColors.healthyGreen : TeaColors.alertRust;
 
     return Card(
-      color: Colors.blue.shade50,
+      color: TeaColors.infoSky.withOpacity(0.15),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -310,7 +313,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
             Row(
               children: [
                 Icon(Icons.attach_money,
-                    color: Colors.green.shade700, size: 28,),
+                    color: TeaColors.matureLeaf, size: 28,),
                 const SizedBox(width: 12),
                 const Text(
                   'Market Value Analysis',
@@ -330,7 +333,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green.shade700,
+                    color: TeaColors.matureLeaf,
                   ),
                 ),
               ],
@@ -409,7 +412,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
                       Row(
                         children: [
                           Icon(Icons.location_on,
-                              size: 16, color: Colors.grey.shade600,),
+                              size: 16, color: TeaColors.darkGray,),
                           const SizedBox(width: 8),
                           Text(entry.key),
                         ],
@@ -430,28 +433,28 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
   Color _getGradeColor(String grade) {
     switch (grade) {
       case 'Premium':
-        return Colors.purple;
+        return TeaColors.clayPot;
       case 'Grade A':
-        return Colors.green;
+        return TeaColors.healthyGreen;
       case 'Grade B':
-        return Colors.orange;
+        return TeaColors.warningAmber;
       case 'Grade C':
-        return Colors.red;
+        return TeaColors.alertRust;
       default:
-        return Colors.grey;
+        return TeaColors.mediumGray;
     }
   }
 
   Color _getTrendColor(String trend) {
     switch (trend) {
       case 'Rising':
-        return Colors.green;
+        return TeaColors.healthyGreen;
       case 'Stable':
-        return Colors.blue;
+        return TeaColors.infoSky;
       case 'Falling':
-        return Colors.red;
+        return TeaColors.alertRust;
       default:
-        return Colors.grey;
+        return TeaColors.mediumGray;
     }
   }
 

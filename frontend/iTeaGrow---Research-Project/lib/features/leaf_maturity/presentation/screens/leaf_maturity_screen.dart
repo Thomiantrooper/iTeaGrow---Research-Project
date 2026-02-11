@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/design_system/tea_colors.dart';
+import '../../../../core/design_system/tea_typography.dart';
+import '../../../../core/design_system/tea_spacing.dart';
 import '../../data/datasources/leaf_maturity_pytorch_service.dart';
 import '../../domain/entities/leaf_maturity_result.dart';
 
@@ -90,7 +92,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: TeaColors.alertRust),
     );
   }
 
@@ -151,7 +153,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: TeaColors.white,
                         ),
                       )
                     : const Icon(Icons.analytics),
@@ -183,9 +185,9 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
     return Container(
       height: 300,
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: TeaColors.lightGray,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade400, width: 2),
+        border: Border.all(color: TeaColors.mediumGray, width: 2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -193,12 +195,12 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
           Icon(
             Icons.add_photo_alternate,
             size: 64,
-            color: Colors.grey.shade600,
+            color: TeaColors.darkGray,
           ),
           const SizedBox(height: 16),
           Text(
             'No image selected',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+            style: TextStyle(color: TeaColors.darkGray, fontSize: 16),
           ),
         ],
       ),
@@ -212,7 +214,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
       return Container(
         height: 300,
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color: TeaColors.lightGray,
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Center(
@@ -249,7 +251,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.black54,
+                color: TeaColors.nearBlack.withOpacity(0.54),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -257,13 +259,13 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
                 children: [
                   const Text(
                     'Grad-CAM',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
+                    style: TextStyle(color: TeaColors.white, fontSize: 12),
                   ),
                   const SizedBox(width: 8),
                   Switch(
                     value: _showGradCam,
                     onChanged: (value) => setState(() => _showGradCam = value),
-                    thumbColor: WidgetStatePropertyAll(AppTheme.accentAmber),
+                    thumbColor: WidgetStatePropertyAll(TeaColors.warmAmber),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ],
@@ -283,7 +285,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
           children: [
             const Row(
               children: [
-                Icon(Icons.check_circle, color: AppTheme.statusGood, size: 28),
+                Icon(Icons.check_circle, color: TeaColors.healthyGreen, size: 28),
                 SizedBox(width: 12),
                 Text(
                   'Analysis Complete',
@@ -299,7 +301,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                color: TeaColors.darkGray,
               ),
             ),
             const SizedBox(height: 12),
@@ -312,12 +314,12 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
             _buildResultRow(
               'Confidence',
               '${(_result!.speciesConfidence * 100).toStringAsFixed(1)}%',
-              AppTheme.primaryGreen,
+              TeaColors.freshLeaf,
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
               value: _result!.speciesConfidence,
-              backgroundColor: Colors.grey.shade300,
+              backgroundColor: TeaColors.lightGray,
               valueColor: AlwaysStoppedAnimation<Color>(
                 _getSpeciesColor(_result!.species),
               ),
@@ -358,7 +360,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                color: TeaColors.darkGray,
               ),
             ),
             const SizedBox(height: 12),
@@ -371,12 +373,12 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
             _buildResultRow(
               'Confidence',
               '${(_result!.maturityConfidence * 100).toStringAsFixed(1)}%',
-              AppTheme.primaryGreen,
+              TeaColors.freshLeaf,
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
               value: _result!.maturityConfidence,
-              backgroundColor: Colors.grey.shade300,
+              backgroundColor: TeaColors.lightGray,
               valueColor: AlwaysStoppedAnimation<Color>(
                 _getMaturityColor(_result!.maturity),
               ),
@@ -412,7 +414,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
             const SizedBox(height: 16),
             Text(
               'Analyzed at: ${_formatTime(_result!.timestamp)}',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 12, color: TeaColors.darkGray),
             ),
           ],
         ),
@@ -422,7 +424,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
 
   Widget _buildYieldPrediction() {
     return Card(
-      color: AppTheme.primaryGreen.withOpacity(0.1),
+      color: TeaColors.freshLeaf.withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -430,7 +432,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
           children: [
             const Row(
               children: [
-                Icon(Icons.trending_up, color: AppTheme.primaryGreen),
+                Icon(Icons.trending_up, color: TeaColors.freshLeaf),
                 SizedBox(width: 8),
                 Text(
                   'Yield Prediction',
@@ -493,22 +495,22 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
   Color _getSpeciesColor(String species) {
     switch (species) {
       case 'Assamica':
-        return Colors.green.shade700;
+        return TeaColors.matureLeaf;
       case 'DT1':
-        return Colors.blue.shade700;
+        return TeaColors.infoSky;
       default:
-        return Colors.grey;
+        return TeaColors.mediumGray;
     }
   }
 
   Color _getMaturityColor(String maturity) {
     switch (maturity) {
       case 'Tender':
-        return AppTheme.statusGood;
+        return TeaColors.healthyGreen;
       case 'Mature':
-        return AppTheme.accentAmber;
+        return TeaColors.warmAmber;
       default:
-        return Colors.grey;
+        return TeaColors.mediumGray;
     }
   }
 

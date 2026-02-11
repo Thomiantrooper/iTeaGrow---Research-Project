@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:iteagrow/core/theme/app_theme.dart';
+import '../../../../core/design_system/tea_colors.dart';
+import '../../../../core/design_system/tea_typography.dart';
+import '../../../../core/design_system/tea_spacing.dart';
 import '../../data/datasources/fertilizer_ml_service.dart';
 import '../../domain/entities/fertilizer_recommendation.dart';
 import 'package:iteagrow/features/iot_connectivity/domain/models/iot_models.dart';
@@ -68,7 +70,7 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
     } catch (e) {
       setState(() => _isCalculating = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Error: $e'), backgroundColor: TeaColors.alertRust),
       );
     }
   }
@@ -103,11 +105,11 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
                   width: 12,
                   height: 12,
                   decoration: BoxDecoration(
-                    color: Colors.green,
+                    color: TeaColors.healthyGreen,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withOpacity(0.5),
+                        color: TeaColors.healthyGreen.withOpacity(0.5),
                         blurRadius: 8,
                         spreadRadius: 2,
                       ),
@@ -119,7 +121,7 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
                   'Live Monitoring Active',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Colors.green,
+                    color: TeaColors.healthyGreen,
                   ),
                 ),
               ],
@@ -207,7 +209,7 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white,),
+                          strokeWidth: 2, color: TeaColors.white,),
                     )
                   : const Icon(Icons.calculate),
               label: Text(_isCalculating
@@ -289,7 +291,7 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
 
   Widget _buildRecommendationCard() {
     return Card(
-      color: AppTheme.accentAmber.withOpacity(0.1),
+      color: TeaColors.warmAmber.withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -297,7 +299,7 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
           children: [
             const Row(
               children: [
-                Icon(Icons.science, color: AppTheme.accentAmber, size: 28),
+                Icon(Icons.science, color: TeaColors.warmAmber, size: 28),
                 SizedBox(width: 12),
                 Text(
                   'TRI-Based Recommendations',
@@ -323,7 +325,7 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                const Icon(Icons.info_outline, color: TeaColors.infoSky, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -337,7 +339,7 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
             const SizedBox(height: 16),
             Text(
               'Generated at: ${_formatTime(_recommendation!.timestamp)}',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 12, color: TeaColors.darkGray),
             ),
           ],
         ),
@@ -358,9 +360,9 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
         Row(
           children: [
             if (needsApplication)
-              const Icon(Icons.add_circle, color: AppTheme.statusWarning, size: 20)
+              const Icon(Icons.add_circle, color: TeaColors.warningAmber, size: 20)
             else
-              const Icon(Icons.check_circle, color: AppTheme.statusGood, size: 20),
+              const Icon(Icons.check_circle, color: TeaColors.healthyGreen, size: 20),
             const SizedBox(width: 8),
             Text(
               needsApplication
@@ -370,8 +372,8 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: needsApplication
-                    ? AppTheme.statusWarning
-                    : AppTheme.statusGood,
+                    ? TeaColors.warningAmber
+                    : TeaColors.healthyGreen,
               ),
             ),
           ],
@@ -424,36 +426,36 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
   Color _getSensorTypeColor(SensorType type) {
     switch (type) {
       case SensorType.soilMoisture:
-        return Colors.blue;
+        return TeaColors.infoSky;
       case SensorType.soilPH:
-        return Colors.purple;
+        return TeaColors.clayPot;
       case SensorType.nitrogen:
-        return Colors.green;
+        return TeaColors.healthyGreen;
       case SensorType.phosphorus:
-        return Colors.orange;
+        return TeaColors.warningAmber;
       case SensorType.potassium:
-        return Colors.red;
+        return TeaColors.alertRust;
       case SensorType.temperature:
-        return Colors.deepOrange;
+        return TeaColors.warmAmber;
       case SensorType.humidity:
-        return Colors.lightBlue;
+        return TeaColors.infoSky;
       default:
-        return Colors.grey;
+        return TeaColors.mediumGray;
     }
   }
 
   Color _getSensorStatusColor(SensorStatus status) {
     switch (status) {
       case SensorStatus.critical:
-        return AppTheme.statusCritical;
+        return TeaColors.alertRust;
       case SensorStatus.warning:
-        return AppTheme.statusWarning;
+        return TeaColors.warningAmber;
       case SensorStatus.normal:
-        return Colors.blue;
+        return TeaColors.infoSky;
       case SensorStatus.optimal:
-        return AppTheme.statusGood;
+        return TeaColors.healthyGreen;
       default:
-        return Colors.grey;
+        return TeaColors.mediumGray;
     }
   }
 }

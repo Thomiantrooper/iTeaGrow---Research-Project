@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../../../core/theme/app_theme.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/design_system/design_system.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../providers/analytics_provider.dart';
 
 class AnalyticsDashboardScreen extends ConsumerStatefulWidget {
@@ -27,574 +29,550 @@ class _AnalyticsDashboardScreenState
     final state = ref.watch(analyticsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(analyticsProvider.notifier).loadAll(),
+      backgroundColor: TeaColors.mistGreen,
+      body: Stack(
+        children: [
+          const FloatingLeavesBackground(
+            leafCount: 4,
+            opacity: 0.05,
+            child: SizedBox.expand(),
           ),
-        ],
-      ),
-      body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : state.error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline,
-                          size: 64, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text('Error: ${state.error}'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () =>
-                            ref.read(analyticsProvider.notifier).loadAll(),
-                        child: const Text('Retry'),
-                      ),
-                    ],
+          CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 80,
+                floating: true,
+                pinned: true,
+                backgroundColor: TeaColors.white,
+                title: Text(
+                  'Analytics',
+                  style: TeaTypography.headlineSmall.copyWith(color: TeaColors.matureLeaf),
+                ),
+                actions: [
+                  TeaIconButton(
+                    icon: Icons.refresh,
+                    onPressed: () => ref.read(analyticsProvider.notifier).loadAll(),
+                    tooltip: 'Refresh',
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: () async {
-                    await ref.read(analyticsProvider.notifier).loadAll();
-                  },
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
+                  const SizedBox(width: TeaSpacing.sm),
+                ],
+              ),
+              if (state.isLoading && state.overview == null)
+                SliverFillRemaining(
+                  child: Center(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildSummaryCards(state),
-                        const SizedBox(height: 24),
-                        _buildSectionTitle('Disease Distribution'),
-                        const SizedBox(height: 16),
-                        _buildPieChart(state),
-                        const SizedBox(height: 24),
-                        _buildSectionTitle('Disease Trends'),
-                        const SizedBox(height: 16),
-                        _buildLineChart(state),
-                        const SizedBox(height: 24),
-                        _buildSectionTitle('Monthly Scans'),
-                        const SizedBox(height: 16),
-                        _buildBarChart(state),
-                        const SizedBox(height: 24),
-                        _buildSectionTitle('Recovery Tracking'),
-                        const SizedBox(height: 16),
-                        _buildRecoverySection(state),
-                        const SizedBox(height: 24),
-                        _buildSectionTitle('Top Scanners'),
-                        const SizedBox(height: 16),
-                        _buildTopScannersSection(state),
+                        const CircularProgressIndicator(color: TeaColors.freshLeaf),
+                        const SizedBox(height: TeaSpacing.md),
+                        Text('Loading analytics...', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
                       ],
                     ),
                   ),
+                )
+              else if (state.error != null && state.overview == null)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 64, height: 64,
+                          decoration: BoxDecoration(
+                            color: TeaColors.alertRust.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.error_outline, size: 32, color: TeaColors.alertRust),
+                        ),
+                        const SizedBox(height: TeaSpacing.md),
+                        Text('Error: ${state.error}', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+                        const SizedBox(height: TeaSpacing.md),
+                        TextButton.icon(
+                          onPressed: () => ref.read(analyticsProvider.notifier).loadAll(),
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: const Text('Retry'),
+                          style: TextButton.styleFrom(foregroundColor: TeaColors.freshLeaf),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: TeaSpacing.screenPaddingHorizontal,
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      const SizedBox(height: TeaSpacing.md),
+                      _buildSummaryCards(state),
+                      const SizedBox(height: TeaSpacing.lg),
+                      _buildDiseaseDistributionSection(state),
+                      const SizedBox(height: TeaSpacing.lg),
+                      _buildTrendsSection(state),
+                      const SizedBox(height: TeaSpacing.lg),
+                      _buildMonthlyScansSection(state),
+                      const SizedBox(height: TeaSpacing.lg),
+                      _buildRecoverySection(state),
+                      const SizedBox(height: TeaSpacing.lg),
+                      _buildTopScannersSection(state),
+                      const SizedBox(height: TeaSpacing.xxl),
+                    ]),
+                  ),
                 ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+            ],
           ),
+        ],
+      ),
     );
   }
 
   Widget _buildSummaryCards(AnalyticsState state) {
     final overview = state.overview;
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.5,
+    return Column(
       children: [
-        _SummaryCard(
-          title: 'Total Scans',
-          value: '${overview?['total_scans'] ?? 0}',
-          icon: Icons.document_scanner,
-          color: Colors.blue,
-        ),
-        _SummaryCard(
-          title: 'Total Users',
-          value: '${overview?['total_users'] ?? 0}',
-          icon: Icons.people,
-          color: Colors.purple,
-        ),
-        _SummaryCard(
-          title: 'Health Rate',
-          value:
-              '${((overview?['health_rate'] ?? 0) as num).toStringAsFixed(1)}%',
-          icon: Icons.health_and_safety,
-          color: AppTheme.statusGood,
-        ),
-        _SummaryCard(
-          title: 'Active Devices',
-          value: '${overview?['total_devices'] ?? 0}',
-          icon: Icons.sensors,
-          color: Colors.teal,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPieChart(AnalyticsState state) {
-    final distribution = state.diseaseDistribution;
-    if (distribution == null || distribution.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Center(child: Text('No disease distribution data available')),
-        ),
-      );
-    }
-
-    final List<Map<String, dynamic>> items =
-        List<Map<String, dynamic>>.from(distribution);
-
-    final colors = [
-      Colors.green,
-      Colors.red,
-      Colors.orange,
-      Colors.blue,
-      Colors.purple,
-    ];
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+        Row(
           children: [
-            SizedBox(
-              height: 200,
-              child: PieChart(
-                PieChartData(
-                  sections: items.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final item = entry.value;
-                    final count = (item['count'] ?? 0) as num;
-                    final percentage = (item['percentage'] ?? 0) as num;
-                    return PieChartSectionData(
-                      value: count.toDouble(),
-                      title: '${percentage.toStringAsFixed(1)}%',
-                      color: colors[i % colors.length],
-                      radius: 80,
-                      titleStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    );
-                  }).toList(),
-                  sectionsSpace: 2,
-                  centerSpaceRadius: 0,
-                ),
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Total Scans',
+                value: '${overview?['total_scans'] ?? 0}',
+                icon: Icons.document_scanner_outlined,
+                iconColor: TeaColors.infoSky,
               ),
             ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              children: items.asMap().entries.map((entry) {
-                final i = entry.key;
-                final item = entry.value;
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: colors[i % colors.length],
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${item['disease_name'] ?? 'Unknown'} (${item['count'] ?? 0})',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                );
-              }).toList(),
+            const SizedBox(width: TeaSpacing.smd),
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Total Users',
+                value: '${overview?['total_users'] ?? 0}',
+                icon: Icons.people_outlined,
+                iconColor: TeaColors.matureLeaf,
+              ),
             ),
           ],
         ),
-      ),
-    );
+        const SizedBox(height: TeaSpacing.smd),
+        Row(
+          children: [
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Health Rate',
+                value: '${((overview?['health_rate'] ?? 0) as num).toStringAsFixed(1)}%',
+                icon: Icons.health_and_safety_outlined,
+                iconColor: TeaColors.healthyGreen,
+              ),
+            ),
+            const SizedBox(width: TeaSpacing.smd),
+            Expanded(
+              child: TeaMetricCard(
+                label: 'Active Devices',
+                value: '${overview?['total_devices'] ?? 0}',
+                icon: Icons.sensors_outlined,
+                iconColor: TeaColors.warmAmber,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildLineChart(AnalyticsState state) {
-    final trends = state.diseaseTrends;
-    if (trends == null || trends.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Center(child: Text('No trend data available')),
-        ),
-      );
-    }
+  Widget _buildDiseaseDistributionSection(AnalyticsState state) {
+    final distribution = state.diseaseDistribution;
 
-    final List<Map<String, dynamic>> trendItems =
-        List<Map<String, dynamic>>.from(trends);
-
-    final spots = trendItems.asMap().entries.map((entry) {
-      final total = (entry.value['total'] ?? 0) as num;
-      return FlSpot(entry.key.toDouble(), total.toDouble());
-    }).toList();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SizedBox(
-          height: 200,
-          child: LineChart(
-            LineChartData(
-              gridData: const FlGridData(show: true),
-              titlesData: FlTitlesData(
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 30,
-                    getTitlesWidget: (value, meta) {
-                      final idx = value.toInt();
-                      if (idx >= 0 && idx < trendItems.length) {
-                        final period =
-                            trendItems[idx]['period']?.toString() ?? '';
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            period.length > 5
-                                ? period.substring(period.length - 5)
-                                : period,
-                            style: const TextStyle(fontSize: 10),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const TeaSectionHeader(title: 'Disease Distribution', icon: Icons.pie_chart_outline),
+        const SizedBox(height: TeaSpacing.smd),
+        if (distribution == null || distribution.isEmpty)
+          TeaCard.elevated(
+            padding: const EdgeInsets.all(TeaSpacing.xl),
+            child: Center(
+              child: Text('No distribution data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+            ),
+          )
+        else
+          TeaCard.elevated(
+            padding: const EdgeInsets.all(TeaSpacing.md),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 200,
+                  child: PieChart(
+                    PieChartData(
+                      sections: distribution.asMap().entries.map((entry) {
+                        final i = entry.key;
+                        final item = entry.value;
+                        final count = (item['count'] ?? 0) as num;
+                        final percentage = (item['percentage'] ?? 0) as num;
+                        return PieChartSectionData(
+                          value: count.toDouble(),
+                          title: '${percentage.toStringAsFixed(1)}%',
+                          color: _chartColors[i % _chartColors.length],
+                          radius: 80,
+                          titleStyle: TeaTypography.labelSmall.copyWith(
+                            color: TeaColors.white,
+                            fontWeight: FontWeight.bold,
                           ),
                         );
-                      }
-                      return const Text('');
-                    },
+                      }).toList(),
+                      sectionsSpace: 2,
+                      centerSpaceRadius: 0,
+                    ),
                   ),
                 ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        value.toInt().toString(),
-                        style: const TextStyle(fontSize: 10),
-                      );
-                    },
-                  ),
-                ),
-                topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false)),
-              ),
-              borderData: FlBorderData(show: false),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: spots,
-                  isCurved: true,
-                  color: AppTheme.primaryGreen,
-                  barWidth: 3,
-                  dotData: const FlDotData(show: true),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: AppTheme.primaryGreen.withOpacity(0.1),
-                  ),
+                const SizedBox(height: TeaSpacing.md),
+                Wrap(
+                  spacing: TeaSpacing.md,
+                  runSpacing: TeaSpacing.sm,
+                  children: distribution.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final item = entry.value;
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 10, height: 10,
+                          decoration: BoxDecoration(
+                            color: _chartColors[i % _chartColors.length],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${item['disease_name'] ?? 'Unknown'} (${item['count'] ?? 0})',
+                          style: TeaTypography.labelSmall,
+                        ),
+                      ],
+                    );
+                  }).toList(),
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
+      ],
+    ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildBarChart(AnalyticsState state) {
-    final yearly = state.yearlyAnalysis;
-    final monthlyData = yearly?['monthly_data'] as List?;
-    if (yearly == null || monthlyData == null || monthlyData.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Center(child: Text('No yearly data available')),
-        ),
-      );
-    }
+  Widget _buildTrendsSection(AnalyticsState state) {
+    final trends = state.diseaseTrends;
 
-    final List<Map<String, dynamic>> months =
-        List<Map<String, dynamic>>.from(monthlyData);
-    final monthNames = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SizedBox(
-          height: 200,
-          child: BarChart(
-            BarChartData(
-              gridData: const FlGridData(show: true),
-              titlesData: FlTitlesData(
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 30,
-                    getTitlesWidget: (value, meta) {
-                      final idx = value.toInt();
-                      if (idx >= 0 && idx < months.length) {
-                        final month = (months[idx]['month'] ?? 1) as num;
-                        final mIdx = month.toInt() - 1;
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            mIdx >= 0 && mIdx < 12 ? monthNames[mIdx] : '',
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                        );
-                      }
-                      return const Text('');
-                    },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const TeaSectionHeader(title: 'Disease Trends', icon: Icons.trending_up),
+        const SizedBox(height: TeaSpacing.smd),
+        if (trends == null || trends.isEmpty)
+          TeaCard.elevated(
+            padding: const EdgeInsets.all(TeaSpacing.xl),
+            child: Center(
+              child: Text('No trend data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+            ),
+          )
+        else
+          TeaCard.elevated(
+            padding: const EdgeInsets.all(TeaSpacing.md),
+            child: SizedBox(
+              height: 200,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: 1,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: TeaColors.lightGray,
+                      strokeWidth: 0.5,
+                    ),
                   ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        value.toInt().toString(),
-                        style: const TextStyle(fontSize: 10),
-                      );
-                    },
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        getTitlesWidget: (value, meta) {
+                          final idx = value.toInt();
+                          if (idx >= 0 && idx < trends.length && idx % (trends.length > 10 ? 3 : 1) == 0) {
+                            final period = trends[idx]['period']?.toString() ?? '';
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                period.length > 5 ? period.substring(period.length - 5) : period,
+                                style: TeaTypography.labelSmall.copyWith(fontSize: 9, color: TeaColors.darkGray),
+                              ),
+                            );
+                          }
+                          return const Text('');
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 35,
+                        getTitlesWidget: (value, meta) => Text(
+                          value.toInt().toString(),
+                          style: TeaTypography.labelSmall.copyWith(fontSize: 9, color: TeaColors.darkGray),
+                        ),
+                      ),
+                    ),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
-                ),
-                topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false)),
-              ),
-              borderData: FlBorderData(show: false),
-              barGroups: months.asMap().entries.map((entry) {
-                final total = (entry.value['total'] ?? 0) as num;
-                return BarChartGroupData(
-                  x: entry.key,
-                  barRods: [
-                    BarChartRodData(
-                      toY: total.toDouble(),
-                      color: AppTheme.primaryGreen,
-                      width: 16,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(4),
+                  borderData: FlBorderData(show: false),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: trends.asMap().entries.map((entry) {
+                        final total = (entry.value['total'] ?? 0) as num;
+                        return FlSpot(entry.key.toDouble(), total.toDouble());
+                      }).toList(),
+                      isCurved: true,
+                      color: TeaColors.freshLeaf,
+                      barWidth: 3,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                          radius: 3,
+                          color: TeaColors.freshLeaf,
+                          strokeWidth: 1.5,
+                          strokeColor: TeaColors.white,
+                        ),
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: TeaColors.freshLeaf.withOpacity(0.1),
                       ),
                     ),
                   ],
-                );
-              }).toList(),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
+      ],
+    ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildMonthlyScansSection(AnalyticsState state) {
+    final yearly = state.yearlyAnalysis;
+    final monthlyData = yearly?['monthly_data'] as List?;
+    final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const TeaSectionHeader(title: 'Monthly Scans', icon: Icons.bar_chart_outlined),
+        const SizedBox(height: TeaSpacing.smd),
+        if (yearly == null || monthlyData == null || monthlyData.isEmpty)
+          TeaCard.elevated(
+            padding: const EdgeInsets.all(TeaSpacing.xl),
+            child: Center(
+              child: Text('No yearly data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+            ),
+          )
+        else
+          TeaCard.elevated(
+            padding: const EdgeInsets.all(TeaSpacing.md),
+            child: SizedBox(
+              height: 200,
+              child: BarChart(
+                BarChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: TeaColors.lightGray,
+                      strokeWidth: 0.5,
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        getTitlesWidget: (value, meta) {
+                          final months = List<Map<String, dynamic>>.from(monthlyData);
+                          final idx = value.toInt();
+                          if (idx >= 0 && idx < months.length) {
+                            final month = (months[idx]['month'] ?? 1) as num;
+                            final mIdx = month.toInt() - 1;
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                mIdx >= 0 && mIdx < 12 ? monthNames[mIdx] : '',
+                                style: TeaTypography.labelSmall.copyWith(fontSize: 9, color: TeaColors.darkGray),
+                              ),
+                            );
+                          }
+                          return const Text('');
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 35,
+                        getTitlesWidget: (value, meta) => Text(
+                          value.toInt().toString(),
+                          style: TeaTypography.labelSmall.copyWith(fontSize: 9, color: TeaColors.darkGray),
+                        ),
+                      ),
+                    ),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  barGroups: List<Map<String, dynamic>>.from(monthlyData).asMap().entries.map((entry) {
+                    final total = (entry.value['total'] ?? 0) as num;
+                    return BarChartGroupData(
+                      x: entry.key,
+                      barRods: [
+                        BarChartRodData(
+                          toY: total.toDouble(),
+                          gradient: const LinearGradient(
+                            colors: [TeaColors.freshLeaf, TeaColors.matureLeaf],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
+                          width: 14,
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ),
+      ],
+    ).animate().fadeIn(delay: 300.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
   Widget _buildRecoverySection(AnalyticsState state) {
     final recovery = state.recoveryTracking;
-    if (recovery == null) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Center(child: Text('No recovery data available')),
-        ),
-      );
-    }
 
-    final recovered = recovery['recovered'] ?? 0;
-    final improving = recovery['improving'] ?? 0;
-    final stillInfected = recovery['still_infected'] ?? 0;
-    final total = recovery['total_tracked_users'] ?? 0;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text('$total Plants Tracked',
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const TeaSectionHeader(title: 'Recovery Tracking', icon: Icons.healing_outlined),
+        const SizedBox(height: TeaSpacing.smd),
+        if (recovery == null)
+          TeaCard.elevated(
+            padding: const EdgeInsets.all(TeaSpacing.xl),
+            child: Center(
+              child: Text('No recovery data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+            ),
+          )
+        else
+          TeaCard.elevated(
+            padding: const EdgeInsets.all(TeaSpacing.lg),
+            child: Column(
               children: [
-                Expanded(
-                  child: _RecoveryIndicator(
-                    label: 'Recovered',
-                    value: recovered,
-                    color: Colors.green,
-                  ),
+                Text(
+                  '${recovery['total_tracked_users'] ?? 0} Plants Tracked',
+                  style: TeaTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
                 ),
-                Expanded(
-                  child: _RecoveryIndicator(
-                    label: 'Improving',
-                    value: improving,
-                    color: Colors.orange,
-                  ),
-                ),
-                Expanded(
-                  child: _RecoveryIndicator(
-                    label: 'Infected',
-                    value: stillInfected,
-                    color: Colors.red,
-                  ),
+                const SizedBox(height: TeaSpacing.md),
+                Row(
+                  children: [
+                    Expanded(child: _buildRecoveryIndicator('Recovered', recovery['recovered'] ?? 0, TeaColors.healthyGreen)),
+                    Expanded(child: _buildRecoveryIndicator('Improving', recovery['improving'] ?? 0, TeaColors.warmAmber)),
+                    Expanded(child: _buildRecoveryIndicator('Infected', recovery['still_infected'] ?? 0, TeaColors.alertRust)),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
+      ],
+    ).animate().fadeIn(delay: 400.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildRecoveryIndicator(String label, dynamic value, Color color) {
+    return Column(
+      children: [
+        Text(
+          '$value',
+          style: TeaTypography.headlineSmall.copyWith(color: color, fontWeight: FontWeight.bold),
         ),
-      ),
+        const SizedBox(height: TeaSpacing.xs),
+        Text(label, style: TeaTypography.labelSmall.copyWith(color: color)),
+      ],
     );
   }
 
   Widget _buildTopScannersSection(AnalyticsState state) {
     final userStats = state.userStats;
-    if (userStats == null) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Center(child: Text('No user stats available')),
-        ),
-      );
-    }
+    final topScanners = List<Map<String, dynamic>>.from(userStats?['top_scanners'] ?? []);
 
-    final topScanners =
-        List<Map<String, dynamic>>.from(userStats['top_scanners'] ?? []);
-
-    if (topScanners.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Center(child: Text('No scanner data')),
-        ),
-      );
-    }
-
-    return Card(
-      child: Column(
-        children: topScanners.asMap().entries.map((entry) {
-          final scanner = entry.value;
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppTheme.primaryGreen.withOpacity(0.2),
-              child: Text(
-                '${entry.key + 1}',
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryGreen),
-              ),
-            ),
-            title: Text(scanner['username'] ?? 'Unknown'),
-            trailing: Text(
-              '${scanner['scan_count'] ?? 0} scans',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
-class _SummaryCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _SummaryCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(
-                  fontSize: 12, color: AppTheme.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RecoveryIndicator extends StatelessWidget {
-  final String label;
-  final dynamic value;
-  final Color color;
-
-  const _RecoveryIndicator({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '$value',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
+        const TeaSectionHeader(title: 'Top Scanners', icon: Icons.leaderboard_outlined),
+        const SizedBox(height: TeaSpacing.smd),
+        if (topScanners.isEmpty)
+          TeaCard.elevated(
+            padding: const EdgeInsets.all(TeaSpacing.xl),
+            child: Center(
+              child: Text('No scanner data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+            ),
+          )
+        else
+          TeaCard.elevated(
+            padding: const EdgeInsets.symmetric(vertical: TeaSpacing.sm),
+            child: Column(
+              children: topScanners.asMap().entries.map((entry) {
+                final scanner = entry.value;
+                final rank = entry.key + 1;
+                return ListTile(
+                  leading: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: rank <= 3
+                        ? [TeaColors.goldenSunlight, TeaColors.mediumGray, TeaColors.warmAmber][rank - 1].withOpacity(0.2)
+                        : TeaColors.freshLeaf.withOpacity(0.1),
+                    child: Text(
+                      '$rank',
+                      style: TeaTypography.labelMedium.copyWith(
+                        color: rank <= 3
+                            ? [TeaColors.goldenSunlight, TeaColors.darkGray, TeaColors.warmAmber][rank - 1]
+                            : TeaColors.freshLeaf,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    scanner['full_name'] ?? scanner['username'] ?? 'Unknown',
+                    style: TeaTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    '@${scanner['username'] ?? ''}',
+                    style: TeaTypography.labelSmall.copyWith(color: TeaColors.darkGray),
+                  ),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: TeaSpacing.sm, vertical: TeaSpacing.xs),
+                    decoration: BoxDecoration(
+                      color: TeaColors.freshLeaf.withOpacity(0.1),
+                      borderRadius: TeaRadius.radiusRound,
+                    ),
+                    child: Text(
+                      '${scanner['scan_count'] ?? 0} scans',
+                      style: TeaTypography.labelSmall.copyWith(
+                        color: TeaColors.matureLeaf,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: color),
-        ),
       ],
-    );
+    ).animate().fadeIn(delay: 500.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
+
+  static const _chartColors = [
+    TeaColors.healthyGreen,
+    TeaColors.alertRust,
+    TeaColors.warmAmber,
+    TeaColors.infoSky,
+    TeaColors.matureLeaf,
+  ];
 }

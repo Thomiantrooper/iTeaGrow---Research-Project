@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/design_system/tea_colors.dart';
+import '../../../../core/design_system/tea_typography.dart';
+import '../../../../core/design_system/tea_spacing.dart';
+import '../../../../core/widgets/cards/tea_card.dart';
 import '../../../../core/services/api_service.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 
 class ReportsListScreen extends ConsumerStatefulWidget {
@@ -67,8 +71,15 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
-        title: Text(_showAllReports ? 'All Reports' : 'My Reports'),
+        title: Text(
+          _showAllReports ? 'All Reports' : 'My Reports',
+          style: TeaTypography.titleLarge.copyWith(color: TeaColors.white),
+        ),
+        backgroundColor: TeaColors.freshLeaf,
+        foregroundColor: TeaColors.white,
+        elevation: 0,
         actions: [
           if (_isAdminOrManager)
             IconButton(
@@ -91,7 +102,9 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(color: TeaColors.freshLeaf),
+      );
     }
 
     if (_error != null) {
@@ -99,12 +112,16 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(_error!),
-            const SizedBox(height: 16),
+            Icon(Icons.error_outline, size: 64, color: TeaColors.alertRust),
+            const SizedBox(height: TeaSpacing.md),
+            Text(_error!, style: TeaTypography.bodyMedium),
+            const SizedBox(height: TeaSpacing.md),
             ElevatedButton(
               onPressed: _loadDetections,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: TeaColors.freshLeaf,
+                foregroundColor: TeaColors.white,
+              ),
               child: const Text('Retry'),
             ),
           ],
@@ -113,20 +130,20 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
     }
 
     if (_detections.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.description_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
+            Icon(Icons.description_outlined, size: 64, color: TeaColors.mediumGray),
+            const SizedBox(height: TeaSpacing.md),
             Text(
               'No scan records found',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
+              style: TeaTypography.titleMedium.copyWith(color: TeaColors.darkGray),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: TeaSpacing.sm),
             Text(
               'Scan tea leaves to generate reports',
-              style: TextStyle(color: Colors.grey),
+              style: TeaTypography.bodySmall,
             ),
           ],
         ),
@@ -134,25 +151,25 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
     }
 
     return RefreshIndicator(
+      color: TeaColors.freshLeaf,
       onRefresh: _loadDetections,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(TeaSpacing.md),
         itemCount: _detections.length,
         itemBuilder: (context, index) {
           final detection = _detections[index];
-          return _buildDetectionCard(detection);
+          return _buildDetectionCard(detection, index);
         },
       ),
     );
   }
 
-  Widget _buildDetectionCard(Map<String, dynamic> detection) {
+  Widget _buildDetectionCard(Map<String, dynamic> detection, int index) {
     final diseaseName = detection['disease_name'] ?? 'Unknown';
     final confidence = (detection['confidence'] ?? 0) as num;
     final severity = detection['severity'] ?? 'Unknown';
     final createdAt = detection['created_at'];
-    final detectionId =
-        detection['_id'] ?? detection['id'] ?? '';
+    final detectionId = detection['_id'] ?? detection['id'] ?? '';
 
     String formattedDate = 'N/A';
     if (createdAt != null) {
@@ -163,130 +180,122 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
     }
 
     final severityColor = _getSeverityColor(severity);
-    final isHealthy =
-        diseaseName.toLowerCase() == 'healthy';
+    final isHealthy = diseaseName.toLowerCase() == 'healthy';
+    final statusColor = isHealthy ? TeaColors.healthyGreen : TeaColors.alertRust;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: TeaSpacing.smd),
+      child: TeaCard.elevated(
         onTap: () {
           if (detectionId.isNotEmpty) {
             context.push('/reports/preview/$detectionId');
           }
         },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Status icon
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: (isHealthy ? Colors.green : Colors.red)
-                      .withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  isHealthy ? Icons.check_circle : Icons.warning,
-                  color: isHealthy ? Colors.green : Colors.red,
-                ),
+        padding: const EdgeInsets.all(TeaSpacing.md),
+        child: Row(
+          children: [
+            // Status icon
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 12),
-              // Details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      diseaseName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          '${(confidence * 100).toStringAsFixed(1)}% confidence',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: severityColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            severity,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: severityColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _showAllReports && detection['farmer_name'] != null
-                          ? '$formattedDate - ${detection['farmer_name']}'
-                          : formattedDate,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
+              child: Icon(
+                isHealthy ? Icons.check_circle : Icons.warning_amber_rounded,
+                color: statusColor,
               ),
-              // Generate report button
-              Column(
+            ),
+            const SizedBox(width: TeaSpacing.smd),
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.picture_as_pdf,
-                    color: AppTheme.primaryGreen.withOpacity(0.8),
+                  Text(
+                    diseaseName,
+                    style: TeaTypography.titleSmall.copyWith(color: statusColor),
                   ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Report',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: AppTheme.primaryGreen,
+                  const SizedBox(height: TeaSpacing.xs),
+                  Row(
+                    children: [
+                      Text(
+                        '${(confidence * 100).toStringAsFixed(1)}% confidence',
+                        style: TeaTypography.bodySmall,
+                      ),
+                      const SizedBox(width: TeaSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: severityColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          severity,
+                          style: TeaTypography.labelSmall.copyWith(
+                            color: severityColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: TeaSpacing.xs),
+                  Text(
+                    _showAllReports && detection['farmer_name'] != null
+                        ? '$formattedDate - ${detection['farmer_name']}'
+                        : formattedDate,
+                    style: TeaTypography.labelSmall.copyWith(
+                      color: TeaColors.mediumGray,
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            // Report icon
+            Column(
+              children: [
+                Icon(
+                  Icons.picture_as_pdf,
+                  color: TeaColors.freshLeaf.withOpacity(0.8),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Report',
+                  style: TeaTypography.labelSmall.copyWith(
+                    color: TeaColors.freshLeaf,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-    );
+    ).animate().fadeIn(
+      duration: 300.ms,
+      delay: (50 * index).ms,
+    ).slideY(begin: 0.1, end: 0);
   }
 
   Color _getSeverityColor(String severity) {
     switch (severity.toLowerCase()) {
       case 'critical':
-        return Colors.red;
+        return TeaColors.criticalRed;
       case 'high':
-        return Colors.deepOrange;
+        return TeaColors.alertRust;
       case 'moderate':
-        return Colors.orange;
+        return TeaColors.warningAmber;
       case 'low':
-        return Colors.yellow.shade800;
+        return TeaColors.goldenSunlight;
       case 'healthy':
       case 'none':
-        return Colors.green;
+        return TeaColors.healthyGreen;
       default:
-        return Colors.grey;
+        return TeaColors.mediumGray;
     }
   }
 }

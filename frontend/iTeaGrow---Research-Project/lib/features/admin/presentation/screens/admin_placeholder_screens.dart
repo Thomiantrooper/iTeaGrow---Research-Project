@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/design_system/tea_colors.dart';
 import '../../../../core/services/admin_service.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../../auth/domain/models/user.dart';
@@ -43,7 +44,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const Icon(Icons.error_outline, size: 64, color: TeaColors.alertRust),
               const SizedBox(height: 16),
               Text('Error: $error'),
               const SizedBox(height: 16),
@@ -115,7 +116,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       Text(
                         '@${user.username}',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: TeaColors.darkGray,
                           fontSize: 14,
                         ),
                       ),
@@ -126,13 +127,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: user.isActive ? Colors.green.shade100 : Colors.red.shade100,
+                    color: user.isActive ? TeaColors.healthyGreen.withOpacity(0.2) : TeaColors.alertRust.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     user.isActive ? 'Active' : 'Inactive',
                     style: TextStyle(
-                      color: user.isActive ? Colors.green.shade800 : Colors.red.shade800,
+                      color: user.isActive ? TeaColors.matureLeaf : TeaColors.criticalRed,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -175,7 +176,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   ),
                   label: Text(user.isActive ? 'Deactivate' : 'Activate'),
                   style: TextButton.styleFrom(
-                    foregroundColor: user.isActive ? Colors.orange : Colors.green,
+                    foregroundColor: user.isActive ? TeaColors.warningAmber : TeaColors.healthyGreen,
                   ),
                   onPressed: () => _toggleUserStatus(user),
                 ),
@@ -183,7 +184,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   icon: const Icon(Icons.delete, size: 18),
                   label: const Text('Delete'),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
+                    foregroundColor: TeaColors.alertRust,
                   ),
                   onPressed: () => _confirmDelete(user),
                 ),
@@ -199,13 +200,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: color ?? Colors.grey),
+        Icon(icon, size: 14, color: color ?? TeaColors.mediumGray),
         const SizedBox(width: 4),
         Text(
           text,
           style: TextStyle(
             fontSize: 12,
-            color: color ?? Colors.grey.shade700,
+            color: color ?? TeaColors.darkGray,
           ),
         ),
       ],
@@ -223,21 +224,21 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             Text('Select new role for ${user.fullName}:'),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.admin_panel_settings, color: Colors.red),
+              leading: const Icon(Icons.admin_panel_settings, color: TeaColors.alertRust),
               title: const Text('Admin'),
               subtitle: const Text('Full system access'),
               selected: user.role == UserRole.admin,
               onTap: () => _updateRole(user, 'admin'),
             ),
             ListTile(
-              leading: const Icon(Icons.manage_accounts, color: Colors.blue),
+              leading: const Icon(Icons.manage_accounts, color: TeaColors.infoSky),
               title: const Text('Manager'),
               subtitle: const Text('Manage teams and data'),
               selected: user.role == UserRole.manager,
               onTap: () => _updateRole(user, 'manager'),
             ),
             ListTile(
-              leading: const Icon(Icons.person, color: Colors.green),
+              leading: const Icon(Icons.person, color: TeaColors.healthyGreen),
               title: const Text('Farmer'),
               subtitle: const Text('Basic access'),
               selected: user.role == UserRole.farmer,
@@ -271,7 +272,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 ? 'Role updated successfully'
                 : 'Failed to update role',
           ),
-          backgroundColor: success ? Colors.green : Colors.red,
+          backgroundColor: success ? TeaColors.healthyGreen : TeaColors.alertRust,
         ),
       );
     }
@@ -293,7 +294,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 ? 'User ${newStatus ? 'activated' : 'deactivated'}'
                 : 'Failed to update status',
           ),
-          backgroundColor: success ? Colors.green : Colors.red,
+          backgroundColor: success ? TeaColors.healthyGreen : TeaColors.alertRust,
         ),
       );
     }
@@ -313,7 +314,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: TeaColors.alertRust),
             onPressed: () async {
               Navigator.pop(context);
               final success = await ref.read(usersProvider.notifier).deleteUser(user.id);
@@ -326,7 +327,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           ? 'User deleted successfully'
                           : 'Failed to delete user',
                     ),
-                    backgroundColor: success ? Colors.green : Colors.red,
+                    backgroundColor: success ? TeaColors.healthyGreen : TeaColors.alertRust,
                   ),
                 );
               }
@@ -349,11 +350,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   Color _getRoleColor(UserRole role) {
     switch (role) {
       case UserRole.admin:
-        return Colors.red;
+        return TeaColors.alertRust;
       case UserRole.manager:
-        return Colors.blue;
+        return TeaColors.infoSky;
       case UserRole.farmer:
-        return Colors.green;
+        return TeaColors.healthyGreen;
     }
   }
 
@@ -446,7 +447,7 @@ class _DeviceManagementScreenState
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(Icons.error_outline,
-                          size: 64, color: Colors.red),
+                          size: 64, color: TeaColors.alertRust),
                       const SizedBox(height: 16),
                       Text(_error!),
                       const SizedBox(height: 16),
@@ -472,7 +473,7 @@ class _DeviceManagementScreenState
                                 child: Column(
                                   children: [
                                     const Icon(Icons.bluetooth,
-                                        color: Colors.blue, size: 32),
+                                        color: TeaColors.infoSky, size: 32),
                                     const SizedBox(height: 8),
                                     Text(
                                       '${_bleDevices.length}',
@@ -482,7 +483,7 @@ class _DeviceManagementScreenState
                                     ),
                                     const Text('BLE Devices',
                                         style: TextStyle(
-                                            fontSize: 12, color: Colors.grey)),
+                                            fontSize: 12, color: TeaColors.mediumGray)),
                                   ],
                                 ),
                               ),
@@ -495,7 +496,7 @@ class _DeviceManagementScreenState
                                 child: Column(
                                   children: [
                                     const Icon(Icons.wifi,
-                                        color: Colors.green, size: 32),
+                                        color: TeaColors.healthyGreen, size: 32),
                                     const SizedBox(height: 8),
                                     Text(
                                       '${_wifiDevices.length}',
@@ -505,7 +506,7 @@ class _DeviceManagementScreenState
                                     ),
                                     const Text('WiFi Devices',
                                         style: TextStyle(
-                                            fontSize: 12, color: Colors.grey)),
+                                            fontSize: 12, color: TeaColors.mediumGray)),
                                   ],
                                 ),
                               ),
@@ -533,7 +534,7 @@ class _DeviceManagementScreenState
                         ..._bleDevices.map((d) => _buildDeviceCard(
                               d,
                               Icons.bluetooth,
-                              Colors.blue,
+                              TeaColors.infoSky,
                             )),
                       const SizedBox(height: 24),
                       // WiFi Devices
@@ -555,7 +556,7 @@ class _DeviceManagementScreenState
                         ..._wifiDevices.map((d) => _buildDeviceCard(
                               d,
                               Icons.wifi,
-                              Colors.green,
+                              TeaColors.healthyGreen,
                             )),
                     ],
                   ),
@@ -580,13 +581,13 @@ class _DeviceManagementScreenState
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color:
-                (isActive ? Colors.green : Colors.red).withOpacity(0.1),
+                (isActive ? TeaColors.healthyGreen : TeaColors.alertRust).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             isActive ? 'Active' : 'Inactive',
             style: TextStyle(
-              color: isActive ? Colors.green : Colors.red,
+              color: isActive ? TeaColors.healthyGreen : TeaColors.alertRust,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -721,7 +722,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Icon(icon, color: Colors.orange),
+        leading: Icon(icon, color: TeaColors.warmAmber),
         title: Text(title),
         trailing: Text(
           unit.isNotEmpty ? '$value $unit' : value,
@@ -769,7 +770,7 @@ class _DataSyncScreenState extends ConsumerState<DataSyncScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Sync completed successfully'),
-            backgroundColor: Colors.green,
+            backgroundColor: TeaColors.healthyGreen,
           ),
         );
       }
@@ -778,7 +779,7 @@ class _DataSyncScreenState extends ConsumerState<DataSyncScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Sync failed: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: TeaColors.alertRust,
           ),
         );
       }
@@ -814,7 +815,7 @@ class _DataSyncScreenState extends ConsumerState<DataSyncScreen> {
                           Icon(
                             _isSyncing ? Icons.sync : Icons.cloud_done,
                             size: 64,
-                            color: _isSyncing ? Colors.orange : Colors.green,
+                            color: _isSyncing ? TeaColors.warningAmber : TeaColors.healthyGreen,
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -828,8 +829,8 @@ class _DataSyncScreenState extends ConsumerState<DataSyncScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               color: _syncStatus?['status'] == 'synced'
-                                  ? Colors.green
-                                  : Colors.orange,
+                                  ? TeaColors.healthyGreen
+                                  : TeaColors.warningAmber,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -837,7 +838,7 @@ class _DataSyncScreenState extends ConsumerState<DataSyncScreen> {
                             Text(
                               'Last sync: ${_syncStatus!['last_sync']}',
                               style: const TextStyle(
-                                  fontSize: 12, color: Colors.grey),
+                                  fontSize: 12, color: TeaColors.mediumGray),
                             ),
                           const SizedBox(height: 16),
                           SizedBox(
@@ -886,7 +887,7 @@ class _DataSyncScreenState extends ConsumerState<DataSyncScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Icon(icon, color: Colors.teal),
+        leading: Icon(icon, color: TeaColors.leafLight),
         title: Text(title),
         trailing: Text(
           value,
@@ -946,10 +947,10 @@ class _SystemLogsScreenState extends ConsumerState<SystemLogsScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.description_outlined,
-                          size: 64, color: Colors.grey),
+                          size: 64, color: TeaColors.mediumGray),
                       SizedBox(height: 16),
                       Text('No activity logs available',
-                          style: TextStyle(color: Colors.grey)),
+                          style: TextStyle(color: TeaColors.mediumGray)),
                     ],
                   ),
                 )
@@ -1011,17 +1012,17 @@ class _SystemLogsScreenState extends ConsumerState<SystemLogsScreen> {
   Color _getLogColor(String type) {
     switch (type) {
       case 'scan':
-        return Colors.blue;
+        return TeaColors.infoSky;
       case 'auth':
-        return Colors.purple;
+        return TeaColors.clayPot;
       case 'device':
-        return Colors.teal;
+        return TeaColors.leafLight;
       case 'sync':
-        return Colors.green;
+        return TeaColors.healthyGreen;
       case 'error':
-        return Colors.red;
+        return TeaColors.alertRust;
       default:
-        return Colors.grey;
+        return TeaColors.mediumGray;
     }
   }
 }

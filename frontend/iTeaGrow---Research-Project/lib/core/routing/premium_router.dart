@@ -6,6 +6,7 @@ import '../../features/auth/presentation/screens/premium_login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/dashboard/presentation/screens/premium_farmer_dashboard.dart';
 import '../../features/dashboard/presentation/screens/manager_dashboard.dart';
+import '../../features/dashboard/presentation/screens/manager_users_screen.dart';
 import '../../features/dashboard/presentation/screens/admin_dashboard_simple.dart';
 import '../../features/disease_detection/presentation/screens/premium_disease_detection_screen.dart';
 import '../../features/soil_fertilization/presentation/screens/soil_fertilization_screen.dart';
@@ -175,6 +176,15 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
         path: '/dashboard/manager',
         pageBuilder: (context, state) => _buildPremiumTransition(
           child: const ManagerDashboard(),
+          state: state,
+        ),
+      ),
+
+      // Manager: User Overview (read-only)
+      GoRoute(
+        path: '/dashboard/manager/users',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const ManagerUsersScreen(),
           state: state,
         ),
       ),
