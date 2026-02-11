@@ -1,0 +1,216 @@
+
+.profile-container {
+    padding-bottom: 60px;
+}
+
+.profile-header {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.profile-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #fff 0%, #a8e063 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.profile-header p {
+    color: var(--text-muted);
+    margin: 0 auto;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--tea-fresh-leaf);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.back-link:hover {
+    color: white;
+    transform: translateX(-5px);
+}
+
+.profile-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-card {
+    padding: 40px;
+}
+
+.profile-user-info {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 35px;
+}
+
+.avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--tea-fresh-leaf), var(--tea-mature-leaf));
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 10px 20px rgba(74, 124, 89, 0.2);
+}
+
+.user-text h3 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.user-text span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 4px 0 10px;
+}
+
+.user-role-badge {
+    display: inline-block !important;
+    background: rgba(168, 224, 99, 0.1);
+    color: #a8e063;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid rgba(168, 224, 99, 0.2);
+}
+
+.status-message {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+}
+
+.status-message.success {
+    background: rgba(168, 224, 99, 0.1);
+    color: #a8e063;
+    border: 1px solid rgba(168, 224, 99, 0.2);
+}
+
+.status-message.error {
+    background: rgba(229, 115, 115, 0.1);
+    color: var(--tea-alert-rust);
+    border: 1px solid rgba(229, 115, 115, 0.2);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.password-section {
+    margin-top: 40px;
+    padding-top: 35px;
+    border-top: 1px solid var(--border);
+}
+
+.password-section h4 {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.password-section p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 25px;
+}
+
+.profile-form .input-container label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.profile-form .input-group {
+    position: relative;
+}
+
+.profile-form .input-group input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px 14px 45px;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.profile-form .input-group input:focus {
+    outline: none;
+    border-color: var(--tea-fresh-leaf);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.profile-form .input-group svg {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+}
+
+.profile-form .input-group input:focus + svg {
+    color: var(--tea-fresh-leaf);
+}
+
+.save-btn {
+    width: 100%;
+    background: var(--tea-fresh-leaf);
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+}
+
+.save-btn:hover:not(:disabled) {
+    background: var(--tea-mature-leaf);
+    transform: translateY(-2px);
+}
+
+.save-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-card {
+        padding: 25px;
+    }
+}

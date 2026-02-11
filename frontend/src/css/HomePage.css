@@ -1,0 +1,536 @@
+.home-container {
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+/* Hero Section */
+.hero-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 80px 0;
+    width: 100%;
+    text-align: left;
+    position: relative; /* Needed for absolute positioning if using that */
+}
+
+.hero-floating-cards {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 0.5;
+    margin-top: -60px; /* Bring it "little up" */
+}
+
+@media (min-width: 992px) {
+    .hero-section {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .hero-floating-cards {
+        margin-top: -100px; /* Bring it "little up" on desktop */
+    }
+}
+
+.float-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px 24px;
+    border-radius: 12px;
+    background: rgba(30, 40, 32, 0.4);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: float 4s ease-in-out infinite;
+}
+
+.float-card h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: white;
+    font-weight: 600;
+}
+
+.status-online {
+    color: var(--tea-fresh-leaf);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.icon-pulse {
+    color: var(--tea-fresh-leaf);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
+}
+
+.hero-content {
+    flex: 1;
+    width: 100%;
+    margin-bottom: 40px;
+}
+
+/* Remove 'badge' look if it's considered 'decorative' */
+.hero-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: var(--tea-golden-sunlight);
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.badge-dot {
+    display: none; /* Simplify */
+}
+
+.hero-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    line-height: 1.2;
+    color: var(--text-main);
+    text-shadow: none; /* Ensure no shadow */
+}
+
+/* Flatten highlight */
+.highlight-text {
+    color: var(--tea-golden-sunlight);
+    background: none;
+    -webkit-text-fill-color: initial;
+}
+
+.hero-subtitle {
+    font-size: 1.15rem;
+    color: #e0e0e0;
+    margin-bottom: 20px; /* Reduced margin to allow for spacing between paras */
+    line-height: 1.8;
+    max-width: 800px;
+    text-align: left;
+}
+
+.hero-subtitle:last-of-type {
+    margin-bottom: 40px; /* Larger gap before buttons */
+}
+
+.hero-actions {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: var(--tea-fresh-leaf);
+    color: white;
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: white;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #aaaaaa;
+    text-transform: uppercase;
+}
+
+.stat-separator {
+    display: none; /* Remove visual clutter */
+}
+
+/* Features Section */
+.features-section {
+    padding: 40px 0;
+}
+
+.section-header {
+    margin-bottom: 30px;
+}
+
+.section-header h2 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.feature-card {
+    background-color: rgba(20, 20, 20, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 24px;
+    border-radius: 12px;
+    height: 300px; /* Fixed height for consistency */
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-card:hover {
+    border-color: var(--tea-fresh-leaf);
+    background-color: rgba(20, 30, 20, 0.95);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    border-color: rgba(74, 124, 89, 0.4);
+}
+
+/* How It Works Section - "V-Formation" Layout */
+.how-it-works-section {
+    padding: 100px 20px 150px; /* Extra bottom padding for the drop */
+    background: transparent;
+    position: relative;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.center-text {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 60px;
+    position: relative;
+    z-index: 2;
+}
+
+.center-text h2 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: #ffffff;
+    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+}
+
+.steps-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    position: relative;
+    padding-top: 20px;
+}
+
+/* The Connecting Line (SVG Curve) */
+.steps-container::before {
+    content: '';
+    position: absolute;
+    top: 50px;
+    left: 16.666%; /* Center of first col */
+    right: 16.666%; /* Center of third col */
+    width: 66.666%; /* Span between centers */
+    height: 300px;
+    /* Dotted, Glowing Connector Line */
+    background-image: url("data:image/svg+xml,%3Csvg width='100%25' height='300' viewBox='0 0 800 300' fill='none' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'%3E%3Cpath d='M0 50 C 200 50, 200 250, 400 250 C 600 250, 600 50, 800 50' stroke='white' stroke-opacity='0.4' stroke-width='2' stroke-dasharray='10 10' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%; 
+    z-index: 0;
+    pointer-events: none;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+}
+
+.step-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 30px;
+    cursor: pointer;
+}
+
+/* V-Shape Staggering */
+.step-card:nth-child(1) { margin-top: 0; }
+.step-card:nth-child(2) { margin-top: 200px; }
+.step-card:nth-child(3) { margin-top: 0; }
+
+/* Unified Hover Effect - Scales the entire card */
+.step-card:hover {
+    transform: scale(1.08);
+}
+
+/* Proper Ghost View Numbers */
+.step-number {
+    font-size: 10rem; /* Massive ghost numbers */
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.15); /* More visible ghosting */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    font-family: 'Playfair Display', serif;
+    pointer-events: none;
+    transition: all 0.6s ease;
+    line-height: 1;
+}
+
+.step-card:hover .step-number {
+    color: rgba(74, 124, 89, 0.45); /* Clearly visible on hover */
+    transform: translate(-50%, -60%) scale(1.15); /* Subtle lift and grow */
+}
+
+.step-card h3 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #ffffff;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+    position: relative;
+    font-weight: 700;
+    transition: color 0.4s ease;
+}
+
+.step-card:hover h3 {
+    color: #a8e063; /* Subtle color shift on hover */
+}
+
+.step-card p {
+    color: #f0f0f0;
+    line-height: 1.6;
+    font-size: 1.15rem;
+    max-width: 320px;
+    margin: 0 auto;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+    font-weight: 500;
+    transition: transform 0.4s ease;
+}
+
+.step-card:hover p {
+    transform: translateY(-5px);
+}
+
+/* Mobile Responsiveness for V-Shape */
+@media (max-width: 900px) {
+    .how-it-works-section {
+        padding: 60px 20px;
+    }
+
+    .steps-container {
+        grid-template-columns: 1fr; /* Stack vertically */
+        gap: 60px;
+    }
+
+    .steps-container::before {
+        display: none; /* Hide connector on mobile */
+    }
+
+    .step-card:nth-of-type(2) {
+        margin-top: 0; /* Reset margin */
+    }
+}
+/* Mission Section - Enhanced Hook Style */
+.mission-section {
+    padding: 120px 20px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.mission-content-hook {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px;
+    position: relative; /* Maintain relative positioning for absolute child */
+    z-index: 1;
+}
+
+.mission-content-hook::before {
+    content: '';
+    position: absolute;
+    top: 46%; /* Adjusted lower as requested */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px; /* Reduced further for a more subtle, centered look */
+    height: 260px;
+    background-image: url('/symboltea1.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.45; /* Significantly increased for high clarity */
+    z-index: -1;
+    pointer-events: none;
+    filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.25));
+}
+
+.mission-content-hook h2 {
+    font-size: 3.5rem;
+    margin-bottom: 30px;
+    color: #ffffff;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+}
+
+.hook-text {
+    font-size: 1.3rem;
+    color: #f0f0f0;
+    line-height: 1.8;
+    margin-bottom: 40px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    font-weight: 500;
+}
+
+.mission-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.link-secondary {
+    color: var(--tea-fresh-leaf);
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid transparent;
+}
+
+.link-secondary:hover {
+    color: #a8e063;
+    border-bottom: 1px solid #a8e063;
+}
+
+.feature-main {
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-icon-wrapper {
+    margin-bottom: 20px;
+    color: var(--tea-fresh-leaf);
+    background: rgba(74, 124, 89, 0.1);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.feature-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+    color: white;
+    font-weight: 600;
+}
+
+.feature-card p {
+    color: #cccccc;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Hover Details Overlay */
+.feature-details {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(20, 30, 20, 0.95);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(5px);
+}
+
+.feature-card:hover .feature-details {
+    transform: translateY(0);
+}
+
+.feature-details h4 {
+    color: var(--tea-fresh-leaf);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    font-weight: 700;
+}
+
+.feature-details ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.feature-details li {
+    font-size: 0.9rem;
+    color: #e0e0e0;
+    margin-bottom: 10px;
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.4;
+}
+
+.feature-details li::before {
+    content: "•";
+    color: var(--tea-fresh-leaf);
+    position: absolute;
+    left: 0;
+    top: 0;
+}

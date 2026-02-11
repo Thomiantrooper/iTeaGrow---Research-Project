@@ -2,11 +2,7 @@
 /node_modules/
 /**/node_modules/
 
-# Environment files
-.env
-backend/.env
-frontend/.env
-**/.env
+
 
 # Build output
 dist/

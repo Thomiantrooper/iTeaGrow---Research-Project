@@ -11,10 +11,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const path = require('path');
+const contactRoutes = require('./routes/contact.routes');
+const authRoutes = require('./routes/auth.routes');
 
-// ... (imports remain)
+const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 app.use(express.json());
+app.use('/api/contact', contactRoutes);
+app.use('/api/auth', authRoutes);
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === 'production') {
@@ -29,6 +33,9 @@ if (process.env.NODE_ENV === 'production') {
     res.send('API is running...');
   });
 }
+
+app.use(notFound);
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -1,60 +1,298 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+
+/* Dashboard.css - Expanded & Clean */
+.dashboard-container {
+    padding: 30px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-.container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 50vh;
+.dashboard-header {
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
 }
 
-h1 {
-  font-size: 5rem;
-  font-weight: 700;
-  color: #e8f5e9;
-  text-align: center;
-  margin-bottom: 0px;
-  margin-top: 0px;
-  animation: glow 2s ease-in-out infinite alternate;
+.dashboard-header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+    color: var(--tea-white);
+    font-weight: 700;
 }
 
-@keyframes glow {
-  from {
-    text-shadow: 0 0 5px #2e7d32, 0 0 10px #2e7d32;
-  }
-  to {
-    text-shadow: 0 0 10px #4caf50, 0 0 20px #4caf50;
-  }
+.dashboard-subtitle {
+    color: var(--tea-medium-gray);
+    font-size: 1rem;
 }
 
-p {
-  font-size: 2rem;
-  margin-top: 20px;
-  opacity: 0.8;
-  letter-spacing: 2px;
-  font-weight: 300;
-  overflow: hidden; /* Ensures the content is not revealed until the animation */
-  border-right: .15em solid orange; /* The typwriter cursor */
-  white-space: nowrap; /* Keeps the content on a single line */
-  margin: 0 auto; /* Gives that scrolling effect as the typing happens */
-  animation: 
-    typing 3.5s steps(11, end),
-    blink-caret .75s step-end infinite;
+.header-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
 }
 
-/* The typing effect */
-@keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
+
+.system-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(46, 204, 113, 0.2); /* Brighter green background */
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: #2ecc71; /* Brighter green text */
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid rgba(46, 204, 113, 0.3); /* Add border for definition */
+    backdrop-filter: blur(4px);
 }
 
-/* The typewriter cursor effect */
-@keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: #81c784; }
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #2ecc71;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #2ecc71; /* Stronger glow */
+}
+
+.last-updated {
+    font-size: 0.9rem;
+    color: #ddd; /* Much lighter gray for visibility */
+    font-weight: 500;
+    background: rgba(0,0,0,0.4);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+/* Stats Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.dashboard-card {
+    background: rgba(20, 30, 20, 0.7); /* Darker glass for better contrast */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 24px;
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+}
+
+.stat-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.stat-card:hover {
+    background: rgba(40, 50, 40, 0.8);
+    transform: translateY(-2px);
+}
+
+.stat-icon-wrapper {
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon-wrapper.blue { color: #4facfe; background: rgba(79, 172, 254, 0.1); }
+.stat-icon-wrapper.green { color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
+.stat-icon-wrapper.orange { color: #f39c12; background: rgba(243, 156, 18, 0.1); }
+.stat-icon-wrapper.purple { color: #9b59b6; background: rgba(155, 89, 182, 0.1); }
+
+.stat-content {
+    flex: 1;
+}
+
+.card-title {
+    font-size: 0.95rem;
+    color: #ddd; /* Lightened from #aaa */
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.card-value-group {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+}
+
+.stat-trend {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.stat-trend.positive { color: #2ecc71; }
+.stat-trend.negative { color: #e74c3c; }
+
+.card-sub {
+    font-size: 0.85rem;
+    color: #ccc; /* Lightened from #666 */
+}
+
+/* Secondary Grid */
+.dashboard-secondary-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 992px) {
+    .dashboard-secondary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.section-icon {
+    color: var(--tea-fresh-leaf);
+    margin-right: 12px;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
+}
+
+/* Activity List */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    transition: background 0.2s ease;
+}
+
+.activity-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.activity-icon {
+    color: #ccc; /* Lightened from #aaa */
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.activity-icon.warning { color: #f39c12; }
+.activity-icon.bg-success { color: #2ecc71; }
+
+.activity-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.activity-text {
+    font-size: 0.95rem;
+    color: #eee; /* Lightened from #ddd */
+    margin-bottom: 4px;
+}
+
+.activity-text strong {
+    color: white;
+    font-weight: 600;
+}
+
+.activity-time {
+    font-size: 0.8rem;
+    color: #bbb; /* Lightened from #777 */
+}
+
+/* Health Metrics */
+.health-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.health-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.health-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #ddd; /* Lightened from #ccc */
+}
+
+.health-value {
+    color: white;
+    font-weight: 600;
+}
+
+.health-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.health-bar-fill {
+    height: 100%;
+    background: var(--tea-fresh-leaf);
+    border-radius: 3px;
+}
+
+.health-bar-fill.warning {
+    background: #f39c12;
+}
+
+.health-status {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.health-status-icon {
+    color: var(--tea-fresh-leaf);
+    opacity: 0.8;
+}
+
+.health-status h4 {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    color: white; /* Ensure heading is white */
+}
+
+.health-status p {
+    font-size: 0.9rem;
+    color: #bbb; /* Lightened from #888 */
 }

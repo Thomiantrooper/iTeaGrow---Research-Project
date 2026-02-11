@@ -1,0 +1,296 @@
+
+.contact-container {
+    padding-top: 100px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.contact-header {
+    text-align: center;
+    max-width: 800px;
+    margin-bottom: 60px;
+    padding: 0 20px;
+}
+
+.contact-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem;
+    color: white;
+    margin-bottom: 16px;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.005); opacity: 0.95; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(500%); }
+}
+
+.contact-header p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.6;
+}
+
+.contact-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 40px;
+    width: 100%;
+    max-width: 1200px;
+    margin-bottom: 80px;
+    padding: 0 40px;
+}
+
+/* Glass Panels */
+.contact-info-panel, .contact-form-panel {
+    background: rgba(20, 30, 20, 0.75);
+    backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 28px;
+    padding: 48px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.contact-form-panel.submitting {
+    animation: pulse 2s infinite ease-in-out;
+}
+
+.contact-form-panel.submitting::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #a8e063, transparent);
+    animation: scanline 2s infinite linear;
+    z-index: 10;
+}
+
+/* Info Panel Styling */
+.contact-info-panel h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: white;
+    margin-bottom: -10px;
+}
+
+.location-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.detail-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    background: rgba(168, 224, 99, 0.1);
+    border: 1px solid rgba(168, 224, 99, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a8e063;
+    flex-shrink: 0;
+}
+
+.detail-text h4 {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.detail-text p {
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Map Styling */
+.map-container {
+    width: 100%;
+    height: 250px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    margin-top: 10px;
+}
+
+.map-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    filter: invert(90%) hue-rotate(100deg) brightness(0.8) contrast(1.2); /* Dark Map style */
+}
+
+.google-maps-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: white;
+    color: #212121;
+    padding: 14px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.google-maps-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+}
+
+/* Form Panel Styling */
+.form-status {
+    padding: 16px;
+    border-radius: 16px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-status.success {
+    background: rgba(168, 224, 99, 0.1);
+    color: #a8e063;
+    border: 1px solid rgba(168, 224, 99, 0.2);
+}
+
+.form-status.error {
+    background: rgba(255, 87, 87, 0.1);
+    color: #ff8a80;
+    border: 1px solid rgba(255, 87, 87, 0.2);
+}
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-container label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-left: 4px;
+}
+
+.contact-input, .contact-textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 16px;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact-input:focus, .contact-textarea:focus {
+    border-color: #a8e063;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 4px rgba(168, 224, 99, 0.1);
+}
+
+.contact-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, #4A7C59, #2D5A3D);
+    color: white;
+    padding: 18px;
+    border-radius: 14px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-shadow: 0 8px 30px rgba(74, 124, 89, 0.3);
+    margin-top: 8px;
+}
+
+.submit-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(74, 124, 89, 0.5);
+}
+
+.submit-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+@media (max-width: 1024px) {
+    .contact-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .contact-header h1 {
+        font-size: 2.5rem;
+    }
+    
+    .contact-layout {
+        padding: 0 20px;
+    }
+    
+    .contact-info-panel, .contact-form-panel {
+        padding: 32px 24px;
+    }
+}

@@ -1,0 +1,163 @@
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.navbar.scrolled {
+    background: rgba(30, 40, 32, 0.85); /* Dark Surface with opacity */
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    height: 70px;
+}
+
+.navbar-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+}
+
+.navbar-logo span {
+    text-shadow: 0 0 12px rgba(74, 124, 89, 0.8), 0 0 25px rgba(74, 124, 89, 0.5);
+}
+
+.logo-icon {
+    color: var(--tea-fresh-leaf);
+    fill: rgba(74, 124, 89, 0.4);
+    filter: drop-shadow(0 0 8px rgba(74, 124, 89, 0.8));
+}
+
+.logo-symbol {
+    height: 40px; /* Increased for better visibility */
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(74, 124, 89, 0.8));
+    opacity: 0.95;
+    margin-left: 5px;
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.nav-link {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--text-main);
+}
+
+.btn-nav-primary {
+    background-color: var(--tea-fresh-leaf);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px; /* Reduced border radius */
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    /* box-shadow removed */
+}
+
+.btn-nav-primary:hover {
+    background-color: var(--tea-mature-leaf);
+    /* transform removed to keep it flat */
+    /* box-shadow removed */
+}
+
+.mobile-toggle {
+    display: none;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .mobile-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--surface);
+        flex-direction: column;
+        padding: 20px 0;
+        border-bottom: 1px solid var(--border);
+        transform: translateY(-200%);
+        transition: transform 0.3s ease;
+        z-index: -1;
+    }
+
+    .nav-menu.active {
+        transform: translateY(0);
+    }
+}
+
+/* User Controls */
+.nav-user-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 16px;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-user-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-main);
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.nav-user-link:hover {
+    color: var(--tea-fresh-leaf);
+}
+
+.nav-logout-btn {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 4px;
+}
+
+.nav-logout-btn:hover {
+    color: var(--tea-alert-rust);
+    transform: scale(1.1);
+}
