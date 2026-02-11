@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/design_system/tea_colors.dart';
+import '../../../../core/design_system/tea_typography.dart';
+import '../../../../core/design_system/tea_spacing.dart';
+import '../../../../core/widgets/cards/tea_card.dart';
 import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
 
@@ -63,22 +67,22 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Scan History',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TeaTypography.titleLarge.copyWith(color: TeaColors.white),
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: AppTheme.primaryGreen,
-        foregroundColor: Colors.white,
+        backgroundColor: TeaColors.freshLeaf,
+        foregroundColor: TeaColors.white,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
+          indicatorColor: TeaColors.white,
           indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          labelColor: TeaColors.white,
+          unselectedLabelColor: TeaColors.white.withOpacity(0.7),
           tabs: const [
             Tab(icon: Icon(Icons.history), text: 'History'),
             Tab(icon: Icon(Icons.bar_chart), text: 'Analytics'),
@@ -110,11 +114,11 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+          Icon(Icons.error_outline, size: 64, color: TeaColors.mediumGray),
           const SizedBox(height: 16),
           Text(
             _error!,
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(color: TeaColors.darkGray),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -123,8 +127,8 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
             icon: const Icon(Icons.refresh),
             label: const Text('Retry'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
-              foregroundColor: Colors.white,
+              backgroundColor: TeaColors.freshLeaf,
+              foregroundColor: TeaColors.white,
             ),
           ),
         ],
@@ -138,20 +142,20 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, size: 80, color: Colors.grey.shade300),
+            Icon(Icons.history, size: 80, color: TeaColors.lightGray),
             const SizedBox(height: 16),
             Text(
               'No scan history yet',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey.shade600,
+                color: TeaColors.darkGray,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Start scanning tea leaves to see your history here',
-              style: TextStyle(color: Colors.grey.shade500),
+              style: TextStyle(color: TeaColors.darkGray),
             ),
           ],
         ),
@@ -172,16 +176,16 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
 
   Widget _buildHistoryItem(DiseaseDetectionResult detection, int index) {
     final isHealthy = detection.diseaseType == 'Healthy';
-    final statusColor = isHealthy ? AppTheme.statusGood : AppTheme.statusCritical;
+    final statusColor = isHealthy ? TeaColors.healthyGreen : TeaColors.alertRust;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: TeaColors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: TeaColors.shadowVale,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -231,7 +235,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                             'Confidence: ${(detection.confidence * 100).toStringAsFixed(1)}%',
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey.shade600,
+                              color: TeaColors.darkGray,
                             ),
                           ),
                           if (detection.severity.isNotEmpty) ...[
@@ -259,7 +263,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                         _formatDateTime(detection.timestamp),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade400,
+                          color: TeaColors.mediumGray,
                         ),
                       ),
                     ],
@@ -269,19 +273,19 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                 if (detection.temperature != null)
                   Column(
                     children: [
-                      Icon(Icons.thermostat, size: 16, color: Colors.orange.shade400),
+                      Icon(Icons.thermostat, size: 16, color: TeaColors.warningAmber),
                       Text(
                         '${detection.temperature!.toStringAsFixed(0)}°',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey.shade600,
+                          color: TeaColors.darkGray,
                         ),
                       ),
                     ],
                   ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Icons.picture_as_pdf, color: Colors.green.shade400, size: 20),
+                  icon: Icon(Icons.picture_as_pdf, color: TeaColors.healthyGreen, size: 20),
                   tooltip: 'Generate Report',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -320,11 +324,11 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
           // Summary cards
           Row(
             children: [
-              Expanded(child: _buildStatCard('Total Scans', totalScans.toString(), Icons.search, Colors.blue)),
+              Expanded(child: _buildStatCard('Total Scans', totalScans.toString(), Icons.search, TeaColors.infoSky)),
               const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('Healthy', healthyCount.toString(), Icons.check_circle, AppTheme.statusGood)),
+              Expanded(child: _buildStatCard('Healthy', healthyCount.toString(), Icons.check_circle, TeaColors.healthyGreen)),
               const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('Infected', infectedCount.toString(), Icons.warning, AppTheme.statusCritical)),
+              Expanded(child: _buildStatCard('Infected', infectedCount.toString(), Icons.warning, TeaColors.alertRust)),
             ],
           ),
 
@@ -353,7 +357,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: TeaColors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -380,7 +384,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: TeaColors.darkGray,
             ),
           ),
         ],
@@ -394,12 +398,12 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primaryGreen.withOpacity(0.1),
-            AppTheme.primaryGreen.withOpacity(0.05),
+            TeaColors.freshLeaf.withOpacity(0.1),
+            TeaColors.freshLeaf.withOpacity(0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.2)),
+        border: Border.all(color: TeaColors.freshLeaf.withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -415,7 +419,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: healthRate >= 70 ? AppTheme.statusGood : AppTheme.statusCritical,
+                  color: healthRate >= 70 ? TeaColors.healthyGreen : TeaColors.alertRust,
                 ),
               ),
             ],
@@ -426,9 +430,9 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
             child: LinearProgressIndicator(
               value: healthRate / 100,
               minHeight: 12,
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: TeaColors.lightGray,
               valueColor: AlwaysStoppedAnimation<Color>(
-                healthRate >= 70 ? AppTheme.statusGood : AppTheme.statusCritical,
+                healthRate >= 70 ? TeaColors.healthyGreen : TeaColors.alertRust,
               ),
             ),
           ),
@@ -439,21 +443,21 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
 
   Widget _buildDiseaseDistributionChart(List distribution) {
     final colors = [
-      AppTheme.statusGood,
-      AppTheme.statusCritical,
-      Colors.orange,
-      Colors.purple,
-      Colors.teal,
+      TeaColors.healthyGreen,
+      TeaColors.alertRust,
+      TeaColors.warningAmber,
+      TeaColors.infoSky,
+      TeaColors.leafLight,
     ];
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: TeaColors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: TeaColors.shadowVale,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -486,7 +490,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                           titleStyle: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: TeaColors.white,
                           ),
                           radius: 50,
                         );
@@ -543,11 +547,11 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: TeaColors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: TeaColors.shadowVale,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -561,11 +565,11 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
-          _buildSeverityBar('Low', low, total, AppTheme.statusGood),
+          _buildSeverityBar('Low', low, total, TeaColors.healthyGreen),
           const SizedBox(height: 12),
-          _buildSeverityBar('Medium', medium, total, AppTheme.statusWarning),
+          _buildSeverityBar('Medium', medium, total, TeaColors.warningAmber),
           const SizedBox(height: 12),
-          _buildSeverityBar('High', high, total, AppTheme.statusCritical),
+          _buildSeverityBar('High', high, total, TeaColors.alertRust),
         ],
       ),
     );
@@ -600,7 +604,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
           child: LinearProgressIndicator(
             value: percentage,
             minHeight: 10,
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: TeaColors.lightGray,
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -620,7 +624,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
         builder: (context, scrollController) {
           return Container(
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: TeaColors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
@@ -630,7 +634,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: TeaColors.lightGray,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -666,7 +670,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.check_circle, size: 18, color: AppTheme.primaryGreen),
+                                const Icon(Icons.check_circle, size: 18, color: TeaColors.freshLeaf),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text(r)),
                               ],
@@ -687,7 +691,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
 
   Widget _buildDetailHeader(DiseaseDetectionResult detection) {
     final isHealthy = detection.diseaseType == 'Healthy';
-    final statusColor = isHealthy ? AppTheme.statusGood : AppTheme.statusCritical;
+    final statusColor = isHealthy ? TeaColors.healthyGreen : TeaColors.alertRust;
 
     return Row(
       children: [
@@ -718,7 +722,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
               ),
               Text(
                 isHealthy ? 'Healthy Tea Leaf' : 'Disease Detected',
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(color: TeaColors.darkGray),
               ),
             ],
           ),
@@ -742,7 +746,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: TeaColors.leafPale,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -761,7 +765,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
         children: [
           Text(
             label,
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(color: TeaColors.darkGray),
           ),
           Text(
             value,
@@ -775,13 +779,13 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
   Color _getSeverityColor(String severity) {
     switch (severity) {
       case 'Low':
-        return AppTheme.statusGood;
+        return TeaColors.healthyGreen;
       case 'Medium':
-        return AppTheme.statusWarning;
+        return TeaColors.warningAmber;
       case 'High':
-        return AppTheme.statusCritical;
+        return TeaColors.alertRust;
       default:
-        return Colors.grey;
+        return TeaColors.mediumGray;
     }
   }
 
