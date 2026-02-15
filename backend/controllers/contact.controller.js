@@ -1,5 +1,6 @@
 const Contact = require('../models/contact.model');
 const asyncHandler = require('express-async-handler');
+const sendEmail = require('../utils/email');
 
 // @desc    Submit a contact form
 // @route   POST /api/contact
@@ -50,8 +51,6 @@ exports.replyToContact = asyncHandler(async (req, res) => {
     }
 
     try {
-        const sendEmail = require('../utils/email'); // Import email utility
-
         const emailOptions = {
             email: contact.email,
             subject: subject,
@@ -113,7 +112,13 @@ exports.replyToContact = asyncHandler(async (req, res) => {
             ];
         }
 
-        await sendEmail(emailOptions);
+        try {
+            await sendEmail(emailOptions);
+        } catch (emailError) {
+            console.error('Failed to send reply email:', emailError);
+            res.status(500);
+            throw new Error(`Email delivery failed: ${emailError.message}`);
+        }
 
         // Update status to Replied and save reply history
         contact.status = 'Replied';

@@ -10,27 +10,42 @@ const sendEmail = async (options) => {
         throw new Error('Server email credentials are not configured.');
     }
 
-    // intrinsic create reusable transporter object using the default SMTP transport
+    // Create reusable transporter object using the default SMTP transport
     const transporter = nodemailer.createTransport({
-        service: 'gmail', // Use Gmail as the service
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
             user: emailUser,
             pass: emailPass
+        },
+        // Timeout settings to prevent infinite hangs
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
+        tls: {
+            rejectUnauthorized: false // Often needed in cloud environments
         }
     });
 
     // Define email options
     const mailOptions = {
-        from: `iTeaGrow Admin <${process.env.EMAIL_USERNAME}>`,
+        from: `"iTeaGrow Admin" <${emailUser}>`,
         to: options.email,
         subject: options.subject,
         text: options.message,
         html: options.html,
-        attachments: options.attachments // Add attachments support
+        attachments: options.attachments
     };
 
-    // Send email
-    await transporter.sendMail(mailOptions);
+    // Send email with catch to ensure we don't hang the parent process
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Nodemailer Error Details:', error);
+        throw error; // Rethrow to be caught by the controller
+    }
 };
 
 module.exports = sendEmail;
