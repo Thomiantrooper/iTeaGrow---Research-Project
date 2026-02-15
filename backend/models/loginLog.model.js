@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const loginLogSchema = mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
+        required: false,
         ref: 'User'
     },
     email: {

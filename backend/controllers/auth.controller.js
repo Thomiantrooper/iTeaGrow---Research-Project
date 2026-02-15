@@ -21,14 +21,18 @@ const loginUser = asyncHandler(async (req, res) => {
     if (user && (await user.matchPassword(password))) {
         console.log(`User attempting login: ${user.email} | Role: ${user.role}`); 
 
-        // Log the successful login
-        await LoginLog.create({
-            user: user._id,
-            email: user.email,
-            ipAddress: req.ip,
-            userAgent: req.headers['user-agent'],
-            status: 'success'
-        });
+        try {
+            // Log the successful login
+            await LoginLog.create({
+                user: user._id,
+                email: user.email,
+                ipAddress: req.ip,
+                userAgent: req.headers['user-agent'],
+                status: 'success'
+            });
+        } catch (error) {
+            console.error("Login logging failed:", error);
+        }
 
         res.json({
             _id: user._id,
@@ -39,15 +43,18 @@ const loginUser = asyncHandler(async (req, res) => {
             token: generateToken(user._id),
         });
     } else {
-        // Log failed attempt (optional, but good for security)
-        // Note: We don't have a user ID if user is not found, so we just log email/ip
-        await LoginLog.create({
-            user: user ? user._id : null, // user might be null here if not found
-            email: email, 
-            ipAddress: req.ip,
-            userAgent: req.headers['user-agent'],
-            status: 'failed'
-        });
+        try {
+            // Log failed attempt (optional, but good for security)
+            await LoginLog.create({
+                user: user ? user._id : null,
+                email: email, 
+                ipAddress: req.ip,
+                userAgent: req.headers['user-agent'],
+                status: 'failed'
+            });
+        } catch (error) {
+            console.error("Login logging failed:", error);
+        }
 
         res.status(401);
         throw new Error('Invalid email or password');
@@ -96,6 +103,11 @@ const registerAdmin = asyncHandler(async (req, res) => {
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password, phone } = req.body;
 
+    if (!name || !email || !password || !phone) {
+        res.status(400);
+        throw new Error('Please fill in all fields');
+    }
+
     // Domain Validation
     const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'my.sliit.lk'];
     const emailDomain = email.split('@')[1]?.toLowerCase();
@@ -108,6 +120,12 @@ const registerUser = asyncHandler(async (req, res) => {
     if (emailDomain === 'iteagrow.com') {
         res.status(400);
         throw new Error('iteagrow.com domain is restricted.');
+    }
+
+    // Phone Number Validation
+    if (phone && !/^\+?[0-9]+$/.test(phone)) {
+        res.status(400);
+        throw new Error('Phone number must contain only numbers (and optional +).');
     }
 
     const userExists = await User.findOne({ email });
@@ -149,7 +167,16 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     if (user) {
         user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
-        user.phoneNumber = req.body.phone || user.phoneNumber;
+        
+        if (req.body.phone) {
+             if (!/^\+?[0-9]+$/.test(req.body.phone)) {
+                res.status(400);
+                throw new Error('Phone number must contain only numbers (and optional +).');
+            }
+            user.phoneNumber = req.body.phone;
+        } else {
+            user.phoneNumber = user.phoneNumber;
+        }
         
         if (req.body.password) {
             user.password = req.body.password;

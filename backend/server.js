@@ -1,24 +1,61 @@
 
+const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 connectDB();
 
 const app = express();
+const cors = require('cors');
 const PORT = process.env.PORT || 5000;
 
-const path = require('path');
+app.use(cors());
+app.use(express.json());
+
 const contactRoutes = require('./routes/contact.routes');
 const authRoutes = require('./routes/auth.routes');
-
+const alertRoutes = require('./routes/alert.routes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
-
-app.use(express.json());
 app.use('/api/contact', contactRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/users', require('./routes/user.routes'));
+app.use('/api/admin', alertRoutes);
+
+// Health Check Endpoint
+app.use('/api/health', (req, res) => {
+  const mongoose = require('mongoose');
+  const os = require('os');
+  const states = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting',
+  };
+  const state = mongoose.connection.readyState;
+  
+  // Get local IP address
+  const networkInterfaces = os.networkInterfaces();
+  const addresses = [];
+  for (const interfaceName in networkInterfaces) {
+    for (const iface of networkInterfaces[interfaceName]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        addresses.push(iface.address);
+      }
+    }
+  }
+
+  res.status(200).json({
+    status: 'success',
+    dbState: state,
+    dbStateString: states[state],
+    timestamp: new Date(),
+    uptime: process.uptime(),
+    ip: addresses[0] || '127.0.0.1'
+  });
+});
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === 'production') {

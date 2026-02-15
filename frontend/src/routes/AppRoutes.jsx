@@ -8,6 +8,9 @@ import ProfilePage from '../pages/ProfilePage';
 import AdminLayout from '../layouts/AdminLayout';
 import AdminDashboard from '../pages/admin/Dashboard';
 import UserManagement from '../pages/admin/UserManagement';
+import DummyPage from '../pages/admin/DummyPage';
+import Feedback from '../pages/admin/Feedback';
+import SystemHealth from '../pages/admin/SystemHealth';
 import LoginPage from '../pages/LoginPage';
 import ProtectedRoute from '../components/ProtectedRoute';
 
@@ -36,11 +39,15 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
+          <Route path="devices" element={<DummyPage title="Device Tracking" description="Tracking active IoT devices and sensor nodes across the estate." />} />
+          <Route path="data" element={<DummyPage title="Data Collection" description="Collecting environmental data including soil moisture, temperature, and humidity." />} />
+          <Route path="health" element={<SystemHealth />} />
+          <Route path="issues" element={<DummyPage title="Issues & Bugs" description="Tracking system issues, error logs, and user-reported bugs." />} />
+          <Route path="feedback" element={<Feedback />} />
         </Route>
       </Route>
     </Routes>
   );
 };
-
 
 export default AppRoutes;
