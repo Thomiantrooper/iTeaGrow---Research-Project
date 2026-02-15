@@ -48,3 +48,29 @@ SendGrid email sent successfully: 202
 - **"SendGrid delivery failed"**: Check that your sender email is verified in SendGrid
 - **"Unauthorized"**: Double-check the API key in Railway variables
 - **Still using Gmail**: Make sure `NODE_ENV=production` is set in Railway
+
+---
+
+## 🔑 API Credentials (Private Repository Only)
+
+> ⚠️ **SECURITY NOTE**: These credentials are stored here because this is a **private repository**. Never share these keys publicly or commit them to public repos.
+
+### SendGrid Web API Key:
+```
+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
+```
+
+### SendGrid SMTP API Key:
+```
+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
+```
+
+### Resend API Key:
+```
+re_33TRBbrS_Hvxqz9sFj8obm49vaHw34Ga
+```
+
+### Usage:
+- **For Railway**: Use the **Web API Key** in the `SENDGRID_API_KEY` environment variable
+- **For SMTP**: The SMTP key is an alternative if you prefer SMTP-based sending (not recommended for Railway)
+- **Resend**: Alternative email service (currently not implemented in the codebase)
