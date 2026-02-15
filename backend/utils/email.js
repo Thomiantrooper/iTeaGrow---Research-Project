@@ -10,7 +10,7 @@ const sendEmail = async (options) => {
         throw new Error('Server email credentials are not configured.');
     }
 
-    // Create reusable transporter object using the default SMTP transport
+    // Create reusable transporter object with Railway-optimized settings
     const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 587,
@@ -19,13 +19,22 @@ const sendEmail = async (options) => {
             user: emailUser,
             pass: emailPass
         },
-        // Timeout settings to prevent infinite hangs
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 10000,
-        socketTimeout: 10000,
+        // Increased timeouts for Railway's network latency
+        connectionTimeout: 30000, // 30 seconds (Railway can be slow)
+        greetingTimeout: 30000,
+        socketTimeout: 30000,
+        // Connection pooling for better reliability
+        pool: true,
+        maxConnections: 1,
+        maxMessages: 3,
+        // TLS settings for cloud environments
         tls: {
-            rejectUnauthorized: false
-        }
+            rejectUnauthorized: false,
+            ciphers: 'SSLv3'
+        },
+        // Debug mode in development
+        debug: process.env.NODE_ENV !== 'production',
+        logger: process.env.NODE_ENV !== 'production'
     });
 
     // Define email options
@@ -38,12 +47,30 @@ const sendEmail = async (options) => {
         attachments: options.attachments
     };
 
-    // Send email with catch to ensure we don't hang the parent process
+    // Send email with enhanced error handling
     try {
-        await transporter.sendMail(mailOptions);
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully:', info.messageId);
+        return info;
     } catch (error) {
         console.error('Nodemailer Error Details:', error);
-        throw error; // Rethrow to be caught by the controller
+        
+        // Provide specific error guidance
+        let errorMessage = 'Email delivery failed: ';
+        
+        if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKET') {
+            errorMessage += 'Connection timeout. Gmail SMTP may be blocked on Railway. ';
+            errorMessage += 'Solutions: 1) Verify App Password is correct, 2) Enable "Less secure app access" in Gmail, ';
+            errorMessage += '3) Check Railway logs for network issues, 4) Consider using SendGrid/Mailgun instead of Gmail.';
+        } else if (error.code === 'EAUTH') {
+            errorMessage += 'Authentication failed. Check that ADMIN_PASSWORD is a valid Gmail App Password (not your regular password).';
+        } else if (error.code === 'ECONNECTION') {
+            errorMessage += 'Cannot connect to Gmail SMTP. Railway may be blocking outbound port 587.';
+        } else {
+            errorMessage += error.message;
+        }
+        
+        throw new Error(errorMessage);
     }
 };
 
