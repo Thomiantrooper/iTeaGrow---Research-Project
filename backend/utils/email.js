@@ -19,6 +19,8 @@ const sendEmail = async (options) => {
             user: emailUser,
             pass: emailPass
         },
+        // CRITICAL: Force IPv4 to avoid Railway's IPv6 network unreachable error
+        dnsFamily: 4,
         // Increased timeouts for Railway's network latency
         connectionTimeout: 30000, // 30 seconds (Railway can be slow)
         greetingTimeout: 30000,
