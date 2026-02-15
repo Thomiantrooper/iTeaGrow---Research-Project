@@ -85,8 +85,37 @@ const createUser = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Get user statistics
+// @route   GET /api/users/stats
+// @access  Private/Admin
+const getUserStats = asyncHandler(async (req, res) => {
+    const total = await User.countDocuments();
+    
+    // Get breakdown by role
+    const breakdown = await User.aggregate([
+        {
+            $group: {
+                _id: '$role',
+                count: { $sum: 1 }
+            }
+        }
+    ]);
+    
+    // Convert array to object for easier frontend consumption
+    const roleBreakdown = {};
+    breakdown.forEach(item => {
+        roleBreakdown[item._id] = item.count;
+    });
+    
+    res.json({
+        total,
+        breakdown: roleBreakdown
+    });
+});
+
 module.exports = {
     getUsers,
     deleteUser,
-    createUser
+    createUser,
+    getUserStats
 };

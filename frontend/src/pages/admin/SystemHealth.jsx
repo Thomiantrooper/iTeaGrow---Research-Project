@@ -162,59 +162,86 @@ const SystemHealth = () => {
                     <h1 style={{ fontSize: '2.5rem', background: 'linear-gradient(90deg, #fff, #aaa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>System Health</h1>
                     <p className="dashboard-subtitle" style={{ fontSize: '1.1rem' }}>Real-time infrastructure monitoring & status.</p>
                 </div>
-                <div className="header-actions">
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        {/* Wake Disease AI Button */}
-                        {/* Unified Wake AI Button */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {/* Wake All Systems - Icon Button */}
                         <button 
                             onClick={() => { 
                                 setTerminalHistory(prev => [...prev, { type: 'info', content: `[${new Date().toLocaleTimeString()}] Initiating Manual Wake-Up for All Systems...` }]);
                                 refreshAll();
                             }} 
-                            className="btn"
                             disabled={aiRefreshing || yieldRefreshing || maturityRefreshing || webAppRefreshing}
+                            title="Wake All Systems"
                             style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '6px', 
-                                padding: '10px 16px', 
-                                fontSize: '0.85rem',
-                                background: 'rgba(46, 204, 113, 0.1)',
-                                color: (aiRefreshing || yieldRefreshing || maturityRefreshing || webAppRefreshing) ? '#2ecc71' : '#ccc',
-                                border: '1px solid rgba(46, 204, 113, 0.2)',
-                                borderRadius: '8px',
-                                transition: 'all 0.3s',
-                                cursor: 'pointer'
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(46, 204, 113, 0.3)',
+                                color: '#2ecc71',
+                                padding: '10px',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.3s ease',
+                                opacity: (aiRefreshing || yieldRefreshing || maturityRefreshing || webAppRefreshing) ? 0.6 : 1
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!(aiRefreshing || yieldRefreshing || maturityRefreshing || webAppRefreshing)) {
+                                    e.currentTarget.style.background = 'rgba(46, 204, 113, 0.15)';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(46, 204, 113, 0.3)';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
                             }}
                         >
-                            <Power size={16} className={(aiRefreshing || yieldRefreshing || maturityRefreshing || webAppRefreshing) ? 'spin' : ''} />
-                            {(aiRefreshing || yieldRefreshing || maturityRefreshing || webAppRefreshing) ? 'Waking Systems...' : 'Wake All Systems'}
+                            <Power size={20} className={(aiRefreshing || yieldRefreshing || maturityRefreshing || webAppRefreshing) ? 'spin' : ''} />
                         </button>
                         
-                        {/* Main Refresh Button */}
+                        {/* Refresh Status - Icon Button */}
                         <button 
                             onClick={checkHealth} 
-                            className="btn btn-primary"
                             disabled={refreshing}
+                            title="Refresh Status"
                             style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '10px', 
-                                padding: '12px 24px', 
-                                fontSize: '1rem',
-                                boxShadow: '0 0 20px rgba(46, 204, 113, 0.4)',
-                                transition: 'all 0.3s'
+                                background: 'rgba(46, 204, 113, 0.2)',
+                                border: '1px solid rgba(46, 204, 113, 0.4)',
+                                color: '#2ecc71',
+                                padding: '10px',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.3s ease',
+                                boxShadow: refreshing ? '0 0 20px rgba(46, 204, 113, 0.4)' : 'none',
+                                opacity: refreshing ? 0.8 : 1
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!refreshing) {
+                                    e.currentTarget.style.background = 'rgba(46, 204, 113, 0.3)';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(46, 204, 113, 0.3)';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(46, 204, 113, 0.2)';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
                             }}
                         >
                             <RefreshCw size={20} className={refreshing ? 'spin' : ''} />
-                            {refreshing ? 'Refreshing...' : 'Refresh Status'}
                         </button>
                     </div>
 
+                    {/* Live Status Indicator */}
                     {healthData && (
-                        <div style={{ textAlign: 'right', marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div className="ping-dot"></div>
-                            <span className="last-updated" style={{ background: 'transparent', padding: 0, color: '#aaa', fontSize: '0.85rem' }}>
+                            <span style={{ color: '#aaa', fontSize: '0.85rem', fontWeight: '500' }}>
                                 Live | Last update: {new Date(healthData.timestamp).toLocaleTimeString()}
                             </span>
                         </div>

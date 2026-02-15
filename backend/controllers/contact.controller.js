@@ -133,3 +133,18 @@ exports.replyToContact = asyncHandler(async (req, res) => {
         throw new Error(error.message || 'Email could not be sent');
     }
 });
+
+// @desc    Get contact statistics
+// @route   GET /api/contact/stats
+// @access  Private/Admin
+exports.getContactStats = asyncHandler(async (req, res) => {
+    const total = await Contact.countDocuments();
+    const pending = await Contact.countDocuments({ status: 'Pending' });
+    const replied = await Contact.countDocuments({ status: 'Replied' });
+    
+    res.json({
+        total,
+        pending,
+        replied
+    });
+});

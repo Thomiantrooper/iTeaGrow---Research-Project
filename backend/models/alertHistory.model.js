@@ -13,6 +13,21 @@ const alertHistorySchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    resolved: {
+        type: Boolean,
+        default: false
+    },
+    acknowledged: {
+        type: Boolean,
+        default: false
+    },
+    resolvedAt: {
+        type: Date
+    },
+    resolvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     timestamp: {
         type: Date,
         default: Date.now

@@ -11,6 +11,7 @@ import UserManagement from '../pages/admin/UserManagement';
 import DummyPage from '../pages/admin/DummyPage';
 import Feedback from '../pages/admin/Feedback';
 import SystemHealth from '../pages/admin/SystemHealth';
+import IssuesBugs from '../pages/admin/IssuesBugs';
 import LoginPage from '../pages/LoginPage';
 import ProtectedRoute from '../components/ProtectedRoute';
 
@@ -42,7 +43,7 @@ const AppRoutes = () => {
           <Route path="devices" element={<DummyPage title="Device Tracking" description="Tracking active IoT devices and sensor nodes across the estate." />} />
           <Route path="data" element={<DummyPage title="Data Collection" description="Collecting environmental data including soil moisture, temperature, and humidity." />} />
           <Route path="health" element={<SystemHealth />} />
-          <Route path="issues" element={<DummyPage title="Issues & Bugs" description="Tracking system issues, error logs, and user-reported bugs." />} />
+          <Route path="issues" element={<IssuesBugs />} />
           <Route path="feedback" element={<Feedback />} />
         </Route>
       </Route>

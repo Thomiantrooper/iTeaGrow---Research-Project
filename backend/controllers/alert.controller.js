@@ -110,3 +110,179 @@ exports.sendSystemAlert = asyncHandler(async (req, res) => {
 
     res.status(200).json({ message: 'Alert email sent and issue logged to database' });
 });
+
+// @desc    Get alert statistics
+// @route   GET /api/admin/alert-stats
+// @access  Private/Admin
+exports.getAlertStats = asyncHandler(async (req, res) => {
+    const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    const total = await AlertHistory.countDocuments();
+    const recent = await AlertHistory.countDocuments({ 
+        createdAt: { $gte: last24h } 
+    });
+    const emailed = await AlertHistory.countDocuments({ emailed: true });
+    const suppressed = await AlertHistory.countDocuments({ emailed: false });
+    
+    res.json({
+        total,
+        last24h: recent,
+        emailed,
+        suppressed
+    });
+});
+
+// @desc    Get recent activity feed
+// @route   GET /api/admin/recent-activity
+// @access  Private/Admin
+exports.getRecentActivity = asyncHandler(async (req, res) => {
+    const Contact = require('../models/contact.model');
+    const LoginLog = require('../models/loginLog.model');
+    
+    // Get latest contacts
+    const contacts = await Contact.find().sort({ createdAt: -1 }).limit(3).select('name email createdAt');
+    
+    // Get latest logins
+    const logins = await LoginLog.find().sort({ loginTime: -1 }).limit(2).select('email loginTime');
+    
+    // Get latest alerts
+    const alerts = await AlertHistory.find().sort({ createdAt: -1 }).limit(2).select('systemName issues createdAt');
+    
+    // Combine and format activities
+    const activities = [
+        ...contacts.map(c => ({
+            type: 'contact',
+            text: `New inquiry from ${c.name}`,
+            email: c.email,
+            time: c.createdAt
+        })),
+        ...logins.map(l => ({
+            type: 'login',
+            text: `User login: ${l.email}`,
+            time: l.loginTime
+        })),
+        ...alerts.map(a => ({
+            type: 'alert',
+            text: `System alert: ${a.systemName || 'System'} - ${a.issues[0] || 'Issue detected'}`,
+            time: a.createdAt
+        }))
+    ];
+    
+    // Sort by time and return top 5
+    activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+    
+    res.json(activities.slice(0, 5));
+});
+
+// @desc    Get all alert history with filtering
+// @route   GET /api/admin/alerts/history
+// @access  Private/Admin
+exports.getAlertHistory = asyncHandler(async (req, res) => {
+    const { severity, service, dateRange, status, sort = 'newest' } = req.query;
+    
+    let query = {};
+    
+    // Filter by service
+    if (service && service !== 'all') {
+        query.systemName = service;
+    }
+    
+    // Filter by date range
+    if (dateRange && dateRange !== 'all') {
+        const now = new Date();
+        let startDate;
+        
+        switch(dateRange) {
+            case '24h':
+                startDate = new Date(now - 24 * 60 * 60 * 1000);
+                break;
+            case '7days':
+                startDate = new Date(now - 7 * 24 * 60 * 60 * 1000);
+                break;
+            case '30days':
+                startDate = new Date(now - 30 * 24 * 60 * 60 * 1000);
+                break;
+        }
+        
+        if (startDate) {
+            query.createdAt = { $gte: startDate };
+        }
+    }
+    
+    // Determine sort order
+    const sortOrder = sort === 'oldest' ? 1 : -1;
+    
+    // Fetch alerts
+    const alerts = await AlertHistory.find(query)
+        .sort({ createdAt: sortOrder })
+        .select('systemName issues emailed createdAt resolved acknowledged resolvedAt')
+        .lean();
+    
+    // Add severity based on keywords in issues
+    const alertsWithMetadata = alerts.map(alert => {
+        let severity = 'info';
+        const issuesText = alert.issues.join(' ').toLowerCase();
+        
+        if (issuesText.includes('offline') || issuesText.includes('critical') || issuesText.includes('failed')) {
+            severity = 'critical';
+        } else if (issuesText.includes('warning') || issuesText.includes('slow') || issuesText.includes('timeout')) {
+            severity = 'warning';
+        }
+        
+        return {
+            ...alert,
+            severity,
+            status: alert.resolved ? 'resolved' : (alert.acknowledged ? 'acknowledged' : 'active')
+        };
+    });
+    
+    // Filter by severity if specified
+    let filteredAlerts = alertsWithMetadata;
+    if (severity && severity !== 'all') {
+        filteredAlerts = alertsWithMetadata.filter(alert => alert.severity === severity);
+    }
+    
+    // Filter by status if specified
+    if (status && status !== 'all') {
+        filteredAlerts = filteredAlerts.filter(alert => alert.status === status);
+    }
+    
+    res.json({
+        count: filteredAlerts.length,
+        alerts: filteredAlerts
+    });
+});
+
+// @desc    Update alert status (resolve/acknowledge)
+// @route   PATCH /api/admin/alerts/:id/status
+// @access  Private/Admin
+exports.updateAlertStatus = asyncHandler(async (req, res) => {
+    const { status } = req.body;
+    const alert = await AlertHistory.findById(req.params.id);
+
+    if (!alert) {
+        res.status(404);
+        throw new Error('Alert not found');
+    }
+
+    if (status === 'resolved') {
+        alert.resolved = true;
+        alert.resolvedAt = Date.now();
+        alert.resolvedBy = req.user._id;
+    } else if (status === 'acknowledged') {
+        alert.acknowledged = true;
+    } else if (status === 'active') {
+        alert.resolved = false;
+        alert.acknowledged = false;
+    }
+
+    const updatedAlert = await alert.save();
+
+    res.json({
+        success: true,
+        alert: {
+            ...updatedAlert.toObject(),
+            status: updatedAlert.resolved ? 'resolved' : (updatedAlert.acknowledged ? 'acknowledged' : 'active')
+        }
+    });
+});

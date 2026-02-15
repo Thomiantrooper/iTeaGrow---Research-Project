@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
-const HealthContext = createContext();
+export const HealthContext = createContext();
 
 export const useHealth = () => useContext(HealthContext);
 
@@ -267,7 +267,7 @@ export const HealthProvider = ({ children }) => {
         maturityHealthData, maturityModelData, maturityLoading, maturityRefreshing,
         webAppHealthData, webAppLoading, webAppRefreshing,
         terminalHistory, setTerminalHistory,
-        refreshAll, checkHealth, checkAiHealth, checkYieldHealth, checkMaturityHealth, checkWebAppHealth
+        refreshAll, checkHealth, checkAiHealth, checkYieldHealth, checkMaturityHealth, checkWebAppHealth, triggerAlert
     };
 
     return <HealthContext.Provider value={value}>{children}</HealthContext.Provider>;

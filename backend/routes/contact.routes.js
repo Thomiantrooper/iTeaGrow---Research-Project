@@ -9,6 +9,7 @@ const upload = multer({ storage: storage });
 
 router.post('/', contactController.submitContactForm);
 router.get('/', contactController.getContacts);
+router.get('/stats', contactController.getContactStats);
 router.post('/:id/reply', upload.single('file'), contactController.replyToContact);
 
 module.exports = router;

@@ -143,31 +143,67 @@ const UserManagement = () => {
 
     return (
         <div className="dashboard-container">
-            <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <header className="dashboard-header" style={{ marginBottom: '30px' }}>
                 <div>
-                    <h1>User Management</h1>
-                    <p className="dashboard-subtitle">Manage users and access.</p>
+                    <h1 style={{ fontSize: '2.5rem', background: 'linear-gradient(90deg, #fff, #aaa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>User Management</h1>
+                    <p className="dashboard-subtitle" style={{ fontSize: '1.1rem' }}>Manage users and access.</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                     {/* DB Connectivity Indicator */}
-                    <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px', 
-                        background: 'rgba(255,255,255,0.1)', 
-                        padding: '8px 12px', 
-                        borderRadius: '20px',
-                        border: `1px solid ${dbConnected ? '#2ecc71' : '#e74c3c'}`
-                    }}>
-                        <Database size={16} color={dbConnected ? '#2ecc71' : '#e74c3c'} />
-                        <span style={{ fontSize: '0.85rem', color: dbConnected ? '#2ecc71' : '#e74c3c', fontWeight: '600' }}>
-                            {dbConnected ? 'DB Connected' : 'DB Offline'}
-                        </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                    {/* Action Buttons */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {/* DB Status - Icon Only */}
+                        <div style={{ 
+                            background: dbConnected ? 'rgba(46, 204, 113, 0.15)' : 'rgba(231, 76, 60, 0.15)',
+                            border: `1px solid ${dbConnected ? 'rgba(46, 204, 113, 0.3)' : 'rgba(231, 76, 60, 0.3)'}`,
+                            padding: '10px',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.3s ease'
+                        }}
+                        title={dbConnected ? 'Database Connected' : 'Database Offline'}
+                        >
+                            <Database size={20} color={dbConnected ? '#2ecc71' : '#e74c3c'} />
+                        </div>
+
+                        {/* Add User Button - Icon Only */}
+                        <button 
+                            onClick={() => setShowAddForm(!showAddForm)}
+                            style={{ 
+                                background: showAddForm ? 'rgba(231, 76, 60, 0.2)' : 'rgba(46, 204, 113, 0.2)',
+                                border: `1px solid ${showAddForm ? 'rgba(231, 76, 60, 0.4)' : 'rgba(46, 204, 113, 0.4)'}`,
+                                color: showAddForm ? '#e74c3c' : '#2ecc71',
+                                padding: '10px',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.3s ease'
+                            }}
+                            title={showAddForm ? 'Cancel' : 'Add User'}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = showAddForm ? 'rgba(231, 76, 60, 0.3)' : 'rgba(46, 204, 113, 0.3)';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = showAddForm ? '0 4px 12px rgba(231, 76, 60, 0.3)' : '0 4px 12px rgba(46, 204, 113, 0.3)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = showAddForm ? 'rgba(231, 76, 60, 0.2)' : 'rgba(46, 204, 113, 0.2)';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
+                            }}
+                        >
+                            <UserPlus size={20} />
+                        </button>
                     </div>
 
-                    <button className="btn btn-primary" onClick={() => setShowAddForm(!showAddForm)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <UserPlus size={18} /> {showAddForm ? 'Cancel' : 'Add User'}
-                    </button>
+                    {/* Status Text */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: dbConnected ? '#2ecc71' : '#e74c3c', fontSize: '0.85rem', fontWeight: '500' }}>
+                            {dbConnected ? 'Database Connected' : 'Database Offline'}
+                        </span>
+                    </div>
                 </div>
             </header>
 
