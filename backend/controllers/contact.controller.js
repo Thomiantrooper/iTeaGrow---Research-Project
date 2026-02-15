@@ -112,20 +112,14 @@ exports.replyToContact = asyncHandler(async (req, res) => {
             ];
         }
 
-        try {
-            await sendEmail(emailOptions);
-        } catch (emailError) {
-            console.error('Failed to send reply email:', emailError);
-            res.status(500);
-            throw new Error(`Email delivery failed: ${emailError.message}`);
-        }
+        // Send the actual email
+        await sendEmail(emailOptions);
 
         // Update status to Replied and save reply history
         contact.status = 'Replied';
         contact.replies.push({
             subject: subject,
             message: message,
-            // Attachments are not saved to DB to avoid potential large file issues/high storage costs
             repliedAt: Date.now()
         });
 
@@ -133,8 +127,9 @@ exports.replyToContact = asyncHandler(async (req, res) => {
 
         res.json({ message: 'Reply sent successfully!' });
     } catch (error) {
-        console.error(error);
+        console.error('Contact Reply Error:', error);
         res.status(500);
-        throw new Error('Email could not be sent');
+        // Throw the original error message so the frontend can see it
+        throw new Error(error.message || 'Email could not be sent');
     }
 });

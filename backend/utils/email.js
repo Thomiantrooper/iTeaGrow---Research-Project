@@ -12,10 +12,9 @@ const sendEmail = async (options) => {
 
     // Create reusable transporter object using the default SMTP transport
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
+        port: 587,
+        secure: false, // Use STARTTLS
         auth: {
             user: emailUser,
             pass: emailPass
@@ -25,7 +24,7 @@ const sendEmail = async (options) => {
         greetingTimeout: 10000,
         socketTimeout: 10000,
         tls: {
-            rejectUnauthorized: false // Often needed in cloud environments
+            rejectUnauthorized: false
         }
     });
 
