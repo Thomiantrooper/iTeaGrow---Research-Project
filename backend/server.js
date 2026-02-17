@@ -25,7 +25,7 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/admin', alertRoutes);
 
 // Health Check Endpoint
-app.use('/api/health', (req, res) => {
+app.use('/api/health', async (req, res) => {
   const mongoose = require('mongoose');
   const os = require('os');
   const states = {
@@ -47,10 +47,22 @@ app.use('/api/health', (req, res) => {
     }
   }
 
+  let dbStatus = 'unknown';
+  try {
+    if (state === 1) {
+      await mongoose.connection.db.admin().ping();
+      dbStatus = 'active';
+    }
+  } catch (err) {
+    dbStatus = 'error';
+    console.error('Health Check DB Ping Failed:', err);
+  }
+
   res.status(200).json({
     status: 'success',
     dbState: state,
     dbStateString: states[state],
+    dbPing: dbStatus,
     timestamp: new Date(),
     uptime: process.uptime(),
     ip: addresses[0] || '127.0.0.1'
