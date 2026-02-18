@@ -1,0 +1,41 @@
+{
+  "training_date": "2026-02-18 01:23:57",
+  "features": [
+    "grade_encoded",
+    "confidence",
+    "color",
+    "aroma",
+    "age",
+    "quantity_kg",
+    "market_price",
+    "price_momentum_3d",
+    "price_momentum_7d",
+    "rainfall_mm",
+    "rainfall_lag_7d",
+    "rainfall_lag_30d",
+    "exchange_rate",
+    "grade_color",
+    "grade_aroma",
+    "grade_age",
+    "market_rainfall_interaction"
+  ],
+  "n_features": 17,
+  "n_train_samples": 1400,
+  "n_val_samples": 150,
+  "n_test_samples": 150,
+  "hyperparameters": {
+    "max_depth": 3,
+    "learning_rate": 0.049822191982578055,
+    "subsample": 0.7638068738861741,
+    "colsample_bytree": 0.6729980424564045,
+    "min_child_weight": 13,
+    "gamma": 4.780140507381034,
+    "alpha": 7.101704421641649,
+    "lambda": 6.269067626323364,
+    "n_estimators": 511
+  },
+  "test_mae": 14.819017008463536,
+  "test_r2": 0.969250316255579,
+  "test_mape": "1.5828581053573834",
+  "training_time_seconds": 0.8661932945251465
+}
