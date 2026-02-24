@@ -1,29 +1,28 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import '../../../../core/design_system/tea_colors.dart';
-import '../../../../core/design_system/tea_typography.dart';
-import '../../../../core/design_system/tea_spacing.dart';
-import '../../data/datasources/powder_grading_ml_service.dart';
-import '../../domain/entities/powder_grading_result.dart';
+import '../../../market_analysis/providers/market_providers.dart';
+import '../../../market_analysis/data/models/market_models.dart';
 
-class PowderGradingScreen extends StatefulWidget {
+class PowderGradingScreen extends ConsumerStatefulWidget {
   final bool showMarketData;
 
   const PowderGradingScreen({super.key, this.showMarketData = true});
 
   @override
-  State<PowderGradingScreen> createState() => _PowderGradingScreenState();
+  ConsumerState<PowderGradingScreen> createState() =>
+      _PowderGradingScreenState();
 }
 
-class _PowderGradingScreenState extends State<PowderGradingScreen> {
+class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
   final ImagePicker _picker = ImagePicker();
-  final PowderGradingMLService _mlService = PowderGradingMLService();
 
   XFile? _selectedImage;
   Uint8List? _imageBytes;
-  PowderGradingResult? _result;
-  bool _isProcessing = false;
+  bool _showExplainability = false;
 
   Future<void> _captureImage() async {
     try {
@@ -39,7 +38,8 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
         setState(() {
           _selectedImage = photo;
           _imageBytes = bytes;
-          _result = null;
+          _showExplainability = false;
+          ref.read(classificationProvider.notifier).clear();
         });
       }
     } catch (e) {
@@ -61,7 +61,8 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
         setState(() {
           _selectedImage = image;
           _imageBytes = bytes;
-          _result = null;
+          _showExplainability = false;
+          ref.read(classificationProvider.notifier).clear();
         });
       }
     } catch (e) {
@@ -71,19 +72,9 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
 
   Future<void> _analyzeImage() async {
     if (_selectedImage == null) return;
-
-    setState(() => _isProcessing = true);
-
-    try {
-      final result = await _mlService.gradePowder(_selectedImage!.path);
-      setState(() {
-        _result = result;
-        _isProcessing = false;
-      });
-    } catch (e) {
-      setState(() => _isProcessing = false);
-      _showError('Analysis error: $e');
-    }
+    ref
+        .read(classificationProvider.notifier)
+        .classify(File(_selectedImage!.path), generateHeatmap: true);
   }
 
   void _showError(String message) {
@@ -94,18 +85,24 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final classState = ref.watch(classificationProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tea Powder Grading'),
         actions: [
-          if (_selectedImage != null)
+          if (_selectedImage != null) ...[
             IconButton(
-              icon: const Icon(Icons.delete),
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Reset and Retake',
               onPressed: () => setState(() {
                 _selectedImage = null;
-                _result = null;
+                _imageBytes = null;
+                _showExplainability = false;
+                ref.read(classificationProvider.notifier).clear();
               }),
             ),
+          ]
         ],
       ),
       body: SingleChildScrollView(
@@ -113,60 +110,58 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Image Display
             if (_selectedImage == null)
               _buildImagePlaceholder()
             else
-              _buildImagePreview(),
-
+              _buildImagePreview(classState.value),
             const SizedBox(height: 24),
-
-            // Action Buttons
             if (_selectedImage == null) ...[
               ElevatedButton.icon(
                 onPressed: _captureImage,
                 icon: const Icon(Icons.camera_alt),
                 label: const Text('Capture Powder Image'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                ),
+                style:
+                    ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _pickFromGallery,
                 icon: const Icon(Icons.photo_library),
                 label: const Text('Choose from Gallery'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
-                ),
+                style:
+                    OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
               ),
-            ] else if (_result == null) ...[
+            ] else if (classState.value == null && !classState.isLoading) ...[
               ElevatedButton.icon(
-                onPressed: _isProcessing ? null : _analyzeImage,
-                icon: _isProcessing
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: TeaColors.white,),
-                      )
-                    : const Icon(Icons.grade),
-                label: Text(_isProcessing ? 'Grading...' : 'Grade Powder'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
+                onPressed: _analyzeImage,
+                icon: const Icon(Icons.grade),
+                label: const Text('Grade Powder'),
+                style:
+                    ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+              ),
+            ] else if (classState.isLoading) ...[
+              ElevatedButton.icon(
+                onPressed: null,
+                icon: const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
                 ),
+                label: const Text('Grading...'),
+                style:
+                    ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
               ),
             ],
-
-            // Results
-            if (_result != null) ...[
+            if (_selectedImage != null && classState.value != null) ...[
               const SizedBox(height: 24),
-              _buildGradingResults(),
-              if (widget.showMarketData) ...[
-                const SizedBox(height: 16),
-                _buildMarketAnalysis(),
-              ],
+              _buildGradingResults(classState.value!),
             ],
+            if (_selectedImage != null && classState.hasError) ...[
+              const SizedBox(height: 16),
+              Text('Error: ${classState.error}',
+                  style: const TextStyle(color: Colors.red)),
+            ]
           ],
         ),
       ),
@@ -175,53 +170,102 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
 
   Widget _buildImagePlaceholder() {
     return Container(
-      height: 300,
+      height: 250,
       decoration: BoxDecoration(
-        color: TeaColors.lightGray,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: TeaColors.mediumGray, width: 2),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: TeaColors.mediumGray.withOpacity(0.5),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
+      alignment: Alignment.center,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.add_photo_alternate,
-              size: 64, color: TeaColors.darkGray,),
-          const SizedBox(height: 16),
-          Text(
-            'No image selected',
-            style: TextStyle(color: TeaColors.darkGray, fontSize: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: TeaColors.freshLeaf.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.add_photo_alternate_outlined,
+                size: 48, color: TeaColors.freshLeaf),
           ),
+          const SizedBox(height: 16),
+          const Text('No Powder Image Selected',
+              style: TextStyle(
+                  color: TeaColors.nearBlack,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16)),
+          const SizedBox(height: 8),
+          Text('Capture or upload an image to begin grading.',
+              style: TextStyle(color: TeaColors.darkGray, fontSize: 14)),
         ],
       ),
     );
   }
 
-  Widget _buildImagePreview() {
+  Widget _buildImagePreview(ClassificationResult? result) {
     if (_imageBytes == null) {
-      return Container(
-        height: 300,
-        decoration: BoxDecoration(
-          color: TeaColors.lightGray,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(),
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: TeaColors.lightGray.withOpacity(0.3),
+        child: const SizedBox(
+          height: 200,
+          child: Center(child: CircularProgressIndicator()),
         ),
       );
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Image.memory(
-        _imageBytes!,
-        height: 300,
-        fit: BoxFit.cover,
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          _showExplainability && result != null && result.heatmapPath != null
+              ? Image.file(
+                  File(result.heatmapPath!),
+                  height: 250,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
+              : Image.memory(
+                  _imageBytes!,
+                  height: 250,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+          if (result != null && result.heatmapPath != null)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Chip(
+                backgroundColor: _showExplainability
+                    ? TeaColors.alertRust.withOpacity(0.8)
+                    : Colors.black54,
+                label: Text(
+                  _showExplainability ? 'Heatmap View' : 'Original View',
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildGradingResults() {
-    final gradeColor = _getGradeColor(_result!.grade);
+  Widget _buildGradingResults(ClassificationResult result) {
+    final gradeColor = TeaColors.healthyGreen;
 
     return Card(
       child: Padding(
@@ -254,7 +298,7 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    _result!.grade,
+                    result.grade,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -267,198 +311,44 @@ class _PowderGradingScreenState extends State<PowderGradingScreen> {
 
             const SizedBox(height: 16),
 
-            // Quality Score
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Quality Score', style: TextStyle(fontSize: 16)),
+                const Text('Confidence', style: TextStyle(fontSize: 16)),
                 Text(
-                  '${_result!.qualityScore.toStringAsFixed(1)}/100',
+                  '${result.confidence.toStringAsFixed(1)}%',
                   style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold,),
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
-              value: _result!.qualityScore / 100,
+              value: result.confidence / 100,
               backgroundColor: TeaColors.lightGray,
               valueColor: AlwaysStoppedAnimation<Color>(gradeColor),
               minHeight: 8,
             ),
-
             const SizedBox(height: 16),
             Text(
-              'Graded at: ${_formatTime(_result!.timestamp)}',
+              'Processing Source: ${result.source == 'offline' ? 'Local ML Model' : 'Cloud Server'}',
               style: TextStyle(fontSize: 12, color: TeaColors.darkGray),
             ),
+            if (result.heatmapPath != null) ...[
+              const Divider(height: 32),
+              SwitchListTile(
+                title: const Text('Explain Grading',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                subtitle: const Text('Show Grad-CAM heatmap overlay'),
+                value: _showExplainability,
+                activeColor: TeaColors.freshLeaf,
+                onChanged: (val) => setState(() => _showExplainability = val),
+              ),
+            ],
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildMarketAnalysis() {
-    final trendColor = _getTrendColor(_result!.marketTrend);
-    final priceChangeColor =
-        _result!.priceChange >= 0 ? TeaColors.healthyGreen : TeaColors.alertRust;
-
-    return Card(
-      color: TeaColors.infoSky.withOpacity(0.15),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.attach_money,
-                    color: TeaColors.matureLeaf, size: 28,),
-                const SizedBox(width: 12),
-                const Text(
-                  'Market Value Analysis',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-
-            // Current Market Price
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Current Price', style: TextStyle(fontSize: 16)),
-                Text(
-                  'Rs ${_result!.marketPrice.toStringAsFixed(2)}/kg',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: TeaColors.matureLeaf,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Price Change
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Price Change (7 days)',
-                    style: TextStyle(fontSize: 14),),
-                Row(
-                  children: [
-                    Icon(
-                      _result!.priceChange >= 0
-                          ? Icons.trending_up
-                          : Icons.trending_down,
-                      color: priceChangeColor,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${_result!.priceChange >= 0 ? '+' : ''}${_result!.priceChange.toStringAsFixed(1)}%',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: priceChangeColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Market Trend
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Market Trend', style: TextStyle(fontSize: 14)),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: trendColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _result!.marketTrend,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: trendColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const Divider(height: 24),
-
-            // Regional Prices
-            const Text(
-              'Regional Prices',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-
-            ..._result!.regionalPrices.entries.map((entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.location_on,
-                              size: 16, color: TeaColors.darkGray,),
-                          const SizedBox(width: 8),
-                          Text(entry.key),
-                        ],
-                      ),
-                      Text(
-                        'Rs ${entry.value.toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getGradeColor(String grade) {
-    switch (grade) {
-      case 'Premium':
-        return TeaColors.clayPot;
-      case 'Grade A':
-        return TeaColors.healthyGreen;
-      case 'Grade B':
-        return TeaColors.warningAmber;
-      case 'Grade C':
-        return TeaColors.alertRust;
-      default:
-        return TeaColors.mediumGray;
-    }
-  }
-
-  Color _getTrendColor(String trend) {
-    switch (trend) {
-      case 'Rising':
-        return TeaColors.healthyGreen;
-      case 'Stable':
-        return TeaColors.infoSky;
-      case 'Falling':
-        return TeaColors.alertRust;
-      default:
-        return TeaColors.mediumGray;
-    }
-  }
-
-  String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${time.second.toString().padLeft(2, '0')}';
   }
 }

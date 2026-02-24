@@ -11,6 +11,10 @@ import '../../features/dashboard/presentation/screens/admin_dashboard_simple.dar
 import '../../features/disease_detection/presentation/screens/premium_disease_detection_screen.dart';
 import '../../features/soil_fertilization/presentation/screens/soil_fertilization_screen.dart';
 import '../../features/powder_grading/presentation/screens/powder_grading_screen.dart';
+import '../../features/market_analysis/presentation/market_analysis_screen.dart';
+import '../../features/market_analysis/presentation/market_value_admin_screen.dart';
+import '../../features/market_analysis/presentation/market_price_report_screen.dart';
+import '../../features/market_analysis/data/models/market_models.dart';
 import '../../features/plants/presentation/screens/premium_plants_screen.dart';
 import '../../features/map/presentation/screens/premium_map_screen.dart';
 import '../../features/settings/presentation/screens/premium_settings_screen.dart';
@@ -52,10 +56,12 @@ CustomTransitionPage<void> _buildPremiumTransition({
             position: Tween<Offset>(
               begin: const Offset(0, 0.03),
               end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: TeaAnimations.enter,
-            ),),
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: TeaAnimations.enter,
+              ),
+            ),
             child: child,
           ),
         );
@@ -98,7 +104,12 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
       final currentPath = state.matchedLocation;
 
       // Public routes that don't require authentication
-      final publicRoutes = ['/splash', '/login', '/register', '/forgot-password'];
+      final publicRoutes = [
+        '/splash',
+        '/login',
+        '/register',
+        '/forgot-password'
+      ];
       final isPublicRoute = publicRoutes.contains(currentPath);
 
       // If auth is still loading, let them stay on splash
@@ -220,10 +231,45 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/powder-grading',
         pageBuilder: (context, state) => _buildPremiumTransition(
-          child: const PowderGradingScreen(),
+          child: const PowderGradingScreen(showMarketData: false),
           state: state,
         ),
       ),
+
+      // Market Analysis
+      GoRoute(
+        path: '/market-analysis',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const MarketAnalysisScreen(),
+          state: state,
+        ),
+      ),
+
+      // Market Value Admin
+      GoRoute(
+          path: '/market-admin',
+          pageBuilder: (context, state) => _buildPremiumTransition(
+                child: const MarketValueAdminScreen(),
+                state: state,
+              ),
+          routes: [
+            GoRoute(
+                path: 'report',
+                pageBuilder: (context, state) {
+                  final reportData = state.extra as MarketPriceResponse?;
+                  // Fallback if accessed absolutely
+                  if (reportData == null) {
+                    return _buildPremiumTransition(
+                      child: const MarketValueAdminScreen(),
+                      state: state,
+                    );
+                  }
+                  return _buildPremiumTransition(
+                    child: MarketPriceReportScreen(reportData: reportData),
+                    state: state,
+                  );
+                })
+          ]),
 
       // Plants/Growth Monitoring
       GoRoute(

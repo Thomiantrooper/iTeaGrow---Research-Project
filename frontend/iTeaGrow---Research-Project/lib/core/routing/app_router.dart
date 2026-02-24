@@ -10,6 +10,10 @@ import '../../features/dashboard/presentation/screens/jarvis_farmer_dashboard.da
 import '../../features/dashboard/presentation/screens/manager_dashboard.dart';
 import '../../features/dashboard/presentation/screens/admin_dashboard.dart';
 import '../../features/disease_detection/presentation/screens/enhanced_disease_detection_screen.dart';
+import '../../features/market_analysis/presentation/market_analysis_screen.dart';
+import '../../features/market_analysis/presentation/market_value_admin_screen.dart';
+import '../../features/market_analysis/presentation/market_price_report_screen.dart';
+import '../../features/market_analysis/data/models/market_models.dart';
 import '../../features/auth/data/providers/auth_provider.dart';
 import '../enums/app_enums.dart';
 
@@ -108,6 +112,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/disease-detection',
         builder: (context, state) => const EnhancedDiseaseDetectionScreen(),
       ),
+      GoRoute(
+        path: '/market-analysis',
+        builder: (context, state) => const MarketAnalysisScreen(),
+      ),
+      GoRoute(
+          path: '/market-admin',
+          builder: (context, state) => const MarketValueAdminScreen(),
+          routes: [
+            GoRoute(
+                path: 'report',
+                builder: (context, state) {
+                  final reportData = state.extra as MarketPriceResponse?;
+                  // Fallback if accessed absolutely
+                  if (reportData == null) {
+                    return const MarketValueAdminScreen();
+                  }
+                  return MarketPriceReportScreen(reportData: reportData);
+                })
+          ]),
 
       // Yield Prediction Routes (Manager Only)
       GoRoute(

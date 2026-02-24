@@ -245,7 +245,7 @@ class JarvisTheme {
       ),
 
       // Cards
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: mistWhitePure,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -387,7 +387,7 @@ class JarvisTheme {
       ),
 
       // Dialog
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: mistWhitePure,
         elevation: 8,
         shape: RoundedRectangleBorder(
@@ -547,7 +547,7 @@ class JarvisTheme {
           ),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: darkCard,
         elevation: 0,
         shape: RoundedRectangleBorder(

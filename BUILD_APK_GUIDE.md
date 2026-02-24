@@ -2,6 +2,10 @@
 
 ## Option 1: GitHub Actions (Recommended - No Setup Required)
 
+
+
+PS C:\Users\HP\Desktop\Tea\iTeaGrow-Prod\frontend\iTeaGrow---Research-Project> flutter build apk --debug; flutter install --debug
+
 The easiest way to get an APK is through GitHub Actions:
 
 ### Steps:

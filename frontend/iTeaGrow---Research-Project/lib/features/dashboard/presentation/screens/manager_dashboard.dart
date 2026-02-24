@@ -83,10 +83,22 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
       bottomNavigationBar: TeaBottomNavBar(
         currentIndex: 0,
         items: const [
-          TeaNavItem(icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, label: 'Home'),
-          TeaNavItem(icon: Icons.people_outlined, activeIcon: Icons.people, label: 'Users'),
-          TeaNavItem(icon: Icons.analytics_outlined, activeIcon: Icons.analytics, label: 'Analytics'),
-          TeaNavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
+          TeaNavItem(
+              icon: Icons.dashboard_outlined,
+              activeIcon: Icons.dashboard,
+              label: 'Home'),
+          TeaNavItem(
+              icon: Icons.people_outlined,
+              activeIcon: Icons.people,
+              label: 'Users'),
+          TeaNavItem(
+              icon: Icons.analytics_outlined,
+              activeIcon: Icons.analytics,
+              label: 'Analytics'),
+          TeaNavItem(
+              icon: Icons.person_outline,
+              activeIcon: Icons.person,
+              label: 'Profile'),
         ],
         onTap: (index) {
           switch (index) {
@@ -164,17 +176,21 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
         children: [
           Row(
             children: [
-              const Expanded(child: TeaShimmer(width: double.infinity, height: 90)),
+              const Expanded(
+                  child: TeaShimmer(width: double.infinity, height: 90)),
               const SizedBox(width: TeaSpacing.smd),
-              const Expanded(child: TeaShimmer(width: double.infinity, height: 90)),
+              const Expanded(
+                  child: TeaShimmer(width: double.infinity, height: 90)),
             ],
           ),
           const SizedBox(height: TeaSpacing.smd),
           Row(
             children: [
-              const Expanded(child: TeaShimmer(width: double.infinity, height: 90)),
+              const Expanded(
+                  child: TeaShimmer(width: double.infinity, height: 90)),
               const SizedBox(width: TeaSpacing.smd),
-              const Expanded(child: TeaShimmer(width: double.infinity, height: 90)),
+              const Expanded(
+                  child: TeaShimmer(width: double.infinity, height: 90)),
             ],
           ),
         ],
@@ -210,7 +226,8 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
             Expanded(
               child: TeaMetricCard(
                 label: 'Health Rate',
-                value: '${((overview?['health_rate'] ?? 0) as num).toStringAsFixed(1)}%',
+                value:
+                    '${((overview?['health_rate'] ?? 0) as num).toStringAsFixed(1)}%',
                 icon: Icons.health_and_safety_outlined,
                 iconColor: TeaColors.healthyGreen,
               ),
@@ -233,7 +250,9 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
   Widget _buildTeamActivity() {
     final analytics = ref.watch(analyticsProvider);
     final userStats = analytics.userStats;
-    final topScanners = (userStats?['top_scanners'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final topScanners =
+        (userStats?['top_scanners'] as List?)?.cast<Map<String, dynamic>>() ??
+            [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,13 +275,15 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
                     color: TeaColors.infoSky.withOpacity(0.12),
                     borderRadius: TeaRadius.radiusMd,
                   ),
-                  child: const Icon(Icons.people_outlined, color: TeaColors.infoSky, size: 22),
+                  child: const Icon(Icons.people_outlined,
+                      color: TeaColors.infoSky, size: 22),
                 ),
                 const SizedBox(width: TeaSpacing.smd),
                 Expanded(
                   child: Text(
                     'Loading team data...',
-                    style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray),
+                    style: TeaTypography.bodySmall
+                        .copyWith(color: TeaColors.darkGray),
                   ),
                 ),
               ],
@@ -274,7 +295,8 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: topScanners.length > 5 ? 5 : topScanners.length,
-              separatorBuilder: (_, __) => const SizedBox(width: TeaSpacing.smd),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: TeaSpacing.smd),
               itemBuilder: (context, index) {
                 final scanner = topScanners[index];
                 final name = scanner['full_name'] ?? 'Unknown';
@@ -290,7 +312,8 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
                       children: [
                         CircleAvatar(
                           radius: 20,
-                          backgroundColor: TeaColors.freshLeaf.withOpacity(0.15),
+                          backgroundColor:
+                              TeaColors.freshLeaf.withOpacity(0.15),
                           child: Text(
                             initials,
                             style: TeaTypography.labelMedium.copyWith(
@@ -302,7 +325,8 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
                         const SizedBox(height: TeaSpacing.xs),
                         Text(
                           name.split(' ').first,
-                          style: TeaTypography.labelSmall.copyWith(fontWeight: FontWeight.w600),
+                          style: TeaTypography.labelSmall
+                              .copyWith(fontWeight: FontWeight.w600),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -340,27 +364,30 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
           children: [
             Expanded(
               child: TeaImageCard(
-                title: 'Predict Yield',
-                subtitle: 'AI Projections',
-                tag: 'FORECAST',
-                fallbackIcon: Icons.query_stats,
+                title: 'Market Prices',
+                subtitle: 'Calculation',
+                tag: 'LIVE',
+                fallbackIcon: Icons.currency_exchange,
                 gradientColors: [TeaColors.matureLeaf, TeaColors.freshLeaf],
                 height: 160,
                 borderRadius: TeaRadius.radiusLg,
-                onTap: () => context.push('/yield-prediction'),
+                onTap: () => context.push('/market-analysis'),
               ),
             ),
             const SizedBox(width: TeaSpacing.smd),
             Expanded(
               child: TeaImageCard(
-                title: 'Quality Audit',
-                subtitle: 'Powder Grading',
-                tag: 'GRADING',
-                fallbackIcon: Icons.grade,
-                gradientColors: [TeaColors.warningAmber, TeaColors.goldenSunlight],
+                title: 'Market Admin',
+                subtitle: 'Update Rates',
+                tag: 'ADMIN',
+                fallbackIcon: Icons.admin_panel_settings,
+                gradientColors: [
+                  TeaColors.warningAmber,
+                  TeaColors.goldenSunlight
+                ],
                 height: 160,
                 borderRadius: TeaRadius.radiusLg,
-                onTap: () => context.push('/powder-grading'),
+                onTap: () => context.push('/market-admin'),
               ),
             ),
           ],
@@ -411,11 +438,20 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
               onTap: () => context.push('/disease-detection'),
             ),
             TeaImageCard(
-              title: 'Growth',
+              title: 'Yield Predict',
               subtitle: 'Block progress',
               tag: 'ANALYSIS',
               fallbackIcon: Icons.grass_outlined,
               gradientColors: [TeaColors.leafLight, TeaColors.freshLeaf],
+              borderRadius: TeaRadius.radiusLg,
+              onTap: () => context.push('/yield-prediction'),
+            ),
+            TeaImageCard(
+              title: 'Growth',
+              subtitle: 'Monitor plants',
+              tag: 'TRACKING',
+              fallbackIcon: Icons.energy_savings_leaf_outlined,
+              gradientColors: [TeaColors.freshLeaf, TeaColors.matureLeaf],
               borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/plants'),
             ),

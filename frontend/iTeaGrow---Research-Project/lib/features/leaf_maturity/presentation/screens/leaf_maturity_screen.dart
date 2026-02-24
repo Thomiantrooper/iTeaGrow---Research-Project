@@ -297,7 +297,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
 
             // Step 1: Species Classification
             Text(
-              'Step 1: Species Classification',
+              'Species Classification',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -356,7 +356,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
 
             // Step 2: Maturity Classification
             Text(
-              'Step 2: Maturity Classification',
+              'Maturity Classification',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
