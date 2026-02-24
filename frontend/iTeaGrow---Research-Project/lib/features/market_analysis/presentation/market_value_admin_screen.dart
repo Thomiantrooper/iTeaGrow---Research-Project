@@ -1,0 +1,377 @@
+import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:iteagrow/core/design_system/design_system.dart';
+import 'dart:async';
+import '../../../../core/services/connectivity_service.dart';
+import '../data/models/market_models.dart';
+import '../providers/market_providers.dart';
+
+class MarketValueAdminScreen extends ConsumerStatefulWidget {
+  const MarketValueAdminScreen({super.key});
+
+  @override
+  ConsumerState<MarketValueAdminScreen> createState() =>
+      _MarketValueAdminScreenState();
+}
+
+class _MarketValueAdminScreenState
+    extends ConsumerState<MarketValueAdminScreen> {
+  Timer? _connectivityTimer;
+  final Map<String, TextEditingController> _controllers = {};
+  final Map<String, String> _placeholders = {};
+  final List<String> _gradesList = [
+    'BOPF',
+    'BOP',
+    'Pekoe',
+    'Fanning1',
+    'Dust',
+    'Dust1'
+  ];
+  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _sourceController = TextEditingController();
+  final String _defaultNotes =
+      "BOPF appreciated by Rs.20-40/kg. Active buying.";
+  final String _defaultSource = "Tea Auction";
+  final TextEditingController _dateController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    for (var g in _gradesList) {
+      _controllers[g] = TextEditingController();
+      _placeholders[g] = "1000.0";
+    }
+    _dateController.text = _getCurrentAuctionWeek();
+
+    Future.microtask(() => _checkConnectivityAndHealth());
+    _connectivityTimer = Timer.periodic(
+        const Duration(seconds: 5), (_) => _checkConnectivityAndHealth());
+  }
+
+  @override
+  void dispose() {
+    _connectivityTimer?.cancel();
+    for (var c in _controllers.values) {
+      c.dispose();
+    }
+    _notesController.dispose();
+    _sourceController.dispose();
+    _dateController.dispose();
+    super.dispose();
+  }
+
+  void _populateFromLatest(Map<String, dynamic>? latestPrices) {
+    if (latestPrices == null) return;
+    for (var g in _gradesList) {
+      if (latestPrices[g] != null) {
+        _placeholders[g] = (latestPrices[g] as num).toStringAsFixed(2);
+      }
+    }
+  }
+
+  String _getCurrentAuctionWeek() {
+    final now = DateTime.now();
+    // In Dart, weekday is 1 for Monday, 7 for Sunday.
+    // Subtract (weekday - 1) days to reliably snap to the preceding Monday
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    return "${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}";
+  }
+
+  Future<void> _savePrices() async {
+    final api = ref.read(marketApiServiceProvider);
+
+    final parsedPrices = <String, double>{}; // Renamed prices to parsedPrices
+    for (var g in _gradesList) {
+      final text = _controllers[g]!.text;
+      parsedPrices[g] = text.isEmpty
+          ? double.tryParse(_placeholders[g] ?? "0.0") ?? 0.0
+          : double.tryParse(text) ?? 0.0;
+    }
+
+    final update = MarketPriceUpdate(
+      auctionWeek: _dateController.text,
+      prices: parsedPrices,
+      notes: _notesController.text,
+      source: _sourceController.text.isEmpty
+          ? 'Manager Update'
+          : _sourceController.text,
+    );
+
+    try {
+      await api.publishMarketValues(update);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Prices published to AI Model!'),
+            backgroundColor: Colors.green));
+        // Refresh grid
+        ref.invalidate(marketPricesProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      }
+    }
+  }
+
+  Future<void> _checkConnectivityAndHealth() async {
+    ref.read(marketApiHealthProvider.notifier).checkHealth();
+    await ref.read(connectivityServiceProvider).checkConnectivity();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final marketGridAsync = ref.watch(marketPricesProvider);
+    final isApiHealthy = ref.watch(marketApiHealthProvider);
+    final connectivityStatus = ref.watch(connectivityStatusProvider);
+    final isOnline = connectivityStatus.value == true && isApiHealthy;
+
+    return Scaffold(
+      backgroundColor: TeaColors.mistGreen,
+      appBar: AppBar(
+        title: const Text('Admin Price Update'),
+        backgroundColor: TeaColors.freshLeaf,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () {
+              final res = ref.read(marketPricesProvider).value;
+              if (res != null) {
+                context.push('/market-admin/report', extra: res);
+              }
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Icon(
+                  isOnline ? Icons.cloud_done : Icons.cloud_off,
+                  color: isOnline
+                      ? TeaColors.healthyGreen
+                      : TeaColors.warningAmber,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  isOnline ? 'Online' : 'Offline',
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      body: marketGridAsync.when(
+        data: (res) {
+          final latestDbPrices = res.latestPrices;
+          if (latestDbPrices.isNotEmpty) {
+            // Schedule populated state to avoid build interference
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_placeholders['BOPF'] == "1000.0") {
+                setState(() => _populateFromLatest(latestDbPrices));
+              }
+            });
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Enter Weekly Auction Prices',
+                    style: TeaTypography.headlineMedium),
+                const SizedBox(height: 16),
+                _buildPriceGrid(),
+                const SizedBox(height: 24),
+                _buildNotesSection(),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: isOnline ? _savePrices : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: TeaColors.freshLeaf,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30)),
+                  ),
+                  child: const Text('Save & Publish Prices',
+                      style: TextStyle(fontSize: 18, color: Colors.white)),
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: Text(
+                    isOnline
+                        ? 'Connected to Server'
+                        : 'Disconnected - Check your internet',
+                    style: TextStyle(
+                      color: isOnline
+                          ? TeaColors.healthyGreen
+                          : TeaColors.warningAmber,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _buildHistorySection(res),
+              ],
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text("Failed to load prices: $e")),
+      ),
+    );
+  }
+
+  Widget _buildPriceGrid() {
+    return Column(
+      children: _gradesList.map((g) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: TeaColors.mediumGray),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(g,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: TeaColors.freshLeaf)),
+              SizedBox(
+                width: 120,
+                child: TextField(
+                  controller: _controllers[g],
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                      prefixText: 'Rs. ',
+                      hintText: _placeholders[g],
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8)),
+                ),
+              )
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildNotesSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: TeaColors.mistGreen,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Market Source',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _sourceController,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              isDense: true,
+              hintText: _defaultSource,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text('Auction Notes',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _notesController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: _defaultNotes,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistorySection(MarketPriceResponse res) {
+    // Filter out 'default' and sort chronologically
+    final keys = res.marketPrices.keys.where((k) => k != 'default').toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    if (keys.length <= 1) return const SizedBox.shrink(); // No history yet
+
+    // Skip the first one because it represents the "current" week
+    final historyKeys = keys.skip(1).toList();
+
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        title: Text('Previous Auction Prices', style: TeaTypography.titleLarge),
+        tilePadding: EdgeInsets.zero,
+        children: historyKeys.map((week) {
+          final prices = res.marketPrices[week] ?? {};
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.date_range,
+                          color: TeaColors.freshLeaf, size: 18),
+                      const SizedBox(width: 8),
+                      Text('Week of: $week',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  LayoutBuilder(builder: (context, constraints) {
+                    final itemWidth = (constraints.maxWidth - 16) / 2;
+                    return Wrap(
+                      spacing: 16,
+                      runSpacing: 8,
+                      children: _gradesList.map((g) {
+                        final val = prices.containsKey(g)
+                            ? (prices[g] as num).toDouble()
+                            : 0.0;
+                        return SizedBox(
+                          width: itemWidth,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(g,
+                                  style: const TextStyle(
+                                      color: TeaColors.darkGray, fontSize: 13)),
+                              Text('Rs. ${val.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13)),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  })
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
