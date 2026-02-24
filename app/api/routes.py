@@ -1,11 +1,21 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from app.database import mongodb
+from app.mqtt.client import mqtt_client
 from app.models.schemas import PredictionResponse
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+@router.get("/health")
+async def health_check():
+    """Check connectivity to all services"""
+    return {
+        "status": "healthy",
+        "database": "connected" if mongodb.client else "disconnected",
+        "mqtt": "running" if mqtt_client.client and mqtt_client.client.is_connected() else "disconnected"
+    }
 
 @router.get("/hectare/{hectare_id}", response_model=List[PredictionResponse])
 async def get_hectare_data(
