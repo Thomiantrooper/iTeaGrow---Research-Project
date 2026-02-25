@@ -45,6 +45,8 @@ class DiseaseStorageService {
         'air_quality': result.airQuality,
         'processing_time_ms': result.processingTimeMs,
         'request_id': result.requestId,
+        'image_quality_score': result.imageQualityScore,
+        'validation_message': result.validationMessage,
       };
 
       final headers = <String, String>{
@@ -149,6 +151,12 @@ class DiseaseStorageService {
       if (result.requestId != null) {
         request.fields['request_id'] = result.requestId!;
       }
+      if (result.imageQualityScore != null) {
+        request.fields['image_quality_score'] = result.imageQualityScore.toString();
+      }
+      if (result.validationMessage != null) {
+        request.fields['validation_message'] = result.validationMessage!;
+      }
 
       final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
       final response = await http.Response.fromStream(streamedResponse);
@@ -237,6 +245,12 @@ class DiseaseStorageService {
       }
       if (result.humidity != null) {
         request.fields['humidity'] = result.humidity.toString();
+      }
+      if (result.airQuality != null) {
+        request.fields['air_quality'] = result.airQuality.toString();
+      }
+      if (result.summary != null) {
+        request.fields['summary'] = jsonEncode(result.summary!.toJson());
       }
 
       final streamedResponse = await request.send().timeout(const Duration(seconds: 60));

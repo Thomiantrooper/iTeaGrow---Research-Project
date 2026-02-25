@@ -1078,18 +1078,60 @@ class _PremiumDiseaseDetectionScreenState
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      statusTitle,
-                      style: TeaTypography.headlineSmall.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          statusTitle,
+                          style: TeaTypography.headlineSmall.copyWith(
+                            color: statusColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (_result!.isPotentialFalsePositive) ...[
+                          const SizedBox(width: TeaSpacing.sm),
+                          const Icon(
+                            Icons.error_outline,
+                            color: TeaColors.warningAmber,
+                            size: 20,
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
               ),
             ],
           ),
+
+          // Lighting / FP Warning
+          if (_result!.isPotentialFalsePositive && !isNotALeaf) ...[
+            const SizedBox(height: TeaSpacing.md),
+            Container(
+              padding: const EdgeInsets.all(TeaSpacing.md),
+              decoration: BoxDecoration(
+                color: TeaColors.warningAmber.withOpacity(0.1),
+                borderRadius: TeaRadius.radiusMd,
+                border: Border.all(
+                  color: TeaColors.warningAmber.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.wb_sunny_outlined, color: TeaColors.warningAmber, size: 20),
+                  const SizedBox(width: TeaSpacing.smd),
+                  Expanded(
+                    child: Text(
+                      'Potential False Positive: Bright light or reflections detected. The "Blister Blight" detection might be caused by glare.',
+                      style: TeaTypography.bodySmall.copyWith(
+                        color: TeaColors.darkGray,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           // Invalid image message
           if (isNotALeaf) ...[
@@ -1112,7 +1154,7 @@ class _PremiumDiseaseDetectionScreenState
                       const SizedBox(width: TeaSpacing.smd),
                       Expanded(
                         child: Text(
-                          'This image does not contain a recognizable tea leaf.',
+                          _result!.validationMessage ?? 'This image does not contain a recognizable tea leaf.',
                           style: TeaTypography.bodyMedium.copyWith(
                             color: TeaColors.warningAmber,
                             fontWeight: FontWeight.w600,
@@ -1123,7 +1165,7 @@ class _PremiumDiseaseDetectionScreenState
                   ),
                   const SizedBox(height: TeaSpacing.smd),
                   Text(
-                    'It may be a hand, fabric, surface, soil, or other non-leaf object. Please scan a clear tea leaf image for accurate disease detection.',
+                    'To improve results, ensure the leaf is well-lit, in focus, and occupies most of the frame. Avoid hands, clutter, or extremely dark/blurry backgrounds.',
                     style: TeaTypography.bodySmall.copyWith(
                       color: TeaColors.darkGray,
                     ),
@@ -1136,11 +1178,72 @@ class _PremiumDiseaseDetectionScreenState
             const Divider(),
             const SizedBox(height: TeaSpacing.md),
 
+            // Quality & Reliability section
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Detection Reliability', style: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            _getReliabilityIcon(_result!.reliabilityLabel),
+                            size: 16,
+                            color: _getReliabilityColor(_result!.reliabilityLabel),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _result!.reliabilityLabel,
+                            style: TeaTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: _getReliabilityColor(_result!.reliabilityLabel),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (_result!.imageQualityScore != null)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('Image Quality', style: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray)),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${(_result!.imageQualityScore! * 100).toStringAsFixed(0)}%',
+                              style: TeaTypography.bodyMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: _getQualityColor(_result!.imageQualityScore!),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.bolt,
+                              size: 16,
+                              color: _getQualityColor(_result!.imageQualityScore!),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: TeaSpacing.md),
+
             // Confidence meter
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Confidence', style: TeaTypography.titleSmall),
+                Text('Confidence Score', style: TeaTypography.titleSmall),
                 Text(
                   '${(_result!.confidence * 100).toStringAsFixed(1)}%',
                   style: TeaTypography.titleMedium.copyWith(
@@ -1516,6 +1619,25 @@ class _PremiumDiseaseDetectionScreenState
             ),
           ),
 
+          // Average Confidence (New)
+          if (_fieldResult!.summary?.averageConfidence != null && 
+              _fieldResult!.summary!.averageConfidence > 0) ...[
+            const SizedBox(height: TeaSpacing.md),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Average Confidence', style: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray)),
+                Text(
+                  '${(_fieldResult!.summary!.averageConfidence * 100).toStringAsFixed(1)}%',
+                  style: TeaTypography.labelSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: TeaColors.mediumGray,
+                  ),
+                ),
+              ],
+            ),
+          ],
+
           // Disease breakdown
           if (_fieldResult!.diseaseCounts.isNotEmpty) ...[
             const SizedBox(height: TeaSpacing.lg),
@@ -1702,25 +1824,67 @@ class _PremiumDiseaseDetectionScreenState
 
   Color _getSeverityColor(String severity) {
     switch (severity.toLowerCase()) {
-      case 'low':
-        return TeaColors.healthyGreen;
+      case 'critical':
+        return TeaColors.alertRust;
+      case 'high':
+        return Colors.orange.shade800;
       case 'medium':
         return TeaColors.warningAmber;
+      case 'low':
+        return TeaColors.infoSky;
+      case 'uncertain':
+        return TeaColors.mediumGray;
+      default:
+        return TeaColors.mediumGray;
+    }
+  }
+
+  Color _getReliabilityColor(String label) {
+    switch (label.toLowerCase()) {
+      case 'very high':
+        return TeaColors.healthyGreen;
       case 'high':
+        return TeaColors.freshLeaf;
+      case 'moderate':
+        return TeaColors.warningAmber;
+      case 'low':
+      case 'very low':
         return TeaColors.alertRust;
       default:
         return TeaColors.mediumGray;
     }
   }
 
+  IconData _getReliabilityIcon(String label) {
+    switch (label.toLowerCase()) {
+      case 'very high':
+        return Icons.verified;
+      case 'high':
+        return Icons.check_circle_outline;
+      case 'moderate':
+        return Icons.info_outline;
+      case 'low':
+      case 'very low':
+        return Icons.warning_amber_rounded;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  Color _getQualityColor(double score) {
+    if (score >= 0.8) return TeaColors.healthyGreen;
+    if (score >= 0.6) return TeaColors.freshLeaf;
+    if (score >= 0.4) return TeaColors.warningAmber;
+    return TeaColors.alertRust;
+  }
+
   Color _getAirQualityColor(double aqi) {
     if (aqi < 50) return TeaColors.healthyGreen;
     if (aqi < 100) return TeaColors.warningAmber;
-    if (aqi < 150) return TeaColors.alertRust;
-    return TeaColors.criticalRed;
+    return TeaColors.alertRust;
   }
 
   String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${time.second.toString().padLeft(2, '0')}';
+    return '${time.hour}:${time.minute.toString().padLeft(2, '0')} - ${time.day}/${time.month}/${time.year}';
   }
 }

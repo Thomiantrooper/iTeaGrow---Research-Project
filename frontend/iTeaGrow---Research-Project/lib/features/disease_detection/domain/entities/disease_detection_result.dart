@@ -98,6 +98,8 @@ class DetectionSummary {
   final String? dominantDisease;
   final String severityLevel;
   final bool requiresImmediateAction;
+  final double averageConfidence;
+  final String detectionReliability; // 'high', 'medium', 'low', 'none'
 
   DetectionSummary({
     required this.totalLeavesDetected,
@@ -108,6 +110,8 @@ class DetectionSummary {
     this.dominantDisease,
     required this.severityLevel,
     required this.requiresImmediateAction,
+    this.averageConfidence = 0.0,
+    this.detectionReliability = 'none',
   });
 
   factory DetectionSummary.fromJson(Map<String, dynamic> json) {
@@ -120,6 +124,8 @@ class DetectionSummary {
       dominantDisease: json['dominant_disease'],
       severityLevel: json['severity_level'] ?? 'none',
       requiresImmediateAction: json['requires_immediate_action'] ?? false,
+      averageConfidence: (json['average_confidence'] as num?)?.toDouble() ?? 0.0,
+      detectionReliability: json['detection_reliability'] ?? 'none',
     );
   }
 
@@ -132,13 +138,15 @@ class DetectionSummary {
     'dominant_disease': dominantDisease,
     'severity_level': severityLevel,
     'requires_immediate_action': requiresImmediateAction,
+    'average_confidence': averageConfidence,
+    'detection_reliability': detectionReliability,
   };
 }
 
 class DiseaseDetectionResult {
   final String diseaseType; // 'Healthy', 'Leaf Blight', 'Red Rust', 'Not A Leaf', etc.
   final double confidence;
-  final String severity; // 'Low', 'Medium', 'High'
+  final String severity; // 'Low', 'Medium', 'High', 'Critical', 'Uncertain'
   final List<String> recommendations;
   final DateTime timestamp;
 
@@ -155,8 +163,29 @@ class DiseaseDetectionResult {
   final List<Detection>? detections;
   final DetectionSummary? summary;
 
+  // Quality & validation
+  final double? imageQualityScore;
+  final String? validationMessage;
+  final bool isPotentialFalsePositive;
+
   /// Check if the result indicates the image is not a valid leaf
-  bool get isNotALeaf => diseaseType == 'Not A Leaf';
+  bool get isNotALeaf => diseaseType == 'Not A Leaf' || 
+    (summary?.dominantDisease == 'not_a_leaf');
+
+  /// Check if the leaf is healthy
+  bool get isHealthy => diseaseType == 'Healthy';
+
+  /// Check if the detection confidence is uncertain
+  bool get isUncertain => severity == 'Uncertain' || confidence < 0.45;
+
+  /// Human-readable reliability label
+  String get reliabilityLabel {
+    if (confidence >= 0.85) return 'Very High';
+    if (confidence >= 0.70) return 'High';
+    if (confidence >= 0.50) return 'Moderate';
+    if (confidence >= 0.30) return 'Low';
+    return 'Very Low';
+  }
 
   DiseaseDetectionResult({
     required this.diseaseType,
@@ -173,6 +202,9 @@ class DiseaseDetectionResult {
     this.processingTimeMs,
     this.detections,
     this.summary,
+    this.imageQualityScore,
+    this.validationMessage,
+    this.isPotentialFalsePositive = false,
   });
 
   /// Create from API response
@@ -264,6 +296,15 @@ class DiseaseDetectionResult {
       ];
     }
 
+    // Parse image quality score from API
+    final imageQuality = json['image_quality'] as Map<String, dynamic>?;
+    final imageQualityScore = (imageQuality?['overall_score'] as num?)?.toDouble();
+
+    // Parse validation info
+    final validation = json['validation'] as Map<String, dynamic>?;
+    final validationMessage = validation?['message'] as String?;
+    final isPotentialFalsePositive = validation?['is_potential_false_positive'] == true;
+
     return DiseaseDetectionResult(
       diseaseType: diseaseType,
       confidence: confidence,
@@ -276,6 +317,9 @@ class DiseaseDetectionResult {
       processingTimeMs: (json['processing_time_ms'] as num?)?.toDouble(),
       detections: detections,
       summary: summary,
+      imageQualityScore: imageQualityScore,
+      validationMessage: validationMessage,
+      isPotentialFalsePositive: isPotentialFalsePositive,
     );
   }
 
@@ -312,6 +356,8 @@ class DiseaseDetectionResult {
     'processing_time_ms': processingTimeMs,
     'detections': detections?.map((d) => d.toJson()).toList(),
     'summary': summary?.toJson(),
+    'image_quality_score': imageQualityScore,
+    'validation_message': validationMessage,
   };
 
   /// Create from stored JSON
@@ -331,6 +377,8 @@ class DiseaseDetectionResult {
       processingTimeMs: (json['processing_time_ms'] as num?)?.toDouble(),
       detections: (json['detections'] as List?)?.map((d) => Detection.fromJson(d)).toList(),
       summary: json['summary'] != null ? DetectionSummary.fromJson(json['summary']) : null,
+      imageQualityScore: (json['image_quality_score'] as num?)?.toDouble(),
+      validationMessage: json['validation_message'],
     );
   }
 }

@@ -34,6 +34,8 @@ async def create_detection(
         "processing_time_ms": detection.processing_time_ms,
         "model_version": detection.model_version,
         "request_id": detection.request_id,
+        "image_quality_score": detection.image_quality_score,
+        "validation_message": detection.validation_message,
         "created_at": datetime.utcnow()
     }
 
@@ -64,6 +66,9 @@ async def create_detection_with_image(
     infected_count: Optional[int] = Form(None),
     health_percentage: Optional[float] = Form(None),
     disease_counts: Optional[str] = Form(None),  # JSON string
+    # Quality & Validation
+    image_quality_score: Optional[float] = Form(None),
+    validation_message: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_active_user)
 ):
     """Create a new disease detection record with image upload"""
@@ -104,6 +109,9 @@ async def create_detection_with_image(
         "infected_count": infected_count,
         "health_percentage": health_percentage,
         "disease_counts": disease_counts_dict,
+        # Quality & Validation
+        "image_quality_score": image_quality_score,
+        "validation_message": validation_message,
     }
 
     result = await db.disease_detections.insert_one(detection_doc)
