@@ -1,55 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design_system/tea_colors.dart';
 import '../../../../core/design_system/tea_typography.dart';
 import '../../../../core/design_system/tea_spacing.dart';
+import '../../../../core/providers/iot_live_provider.dart';
 import '../../data/datasources/fertilizer_ml_service.dart';
 import '../../domain/entities/fertilizer_recommendation.dart';
 import 'package:iteagrow/features/iot_connectivity/domain/models/iot_models.dart';
 
-class SoilFertilizationScreen extends StatefulWidget {
+class SoilFertilizationScreen extends ConsumerStatefulWidget {
   const SoilFertilizationScreen({super.key});
 
   @override
-  State<SoilFertilizationScreen> createState() =>
+  ConsumerState<SoilFertilizationScreen> createState() =>
       _SoilFertilizationScreenState();
 }
 
-class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
+class _SoilFertilizationScreenState extends ConsumerState<SoilFertilizationScreen> {
   final FertilizerMLService _mlService = FertilizerMLService();
 
-  // Live sensor readings (simulated - replace with real IoT data)
-  double soilMoisture = 65.5;
+  // NPK and pH are not from ESP32 — keep as manual/default values
   double soilPH = 6.2;
   double nitrogen = 42.0;
   double phosphorus = 28.0;
   double potassium = 35.0;
-  double temperature = 26.5;
-  double humidity = 72.0;
 
   FertilizerRecommendation? _recommendation;
   bool _isCalculating = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Simulate live data updates
-    _startLiveUpdates();
-  }
-
-  void _startLiveUpdates() {
-    // Simulate sensor data updates every 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() {
-          // Simulate small variations in readings
-          soilMoisture += (DateTime.now().millisecond % 10 - 5) * 0.1;
-          temperature += (DateTime.now().millisecond % 10 - 5) * 0.05;
-          humidity += (DateTime.now().millisecond % 10 - 5) * 0.1;
-        });
-        _startLiveUpdates();
-      }
-    });
-  }
 
   Future<void> _getFertilizerRecommendation() async {
     setState(() => _isCalculating = true);
@@ -77,19 +54,19 @@ class _SoilFertilizationScreenState extends State<SoilFertilizationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final liveState = ref.watch(iotLiveProvider);
+    final device = liveState.deviceList.isNotEmpty ? liveState.deviceList.first : null;
+    final soilMoisture = device?.soilMoisture ?? 65.5;
+    final temperature  = device?.temperature  ?? 26.5;
+    final humidity     = device?.humidity     ?? 72.0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Soil Monitoring & Fertilization'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () {
-              setState(() {
-                // Simulate refresh
-                soilMoisture = 60 + (DateTime.now().millisecond % 20);
-                soilPH = 5.5 + (DateTime.now().millisecond % 15) * 0.1;
-              });
-            },
+            onPressed: () => ref.read(iotLiveProvider.notifier).refresh(),
           ),
         ],
       ),

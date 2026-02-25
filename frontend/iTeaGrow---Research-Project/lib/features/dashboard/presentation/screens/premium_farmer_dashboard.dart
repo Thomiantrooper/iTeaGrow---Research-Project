@@ -7,6 +7,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/widgets/jarvis_assistant.dart';
 import '../../../../core/animations/tea_animations.dart';
 import '../../../../core/providers/global_iot_provider.dart';
+import '../../../../core/providers/iot_live_provider.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 
 /// Premium Farmer Dashboard with 3D hero and modern UI
@@ -500,22 +501,38 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
 
   Widget _buildMetricsRow() {
     final iotState = ref.watch(globalIoTProvider);
-    final hasLiveData = iotState.hasData;
+    // Prefer MQTT live feed (iotLiveProvider); fall back to globalIoTProvider
+    final mqttState = ref.watch(iotLiveProvider);
+    final mqttDevice = mqttState.deviceList.isNotEmpty
+        ? mqttState.deviceList.first
+        : null;
+    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
+    final hasLiveData = hasMqtt || iotState.hasData;
 
-    // Get temperature value
-    final temperature =
-        hasLiveData ? iotState.temperature.toStringAsFixed(1) : '24';
+    // Temperature: MQTT first, then globalIoT, then placeholder
+    final temperature = hasMqtt && mqttDevice.temperature != null
+        ? mqttDevice.temperature!.toStringAsFixed(1)
+        : iotState.hasData
+            ? iotState.temperature.toStringAsFixed(1)
+            : '--';
 
-    // Get humidity value
-    final humidity = hasLiveData ? iotState.humidity.toStringAsFixed(0) : '78';
+    // Humidity: MQTT first, then globalIoT, then placeholder
+    final humidity = hasMqtt && mqttDevice.humidity != null
+        ? mqttDevice.humidity!.toStringAsFixed(0)
+        : iotState.hasData
+            ? iotState.humidity.toStringAsFixed(0)
+            : '--';
 
-    // Get air quality label
-    final airQuality =
-        hasLiveData ? _getAirQualityLabel(iotState.airQuality) : 'Good';
-
-    final airQualityColor = hasLiveData
-        ? _getAirQualityColor(iotState.airQuality)
-        : TeaColors.healthyGreen;
+    // Air quality: MQTT first (ppm → label), then globalIoT, then placeholder
+    final double aqValue = hasMqtt && mqttDevice.airQuality != null
+        ? mqttDevice.airQuality!
+        : iotState.hasData
+            ? iotState.airQuality.toDouble()
+            : -1;
+    final airQuality = aqValue >= 0 ? _getAirQualityLabel(aqValue.toInt()) : '--';
+    final airQualityColor = aqValue >= 0
+        ? _getAirQualityColor(aqValue.toInt())
+        : TeaColors.darkGray;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

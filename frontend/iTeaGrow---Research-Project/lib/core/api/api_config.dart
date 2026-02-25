@@ -98,6 +98,12 @@ class ApiConfig {
   static String get iotRiskFactors => '$apiBaseUrl/iot/risk-factors';
   static String get iotAnomalies => '$apiBaseUrl/iot/anomalies';
 
+  // MQTT Live Streaming Endpoints (data stored by mqtt_bridge.py)
+  // Returns latest reading per device pushed by MQTT bridge (user_id='iot_system')
+  static String get iotLiveLatest => '$effectiveBaseUrl/api/iot/live/latest';
+  static String iotLiveDevice(String deviceId) =>
+      '$effectiveBaseUrl/api/iot/live/latest?device_id=$deviceId';
+
   // Bluetooth IoT Endpoints
   static String get bluetoothConfig => '$apiBaseUrl/bluetooth/config';
   static String get bluetoothRegister =>
