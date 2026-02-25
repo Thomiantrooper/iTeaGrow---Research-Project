@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/providers/global_iot_provider.dart';
+import '../../../../core/providers/iot_live_provider.dart';
 import '../../data/services/websocket_sensor_service.dart';
 import '../widgets/voice_assistant_panel.dart';
 
@@ -82,7 +83,7 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     // Initialize URL controller from global state
     final globalState = ref.read(globalIoTProvider);
     _wsUrlController = TextEditingController(text: globalState.serverUrl);
@@ -188,7 +189,7 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
           unselectedLabelColor: TeaColors.darkGray,
           onTap: (index) {
             setState(() {
-              _connectionType = ['all', 'bluetooth', 'wifi', 'websocket'][index];
+              _connectionType = ['all', 'bluetooth', 'wifi', 'websocket', 'mqtt'][index];
             });
           },
           tabs: [
@@ -229,6 +230,16 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
                   Icon(Icons.cloud, size: 16),
                   SizedBox(width: 4),
                   Text('WS'),
+                ],
+              ),
+            ),
+            const Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.sensors, size: 16),
+                  SizedBox(width: 4),
+                  Text('Live'),
                 ],
               ),
             ),
@@ -273,21 +284,23 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
                     ),
                   ).animate().fadeIn(),
 
-                // Device List
+                // Device List or MQTT Live View
                 Expanded(
-                  child: filteredDevices.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          padding: TeaSpacing.screenPadding,
-                          itemCount: filteredDevices.length,
-                          itemBuilder: (context, index) {
-                            final device = filteredDevices[index];
-                            return _buildDeviceCard(device)
-                                .animate()
-                                .fadeIn(delay: (index * 100).ms)
-                                .slideX(begin: 0.1, end: 0);
-                          },
-                        ),
+                  child: _connectionType == 'mqtt'
+                      ? _buildMqttLiveView()
+                      : filteredDevices.isEmpty
+                          ? _buildEmptyState()
+                          : ListView.builder(
+                              padding: TeaSpacing.screenPadding,
+                              itemCount: filteredDevices.length,
+                              itemBuilder: (context, index) {
+                                final device = filteredDevices[index];
+                                return _buildDeviceCard(device)
+                                    .animate()
+                                    .fadeIn(delay: (index * 100).ms)
+                                    .slideX(begin: 0.1, end: 0);
+                              },
+                            ),
                 ),
               ],
             ),
@@ -472,6 +485,267 @@ class _PremiumIoTScreenState extends ConsumerState<PremiumIoTScreen>
       ),
     );
   }
+
+  // ─── MQTT Live View ────────────────────────────────────────────────────────
+
+  Widget _buildMqttLiveView() {
+    final liveState = ref.watch(iotLiveProvider);
+
+    // Initial load spinner
+    if (liveState.isLoading && !liveState.hasDevices) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: TeaColors.freshLeaf),
+            SizedBox(height: TeaSpacing.md),
+            Text('Fetching live sensor data…'),
+          ],
+        ),
+      );
+    }
+
+    // Auth / network error with no cached devices
+    if (liveState.error != null && !liveState.hasDevices) {
+      return Center(
+        child: Padding(
+          padding: TeaSpacing.screenPadding,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.cloud_off, size: 64, color: TeaColors.mediumGray),
+              const SizedBox(height: TeaSpacing.md),
+              Text(
+                'No MQTT data available',
+                style: TeaTypography.titleMedium.copyWith(color: TeaColors.darkGray),
+              ),
+              const SizedBox(height: TeaSpacing.sm),
+              Text(
+                liveState.error!,
+                style: TeaTypography.bodySmall.copyWith(color: TeaColors.mediumGray),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: TeaSpacing.lg),
+              TeaButton.primary(
+                label: 'Retry',
+                icon: Icons.refresh,
+                onPressed: () => ref.read(iotLiveProvider.notifier).refresh(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // No devices yet
+    if (!liveState.hasDevices) {
+      return Center(
+        child: Padding(
+          padding: TeaSpacing.screenPadding,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.sensors_off, size: 64, color: TeaColors.mediumGray),
+              const SizedBox(height: TeaSpacing.md),
+              Text(
+                'No MQTT Devices Online',
+                style: TeaTypography.titleMedium.copyWith(color: TeaColors.darkGray),
+              ),
+              const SizedBox(height: TeaSpacing.sm),
+              Text(
+                'Waiting for ESP32 to publish sensor data via MQTT…\nTopic: iteagrow/sensors/{device_id}',
+                style: TeaTypography.bodySmall.copyWith(color: TeaColors.mediumGray),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Live device cards
+    return Column(
+      children: [
+        // Status banner
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: TeaSpacing.md,
+            vertical: TeaSpacing.sm,
+          ),
+          color: TeaColors.healthyGreen.withOpacity(0.08),
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: TeaColors.healthyGreen,
+                  shape: BoxShape.circle,
+                ),
+              ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1500.ms),
+              const SizedBox(width: TeaSpacing.sm),
+              Text(
+                'MQTT Live  •  ${liveState.deviceCount} device${liveState.deviceCount > 1 ? 's' : ''} online',
+                style: TeaTypography.bodySmall.copyWith(
+                  color: TeaColors.healthyGreen,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              if (liveState.lastRefreshed != null)
+                Text(
+                  'Updated ${_formatLastSeen(liveState.lastRefreshed!)}',
+                  style: TeaTypography.labelSmall.copyWith(
+                    color: TeaColors.mediumGray,
+                  ),
+                ),
+              if (liveState.isLoading)
+                const Padding(
+                  padding: EdgeInsets.only(left: TeaSpacing.sm),
+                  child: SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: TeaColors.healthyGreen,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: TeaSpacing.screenPadding,
+            itemCount: liveState.deviceList.length,
+            itemBuilder: (context, index) {
+              return _buildMqttDeviceCard(liveState.deviceList[index])
+                  .animate()
+                  .fadeIn(delay: (index * 100).ms)
+                  .slideX(begin: 0.1, end: 0);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMqttDeviceCard(LiveSensorReading reading) {
+    final isOnline = !reading.isStale;
+    final dotColor = isOnline ? TeaColors.healthyGreen : TeaColors.mediumGray;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: TeaSpacing.md),
+      child: TeaCard.elevated(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(TeaSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: TeaColors.freshLeaf.withOpacity(0.1),
+                    borderRadius: TeaRadius.radiusSm,
+                  ),
+                  child: const Icon(Icons.sensors, color: TeaColors.freshLeaf, size: 24),
+                ),
+                const SizedBox(width: TeaSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(reading.deviceId, style: TeaTypography.titleSmall),
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: dotColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: TeaSpacing.xs),
+                          Text(
+                            isOnline ? 'Online  •  MQTT' : 'Stale  •  ${reading.lastSeenLabel}',
+                            style: TeaTypography.labelSmall.copyWith(color: dotColor),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: TeaSpacing.sm,
+                    vertical: TeaSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: TeaColors.freshLeaf.withOpacity(0.1),
+                    borderRadius: TeaRadius.radiusSm,
+                  ),
+                  child: Text(
+                    reading.lastSeenLabel,
+                    style: TeaTypography.labelSmall.copyWith(
+                      color: TeaColors.freshLeaf,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Sensor chips
+            if (reading.hasData) ...[
+              const SizedBox(height: TeaSpacing.md),
+              const Divider(height: 1),
+              const SizedBox(height: TeaSpacing.md),
+              Wrap(
+                spacing: TeaSpacing.md,
+                runSpacing: TeaSpacing.sm,
+                children: [
+                  if (reading.temperature != null)
+                    _buildSensorChip(
+                      Icons.thermostat,
+                      '${reading.temperature!.toStringAsFixed(1)}°C',
+                      TeaColors.warningAmber,
+                    ),
+                  if (reading.humidity != null)
+                    _buildSensorChip(
+                      Icons.water_drop,
+                      '${reading.humidity!.toStringAsFixed(1)}%',
+                      TeaColors.infoSky,
+                    ),
+                  if (reading.soilMoisture != null)
+                    _buildSensorChip(
+                      Icons.grass,
+                      '${reading.soilMoisture!.toStringAsFixed(1)}%',
+                      TeaColors.richSoil,
+                    ),
+                  if (reading.airQuality != null)
+                    _buildSensorChip(
+                      Icons.air,
+                      '${reading.airQuality!.toStringAsFixed(0)} ppm  •  ${reading.airQualityLabel}',
+                      TeaColors.leafLight,
+                    ),
+                  if (reading.lightLevel != null)
+                    _buildSensorChip(
+                      Icons.wb_sunny,
+                      '${reading.lightLevel!.toStringAsFixed(0)} lux',
+                      TeaColors.goldenSunlight,
+                    ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Device Cards (existing BLE/WiFi/WS) ──────────────────────────────────
 
   Widget _buildDeviceCard(IoTDeviceModel device) {
     final isConnected = device.status == DeviceStatus.connected;

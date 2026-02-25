@@ -206,6 +206,50 @@ async def get_iot_statistics(
         "light_level": None
     }
 
+@router.get("/live/latest")
+async def get_live_latest(
+    device_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_active_user),
+):
+    """
+    Get the latest sensor reading(s) pushed by the MQTT bridge.
+    All MQTT data is stored with user_id='iot_system', so this endpoint
+    returns live readings without a per-user filter.
+    """
+    db = get_database()
+
+    if device_id:
+        data = await db.iot_data.find_one(
+            {"user_id": "iot_system", "device_id": device_id},
+            sort=[("timestamp", -1)],
+        )
+        if data:
+            data["_id"] = str(data["_id"])
+            return data
+        return {}
+
+    # All MQTT devices — return latest reading per device_id
+    pipeline = [
+        {"$match": {"user_id": "iot_system"}},
+        {"$sort": {"timestamp": -1}},
+        {
+            "$group": {
+                "_id": "$device_id",
+                "latest": {"$first": "$$ROOT"},
+            }
+        },
+    ]
+
+    cursor = db.iot_data.aggregate(pipeline)
+    result = {}
+    async for doc in cursor:
+        data = doc["latest"]
+        data["_id"] = str(data["_id"])
+        result[doc["_id"]] = data
+
+    return result
+
+
 @router.delete("/data")
 async def delete_old_data(
     days: int = Query(30, ge=1, le=365),

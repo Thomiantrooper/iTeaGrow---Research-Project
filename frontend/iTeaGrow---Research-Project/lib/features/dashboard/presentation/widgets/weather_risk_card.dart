@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/jarvis_theme.dart';
 import '../../../../core/widgets/hologram_card.dart';
+import '../../../../core/providers/iot_live_provider.dart';
 
 /// Weather-based disease risk alert card
-class WeatherRiskCard extends StatefulWidget {
+class WeatherRiskCard extends ConsumerStatefulWidget {
   const WeatherRiskCard({super.key});
 
   @override
-  State<WeatherRiskCard> createState() => _WeatherRiskCardState();
+  ConsumerState<WeatherRiskCard> createState() => _WeatherRiskCardState();
 }
 
-class _WeatherRiskCardState extends State<WeatherRiskCard>
+class _WeatherRiskCardState extends ConsumerState<WeatherRiskCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -34,18 +36,20 @@ class _WeatherRiskCardState extends State<WeatherRiskCard>
     super.dispose();
   }
 
-  // Simulated weather data - in production, this would come from API
   final WeatherRiskData _riskData = WeatherRiskData(
     riskLevel: RiskLevel.moderate,
     disease: 'Blister Blight',
-    temperature: 24.5,
-    humidity: 85,
     forecast: 'Foggy morning expected',
     recommendation: 'Inspect leaves early morning. Consider preventive spray.',
   );
 
   @override
   Widget build(BuildContext context) {
+    final liveState = ref.watch(iotLiveProvider);
+    final device = liveState.deviceList.isNotEmpty ? liveState.deviceList.first : null;
+    final liveTemp = device?.temperature;
+    final liveHumidity = device?.humidity;
+
     return HologramCard(
       enableGlow: _riskData.riskLevel != RiskLevel.low,
       glowColor: _riskData.riskColor,
@@ -143,7 +147,7 @@ class _WeatherRiskCardState extends State<WeatherRiskCard>
                     size: 32,
                   ),
                   Text(
-                    '${_riskData.temperature.toStringAsFixed(0)}°C',
+                    liveTemp != null ? '${liveTemp.toStringAsFixed(0)}°C' : '--°C',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -168,13 +172,13 @@ class _WeatherRiskCardState extends State<WeatherRiskCard>
               children: [
                 _buildWeatherChip(
                   Icons.thermostat_outlined,
-                  '${_riskData.temperature.toStringAsFixed(1)}°C',
+                  liveTemp != null ? '${liveTemp.toStringAsFixed(1)}°C' : '--°C',
                   Colors.deepOrange,
                 ),
                 const SizedBox(width: JarvisTheme.spacingSm),
                 _buildWeatherChip(
                   Icons.water_drop_outlined,
-                  '${_riskData.humidity}%',
+                  liveHumidity != null ? '${liveHumidity.toStringAsFixed(0)}%' : '--%',
                   Colors.blue,
                 ),
                 const SizedBox(width: JarvisTheme.spacingSm),
@@ -323,16 +327,12 @@ enum RiskLevel {
 class WeatherRiskData {
   final RiskLevel riskLevel;
   final String disease;
-  final double temperature;
-  final int humidity;
   final String forecast;
   final String recommendation;
 
   WeatherRiskData({
     required this.riskLevel,
     required this.disease,
-    required this.temperature,
-    required this.humidity,
     required this.forecast,
     required this.recommendation,
   });
