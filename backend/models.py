@@ -76,6 +76,8 @@ class DetectionSummary(BaseModel):
     dominant_disease: Optional[str] = None
     severity_level: str = "Low"
     requires_immediate_action: bool = False
+    average_confidence: float = 0.0
+    detection_reliability: str = "none" # 'high', 'medium', 'low', 'none'
 
 class DiseaseDetection(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
@@ -115,6 +117,9 @@ class DiseaseDetection(BaseModel):
     app_version: Optional[str] = Field(default=None, description="Mobile app version")
     image_resolution: Optional[str] = Field(default=None, description="Original image resolution")
     image_size_kb: Optional[float] = Field(default=None, description="Image file size in KB")
+    # Quality & Validation Persistence
+    image_quality_score: Optional[float] = None
+    validation_message: Optional[str] = None
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -146,6 +151,9 @@ class DiseaseDetectionCreate(BaseModel):
     app_version: Optional[str] = None
     image_resolution: Optional[str] = None
     image_size_kb: Optional[float] = None
+    # Quality & Validation Input
+    image_quality_score: Optional[float] = None
+    validation_message: Optional[str] = None
 
 # IoT Data Models
 class IoTDataPoint(BaseModel):

@@ -74,6 +74,8 @@ async def get_report_data(
             "image_path": detection.get("image_path"),
             "processing_time_ms": detection.get("processing_time_ms"),
             "model_version": detection.get("model_version"),
+            "image_quality_score": detection.get("image_quality_score"),
+            "validation_message": detection.get("validation_message"),
         },
         "farmer": {
             "name": user["full_name"] if user else "Unknown",
@@ -86,6 +88,14 @@ async def get_report_data(
         "precautions": precautions,
         "summary": detection.get("summary"),
         "detections": detection.get("detections"),
+        "field_analysis": {
+            "is_field_analysis": detection.get("is_field_analysis", False),
+            "detected_leaf_count": detection.get("detected_leaf_count"),
+            "healthy_count": detection.get("healthy_count"),
+            "infected_count": detection.get("infected_count"),
+            "health_percentage": detection.get("health_percentage"),
+            "disease_counts": detection.get("disease_counts"),
+        } if detection.get("is_field_analysis") else None,
         "organization": {
             "name": "iTeaGrow",
             "tagline": "AI-Powered Tea Leaf Disease Detection",

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:http/http.dart' as http;
@@ -6,6 +7,11 @@ import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_config.dart';
 import '../../../../core/api/api_exceptions.dart';
 import '../../domain/entities/disease_detection_result.dart';
+
+/// Image validation constants
+const int _maxImageSizeBytes = 20 * 1024 * 1024; // 20 MB
+const int _minImageSizeBytes = 5 * 1024; // 5 KB
+const Set<String> _allowedExtensions = {'.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff'};
 
 class DiseaseDetectionMLService {
   static final DiseaseDetectionMLService _instance =
@@ -53,6 +59,35 @@ class DiseaseDetectionMLService {
     }
   }
 
+  /// Validate image file before sending to backend.
+  /// Returns null if valid, or an error message if invalid.
+  String? _validateImageFile(String imagePath) {
+    if (kIsWeb) return null; // Skip file checks on web
+
+    final file = File(imagePath);
+    if (!file.existsSync()) {
+      return 'Image file not found at: $imagePath';
+    }
+
+    final fileSize = file.lengthSync();
+    if (fileSize < _minImageSizeBytes) {
+      return 'Image file is too small (${(fileSize / 1024).toStringAsFixed(1)} KB). '
+          'The file may be corrupt. Minimum size is ${_minImageSizeBytes ~/ 1024} KB.';
+    }
+    if (fileSize > _maxImageSizeBytes) {
+      return 'Image file is too large (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB). '
+          'Maximum size is ${_maxImageSizeBytes ~/ 1024 ~/ 1024} MB.';
+    }
+
+    final extension = imagePath.contains('.') ? '.${imagePath.split('.').last.toLowerCase()}' : '';
+    if (extension.isNotEmpty && !_allowedExtensions.contains(extension)) {
+      return 'Unsupported image format: $extension. '
+          'Please use JPEG, PNG, or WebP.';
+    }
+
+    return null; // Valid
+  }
+
   /// Predict disease from image using backend API (Single Leaf)
   Future<DiseaseDetectionResult> predict(
     String imagePath, {
@@ -67,6 +102,22 @@ class DiseaseDetectionMLService {
     // Ensure initialized
     if (!_isInitialized) {
       await initialize();
+    }
+
+    // Pre-flight image validation
+    final validationError = _validateImageFile(imagePath);
+    if (validationError != null) {
+      debugPrint('Image validation failed: $validationError');
+      return DiseaseDetectionResult(
+        diseaseType: 'Not A Leaf',
+        confidence: 0.0,
+        severity: 'None',
+        recommendations: [
+          validationError,
+          'Please select a valid image file.',
+        ],
+        timestamp: DateTime.now(),
+      );
     }
 
     debugPrint('>>> PREDICT CALLED <<<');
@@ -167,6 +218,26 @@ class DiseaseDetectionMLService {
       await initialize();
     }
 
+    // Pre-flight image validation
+    final validationError = _validateImageFile(imagePath);
+    if (validationError != null) {
+      debugPrint('Field analysis image validation failed: $validationError');
+      return FieldAnalysisResult(
+        detectedLeafCount: 0,
+        healthyCount: 0,
+        infectedCount: 0,
+        healthPercentage: 0.0,
+        overallStatus: 'Invalid Image',
+        diseaseCounts: {},
+        timestamp: DateTime.now(),
+        recommendations: [
+          validationError,
+          'Please select a valid image file for field analysis.',
+        ],
+        boundingBoxes: [],
+      );
+    }
+
     if (_isBackendAvailable) {
       try {
         return await _analyzeFieldWithBackend(
@@ -232,7 +303,7 @@ class DiseaseDetectionMLService {
     // Parse response and add IoT data
     final result = DiseaseDetectionResult.fromApiResponse(response);
 
-    // Return result with IoT context
+    // Return result with IoT context + quality/validation data
     return DiseaseDetectionResult(
       diseaseType: result.diseaseType,
       confidence: result.confidence,
@@ -247,6 +318,8 @@ class DiseaseDetectionMLService {
       processingTimeMs: result.processingTimeMs,
       detections: result.detections,
       summary: result.summary,
+      imageQualityScore: result.imageQualityScore,
+      validationMessage: result.validationMessage,
     );
   }
 
@@ -653,8 +726,10 @@ class FieldAnalysisResult {
   final DateTime timestamp;
   final double? temperature;
   final double? humidity;
+  final double? airQuality;
   final List<String> recommendations;
   final List<BoundingBox> boundingBoxes;
+  final DetectionSummary? summary;
 
   FieldAnalysisResult({
     required this.detectedLeafCount,
@@ -666,8 +741,10 @@ class FieldAnalysisResult {
     required this.timestamp,
     this.temperature,
     this.humidity,
+    this.airQuality,
     required this.recommendations,
     required this.boundingBoxes,
+    this.summary,
   });
 
   factory FieldAnalysisResult.fromApiResponse(Map<String, dynamic> json) {
@@ -686,8 +763,10 @@ class FieldAnalysisResult {
       timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
       temperature: json['temperature']?.toDouble(),
       humidity: json['humidity']?.toDouble(),
+      airQuality: json['air_quality']?.toDouble(),
       recommendations: List<String>.from(json['recommendations'] ?? []),
       boundingBoxes: boxes,
+      summary: json['summary'] != null ? DetectionSummary.fromJson(json['summary']) : null,
     );
   }
 }
