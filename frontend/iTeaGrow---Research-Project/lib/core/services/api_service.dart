@@ -63,8 +63,12 @@ class ApiService {
     T Function(dynamic)? fromJson,
   }) async {
     try {
+      final String url = endpoint.startsWith('http')
+          ? endpoint
+          : '${ApiConfig.effectiveBaseUrl}$endpoint';
+
       final response = await http.get(
-        Uri.parse('${ApiConfig.effectiveBaseUrl}$endpoint'),
+        Uri.parse(url),
         headers: _headers,
       );
 
@@ -85,8 +89,12 @@ class ApiService {
     T Function(dynamic)? fromJson,
   }) async {
     try {
+      final String url = endpoint.startsWith('http')
+          ? endpoint
+          : '${ApiConfig.effectiveBaseUrl}$endpoint';
+
       final response = await http.post(
-        Uri.parse('${ApiConfig.effectiveBaseUrl}$endpoint'),
+        Uri.parse(url),
         headers: _headers,
         body: body != null ? jsonEncode(body) : null,
       );
@@ -108,8 +116,12 @@ class ApiService {
     T Function(dynamic)? fromJson,
   }) async {
     try {
+      final String url = endpoint.startsWith('http')
+          ? endpoint
+          : '${ApiConfig.effectiveBaseUrl}$endpoint';
+
       final response = await http.put(
-        Uri.parse('${ApiConfig.effectiveBaseUrl}$endpoint'),
+        Uri.parse(url),
         headers: _headers,
         body: body != null ? jsonEncode(body) : null,
       );
@@ -130,8 +142,12 @@ class ApiService {
     T Function(dynamic)? fromJson,
   }) async {
     try {
+      final String url = endpoint.startsWith('http')
+          ? endpoint
+          : '${ApiConfig.effectiveBaseUrl}$endpoint';
+
       final response = await http.delete(
-        Uri.parse('${ApiConfig.effectiveBaseUrl}$endpoint'),
+        Uri.parse(url),
         headers: _headers,
       );
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/providers/iot_live_provider.dart';
 import '../../../auth/data/providers/auth_provider_simple.dart';
 
 class FarmerDashboardSimple extends ConsumerWidget {
@@ -10,6 +11,9 @@ class FarmerDashboardSimple extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateSimpleProvider);
+    final liveState = ref.watch(iotLiveProvider);
+    final device = liveState.deviceList.isNotEmpty ? liveState.deviceList.first : null;
+    final hasLive = device != null && device.hasData;
 
     return Scaffold(
       appBar: AppBar(
@@ -111,25 +115,49 @@ class FarmerDashboardSimple extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            const _SensorCard(
+            _SensorCard(
               title: 'Soil Moisture',
-              value: '65%',
-              status: 'Optimal',
-              statusColor: AppTheme.statusGood,
+              value: hasLive && device.soilMoisture != null
+                  ? '${device.soilMoisture!.toStringAsFixed(0)}%'
+                  : '--',
+              status: hasLive && device.soilMoisture != null
+                  ? (device.soilMoisture! < 35 || device.soilMoisture! > 75 ? 'Warning' : 'Optimal')
+                  : 'No data',
+              statusColor: hasLive && device.soilMoisture != null
+                  ? (device.soilMoisture! < 35 || device.soilMoisture! > 75
+                      ? AppTheme.statusWarning
+                      : AppTheme.statusGood)
+                  : AppTheme.textSecondary,
             ),
             const SizedBox(height: 8),
-            const _SensorCard(
-              title: 'pH Level',
-              value: '5.8',
-              status: 'Good',
-              statusColor: AppTheme.statusGood,
+            _SensorCard(
+              title: 'Humidity',
+              value: hasLive && device.humidity != null
+                  ? '${device.humidity!.toStringAsFixed(0)}%'
+                  : '--',
+              status: hasLive && device.humidity != null
+                  ? (device.humidity! < 55 || device.humidity! > 85 ? 'Warning' : 'Optimal')
+                  : 'No data',
+              statusColor: hasLive && device.humidity != null
+                  ? (device.humidity! < 55 || device.humidity! > 85
+                      ? AppTheme.statusWarning
+                      : AppTheme.statusGood)
+                  : AppTheme.textSecondary,
             ),
             const SizedBox(height: 8),
-            const _SensorCard(
+            _SensorCard(
               title: 'Temperature',
-              value: '24°C',
-              status: 'Optimal',
-              statusColor: AppTheme.statusGood,
+              value: hasLive && device.temperature != null
+                  ? '${device.temperature!.toStringAsFixed(1)}°C'
+                  : '--',
+              status: hasLive && device.temperature != null
+                  ? (device.temperature! < 18 || device.temperature! > 30 ? 'Warning' : 'Optimal')
+                  : 'No data',
+              statusColor: hasLive && device.temperature != null
+                  ? (device.temperature! < 18 || device.temperature! > 30
+                      ? AppTheme.statusWarning
+                      : AppTheme.statusGood)
+                  : AppTheme.textSecondary,
             ),
 
             const SizedBox(height: 24),

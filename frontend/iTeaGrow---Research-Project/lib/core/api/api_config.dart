@@ -98,6 +98,17 @@ class ApiConfig {
   static String get iotRiskFactors => '$apiBaseUrl/iot/risk-factors';
   static String get iotAnomalies => '$apiBaseUrl/iot/anomalies';
 
+  // Environmental IoT Microservice (Standalone Railway Backend)
+  static const String environmentalIotMicroserviceBaseUrl =
+      'https://iteagrow-environment-monitoring-iot-api.up.railway.app';
+
+  // Environmental MQTT Live Streaming Endpoints (data stored by mqtt_bridge.py)
+  // Returns latest reading per device pushed by MQTT bridge
+  static String get environmentalIotLiveLatest =>
+      '$environmentalIotMicroserviceBaseUrl/api/iot/live/latest';
+  static String environmentalIotLiveDevice(String deviceId) =>
+      '$environmentalIotMicroserviceBaseUrl/api/iot/live/latest?device_id=$deviceId';
+
   // Bluetooth IoT Endpoints
   static String get bluetoothConfig => '$apiBaseUrl/bluetooth/config';
   static String get bluetoothRegister =>
@@ -155,13 +166,22 @@ class ApiConfig {
   static String get chatbotHealth => '$apiBaseUrl/chatbot/health';
   static String get chatbotSuggestions => '$apiBaseUrl/chatbot/suggestions';
 
-  // Auth Endpoints
-  static String get authLogin => '$effectiveBaseUrl/api/users/login';
-  static String get authRegister => '$effectiveBaseUrl/api/users/register';
+  // Auth Endpoints (Using Standalone Authentication Microservice)
+  static const String authMicroserviceBaseUrl =
+      'https://authentication-iteagrow-api.up.railway.app';
+
+  static String get authLogin => '$authMicroserviceBaseUrl/api/users/login';
+  static String get authGoogleLogin =>
+      '$authMicroserviceBaseUrl/api/users/google-login';
+  static String get authRegister =>
+      '$authMicroserviceBaseUrl/api/users/register';
   static String get authVerifyToken =>
-      '$effectiveBaseUrl/api/users/verify-token';
-  static String get authProfile => '$effectiveBaseUrl/api/users/me';
-  static String get authLogout => '$effectiveBaseUrl/api/users/logout';
+      '$authMicroserviceBaseUrl/api/users/verify-token';
+  static String get authProfile => '$authMicroserviceBaseUrl/api/users/me';
+  static String get authChangePassword =>
+      '$authMicroserviceBaseUrl/api/users/change-password';
+  static String get authLogout =>
+      '$authMicroserviceBaseUrl/api/users/logout'; // Not currently implemented in backend but keeping for future
 
   // Feedback & Retraining Endpoints
   static String get feedbackSubmit => '$apiBaseUrl/feedback/submit';

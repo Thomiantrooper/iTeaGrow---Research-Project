@@ -4,13 +4,30 @@ from contextlib import asynccontextmanager
 from database import connect_to_mongo, close_mongo_connection
 from routers import users, disease, iot, inference, chatbot, bluetooth, analytics, reports, wifi_devices
 from config import settings
+import logging
+
+log = logging.getLogger("main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     await connect_to_mongo()
+
+    # Start MQTT bridge in background (connects to HiveMQ Cloud → writes to MongoDB)
+    try:
+        from mqtt_bridge import get_bridge
+        _bridge = get_bridge()
+        _bridge.start_background()
+        log.info("MQTT Bridge started successfully")
+    except Exception as exc:
+        log.warning("MQTT Bridge could not start (non-fatal): %s", exc)
+        _bridge = None
+
     yield
+
     # Shutdown
+    if _bridge:
+        _bridge.stop()
     await close_mongo_connection()
 
 app = FastAPI(

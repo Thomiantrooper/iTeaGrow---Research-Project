@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +8,7 @@ import 'dart:typed_data';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/animations/tea_animations.dart';
-import '../../../../core/providers/global_iot_provider.dart';
+import '../../../../core/providers/iot_live_provider.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 import '../../data/datasources/disease_detection_ml_service.dart';
 import '../../data/datasources/disease_storage_service.dart';
@@ -87,25 +88,44 @@ class _PremiumDiseaseDetectionScreenState
     }
   }
 
-  // Get live sensor values from global IoT provider
+  // Get live sensor values from Railway IoT provider (same pattern as dashboard)
   double get _liveTemp {
-    final iotState = ref.read(globalIoTProvider);
-    return iotState.hasData ? iotState.temperature : 26.5;
+    final mqttState = ref.read(iotLiveProvider);
+    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
+    
+    if (hasMqtt && mqttDevice.temperature != null) {
+      return mqttDevice.temperature!;
+    }
+    return 26.5; // Fallback
   }
 
   double get _liveHumidity {
-    final iotState = ref.read(globalIoTProvider);
-    return iotState.hasData ? iotState.humidity : 72.0;
+    final mqttState = ref.read(iotLiveProvider);
+    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
+    
+    if (hasMqtt && mqttDevice.humidity != null) {
+      return mqttDevice.humidity!;
+    }
+    return 72.0; // Fallback
   }
 
   double get _liveAirQuality {
-    final iotState = ref.read(globalIoTProvider);
-    return iotState.hasData ? iotState.airQuality.toDouble() : 45.0;
+    final mqttState = ref.read(iotLiveProvider);
+    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
+    
+    if (hasMqtt && mqttDevice.airQuality != null) {
+      return mqttDevice.airQuality!.toDouble();
+    }
+    return 45.0; // Fallback
   }
 
   bool get _hasLiveIoTData {
-    final iotState = ref.read(globalIoTProvider);
-    return iotState.hasData && iotState.isConnected;
+    final mqttState = ref.read(iotLiveProvider);
+    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    return mqttDevice != null && mqttDevice.hasData;
   }
 
   Future<void> _captureImage() async {
@@ -344,8 +364,8 @@ class _PremiumDiseaseDetectionScreenState
 
   @override
   Widget build(BuildContext context) {
-    // Watch global IoT state for live updates
-    final iotState = ref.watch(globalIoTProvider);
+    // Watch both IoT providers (same as dashboard)
+    final mqttState = ref.watch(iotLiveProvider);
 
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
@@ -377,7 +397,7 @@ class _PremiumDiseaseDetectionScreenState
                     const SizedBox(height: TeaSpacing.md),
 
                     // Live Environment Card (with real IoT data)
-                    _buildLiveEnvironmentCard(iotState),
+                    _buildLiveEnvironmentCard(mqttState),
 
                     const SizedBox(height: TeaSpacing.lg),
 
@@ -613,11 +633,30 @@ class _PremiumDiseaseDetectionScreenState
     );
   }
 
-  Widget _buildLiveEnvironmentCard(GlobalIoTState iotState) {
-    final hasIoTData = iotState.hasData && iotState.isConnected;
-    final temp = hasIoTData ? iotState.temperature : 26.5;
-    final humidity = hasIoTData ? iotState.humidity : 72.0;
-    final airQuality = hasIoTData ? iotState.airQuality.toDouble() : 45.0;
+  Widget _buildLiveEnvironmentCard(IoTLiveState mqttState) {
+    // Use same pattern as dashboard for reliability
+    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
+    
+    // Debug: Print values to console (same as dashboard)
+    if (hasMqtt) {
+      debugPrint('[Disease] MQTT Device: T=${mqttDevice.temperature}°C H=${mqttDevice.humidity}% AQ=${mqttDevice.airQuality} TS=${mqttDevice.timestamp}');
+    }
+    
+    // Get values EXACTLY like dashboard does
+    final temperature = hasMqtt && mqttDevice.temperature != null
+        ? mqttDevice.temperature!.toStringAsFixed(1)
+        : '--';
+    final humidity = hasMqtt && mqttDevice.humidity != null
+        ? mqttDevice.humidity!.toString()
+        : '--';
+    final double aqValue = hasMqtt && mqttDevice.airQuality != null
+        ? mqttDevice.airQuality!
+        : -1;
+    final airQuality = aqValue >= 0 ? _getAirQualityLabel(aqValue.toInt()) : '--';
+    final airQualityColor = aqValue >= 0
+        ? _getAirQualityColor(aqValue.toInt())
+        : TeaColors.darkGray;
 
     return TeaCard.elevated(
       child: Column(
@@ -628,14 +667,14 @@ class _PremiumDiseaseDetectionScreenState
                 padding: const EdgeInsets.all(TeaSpacing.sm),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: hasIoTData
+                    colors: hasMqtt
                         ? [TeaColors.freshLeaf, TeaColors.healthyGreen]
                         : [TeaColors.mediumGray, TeaColors.darkGray],
                   ),
                   borderRadius: TeaRadius.radiusSm,
                 ),
                 child: Icon(
-                  hasIoTData ? Icons.sensors : Icons.sensors_off,
+                  hasMqtt ? Icons.sensors : Icons.sensors_off,
                   color: TeaColors.white,
                   size: 20,
                 ),
@@ -647,15 +686,15 @@ class _PremiumDiseaseDetectionScreenState
                   children: [
                     Text('Live Environment', style: TeaTypography.titleSmall),
                     Text(
-                      hasIoTData ? 'Real-time IoT sensor data' : 'IoT not connected - using defaults',
+                      hasMqtt ? 'Railway IoT Sensor' : 'Using default values',
                       style: TeaTypography.labelSmall.copyWith(
-                        color: hasIoTData ? TeaColors.freshLeaf : TeaColors.mediumGray,
+                        color: hasMqtt ? TeaColors.freshLeaf : TeaColors.mediumGray,
                       ),
                     ),
                   ],
                 ),
               ),
-              if (hasIoTData)
+              if (hasMqtt)
                 AnimatedBuilder(
                   animation: _pulseController,
                   builder: (context, child) {
@@ -735,7 +774,7 @@ class _PremiumDiseaseDetectionScreenState
                 Expanded(
                   child: _buildEnvReading(
                     Icons.thermostat,
-                    '${temp.toStringAsFixed(1)}°C',
+                    temperature == '--' ? '--' : '$temperature°C',
                     'Temperature',
                     TeaColors.warningAmber,
                   ),
@@ -748,7 +787,7 @@ class _PremiumDiseaseDetectionScreenState
                 Expanded(
                   child: _buildEnvReading(
                     Icons.water_drop,
-                    '${humidity.toStringAsFixed(0)}%',
+                    humidity == '--' ? '--' : '$humidity%',
                     'Humidity',
                     TeaColors.infoSky,
                   ),
@@ -761,9 +800,9 @@ class _PremiumDiseaseDetectionScreenState
                 Expanded(
                   child: _buildEnvReading(
                     Icons.air,
-                    airQuality.toStringAsFixed(0),
+                    airQuality,
                     'AQI',
-                    _getAirQualityColor(airQuality),
+                    airQualityColor,
                   ),
                 ),
               ],
@@ -1078,18 +1117,60 @@ class _PremiumDiseaseDetectionScreenState
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      statusTitle,
-                      style: TeaTypography.headlineSmall.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          statusTitle,
+                          style: TeaTypography.headlineSmall.copyWith(
+                            color: statusColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (_result!.isPotentialFalsePositive) ...[
+                          const SizedBox(width: TeaSpacing.sm),
+                          const Icon(
+                            Icons.error_outline,
+                            color: TeaColors.warningAmber,
+                            size: 20,
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
               ),
             ],
           ),
+
+          // Lighting / FP Warning
+          if (_result!.isPotentialFalsePositive && !isNotALeaf) ...[
+            const SizedBox(height: TeaSpacing.md),
+            Container(
+              padding: const EdgeInsets.all(TeaSpacing.md),
+              decoration: BoxDecoration(
+                color: TeaColors.warningAmber.withOpacity(0.1),
+                borderRadius: TeaRadius.radiusMd,
+                border: Border.all(
+                  color: TeaColors.warningAmber.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.wb_sunny_outlined, color: TeaColors.warningAmber, size: 20),
+                  const SizedBox(width: TeaSpacing.smd),
+                  Expanded(
+                    child: Text(
+                      'Potential False Positive: Bright light or reflections detected. The "Blister Blight" detection might be caused by glare.',
+                      style: TeaTypography.bodySmall.copyWith(
+                        color: TeaColors.darkGray,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           // Invalid image message
           if (isNotALeaf) ...[
@@ -1112,7 +1193,7 @@ class _PremiumDiseaseDetectionScreenState
                       const SizedBox(width: TeaSpacing.smd),
                       Expanded(
                         child: Text(
-                          'This image does not contain a recognizable tea leaf.',
+                          _result!.validationMessage ?? 'This image does not contain a recognizable tea leaf.',
                           style: TeaTypography.bodyMedium.copyWith(
                             color: TeaColors.warningAmber,
                             fontWeight: FontWeight.w600,
@@ -1123,7 +1204,7 @@ class _PremiumDiseaseDetectionScreenState
                   ),
                   const SizedBox(height: TeaSpacing.smd),
                   Text(
-                    'It may be a hand, fabric, surface, soil, or other non-leaf object. Please scan a clear tea leaf image for accurate disease detection.',
+                    'To improve results, ensure the leaf is well-lit, in focus, and occupies most of the frame. Avoid hands, clutter, or extremely dark/blurry backgrounds.',
                     style: TeaTypography.bodySmall.copyWith(
                       color: TeaColors.darkGray,
                     ),
@@ -1136,11 +1217,72 @@ class _PremiumDiseaseDetectionScreenState
             const Divider(),
             const SizedBox(height: TeaSpacing.md),
 
+            // Quality & Reliability section
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Detection Reliability', style: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            _getReliabilityIcon(_result!.reliabilityLabel),
+                            size: 16,
+                            color: _getReliabilityColor(_result!.reliabilityLabel),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _result!.reliabilityLabel,
+                            style: TeaTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: _getReliabilityColor(_result!.reliabilityLabel),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (_result!.imageQualityScore != null)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('Image Quality', style: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray)),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${(_result!.imageQualityScore! * 100).toStringAsFixed(0)}%',
+                              style: TeaTypography.bodyMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: _getQualityColor(_result!.imageQualityScore!),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.bolt,
+                              size: 16,
+                              color: _getQualityColor(_result!.imageQualityScore!),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: TeaSpacing.md),
+
             // Confidence meter
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Confidence', style: TeaTypography.titleSmall),
+                Text('Confidence Score', style: TeaTypography.titleSmall),
                 Text(
                   '${(_result!.confidence * 100).toStringAsFixed(1)}%',
                   style: TeaTypography.titleMedium.copyWith(
@@ -1516,6 +1658,25 @@ class _PremiumDiseaseDetectionScreenState
             ),
           ),
 
+          // Average Confidence (New)
+          if (_fieldResult!.summary?.averageConfidence != null && 
+              _fieldResult!.summary!.averageConfidence > 0) ...[
+            const SizedBox(height: TeaSpacing.md),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Average Confidence', style: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray)),
+                Text(
+                  '${(_fieldResult!.summary!.averageConfidence * 100).toStringAsFixed(1)}%',
+                  style: TeaTypography.labelSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: TeaColors.mediumGray,
+                  ),
+                ),
+              ],
+            ),
+          ],
+
           // Disease breakdown
           if (_fieldResult!.diseaseCounts.isNotEmpty) ...[
             const SizedBox(height: TeaSpacing.lg),
@@ -1702,25 +1863,77 @@ class _PremiumDiseaseDetectionScreenState
 
   Color _getSeverityColor(String severity) {
     switch (severity.toLowerCase()) {
-      case 'low':
-        return TeaColors.healthyGreen;
+      case 'critical':
+        return TeaColors.alertRust;
+      case 'high':
+        return Colors.orange.shade800;
       case 'medium':
         return TeaColors.warningAmber;
+      case 'low':
+        return TeaColors.infoSky;
+      case 'uncertain':
+        return TeaColors.mediumGray;
+      default:
+        return TeaColors.mediumGray;
+    }
+  }
+
+  Color _getReliabilityColor(String label) {
+    switch (label.toLowerCase()) {
+      case 'very high':
+        return TeaColors.healthyGreen;
       case 'high':
+        return TeaColors.freshLeaf;
+      case 'moderate':
+        return TeaColors.warningAmber;
+      case 'low':
+      case 'very low':
         return TeaColors.alertRust;
       default:
         return TeaColors.mediumGray;
     }
   }
 
-  Color _getAirQualityColor(double aqi) {
-    if (aqi < 50) return TeaColors.healthyGreen;
-    if (aqi < 100) return TeaColors.warningAmber;
-    if (aqi < 150) return TeaColors.alertRust;
-    return TeaColors.criticalRed;
+  IconData _getReliabilityIcon(String label) {
+    switch (label.toLowerCase()) {
+      case 'very high':
+        return Icons.verified;
+      case 'high':
+        return Icons.check_circle_outline;
+      case 'moderate':
+        return Icons.info_outline;
+      case 'low':
+      case 'very low':
+        return Icons.warning_amber_rounded;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  Color _getQualityColor(double score) {
+    if (score >= 0.8) return TeaColors.healthyGreen;
+    if (score >= 0.6) return TeaColors.freshLeaf;
+    if (score >= 0.4) return TeaColors.warningAmber;
+    return TeaColors.alertRust;
+  }
+
+  String _getAirQualityLabel(int aqi) {
+    if (aqi <= 50) return 'Good';
+    if (aqi <= 100) return 'Moderate';
+    if (aqi <= 150) return 'Unhealthy';
+    if (aqi <= 200) return 'Bad';
+    return 'Hazardous';
+  }
+
+  Color _getAirQualityColor(int aqi) {
+    if (aqi <= 50) return TeaColors.healthyGreen;
+    if (aqi <= 100) return TeaColors.goldenSunlight;
+    if (aqi <= 150) return TeaColors.warningAmber;
+    if (aqi <= 200) return TeaColors.alertRust;
+    return const Color(0xFF8E4585); // Purple for hazardous
   }
 
   String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${time.second.toString().padLeft(2, '0')}';
+    return '${time.hour}:${time.minute.toString().padLeft(2, '0')} - ${time.day}/${time.month}/${time.year}';
   }
 }

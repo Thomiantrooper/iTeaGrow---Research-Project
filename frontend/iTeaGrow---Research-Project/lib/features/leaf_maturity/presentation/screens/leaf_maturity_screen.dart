@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'dart:typed_data';
+import 'package:printing/printing.dart';
 import '../../../../core/design_system/tea_colors.dart';
 import '../../../../core/design_system/tea_typography.dart';
 import '../../../../core/design_system/tea_spacing.dart';
 import '../../data/datasources/leaf_maturity_pytorch_service.dart';
 import '../../domain/entities/leaf_maturity_result.dart';
+import '../services/leaf_maturity_report_service.dart';
 
 class LeafMaturityScreen extends StatefulWidget {
   final bool isManagerOrAdmin;
@@ -96,6 +99,51 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
     );
   }
 
+  Future<void> _generatePdfReport() async {
+    if (_result == null || _selectedImage == null) return;
+
+    // We already have image locally, we don't need to base64 encode it unless the user
+    // requires a remote upload. The PDF service handles memory image or base64.
+    // For simplicity, we can pass base64 since `LeafMaturityReportService` expects it.
+    final base64Image = base64Encode(_imageBytes!);
+
+    try {
+      final reportData = {
+        'detection': {
+          'species': _result!.species,
+          'maturity': _result!.maturity,
+          'species_confidence': _result!.speciesConfidence,
+          'maturity_confidence': _result!.maturityConfidence,
+          'image_data': base64Image,
+          'created_at': _result!.timestamp.toIso8601String(),
+          'species_probs': _result!.speciesProbabilities,
+          'maturity_probs': _result!.maturityProbabilities,
+        },
+        'farmer': {
+          'name': 'Current User',
+          'location': 'Local Plantation',
+        },
+        'organization': {
+          'name': 'iTeaGrow Leaf Maturity',
+        },
+        'report_id':
+            'LM-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
+        'generated_at': DateTime.now().toIso8601String(),
+      };
+
+      final pdfBytes =
+          await LeafMaturityReportService().generateReport(reportData);
+
+      await Printing.layoutPdf(
+        onLayout: (format) async => pdfBytes,
+        name:
+            'tea_maturity_report_\${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+    } catch (e) {
+      _showError('Failed to generate report: \$e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,6 +222,23 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
             if (widget.isManagerOrAdmin && _result != null) ...[
               const SizedBox(height: 24),
               _buildYieldPrediction(),
+            ],
+
+            if (_result != null) ...[
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: _generatePdfReport,
+                icon: const Icon(Icons.picture_as_pdf),
+                label: const Text('Generate PDF Report'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: TeaColors.freshLeaf,
+                  side: const BorderSide(color: TeaColors.freshLeaf),
+                  padding: const EdgeInsets.all(16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ],
           ],
         ),
@@ -285,7 +350,8 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
           children: [
             const Row(
               children: [
-                Icon(Icons.check_circle, color: TeaColors.healthyGreen, size: 28),
+                Icon(Icons.check_circle,
+                    color: TeaColors.healthyGreen, size: 28),
                 SizedBox(width: 12),
                 Text(
                   'Analysis Complete',

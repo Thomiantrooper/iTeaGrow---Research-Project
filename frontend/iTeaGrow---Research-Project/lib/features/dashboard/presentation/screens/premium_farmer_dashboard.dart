@@ -7,6 +7,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/widgets/jarvis_assistant.dart';
 import '../../../../core/animations/tea_animations.dart';
 import '../../../../core/providers/global_iot_provider.dart';
+import '../../../../core/providers/iot_live_provider.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 
 /// Premium Farmer Dashboard with 3D hero and modern UI
@@ -47,8 +48,17 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final iotState = ref.watch(globalIoTProvider);
+    final mqttState = ref.watch(iotLiveProvider);
     final user = authState.user;
     final greeting = _getGreeting();
+
+    // Debug: Log every rebuild
+    debugPrint('[Dashboard] BUILD called - MQTT devices: ${mqttState.devices.length}, loading: ${mqttState.isLoading}, lastRefresh: ${mqttState.lastRefreshed}');
+    if (mqttState.devices.isNotEmpty) {
+      final device = mqttState.devices.values.first;
+      debugPrint('[Dashboard] BUILD - First device: T=${device.temperature}°C H=${device.humidity}%');
+    }
 
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
@@ -81,7 +91,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                     const SizedBox(height: TeaSpacing.lg),
 
                     // Metrics Row
-                    _buildMetricsRow(),
+                    _buildMetricsRow(iotState, mqttState),
 
                     const SizedBox(height: TeaSpacing.lg),
 
@@ -111,10 +121,16 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
       bottomNavigationBar: TeaBottomNavBar(
         currentIndex: 0,
         items: const [
-          TeaNavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
-          TeaNavItem(icon: Icons.eco_outlined, activeIcon: Icons.eco, label: 'Plants'),
-          TeaNavItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Map'),
-          TeaNavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
+          TeaNavItem(
+              icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
+          TeaNavItem(
+              icon: Icons.eco_outlined, activeIcon: Icons.eco, label: 'Plants'),
+          TeaNavItem(
+              icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Map'),
+          TeaNavItem(
+              icon: Icons.person_outline,
+              activeIcon: Icons.person,
+              label: 'Profile'),
         ],
         onTap: (index) {
           switch (index) {
@@ -498,24 +514,42 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     );
   }
 
-  Widget _buildMetricsRow() {
-    final iotState = ref.watch(globalIoTProvider);
-    final hasLiveData = iotState.hasData;
+  Widget _buildMetricsRow(dynamic iotState, dynamic mqttState) {
+    final mqttDevice =
+        mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
+    final hasLiveData = hasMqtt || iotState.hasData;
 
-    // Get temperature value
-    final temperature =
-        hasLiveData ? iotState.temperature.toStringAsFixed(1) : '24';
+    // Debug: Print values to console
+    if (hasMqtt) {
+      debugPrint('[Dashboard] MQTT Device: T=${mqttDevice.temperature}°C H=${mqttDevice.humidity}% AQ=${mqttDevice.airQuality} TS=${mqttDevice.timestamp}');
+    }
 
-    // Get humidity value
-    final humidity = hasLiveData ? iotState.humidity.toStringAsFixed(0) : '78';
+    // Temperature: MQTT first, then globalIoT, then placeholder
+    final temperature = hasMqtt && mqttDevice.temperature != null
+        ? mqttDevice.temperature!.toStringAsFixed(1)
+        : iotState.hasData
+            ? iotState.temperature.toStringAsFixed(1)
+            : '--';
 
-    // Get air quality label
+    // Humidity: MQTT first, then globalIoT, then placeholder (show exact decimal value)
+    final humidity = hasMqtt && mqttDevice.humidity != null
+        ? mqttDevice.humidity!.toString()
+        : iotState.hasData
+            ? iotState.humidity.toString()
+            : '--';
+
+    // Air quality: MQTT first (ppm → label), then globalIoT, then placeholder
+    final double aqValue = hasMqtt && mqttDevice.airQuality != null
+        ? mqttDevice.airQuality!
+        : iotState.hasData
+            ? iotState.airQuality.toDouble()
+            : -1;
     final airQuality =
-        hasLiveData ? _getAirQualityLabel(iotState.airQuality) : 'Good';
-
-    final airQualityColor = hasLiveData
-        ? _getAirQualityColor(iotState.airQuality)
-        : TeaColors.healthyGreen;
+        aqValue >= 0 ? _getAirQualityLabel(aqValue.toInt()) : '--';
+    final airQualityColor = aqValue >= 0
+        ? _getAirQualityColor(aqValue.toInt())
+        : TeaColors.darkGray;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,38 +570,89 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                 style: TeaTypography.titleMedium,
               ),
               const Spacer(),
-              if (hasLiveData)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: TeaSpacing.sm,
-                    vertical: TeaSpacing.xxs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: TeaColors.healthyGreen.withOpacity(0.1),
-                    borderRadius: TeaRadius.radiusSm,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: TeaColors.healthyGreen,
-                        ),
+              if (hasLiveData) ...[
+                if (hasMqtt && mqttDevice.timestamp != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: TeaSpacing.sm),
+                    child: Text(
+                      '${DateTime.now().difference(mqttDevice.timestamp!).inSeconds}s ago',
+                      style: TeaTypography.labelSmall.copyWith(
+                        color: DateTime.now().difference(mqttDevice.timestamp!).inMinutes > 2
+                            ? TeaColors.warningAmber
+                            : TeaColors.darkGray,
+                        fontWeight: FontWeight.w500,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Live',
-                        style: TeaTypography.labelSmall.copyWith(
-                          color: TeaColors.healthyGreen,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                  ),
+                if (mqttState.lastRefreshed != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: TeaSpacing.sm),
+                    child: Text(
+                      'Ref: ${DateTime.now().difference(mqttState.lastRefreshed!).inSeconds}s',
+                      style: TeaTypography.labelSmall.copyWith(
+                        color: TeaColors.darkGray.withOpacity(0.7),
                       ),
-                    ],
+                    ),
+                  ),
+                InkWell(
+                  onTap: () {
+                    debugPrint('[Dashboard] Manual refresh triggered');
+                    ref.read(iotLiveProvider.notifier).refresh();
+                  },
+                  borderRadius: TeaRadius.radiusSm,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: TeaSpacing.sm,
+                      vertical: TeaSpacing.xxs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: TeaColors.healthyGreen.withOpacity(0.1),
+                      borderRadius: TeaRadius.radiusSm,
+                      border: Border.all(
+                        color: TeaColors.healthyGreen.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (mqttState.isLoading)
+                          const SizedBox(
+                            width: 10,
+                            height: 10,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: TeaColors.healthyGreen,
+                            ),
+                          )
+                        else ...[
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: TeaColors.healthyGreen,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.refresh,
+                            size: 12,
+                            color: TeaColors.healthyGreen,
+                          ),
+                        ],
+                        const SizedBox(width: 4),
+                        Text(
+                          'Live',
+                          style: TeaTypography.labelSmall.copyWith(
+                            color: TeaColors.healthyGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              ],
             ],
           ),
         ),

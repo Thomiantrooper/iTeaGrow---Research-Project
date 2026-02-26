@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/api/api_config.dart';
 import '../../domain/models/user.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
@@ -37,7 +38,7 @@ class AuthRepository {
       try {
         debugPrint('Attempting API login for user: $username');
         final response = await _apiService.post<Map<String, dynamic>>(
-          '/api/users/login',
+          ApiConfig.authLogin,
           body: {
             'username': username,
             'password': password,
@@ -45,7 +46,8 @@ class AuthRepository {
           fromJson: (data) => data as Map<String, dynamic>,
         );
 
-        debugPrint('API login response: success=${response.success}, statusCode=${response.statusCode}');
+        debugPrint(
+            'API login response: success=${response.success}, statusCode=${response.statusCode}');
 
         if (response.success && response.data != null) {
           final authResponse = AuthResponse.fromJson(response.data!);
@@ -78,6 +80,37 @@ class AuthRepository {
   Future<User?> login(String username, String password) async {
     final response = await loginWithToken(username, password);
     return response?.user;
+  }
+
+  /// Login with Google ID Token - returns AuthResponse with token (Managers Only)
+  Future<AuthResponse?> loginWithGoogleToken(String idToken) async {
+    if (_useApi && _apiService != null) {
+      try {
+        debugPrint('Attempting API Google login');
+        final response = await _apiService.post<Map<String, dynamic>>(
+          ApiConfig.authGoogleLogin,
+          body: {'id_token': idToken},
+          fromJson: (data) => data as Map<String, dynamic>,
+        );
+
+        debugPrint(
+            'API Google login response: success=${response.success}, statusCode=${response.statusCode}');
+
+        if (response.success && response.data != null) {
+          final authResponse = AuthResponse.fromJson(response.data!);
+          await _apiService.saveToken(authResponse.accessToken);
+          debugPrint('API Google login successful, token saved');
+          return authResponse;
+        } else {
+          debugPrint('API Google login failed: ${response.error}');
+          return null; // Don't fallback to local for Google Auth
+        }
+      } catch (e) {
+        debugPrint('API Google login exception: $e');
+        return null;
+      }
+    }
+    return null;
   }
 
   /// Local login fallback
@@ -122,7 +155,7 @@ class AuthRepository {
       try {
         debugPrint('Attempting API registration for user: $username');
         final response = await _apiService.post<Map<String, dynamic>>(
-          '/api/users/register',
+          ApiConfig.authRegister,
           body: {
             'username': username,
             'password': password,
@@ -135,7 +168,8 @@ class AuthRepository {
           fromJson: (data) => data as Map<String, dynamic>,
         );
 
-        debugPrint('API registration response: success=${response.success}, statusCode=${response.statusCode}');
+        debugPrint(
+            'API registration response: success=${response.success}, statusCode=${response.statusCode}');
 
         if (response.success && response.data != null) {
           final authResponse = AuthResponse.fromJson(response.data!);
@@ -234,7 +268,7 @@ class AuthRepository {
 
     try {
       final response = await _apiService.post<Map<String, dynamic>>(
-        '/api/users/verify-token',
+        ApiConfig.authVerifyToken,
         fromJson: (data) => data as Map<String, dynamic>,
       );
 
@@ -253,7 +287,7 @@ class AuthRepository {
     if (_useApi && _apiService != null) {
       try {
         final response = await _apiService.put<Map<String, dynamic>>(
-          '/api/users/me',
+          ApiConfig.authProfile,
           body: updates,
           fromJson: (data) => data as Map<String, dynamic>,
         );
@@ -336,7 +370,8 @@ class AuthRepository {
   /// Delete user
   Future<bool> deleteUser(String userId) async {
     try {
-      await _db.delete('users', 'id = ?', whereArgs: [int.tryParse(userId) ?? 0]);
+      await _db
+          .delete('users', 'id = ?', whereArgs: [int.tryParse(userId) ?? 0]);
       return true;
     } catch (e) {
       return false;

@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/data/providers/auth_provider.dart';
+import '../../../../core/providers/iot_live_provider.dart';
 import '../../data/datasources/disease_detection_ml_service.dart';
 import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
@@ -41,17 +42,11 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
   late Animation<double> _scanAnimation;
   late Animation<double> _pulseAnimation;
 
-  // Live readings state
-  double _temp = 26.5;
-  double _humidity = 72.0;
-  double _airQuality = 45.0;
-
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _initializeService();
-    _startLiveUpdates();
   }
 
   void _initializeAnimations() {
@@ -107,18 +102,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     }
   }
 
-  void _startLiveUpdates() {
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _temp += (DateTime.now().millisecond % 10 - 5) * 0.05;
-          _humidity += (DateTime.now().millisecond % 10 - 5) * 0.1;
-          _airQuality += (DateTime.now().millisecond % 10 - 5) * 0.2;
-        });
-        _startLiveUpdates();
-      }
-    });
-  }
+
 
   Future<void> _captureImage() async {
     try {
@@ -183,11 +167,15 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
 
     try {
       print('>>> Calling _mlService.predict() <<<');
+      // Get live IoT data for ML prediction
+      final iotData = ref.read(iotLiveProvider);
+      final device = iotData.deviceList.isNotEmpty ? iotData.deviceList.first : null;
+      
       final result = await _mlService.predict(
         _selectedImage!.path,
-        liveTemperature: _temp,
-        liveHumidity: _humidity,
-        liveAirQuality: _airQuality,
+        liveTemperature: device?.temperature ?? 26.5,
+        liveHumidity: device?.humidity ?? 72.0,
+        liveAirQuality: device?.airQuality ?? 45.0,
       );
       print('>>> _mlService.predict() RETURNED <<<');
       print('>>> Result type: ${result.runtimeType}');
@@ -829,30 +817,42 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                 color: Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildLiveReadingItem(
-                    Icons.thermostat,
-                    '${_temp.toStringAsFixed(1)}°C',
-                    'Temperature',
-                    Colors.deepOrange,
-                  ),
-                  Container(width: 1, height: 50, color: Colors.grey.shade300),
-                  _buildLiveReadingItem(
-                    Icons.water_drop,
-                    '${_humidity.toStringAsFixed(1)}%',
-                    'Humidity',
-                    Colors.blue,
-                  ),
-                  Container(width: 1, height: 50, color: Colors.grey.shade300),
-                  _buildLiveReadingItem(
-                    Icons.air,
-                    _airQuality.toStringAsFixed(0),
-                    'AQI',
-                    _getAirQualityColor(_airQuality),
-                  ),
-                ],
+              child: Consumer(
+                builder: (context, ref, child) {
+                  // Get live IoT data
+                  final iotData = ref.watch(iotLiveProvider);
+                  final device = iotData.deviceList.isNotEmpty ? iotData.deviceList.first : null;
+                  
+                  final temp = device?.temperature?.toStringAsFixed(1) ?? '--';
+                  final humidity = device?.humidity?.toString() ?? '--';
+                  final airQuality = device?.airQuality?.toStringAsFixed(0) ?? '--';
+                  
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildLiveReadingItem(
+                        Icons.thermostat,
+                        '${temp}°C',
+                        'Temperature',
+                        Colors.deepOrange,
+                      ),
+                      Container(width: 1, height: 50, color: Colors.grey.shade300),
+                      _buildLiveReadingItem(
+                        Icons.water_drop,
+                        '${humidity}%',
+                        'Humidity',
+                        Colors.blue,
+                      ),
+                      Container(width: 1, height: 50, color: Colors.grey.shade300),
+                      _buildLiveReadingItem(
+                        Icons.air,
+                        airQuality,
+                        'AQI',
+                        _getAirQualityColor(device?.airQuality ?? 0),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
