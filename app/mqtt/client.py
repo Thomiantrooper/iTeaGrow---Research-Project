@@ -14,7 +14,7 @@ from app.models.schemas import SoilData
 logger = logging.getLogger(__name__)
 
 class MQTTClient:
-    """MQTT client for handling sensor data with 7 features"""
+    """MQTT client for handling sensor data from ESP32"""
     
     def __init__(self):
         self.client = mqtt.Client(
@@ -50,56 +50,68 @@ class MQTTClient:
         try:
             # Parse message
             payload = msg.payload.decode()
-            logger.debug(f"📨 Received message: {payload}")
+            logger.info(f"📨 Received raw message: {payload}")
             
             data = json.loads(payload)
             
-            # Validate data (will check all 7 features if present)
-            soil_data = SoilData(**data)
+            # Validate data using model_validate with alias support
+            soil_data = SoilData.model_validate(data)
+            logger.info(f"✅ Data validated successfully: {soil_data}")
             
             # Process the data
-            self.process_sensor_data(soil_data.dict())
+            self.process_sensor_data(soil_data)
             
         except json.JSONDecodeError as e:
             logger.error(f"❌ Invalid JSON format: {e}")
         except Exception as e:
             logger.error(f"❌ Error processing message: {e}")
+            logger.error(f"Raw data that caused error: {payload}")
     
-    def process_sensor_data(self, data: dict):
-        """Process sensor data with 7 features: predict, recommend, and store"""
+    def process_sensor_data(self, soil_data: SoilData):
+        """Process sensor data: predict, recommend, and store"""
         try:
-            # Predict soil health using all 7 features
-            soil_health = predict_soil_health(data)
+            # Convert to dict for processing
+            data_dict = soil_data.model_dump()
+            logger.debug(f"Processed data dict: {data_dict}")
             
-            # Get fertilizer recommendations (uses N, P, K, pH)
+            # Predict soil health using all 7 features
+            soil_health = predict_soil_health(data_dict)
+            
+            # Get fertilizer recommendations
             fertilizer = fertilizer_recommendation(
-                data["N"], data["P"], data["K"], data["pH"], soil_health
+                data_dict["N"], data_dict["P"], data_dict["K"], data_dict["pH"], soil_health
             )
             
-            # Create result document with all 7 features
+            # Create result document with all features
             result = {
-                "device_id": data["device_id"],
-                "hectare_id": data["hectare_id"],
-                "N": data["N"],
-                "P": data["P"],
-                "K": data["K"],
-                "pH": data["pH"],
-                "EC": data.get("EC", 0.0),  # Electrical Conductivity
-                "temperature": data.get("temperature", 0.0),
-                "humidity": data.get("humidity", 0.0),
+                "device_id": data_dict["device_id"],
+                "hectare_id": data_dict["hectare_id"],
+                "block_id": data_dict.get("block_id"),  # Store block_id if present
+                "N": data_dict["N"],
+                "P": data_dict["P"],
+                "K": data_dict["K"],
+                "pH": data_dict["pH"],
+                "EC": data_dict["EC"],
+                "temperature": data_dict["temperature"],
+                "humidity": data_dict["humidity"],
                 "soil_health": soil_health,
                 "fertilizer": fertilizer,
                 "timestamp": datetime.now(timezone.utc)
             }
             
+            # Add reading_count if present
+            if "reading_count" in data_dict and data_dict["reading_count"] is not None:
+                result["reading_count"] = data_dict["reading_count"]
+            
             # Save to MongoDB
             mongodb.predictions.insert_one(result)
             
-            logger.info(f"✅ Saved prediction for hectare {data['hectare_id']}: {soil_health}")
-            logger.debug(f"📊 Data: N={data['N']}, P={data['P']}, K={data['K']}, pH={data['pH']}, EC={data.get('EC')}, Temp={data.get('temperature')}, Humidity={data.get('humidity')}")
+            logger.info(f"✅ Saved prediction for hectare {data_dict['hectare_id']}: {soil_health}")
+            logger.debug(f"📊 Result saved: {result}")
             
         except Exception as e:
             logger.error(f"❌ Error processing sensor data: {e}")
+            logger.error(f"Data that caused error: {soil_data}")
     
     def start(self):
         """Start MQTT client in background thread"""
