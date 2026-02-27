@@ -109,6 +109,14 @@ class ApiConfig {
   static String environmentalIotLiveDevice(String deviceId) =>
       '$environmentalIotMicroserviceBaseUrl/api/iot/live/latest?device_id=$deviceId';
 
+  // Soil Monitoring & Health API (Railway Standard)
+  static const String soilMonitoringBaseUrl =
+      'https://iteagrow-soil-monitoring-iot-api.up.railway.app';
+  static String get soilLatestPredictions =>
+      '$soilMonitoringBaseUrl/farm/by-hectare';
+  static String soilHectareData(int id) => '$soilMonitoringBaseUrl/hectare/$id';
+  static String get soilHealthCheck => '$soilMonitoringBaseUrl/health';
+
   // Bluetooth IoT Endpoints
   static String get bluetoothConfig => '$apiBaseUrl/bluetooth/config';
   static String get bluetoothRegister =>

@@ -54,10 +54,12 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     final greeting = _getGreeting();
 
     // Debug: Log every rebuild
-    debugPrint('[Dashboard] BUILD called - MQTT devices: ${mqttState.devices.length}, loading: ${mqttState.isLoading}, lastRefresh: ${mqttState.lastRefreshed}');
+    debugPrint(
+        '[Dashboard] BUILD called - MQTT devices: ${mqttState.devices.length}, loading: ${mqttState.isLoading}, lastRefresh: ${mqttState.lastRefreshed}');
     if (mqttState.devices.isNotEmpty) {
       final device = mqttState.devices.values.first;
-      debugPrint('[Dashboard] BUILD - First device: T=${device.temperature}°C H=${device.humidity}%');
+      debugPrint(
+          '[Dashboard] BUILD - First device: T=${device.temperature}°C H=${device.humidity}%');
     }
 
     return Scaffold(
@@ -522,7 +524,8 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
 
     // Debug: Print values to console
     if (hasMqtt) {
-      debugPrint('[Dashboard] MQTT Device: T=${mqttDevice.temperature}°C H=${mqttDevice.humidity}% AQ=${mqttDevice.airQuality} TS=${mqttDevice.timestamp}');
+      debugPrint(
+          '[Dashboard] MQTT Device: T=${mqttDevice.temperature}°C H=${mqttDevice.humidity}% AQ=${mqttDevice.airQuality} TS=${mqttDevice.timestamp}');
     }
 
     // Temperature: MQTT first, then globalIoT, then placeholder
@@ -577,7 +580,10 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                     child: Text(
                       '${DateTime.now().difference(mqttDevice.timestamp!).inSeconds}s ago',
                       style: TeaTypography.labelSmall.copyWith(
-                        color: DateTime.now().difference(mqttDevice.timestamp!).inMinutes > 2
+                        color: DateTime.now()
+                                    .difference(mqttDevice.timestamp!)
+                                    .inMinutes >
+                                2
                             ? TeaColors.warningAmber
                             : TeaColors.darkGray,
                         fontWeight: FontWeight.w500,
@@ -796,15 +802,6 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
               gradientColors: [TeaColors.infoSky, Colors.blue.shade400],
               borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/iot-devices'),
-            ),
-            TeaImageCard(
-              title: 'Soil Test',
-              subtitle: 'Nutrient check',
-              tag: 'SOIL',
-              fallbackIcon: Icons.science_outlined,
-              gradientColors: [TeaColors.richSoil, Colors.brown.shade400],
-              borderRadius: TeaRadius.radiusLg,
-              onTap: () => context.push('/soil-fertilization'),
             ),
             TeaImageCard(
               title: 'Quality',
