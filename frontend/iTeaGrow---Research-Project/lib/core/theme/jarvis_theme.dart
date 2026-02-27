@@ -380,7 +380,7 @@ class JarvisTheme {
       ),
 
       // Dialog
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: mistWhitePure,
         elevation: 8,
         shape: RoundedRectangleBorder(

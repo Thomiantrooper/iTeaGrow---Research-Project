@@ -279,7 +279,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: TeaColors.white,
         elevation: 8,
         shadowColor: TeaColors.shadowVale,
@@ -605,7 +605,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: TeaColors.darkSurface,
         elevation: 8,
         shape: RoundedRectangleBorder(
