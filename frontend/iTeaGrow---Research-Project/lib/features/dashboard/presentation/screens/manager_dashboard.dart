@@ -6,6 +6,7 @@ import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 import '../providers/analytics_provider.dart';
+import '../../../settings/presentation/screens/premium_settings_screen.dart';
 
 class ManagerDashboard extends ConsumerStatefulWidget {
   const ManagerDashboard({super.key});
@@ -121,6 +122,15 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
       pinned: true,
       elevation: _isScrolled ? 2 : 0,
       backgroundColor: _isScrolled ? TeaColors.white : Colors.transparent,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: Icon(
+            Icons.menu_rounded,
+            color: _isScrolled ? TeaColors.matureLeaf : TeaColors.matureLeaf,
+          ),
+          onPressed: () => _showDrawer(context, userName),
+        ),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           padding: const EdgeInsets.fromLTRB(
@@ -489,6 +499,127 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
         .animate()
         .fadeIn(delay: 200.ms, duration: 400.ms)
         .slideY(begin: 0.1, end: 0);
+  }
+
+  void _showDrawer(BuildContext context, String userName) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: TeaColors.white,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(24.0),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(top: 12),
+              decoration: BoxDecoration(
+                color: TeaColors.darkGray.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // User header
+            Container(
+              padding: const EdgeInsets.all(TeaSpacing.lg),
+              child: Row(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: TeaColors.freshLeaf.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        _getInitials(userName),
+                        style: TeaTypography.titleLarge.copyWith(
+                          color: TeaColors.matureLeaf,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: TeaSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName,
+                          style: TeaTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Manager',
+                          style: TeaTypography.bodySmall.copyWith(
+                            color: TeaColors.darkGray,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            // Menu items
+            ListTile(
+              leading: const Icon(Icons.dashboard_outlined,
+                  color: TeaColors.matureLeaf),
+              title: const Text('Dashboard'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.history_outlined,
+                  color: TeaColors.matureLeaf),
+              title: const Text('Scan History'),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined,
+                  color: TeaColors.matureLeaf),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context); // Close the bottom sheet
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const PremiumSettingsScreen(
+                            allowBiometricAndPin: false,
+                          )),
+                );
+              },
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.help_outline, color: TeaColors.matureLeaf),
+              title: const Text('Help & Support'),
+              onTap: () {},
+            ),
+            const Spacer(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: TeaColors.alertRust),
+              title: const Text('Logout',
+                  style: TextStyle(color: TeaColors.alertRust)),
+              onTap: () {
+                ref.read(authStateProvider.notifier).logout();
+              },
+            ),
+            const SizedBox(height: TeaSpacing.lg),
+          ],
+        ),
+      ),
+    );
   }
 
   String _getInitials(String name) {

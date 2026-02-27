@@ -4,7 +4,6 @@ import '../../../../core/services/local_auth_service.dart';
 import '../../../../core/services/google_auth_service.dart';
 import '../repositories/auth_repository.dart';
 import '../../domain/models/user.dart';
-import '../../../../core/enums/app_enums.dart';
 
 /// Authentication state enum for better state management
 enum AuthStatus {
@@ -43,7 +42,8 @@ class AuthState {
     );
   }
 
-  bool get isAuthenticated => status == AuthStatus.authenticated && user != null;
+  bool get isAuthenticated =>
+      status == AuthStatus.authenticated && user != null;
   bool get isLoading => status == AuthStatus.loading;
 }
 
@@ -228,7 +228,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         {'language_preference': languageCode},
       );
 
-      final updatedUser = currentUser.copyWith(languagePreference: languageCode);
+      final updatedUser =
+          currentUser.copyWith(languagePreference: languageCode);
       await _localAuthService.updateStoredUser(updatedUser);
 
       state = state.copyWith(user: updatedUser);
@@ -267,7 +268,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Change password
-  Future<bool> changePassword(String currentPassword, String newPassword) async {
+  Future<bool> changePassword(
+      String currentPassword, String newPassword) async {
     final currentUser = state.user;
     if (currentUser == null) return false;
 
@@ -285,9 +287,91 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return await _authRepository.changePassword(currentUser.id, newPassword);
   }
 
+  // ========== PIN Authentication ==========
+
+  bool get isPinEnabled => _localAuthService.isPinEnabled;
+
+  /// Login with PIN authentication
+  Future<bool> loginWithPin(String pin) async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+
+    try {
+      if (!_localAuthService.isPinEnabled) {
+        state = const AuthState(
+          status: AuthStatus.error,
+          errorMessage: 'PIN login is not enabled',
+        );
+        return false;
+      }
+
+      final isValid = await _localAuthService.verifyPin(pin);
+      if (!isValid) {
+        state = const AuthState(
+          status: AuthStatus.unauthenticated,
+          errorMessage: 'Invalid PIN code',
+        );
+        return false;
+      }
+
+      final credentials = await _localAuthService.getPinCredentials();
+      if (credentials == null) {
+        state = const AuthState(
+          status: AuthStatus.error,
+          errorMessage: 'PIN credentials not found',
+        );
+        return false;
+      }
+
+      return await login(
+        credentials['username']!,
+        credentials['password']!,
+        rememberMe: true,
+      );
+    } catch (e) {
+      state = AuthState(
+        status: AuthStatus.error,
+        errorMessage: 'PIN login failed: ${e.toString()}',
+      );
+      return false;
+    }
+  }
+
+  /// Enable PIN login for current user
+  Future<bool> enablePinLogin(String password, String pin) async {
+    final user = currentUser;
+    if (user == null) return false;
+
+    try {
+      // Verify password first
+      final verified = await _authRepository.login(user.username, password);
+      if (verified == null) {
+        state = state.copyWith(errorMessage: 'Password wrong');
+        return false;
+      }
+
+      // Enable PIN login
+      await _localAuthService.enablePinLogin(user.username, password, pin);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        errorMessage: 'Failed to enable PIN login: ${e.toString()}',
+      );
+      return false;
+    }
+  }
+
+  /// Disable PIN login
+  Future<void> disablePinLogin() async {
+    await _localAuthService.disablePinLogin();
+  }
+
+  /// Check if PIN login is enabled
+  Future<bool> isPinLoginEnabled() async {
+    return _localAuthService.isPinEnabled;
+  }
+
   // ========== Biometric Authentication ==========
 
-  /// Login with biometric authentication
   Future<bool> loginWithBiometrics() async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
@@ -348,7 +432,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Verify password first
       final verified = await _authRepository.login(user.username, password);
       if (verified == null) {
-        state = state.copyWith(errorMessage: 'Invalid password');
+        state = state.copyWith(errorMessage: 'Password wrong');
         return false;
       }
 
@@ -356,7 +440,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final isAvailable = await _localAuthService.isBiometricAvailable();
       if (!isAvailable) {
         state = state.copyWith(
-          errorMessage: 'Biometric authentication is not available on this device',
+          errorMessage:
+              'Biometric authentication is not available on this device',
         );
         return false;
       }
@@ -404,7 +489,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       // Sign in with Google
       final googleAccount = await _googleAuthService.signIn();
-      
+
       if (googleAccount == null) {
         state = const AuthState(
           status: AuthStatus.unauthenticated,
@@ -415,7 +500,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       // Get Google ID token for backend verification
       final idToken = await _googleAuthService.getIdToken();
-      
+
       if (idToken == null) {
         state = const AuthState(
           status: AuthStatus.error,
@@ -426,33 +511,36 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       debugPrint('Google Sign-In successful: ${googleAccount.email}');
 
-      // Create a local User from Google account data
-      final user = User(
-        id: 'google_${googleAccount.id}',
-        username: googleAccount.email.split('@').first,
-        fullName: googleAccount.displayName ?? googleAccount.email.split('@').first,
-        role: UserRole.farmer,
-        languagePreference: 'en',
-        email: googleAccount.email,
-        createdAt: DateTime.now(),
-        isActive: true,
-      );
+      // Send Google ID token to our backend for verification and role check
+      final authResponse = await _authRepository.loginWithGoogleToken(idToken);
 
-      // Save session locally with Google ID token
-      await _localAuthService.saveSession(
-        user,
-        accessToken: idToken,
-        rememberMe: true,
-      );
+      if (authResponse != null) {
+        // Save session locally with our backend's API token
+        await _localAuthService.saveSession(
+          authResponse.user,
+          accessToken: authResponse.accessToken,
+          rememberMe: true,
+        );
 
-      state = AuthState(
-        status: AuthStatus.authenticated,
-        user: user,
-        accessToken: idToken,
-      );
+        state = AuthState(
+          status: AuthStatus.authenticated,
+          user: authResponse.user,
+          accessToken: authResponse.accessToken,
+        );
 
-      debugPrint('Google user session saved: ${user.username}');
-      return true;
+        debugPrint(
+            'Google user session saved from backend: ${authResponse.user.username}');
+        return true;
+      } else {
+        // Backend rejected the login (e.g., they are not a manager, or not registered)
+        state = const AuthState(
+          status: AuthStatus.unauthenticated,
+          errorMessage: 'Login failed. Ensure you are a registered Manager.',
+        );
+        // Ensure we sign out of Google locally so they can try another account next time
+        await _googleAuthService.signOut();
+        return false;
+      }
     } catch (e) {
       state = AuthState(
         status: AuthStatus.error,

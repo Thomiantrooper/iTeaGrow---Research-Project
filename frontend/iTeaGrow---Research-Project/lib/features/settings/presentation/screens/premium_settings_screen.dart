@@ -8,10 +8,16 @@ import '../../../auth/data/providers/auth_provider.dart';
 
 /// Premium Settings Screen
 class PremiumSettingsScreen extends ConsumerStatefulWidget {
-  const PremiumSettingsScreen({super.key});
+  final bool allowBiometricAndPin;
+
+  const PremiumSettingsScreen({
+    super.key,
+    this.allowBiometricAndPin = true,
+  });
 
   @override
-  ConsumerState<PremiumSettingsScreen> createState() => _PremiumSettingsScreenState();
+  ConsumerState<PremiumSettingsScreen> createState() =>
+      _PremiumSettingsScreenState();
 }
 
 class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
@@ -21,6 +27,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
   bool _hapticFeedback = true;
   bool _biometricAvailable = false;
   bool _biometricEnabled = false;
+  bool _pinEnabled = false;
   String _selectedLanguage = 'English';
   String _selectedUnit = 'Metric';
 
@@ -34,10 +41,13 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
     final authNotifier = ref.read(authStateProvider.notifier);
     final available = await authNotifier.isBiometricAvailable();
     final enabled = authNotifier.isBiometricEnabled;
+    final pinEnabled =
+        await ref.read(authStateProvider.notifier).isPinLoginEnabled();
     if (mounted) {
       setState(() {
         _biometricAvailable = available;
         _biometricEnabled = enabled;
+        _pinEnabled = pinEnabled;
       });
     }
   }
@@ -92,7 +102,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                     subtitle: 'Two-factor authentication, login history',
                     onTap: () => context.push('/activity-history'),
                   ),
-                  if (_biometricAvailable) ...[
+                  if (widget.allowBiometricAndPin && _biometricAvailable) ...[
                     const Divider(height: 1),
                     _buildSwitchTile(
                       icon: Icons.fingerprint,
@@ -109,6 +119,33 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                         }
                       },
                     ),
+                  ],
+                  if (widget.allowBiometricAndPin) ...[
+                    const Divider(height: 1),
+                    _buildSwitchTile(
+                      icon: Icons.pin_outlined,
+                      title: 'PIN Login',
+                      subtitle: _pinEnabled
+                          ? 'Sign in with a 4-8 digit PIN'
+                          : 'Enable PIN login',
+                      value: _pinEnabled,
+                      onChanged: (value) {
+                        if (value) {
+                          _showEnablePinDialog();
+                        } else {
+                          _disablePin();
+                        }
+                      },
+                    ),
+                    if (_pinEnabled) ...[
+                      const Divider(height: 1),
+                      _buildSettingsTile(
+                        icon: Icons.lock_reset,
+                        title: 'Change PIN',
+                        subtitle: 'Update your current PIN code',
+                        onTap: _showChangePinDialog,
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -151,7 +188,9 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                     onChanged: (value) {
                       setState(() => _selectedLanguage = value!);
                       final locale = _getLocaleFromName(value!);
-                      ref.read(persistentLocaleProvider.notifier).setLocale(locale);
+                      ref
+                          .read(persistentLocaleProvider.notifier)
+                          .setLocale(locale);
                     },
                   ),
                   const Divider(height: 1),
@@ -213,7 +252,8 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                     icon: Icons.wifi,
                     title: 'Network Settings',
                     subtitle: 'Configure WiFi and data usage',
-                    onTap: () => TeaSnackbar.info(context, 'Network settings coming soon!'),
+                    onTap: () => TeaSnackbar.info(
+                        context, 'Network settings coming soon!'),
                   ),
                 ],
               ),
@@ -254,7 +294,8 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                     icon: Icons.download,
                     title: 'Export Data',
                     subtitle: 'Download your plantation data',
-                    onTap: () => TeaSnackbar.info(context, 'Export feature coming soon!'),
+                    onTap: () => TeaSnackbar.info(
+                        context, 'Export feature coming soon!'),
                   ),
                 ],
               ),
@@ -367,7 +408,8 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
           color: TeaColors.darkGray,
         ),
       ),
-      trailing: trailing ?? const Icon(Icons.chevron_right, color: TeaColors.mediumGray),
+      trailing: trailing ??
+          const Icon(Icons.chevron_right, color: TeaColors.mediumGray),
       onTap: onTap,
     );
   }
@@ -494,7 +536,8 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear Cache'),
-        content: const Text('This will clear all cached data and downloaded files. This action cannot be undone.'),
+        content: const Text(
+            'This will clear all cached data and downloaded files. This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -622,7 +665,8 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                   TeaSnackbar.success(context, 'Biometric login enabled!');
                 } else {
                   final error = ref.read(authStateProvider).errorMessage;
-                  TeaSnackbar.error(context, error ?? 'Failed to enable biometric login');
+                  TeaSnackbar.error(
+                      context, error ?? 'Failed to enable biometric login');
                 }
               }
               passwordController.dispose();
@@ -687,7 +731,8 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              TeaSnackbar.info(context, 'Account deletion is disabled in demo mode.');
+              TeaSnackbar.info(
+                  context, 'Account deletion is disabled in demo mode.');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: TeaColors.criticalRed,
@@ -697,5 +742,191 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
         ],
       ),
     );
+  }
+
+  void _showChangePinDialog() {
+    final passwordController = TextEditingController();
+    final newPinController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Change PIN'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Enter your current account password and a new PIN.'),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Current Account Password',
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Required';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: newPinController,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 8,
+                decoration: const InputDecoration(
+                  labelText: 'New PIN Code',
+                  prefixIcon: Icon(Icons.pin),
+                  counterText: '',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty)
+                    return 'Please enter a PIN';
+                  if (value.length < 4) return 'PIN must be at least 4 digits';
+                  if (value.length > 8) return 'PIN must be max 8 digits';
+                  if (!RegExp(r'^[0-9]+$').hasMatch(value))
+                    return 'PIN must be numbers only';
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(context);
+                final success = await ref
+                    .read(authStateProvider.notifier)
+                    .enablePinLogin(
+                        passwordController.text, newPinController.text);
+
+                if (mounted) {
+                  if (success) {
+                    TeaSnackbar.success(context, 'PIN changed successfully!');
+                  } else {
+                    final error = ref.read(authStateProvider).errorMessage;
+                    TeaSnackbar.error(context, error ?? 'Failed to change PIN');
+                  }
+                }
+                passwordController.dispose();
+                newPinController.dispose();
+              }
+            },
+            child: const Text('Change PIN'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEnablePinDialog() {
+    final passwordController = TextEditingController();
+    final pinController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Enable PIN Login'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Set a 4 to 8 digit PIN Code for quick login.'),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: pinController,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 8,
+                decoration: const InputDecoration(
+                  labelText: 'New PIN Code',
+                  prefixIcon: Icon(Icons.pin),
+                  counterText: '',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty)
+                    return 'Please enter a PIN';
+                  if (value.length < 4) return 'PIN must be at least 4 digits';
+                  if (value.length > 8) return 'PIN must be max 8 digits';
+                  if (!RegExp(r'^[0-9]+$').hasMatch(value))
+                    return 'PIN must be numbers only';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Current Account Password',
+                  prefixIcon: Icon(Icons.lock_outline),
+                  helperText: 'Required to securely save your PIN',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Required';
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() => _pinEnabled = false);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(context);
+                final success = await ref
+                    .read(authStateProvider.notifier)
+                    .enablePinLogin(
+                        passwordController.text, pinController.text);
+                if (mounted) {
+                  if (success) {
+                    setState(() => _pinEnabled = true);
+                    TeaSnackbar.success(context, 'PIN login enabled!');
+                  } else {
+                    final error = ref.read(authStateProvider).errorMessage;
+                    setState(() => _pinEnabled = false);
+                    TeaSnackbar.error(
+                        context, error ?? 'Failed to enable PIN login');
+                  }
+                }
+                passwordController.dispose();
+                pinController.dispose();
+              }
+            },
+            child: const Text('Enable'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _disablePin() async {
+    await ref.read(authStateProvider.notifier).disablePinLogin();
+    if (mounted) {
+      setState(() => _pinEnabled = false);
+      TeaSnackbar.info(context, 'PIN login disabled');
+    }
   }
 }

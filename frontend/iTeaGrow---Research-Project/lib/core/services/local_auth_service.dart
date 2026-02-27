@@ -18,6 +18,8 @@ class AuthKeys {
   static const String rememberMe = 'auth_remember_me';
   static const String biometricEnabled = 'auth_biometric_enabled';
   static const String biometricUsername = 'auth_biometric_username';
+  static const String pinEnabled = 'auth_pin_enabled';
+  static const String pinUsername = 'auth_pin_username';
 }
 
 /// Service for managing local authentication persistence
@@ -57,7 +59,8 @@ class LocalAuthService {
     await _prefs.setString(AuthKeys.userId, user.id);
     await _prefs.setBool(AuthKeys.isLoggedIn, true);
     await _prefs.setBool(AuthKeys.rememberMe, rememberMe);
-    await _prefs.setString(AuthKeys.lastLoginTime, DateTime.now().toIso8601String());
+    await _prefs.setString(
+        AuthKeys.lastLoginTime, DateTime.now().toIso8601String());
 
     // Store API token if provided
     if (accessToken != null && accessToken.isNotEmpty) {
@@ -71,7 +74,8 @@ class LocalAuthService {
       await _prefs.setString(AuthKeys.userData, userData);
     }
 
-    debugPrint('Session saved for user: ${user.username} (Remember: $rememberMe)');
+    debugPrint(
+        'Session saved for user: ${user.username} (Remember: $rememberMe)');
   }
 
   /// Clear user session on logout
@@ -125,7 +129,8 @@ class LocalAuthService {
       try {
         final userMap = jsonDecode(userData) as Map<String, dynamic>;
         final user = User.fromMap(userMap);
-        debugPrint('Session restored from stored data for user: ${user.username}');
+        debugPrint(
+            'Session restored from stored data for user: ${user.username}');
         return user;
       } catch (e) {
         debugPrint('Failed to parse stored user data: $e');
@@ -145,7 +150,8 @@ class LocalAuthService {
 
           if (users.isNotEmpty) {
             final user = User.fromMap(users.first);
-            debugPrint('Session restored from database for user: ${user.username}');
+            debugPrint(
+                'Session restored from database for user: ${user.username}');
             return user;
           }
         } catch (e) {
@@ -177,10 +183,10 @@ class LocalAuthService {
     try {
       final canCheckBiometrics = await _localAuth.canCheckBiometrics;
       final isDeviceSupported = await _localAuth.isDeviceSupported();
-      
+
       debugPrint('Can check biometrics: $canCheckBiometrics');
       debugPrint('Device supported: $isDeviceSupported');
-      
+
       return canCheckBiometrics && isDeviceSupported;
     } catch (e) {
       debugPrint('Error checking biometric availability: $e');
@@ -191,7 +197,7 @@ class LocalAuthService {
   /// Get available biometric types
   Future<List<BiometricType>> getAvailableBiometrics() async {
     if (kIsWeb) return [];
-    
+
     try {
       return await _localAuth.getAvailableBiometrics();
     } catch (e) {
@@ -253,11 +259,11 @@ class LocalAuthService {
       // Store credentials securely
       await _secureStorage.write(key: 'biometric_username', value: username);
       await _secureStorage.write(key: 'biometric_password', value: password);
-      
+
       // Save preferences
       await _prefs.setBool(AuthKeys.biometricEnabled, true);
       await _prefs.setString(AuthKeys.biometricUsername, username);
-      
+
       debugPrint('Biometric login enabled for user: $username');
     } catch (e) {
       debugPrint('Error enabling biometric login: $e');
@@ -270,25 +276,92 @@ class LocalAuthService {
       // Clear secure storage
       await _secureStorage.delete(key: 'biometric_username');
       await _secureStorage.delete(key: 'biometric_password');
-      
+
       // Clear preferences
       await _prefs.remove(AuthKeys.biometricEnabled);
       await _prefs.remove(AuthKeys.biometricUsername);
-      
+
       debugPrint('Biometric login disabled');
     } catch (e) {
       debugPrint('Error disabling biometric login: $e');
     }
   }
 
+  // ========== PIN Authentication Methods ==========
+
+  bool get isPinEnabled {
+    return _prefs.getBool(AuthKeys.pinEnabled) ?? false;
+  }
+
+  String? get pinUsername {
+    return _prefs.getString(AuthKeys.pinUsername);
+  }
+
+  Future<void> enablePinLogin(
+      String username, String password, String pin) async {
+    if (kIsWeb) return;
+    try {
+      await _secureStorage.write(key: 'pin_username', value: username);
+      await _secureStorage.write(key: 'pin_password', value: password);
+      await _secureStorage.write(key: 'app_pin', value: pin);
+
+      await _prefs.setBool(AuthKeys.pinEnabled, true);
+      await _prefs.setString(AuthKeys.pinUsername, username);
+      debugPrint('PIN login enabled for user: $username');
+    } catch (e) {
+      debugPrint('Error enabling PIN login: $e');
+    }
+  }
+
+  Future<void> disablePinLogin() async {
+    try {
+      await _secureStorage.delete(key: 'pin_username');
+      await _secureStorage.delete(key: 'pin_password');
+      await _secureStorage.delete(key: 'app_pin');
+
+      await _prefs.remove(AuthKeys.pinEnabled);
+      await _prefs.remove(AuthKeys.pinUsername);
+      debugPrint('PIN login disabled');
+    } catch (e) {
+      debugPrint('Error disabling PIN login: $e');
+    }
+  }
+
+  Future<bool> verifyPin(String pin) async {
+    if (kIsWeb) return false;
+    try {
+      final storedPin = await _secureStorage.read(key: 'app_pin');
+      return storedPin == pin;
+    } catch (e) {
+      debugPrint('Error verifying PIN: $e');
+      return false;
+    }
+  }
+
+  Future<Map<String, String>?> getPinCredentials() async {
+    if (kIsWeb) return null;
+    try {
+      final username = await _secureStorage.read(key: 'pin_username');
+      final password = await _secureStorage.read(key: 'pin_password');
+
+      if (username != null && password != null) {
+        return {'username': username, 'password': password};
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error reading PIN credentials: $e');
+      return null;
+    }
+  }
+
   /// Get stored biometric credentials
   Future<Map<String, String>?> getBiometricCredentials() async {
     if (kIsWeb) return null;
-    
+
     try {
       final username = await _secureStorage.read(key: 'biometric_username');
       final password = await _secureStorage.read(key: 'biometric_password');
-      
+
       if (username != null && password != null) {
         return {'username': username, 'password': password};
       }

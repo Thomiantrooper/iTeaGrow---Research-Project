@@ -60,16 +60,8 @@ class TeaTheme {
         shadowColor: TeaColors.shadowVale,
       ),
 
-      // Card Theme
-      cardTheme: CardTheme(
-        color: TeaColors.white,
-        elevation: 0,
-        shadowColor: TeaColors.shadowVale,
-        shape: RoundedRectangleBorder(
-          borderRadius: TeaRadius.radiusLg,
-        ),
-        margin: EdgeInsets.zero,
-      ),
+      // Cards
+      cardColor: TeaColors.white,
 
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -491,15 +483,8 @@ class TeaTheme {
         ),
       ),
 
-      // Card Theme
-      cardTheme: CardTheme(
-        color: TeaColors.darkCard,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: TeaRadius.radiusLg,
-        ),
-        margin: EdgeInsets.zero,
-      ),
+      // Cards
+      cardColor: TeaColors.darkCard,
 
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(

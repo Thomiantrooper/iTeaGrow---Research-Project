@@ -7,6 +7,7 @@ import '../../../../core/widgets/hologram_card.dart';
 import '../../../../core/widgets/floating_tea_leaf.dart';
 import '../../../../core/services/ai_assistant_service.dart';
 import '../../../../core/services/voice_service.dart';
+import '../../../../core/providers/iot_live_provider.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 import '../../data/datasources/disease_detection_ml_service.dart';
 import '../../data/datasources/disease_storage_service.dart';
@@ -37,10 +38,6 @@ class _EnhancedDiseaseDetectionScreenState
   bool _savedToDb = false;
   bool _isSavingToDb = false;
 
-  // Live readings
-  double _temp = 26.5;
-  double _humidity = 72.0;
-
   late AnimationController _scanController;
   late Animation<double> _scanAnimation;
 
@@ -48,7 +45,6 @@ class _EnhancedDiseaseDetectionScreenState
   void initState() {
     super.initState();
     _initializeService();
-    _startLiveUpdates();
 
     _scanController = AnimationController(
       duration: const Duration(seconds: 2),
@@ -65,18 +61,6 @@ class _EnhancedDiseaseDetectionScreenState
     setState(() {
       _isBackendConnected = _mlService.isBackendAvailable;
       _isCheckingConnection = false;
-    });
-  }
-
-  void _startLiveUpdates() {
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _temp += (DateTime.now().millisecond % 10 - 5) * 0.05;
-          _humidity += (DateTime.now().millisecond % 10 - 5) * 0.1;
-        });
-        _startLiveUpdates();
-      }
     });
   }
 
@@ -149,10 +133,20 @@ class _EnhancedDiseaseDetectionScreenState
 
     try {
       print('>>> EnhancedScreen: Calling _mlService.predict() <<<');
+      
+      // Get live IoT data
+      final iotState = ref.read(iotLiveProvider);
+      final temp = (iotState.devices.isNotEmpty && iotState.devices.values.first.temperature != null)
+          ? iotState.devices.values.first.temperature!
+          : 26.5;
+      final humidity = (iotState.devices.isNotEmpty && iotState.devices.values.first.humidity != null)
+          ? iotState.devices.values.first.humidity!
+          : 72.0;
+      
       final result = await _mlService.predict(
         _selectedImage!.path,
-        liveTemperature: _temp,
-        liveHumidity: _humidity,
+        liveTemperature: temp,
+        liveHumidity: humidity,
       );
 
       // IMMEDIATELY print after predict returns
@@ -398,48 +392,62 @@ class _EnhancedDiseaseDetectionScreenState
   }
 
   Widget _buildEnvironmentCard() {
-    return HologramCard(
-      enableGlow: false,
-      padding: const EdgeInsets.all(JarvisTheme.spacingMd),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blue.shade400, Colors.blue.shade600],
+    return Consumer(
+      builder: (context, ref, child) {
+        final iotState = ref.watch(iotLiveProvider);
+        
+        // Get live values or fallback
+        final temp = (iotState.devices.isNotEmpty && iotState.devices.values.first.temperature != null)
+            ? iotState.devices.values.first.temperature!
+            : 26.5;
+        final humidity = (iotState.devices.isNotEmpty && iotState.devices.values.first.humidity != null)
+            ? iotState.devices.values.first.humidity!
+            : 72.0;
+        
+        return HologramCard(
+          enableGlow: false,
+          padding: const EdgeInsets.all(JarvisTheme.spacingMd),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade400, Colors.blue.shade600],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.sensors, color: Colors.white, size: 20),
               ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.sensors, color: Colors.white, size: 20),
-          ),
-          const SizedBox(width: JarvisTheme.spacingMd),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Live Environment',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: JarvisTheme.textPrimary,
-                  ),
+              const SizedBox(width: JarvisTheme.spacingMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Live Environment',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: JarvisTheme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      iotState.devices.isNotEmpty ? 'Railway IoT Sensor' : 'Fallback values',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: iotState.devices.isNotEmpty ? Colors.green : JarvisTheme.textMuted,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'Real-time sensor data',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: JarvisTheme.textMuted,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              _buildMetricChip(Icons.thermostat, '${temp.toStringAsFixed(1)}\u00b0C', Colors.deepOrange),
+              const SizedBox(width: 8),
+              _buildMetricChip(Icons.water_drop, '${humidity.toString()}%', Colors.blue),
+            ],
           ),
-          _buildMetricChip(Icons.thermostat, '${_temp.toStringAsFixed(1)}°C', Colors.deepOrange),
-          const SizedBox(width: 8),
-          _buildMetricChip(Icons.water_drop, '${_humidity.toStringAsFixed(0)}%', Colors.blue),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -292,10 +292,14 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
       // Settings
       GoRoute(
         path: '/settings',
-        pageBuilder: (context, state) => _buildPremiumTransition(
-          child: const PremiumSettingsScreen(),
-          state: state,
-        ),
+        pageBuilder: (context, state) {
+          final authState = ref.read(authStateProvider);
+          final isFarmer = authState.user?.role == UserRole.farmer;
+          return _buildPremiumTransition(
+            child: PremiumSettingsScreen(allowBiometricAndPin: isFarmer),
+            state: state,
+          );
+        },
       ),
 
       // Profile

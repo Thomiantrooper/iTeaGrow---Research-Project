@@ -245,14 +245,7 @@ class JarvisTheme {
       ),
 
       // Cards
-      cardTheme: CardTheme(
-        color: mistWhitePure,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusLg),
-        ),
-        margin: const EdgeInsets.all(spacingSm),
-      ),
+      cardColor: mistWhitePure,
 
       // Elevated Button
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -547,13 +540,7 @@ class JarvisTheme {
           ),
         ),
       ),
-      cardTheme: CardTheme(
-        color: darkCard,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusLg),
-        ),
-      ),
+      cardColor: darkCard,
       fontFamily: 'Poppins',
     );
   }

@@ -21,8 +21,9 @@ class GoogleAuthService {
           'email',
           'profile',
         ],
-        // Uncomment and add your web client ID here if not using meta tag:
-        // clientId: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+        // Set your created Google OAuth Client ID here:
+        clientId:
+            '422600401949-2icliet7cotors3q8equqi2ahcncb7ts.apps.googleusercontent.com',
       );
       _isInitialized = true;
       debugPrint('Google Sign-In initialized successfully');
