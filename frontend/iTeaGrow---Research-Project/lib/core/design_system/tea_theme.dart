@@ -279,7 +279,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: TeaColors.white,
         elevation: 8,
         shadowColor: TeaColors.shadowVale,
@@ -317,7 +317,7 @@ class TeaTheme {
       ),
 
       // Tab Bar Theme
-      tabBarTheme: TabBarThemeData(
+      tabBarTheme: TabBarTheme(
         labelColor: TeaColors.freshLeaf,
         unselectedLabelColor: TeaColors.darkGray,
         labelStyle: TeaTypography.labelLarge,
@@ -605,7 +605,7 @@ class TeaTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: TeaColors.darkSurface,
         elevation: 8,
         shape: RoundedRectangleBorder(
