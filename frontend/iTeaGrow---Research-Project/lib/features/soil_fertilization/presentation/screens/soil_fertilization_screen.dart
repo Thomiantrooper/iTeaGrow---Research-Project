@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design_system/tea_colors.dart';
 import '../../../../core/design_system/tea_typography.dart';
-import '../../../../core/design_system/tea_spacing.dart';
-import '../../../../core/providers/iot_live_provider.dart';
-import '../../data/datasources/fertilizer_ml_service.dart';
-import '../../domain/entities/fertilizer_recommendation.dart';
-import 'package:iteagrow/features/iot_connectivity/domain/models/iot_models.dart';
+import '../../data/providers/soil_health_provider.dart';
+import '../../domain/entities/soil_health_record.dart';
+import 'soil_health_pdf_screen.dart';
 
 class SoilFertilizationScreen extends ConsumerStatefulWidget {
   const SoilFertilizationScreen({super.key});
@@ -16,423 +14,709 @@ class SoilFertilizationScreen extends ConsumerStatefulWidget {
       _SoilFertilizationScreenState();
 }
 
-class _SoilFertilizationScreenState extends ConsumerState<SoilFertilizationScreen> {
-  final FertilizerMLService _mlService = FertilizerMLService();
+class _SoilFertilizationScreenState
+    extends ConsumerState<SoilFertilizationScreen> {
+  double _blockSize = 1.0; // In Hectares
+  String _selectedZoneFilter = 'All'; // All, North, East, South, West, Central
+  String _selectedHealthFilter = 'All'; // All, Good, Fair, Poor
 
-  // NPK and pH are not from ESP32 — keep as manual/default values
-  double soilPH = 6.2;
-  double nitrogen = 42.0;
-  double phosphorus = 28.0;
-  double potassium = 35.0;
+  String _getZoneName(int id) {
+    if (id <= 25) return 'North';
+    if (id <= 50) return 'East';
+    if (id <= 75) return 'South';
+    if (id <= 100) return 'West';
+    return 'Central';
+  }
 
-  FertilizerRecommendation? _recommendation;
-  bool _isCalculating = false;
-
-  Future<void> _getFertilizerRecommendation() async {
-    setState(() => _isCalculating = true);
-
-    try {
-      final recommendation = await _mlService.recommend(
-        currentNitrogen: nitrogen,
-        currentPhosphorus: phosphorus,
-        currentPotassium: potassium,
-        soilPH: soilPH,
-        cropStage: 'vegetative', // This should come from user input or system
-      );
-
-      setState(() {
-        _recommendation = recommendation;
-        _isCalculating = false;
-      });
-    } catch (e) {
-      setState(() => _isCalculating = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: TeaColors.alertRust),
-      );
-    }
+  String _getHectareLabel(int id) {
+    return '${_getZoneName(id)} A$id';
   }
 
   @override
   Widget build(BuildContext context) {
-    final liveState = ref.watch(iotLiveProvider);
-    final device = liveState.deviceList.isNotEmpty ? liveState.deviceList.first : null;
-    final soilMoisture = device?.soilMoisture ?? 65.5;
-    final temperature  = device?.temperature  ?? 26.5;
-    final humidity     = device?.humidity     ?? 72.0;
+    final soilState = ref.watch(soilHealthProvider);
+    final record = soilState.latest;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Soil Monitoring & Fertilization'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(iotLiveProvider.notifier).refresh(),
+      backgroundColor: const Color(0xFFF7FAF8), // Airy off-white to match map
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // ── Background Gradient ──
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withOpacity(0.8),
+                      const Color(0xFFF7FAF8),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Content ──
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildPremiumHeader(record),
+                  _buildHectareSelector(soilState),
+                  if (soilState.isLoading && record == null)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (soilState.error != null && record == null)
+                    Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40.0),
+                        child: Text(soilState.error!),
+                      ),
+                    )
+                  else
+                    _buildMainReport(record),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPremiumHeader(SoilHealthRecord? record) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(top: 24, bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(50),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000), // _kShadowSoft
+              blurRadius: 15,
+              offset: Offset(0, 5),
+            ),
+          ],
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.spa_rounded, color: Color(0xFF2E7D32), size: 22),
+            const SizedBox(width: 12),
+            Text(
+              'Soil Health Report',
+              style: TeaTypography.headlineSmall.copyWith(
+                color: TeaColors.deepForest,
+                fontWeight: FontWeight.w900,
+                fontSize: 20,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 1,
+              height: 20,
+              color: Colors.black.withOpacity(0.1),
+            ),
+            const SizedBox(width: 12),
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded, size: 22),
+              color: TeaColors.deepForest.withOpacity(0.8),
+              onPressed: () => ref.read(soilHealthProvider.notifier).refresh(),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            if (record != null) ...[
+              const SizedBox(width: 12),
+              Container(
+                width: 1,
+                height: 20,
+                color: Colors.black.withOpacity(0.1),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                icon: const Icon(Icons.picture_as_pdf_rounded, size: 22),
+                color: TeaColors.deepForest.withOpacity(0.8),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => SoilHealthPdfScreen(record: record),
+                    ),
+                  );
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHectareSelector(SoilHealthState state) {
+    if (state.records.isEmpty) return const SizedBox.shrink();
+
+    // 1. Filter the records
+    final filteredRecords = state.records.where((record) {
+      final zoneMatch = _selectedZoneFilter == 'All' ||
+          _getZoneName(record.hectareId) == _selectedZoneFilter;
+      final healthMatch = _selectedHealthFilter == 'All' ||
+          record.healthStatus.label == _selectedHealthFilter;
+      return zoneMatch && healthMatch;
+    }).toList();
+
+    return Column(
+      children: [
+        // Zone Filter
+        SizedBox(
+          height: 40,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            children: [
+              'All',
+              'North',
+              'East',
+              'South',
+              'West',
+              'Central',
+            ].map((zone) {
+              final isSelected = _selectedZoneFilter == zone;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(zone, style: const TextStyle(fontSize: 12)),
+                  selected: isSelected,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedZoneFilter = zone);
+                  },
+                  selectedColor: TeaColors.deepForest.withOpacity(0.2),
+                  labelStyle: TextStyle(
+                    color: isSelected ? TeaColors.deepForest : Colors.grey,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Health Filter
+        SizedBox(
+          height: 40,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            children: [
+              'All',
+              'Good',
+              'Fair',
+              'Poor',
+            ].map((health) {
+              final isSelected = _selectedHealthFilter == health;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(health, style: const TextStyle(fontSize: 12)),
+                  selected: isSelected,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedHealthFilter = health);
+                  },
+                  selectedColor: health == 'Good'
+                      ? TeaColors.healthyGreen.withOpacity(0.2)
+                      : health == 'Fair'
+                          ? TeaColors.warningAmber.withOpacity(0.2)
+                          : health == 'Poor'
+                              ? TeaColors.alertRust.withOpacity(0.2)
+                              : TeaColors.deepForest.withOpacity(0.2),
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? (health == 'Good'
+                            ? TeaColors.healthyGreen
+                            : health == 'Fair'
+                                ? TeaColors.warningAmber
+                                : health == 'Poor'
+                                    ? TeaColors.alertRust
+                                    : TeaColors.deepForest)
+                        : Colors.grey,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Hectare Chips
+        SizedBox(
+          height: 60,
+          child: filteredRecords.isEmpty
+              ? const Center(
+                  child: Text('No hectares match these filters',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)))
+              : ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: filteredRecords.length,
+                  itemBuilder: (context, index) {
+                    final record = filteredRecords[index];
+                    final hectareId = record.hectareId;
+                    final isSelected = state.selectedHectareId == hectareId;
+
+                    return GestureDetector(
+                      onTap: () => ref
+                          .read(soilHealthProvider.notifier)
+                          .selectHectare(hectareId),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected ? TeaColors.deepForest : Colors.white,
+                          borderRadius: BorderRadius.circular(25),
+                          border: Border.all(
+                            color: isSelected
+                                ? TeaColors.deepForest
+                                : TeaColors.deepForest.withOpacity(0.1),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            if (isSelected)
+                              BoxShadow(
+                                color: TeaColors.deepForest.withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            _getHectareLabel(hectareId),
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : TeaColors.deepForest,
+                              fontWeight: isSelected
+                                  ? FontWeight.w900
+                                  : FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMainReport(SoilHealthRecord? record) {
+    if (record == null)
+      return const Center(
+          child: Padding(
+        padding: EdgeInsets.all(40.0),
+        child: Text('No data report generated'),
+      ));
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Executive Summary
+          _buildExecutiveSummary(record),
+
+          const SizedBox(height: 32),
+
+          // 2. Critical Actions (Fertilizer)
+          _buildActionsSection(record),
+
+          const SizedBox(height: 32),
+
+          // 3. Detailed Soil Metrics
+          Text('Soil Chemistry Details', style: TeaTypography.titleLarge),
+          const SizedBox(height: 16),
+          _buildDetailedMetrics(record),
+
+          const SizedBox(height: 32),
+
+          // 4. Timestamp & Meta
+          Center(
+            child: Text(
+              'Report generated at ${record.formattedTime} for ${_getHectareLabel(record.hectareId)}',
+              style: TeaTypography.bodySmall,
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExecutiveSummary(SoilHealthRecord record) {
+    final status = record.healthStatus;
+    final color = _getStatusColor(status);
+    final isGood = status == SoilHealthStatus.good;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(40),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+          ),
+        ],
+        border: Border.all(color: Colors.white, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            'SOIL CONDITION REPORT',
+            style: TeaTypography.labelSmall.copyWith(
+              color: TeaColors.deepForest.withOpacity(0.5),
+              letterSpacing: 2.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            status.label.toUpperCase(),
+            style: TeaTypography.displayMedium.copyWith(
+              color: color,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.0,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              isGood
+                  ? 'Optimal condition. No major fertilizer adjustments required.'
+                  : 'Action required. Significant imbalances found in Nitrogen/Soil Chemistry.',
+              textAlign: TextAlign.center,
+              style: TeaTypography.bodyMedium.copyWith(
+                color: TeaColors.deepForest.withOpacity(0.7),
+                height: 1.5,
+              ),
+            ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Live Status Indicator
-            Row(
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
+    );
+  }
+
+  Widget _buildActionsSection(SoilHealthRecord record) {
+    final advice = record.sanitizedAdvice;
+    if (advice.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'Required Actions',
+            style: TeaTypography.titleLarge.copyWith(
+              color: TeaColors.deepForest,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...advice.map((line) => _buildPremiumActionCard(line)),
+        const SizedBox(height: 16),
+        _buildPremiumCalculator(record),
+      ],
+    );
+  }
+
+  Widget _buildPremiumActionCard(String text) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.white, width: 1.5),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: TeaColors.warmAmber.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.priority_high_rounded,
+                color: TeaColors.warmAmber, size: 18),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              text,
+              style: TeaTypography.bodyMedium.copyWith(
+                fontWeight: FontWeight.w700,
+                color: TeaColors.nearBlack.withOpacity(0.8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumCalculator(SoilHealthRecord record) {
+    bool hasUreaCount = record.sanitizedAdvice.any((a) => a.contains('Urea'));
+    if (!hasUreaCount) return const SizedBox.shrink();
+
+    double bagsNeeded = (_blockSize * 50) / 50;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            TeaColors.deepForest,
+            TeaColors.deepForest.withOpacity(0.85),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: TeaColors.deepForest.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calculate_rounded,
+                  color: Colors.white, size: 20),
+              const SizedBox(width: 12),
+              Text(
+                'Procurement Estimator',
+                style: TeaTypography.titleSmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              _buildModernChip(1.0),
+              _buildModernChip(2.5),
+              _buildModernChip(5.0),
+              const Spacer(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${bagsNeeded.ceil()} BAGS',
+                    style: TeaTypography.headlineSmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    'UREA REQ.',
+                    style: TeaTypography.bodySmall.copyWith(
+                      color: Colors.white60,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernChip(double size) {
+    bool isSelected = _blockSize == size;
+    return GestureDetector(
+      onTap: () => setState(() => _blockSize = size),
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? Colors.white : Colors.white24,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          '${size}ha',
+          style: TextStyle(
+            color: isSelected ? TeaColors.deepForest : Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailedMetrics(SoilHealthRecord record) {
+    return Column(
+      children: [
+        _buildMetricBar(
+            'Nitrogen (N)', record.nitrogen, 150, 250, 'Sensor Level'),
+        const SizedBox(height: 12),
+        _buildMetricBar(
+            'Phosphorus (P)', record.phosphorus, 80, 150, 'Sensor Level'),
+        const SizedBox(height: 12),
+        _buildMetricBar(
+            'Potassium (K)', record.potassium, 150, 250, 'Sensor Level'),
+        const SizedBox(height: 24),
+        _buildMetricBar('Soil pH', record.ph, 4.5, 5.5, 'pH'),
+        const SizedBox(height: 12),
+        _buildMetricBar('Humidity', record.humidity, 40, 70, '%'),
+      ],
+    );
+  }
+
+  Widget _buildMetricBar(
+      String label, double value, double min, double max, String unit) {
+    final status = value < min
+        ? 'Low'
+        : value > max
+            ? 'High'
+            : 'Optimal';
+    final color =
+        status == 'Optimal' ? TeaColors.healthyGreen : TeaColors.alertRust;
+
+    // Convert to percentage for user-friendly display
+    final percentage = ((value / 1999) * 100).clamp(0, 100);
+    final displayValue = unit == 'Sensor Level'
+        ? '${percentage.toStringAsFixed(0)}%'
+        : '${value.toStringAsFixed(1)} $unit';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white, width: 1),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: TeaTypography.labelLarge.copyWith(
+                  color: TeaColors.deepForest,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                displayValue,
+                style: TeaTypography.labelLarge.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Stack(
+            children: [
+              Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              FractionallySizedBox(
+                widthFactor: (percentage / 100).clamp(0.0, 1.0),
+                child: Container(
+                  height: 6,
                   decoration: BoxDecoration(
-                    color: TeaColors.healthyGreen,
-                    shape: BoxShape.circle,
+                    color: color,
+                    borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: TeaColors.healthyGreen.withOpacity(0.5),
+                        color: color.withOpacity(0.3),
                         blurRadius: 8,
-                        spreadRadius: 2,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Live Monitoring Active',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: TeaColors.healthyGreen,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Soil Monitoring Section
-            Text(
-              'Soil Monitoring',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 16),
-
-            // Live Sensor Readings
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildSensorReading(
-                      SensorType.soilMoisture,
-                      soilMoisture,
-                      _getSensorStatus(SensorType.soilMoisture, soilMoisture),
-                    ),
-                    const Divider(height: 24),
-                    _buildSensorReading(
-                      SensorType.soilPH,
-                      soilPH,
-                      _getSensorStatus(SensorType.soilPH, soilPH),
-                    ),
-                    const Divider(height: 24),
-                    _buildSensorReading(
-                      SensorType.nitrogen,
-                      nitrogen,
-                      _getSensorStatus(SensorType.nitrogen, nitrogen),
-                    ),
-                    const Divider(height: 24),
-                    _buildSensorReading(
-                      SensorType.phosphorus,
-                      phosphorus,
-                      _getSensorStatus(SensorType.phosphorus, phosphorus),
-                    ),
-                    const Divider(height: 24),
-                    _buildSensorReading(
-                      SensorType.potassium,
-                      potassium,
-                      _getSensorStatus(SensorType.potassium, potassium),
-                    ),
-                    const Divider(height: 24),
-                    _buildSensorReading(
-                      SensorType.temperature,
-                      temperature,
-                      _getSensorStatus(SensorType.temperature, temperature),
-                    ),
-                    const Divider(height: 24),
-                    _buildSensorReading(
-                      SensorType.humidity,
-                      humidity,
-                      _getSensorStatus(SensorType.humidity, humidity),
-                    ),
-                  ],
-                ),
               ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Fertilization Section
-            Text(
-              'Fertilization Recommendations',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 16),
-
-            // Get Recommendation Button
-            ElevatedButton.icon(
-              onPressed: _isCalculating ? null : _getFertilizerRecommendation,
-              icon: _isCalculating
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: TeaColors.white,),
-                    )
-                  : const Icon(Icons.calculate),
-              label: Text(_isCalculating
-                  ? 'Calculating...'
-                  : 'Get TRI-Based Recommendation',),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(16),
-              ),
-            ),
-
-            // Recommendation Results
-            if (_recommendation != null) ...[
-              const SizedBox(height: 24),
-              _buildRecommendationCard(),
             ],
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Status: $status (Optimal Range: ${((min / 1999) * 100).toStringAsFixed(0)}-${((max / 1999) * 100).toStringAsFixed(0)}%)',
+              style: TeaTypography.bodySmall.copyWith(
+                color: Colors.black.withOpacity(0.4),
+                fontSize: 10,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSensorReading(
-      SensorType type, double value, SensorStatus status,) {
-    final typeColor = _getSensorTypeColor(type);
-    final statusColor = _getSensorStatusColor(status);
-
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: typeColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(type.icon, color: typeColor, size: 28),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                type.displayName,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${value.toStringAsFixed(1)} ${type.unit}',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: typeColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            status.displayName,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: statusColor,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecommendationCard() {
-    return Card(
-      color: TeaColors.warmAmber.withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.science, color: TeaColors.warmAmber, size: 28),
-                SizedBox(width: 12),
-                Text(
-                  'TRI-Based Recommendations',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-
-            // NPK Recommendations
-            _buildNutrientRecommendation(
-                'Nitrogen (N)', _recommendation!.nitrogenAmount,),
-            const SizedBox(height: 12),
-            _buildNutrientRecommendation(
-                'Phosphorus (P)', _recommendation!.phosphorusAmount,),
-            const SizedBox(height: 12),
-            _buildNutrientRecommendation(
-                'Potassium (K)', _recommendation!.potassiumAmount,),
-
-            const Divider(height: 24),
-
-            // Reasoning
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.info_outline, color: TeaColors.infoSky, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _recommendation!.reasoning,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-            Text(
-              'Generated at: ${_formatTime(_recommendation!.timestamp)}',
-              style: TextStyle(fontSize: 12, color: TeaColors.darkGray),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNutrientRecommendation(String nutrient, double amount) {
-    final needsApplication = amount > 0;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          nutrient,
-          style: const TextStyle(fontSize: 16),
-        ),
-        Row(
-          children: [
-            if (needsApplication)
-              const Icon(Icons.add_circle, color: TeaColors.warningAmber, size: 20)
-            else
-              const Icon(Icons.check_circle, color: TeaColors.healthyGreen, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              needsApplication
-                  ? '${amount.toStringAsFixed(1)} kg/ha'
-                  : 'Sufficient',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: needsApplication
-                    ? TeaColors.warningAmber
-                    : TeaColors.healthyGreen,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  SensorStatus _getSensorStatus(SensorType type, double value) {
-    // Simple thresholds - replace with actual TRI guidelines
-    switch (type) {
-      case SensorType.soilMoisture:
-        if (value < 40) return SensorStatus.critical;
-        if (value < 50) return SensorStatus.warning;
-        if (value > 80) return SensorStatus.warning;
-        return SensorStatus.optimal;
-      case SensorType.soilPH:
-        if (value < 5.0 || value > 7.0) return SensorStatus.critical;
-        if (value < 5.5 || value > 6.5) return SensorStatus.warning;
-        return SensorStatus.optimal;
-      case SensorType.nitrogen:
-        if (value < 30) return SensorStatus.critical;
-        if (value < 40) return SensorStatus.warning;
-        return SensorStatus.optimal;
-      case SensorType.phosphorus:
-        if (value < 20) return SensorStatus.critical;
-        if (value < 30) return SensorStatus.warning;
-        return SensorStatus.optimal;
-      case SensorType.potassium:
-        if (value < 20) return SensorStatus.critical;
-        if (value < 25) return SensorStatus.warning;
-        return SensorStatus.optimal;
-      case SensorType.temperature:
-        if (value < 15 || value > 35) return SensorStatus.critical;
-        if (value < 20 || value > 30) return SensorStatus.warning;
-        return SensorStatus.optimal;
-      case SensorType.humidity:
-        if (value < 40 || value > 90) return SensorStatus.critical;
-        if (value < 50 || value > 80) return SensorStatus.warning;
-        return SensorStatus.optimal;
-      default:
-        return SensorStatus.normal;
-    }
-  }
-
-  String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${time.second.toString().padLeft(2, '0')}';
-  }
-
-  Color _getSensorTypeColor(SensorType type) {
-    switch (type) {
-      case SensorType.soilMoisture:
-        return TeaColors.infoSky;
-      case SensorType.soilPH:
-        return TeaColors.clayPot;
-      case SensorType.nitrogen:
-        return TeaColors.healthyGreen;
-      case SensorType.phosphorus:
-        return TeaColors.warningAmber;
-      case SensorType.potassium:
-        return TeaColors.alertRust;
-      case SensorType.temperature:
-        return TeaColors.warmAmber;
-      case SensorType.humidity:
-        return TeaColors.infoSky;
-      default:
-        return TeaColors.mediumGray;
-    }
-  }
-
-  Color _getSensorStatusColor(SensorStatus status) {
+  Color _getStatusColor(SoilHealthStatus status) {
     switch (status) {
-      case SensorStatus.critical:
-        return TeaColors.alertRust;
-      case SensorStatus.warning:
-        return TeaColors.warningAmber;
-      case SensorStatus.normal:
-        return TeaColors.infoSky;
-      case SensorStatus.optimal:
+      case SoilHealthStatus.good:
         return TeaColors.healthyGreen;
+      case SoilHealthStatus.fair:
+        return TeaColors.warningAmber;
+      case SoilHealthStatus.poor:
+        return TeaColors.alertRust;
       default:
-        return TeaColors.mediumGray;
+        return Colors.grey;
     }
   }
 }

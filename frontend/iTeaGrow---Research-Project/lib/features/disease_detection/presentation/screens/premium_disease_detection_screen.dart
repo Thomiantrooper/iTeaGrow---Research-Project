@@ -686,7 +686,7 @@ class _PremiumDiseaseDetectionScreenState
                   children: [
                     Text('Live Environment', style: TeaTypography.titleSmall),
                     Text(
-                      hasMqtt ? 'Railway IoT Sensor' : 'Using default values',
+                      hasMqtt ? 'IoTENV' : 'Using default values',
                       style: TeaTypography.labelSmall.copyWith(
                         color: hasMqtt ? TeaColors.freshLeaf : TeaColors.mediumGray,
                       ),

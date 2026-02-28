@@ -89,9 +89,7 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
               activeIcon: Icons.dashboard,
               label: 'Home'),
           TeaNavItem(
-              icon: Icons.people_outlined,
-              activeIcon: Icons.people,
-              label: 'Users'),
+              icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Maps'),
           TeaNavItem(
               icon: Icons.analytics_outlined,
               activeIcon: Icons.analytics,
@@ -104,7 +102,7 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
         onTap: (index) {
           switch (index) {
             case 1:
-              context.push('/dashboard/manager/users');
+              context.push('/map');
             case 2:
               context.push('/dashboard/admin/analytics');
             case 3:

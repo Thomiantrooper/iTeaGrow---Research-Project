@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/providers/iot_live_provider.dart';
+import '../../../soil_fertilization/data/providers/soil_health_provider.dart';
 
 /// Premium IoT Devices Screen - Simplified Design
 class PremiumIoTScreen extends ConsumerWidget {
@@ -10,14 +11,24 @@ class PremiumIoTScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Environment Device Status
     final iotData = ref.watch(iotLiveProvider);
-    final device = iotData.deviceList.isNotEmpty ? iotData.deviceList.first : null;
-    
-    // Check if device is online (data received within last 30 seconds)
+    final device =
+        iotData.deviceList.isNotEmpty ? iotData.deviceList.first : null;
     bool isOnline = false;
     if (device != null && device.timestamp != null) {
       final timeDiff = DateTime.now().difference(device.timestamp!);
       isOnline = timeDiff.inSeconds < 30;
+    }
+
+    // Soil Device Status
+    final soilState = ref.watch(soilHealthProvider);
+    final latestSoil = soilState.latest;
+    bool isSoilOnline = false;
+    if (latestSoil != null) {
+      final soilTimeDiff = DateTime.now().difference(latestSoil.timestamp);
+      // Soil data usually updates less frequently (e.g., every 5-10 mins in production, but let's use 5 mins for "live" feel)
+      isSoilOnline = soilTimeDiff.inMinutes < 5;
     }
 
     return Scaffold(
@@ -32,7 +43,8 @@ class PremiumIoTScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: TeaColors.nearBlack),
+            icon: const Icon(Icons.arrow_back_rounded,
+                color: TeaColors.nearBlack),
             onPressed: () => context.pop(),
           ),
         ),
@@ -52,7 +64,8 @@ class PremiumIoTScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: TeaColors.freshLeaf),
+              icon:
+                  const Icon(Icons.refresh_rounded, color: TeaColors.freshLeaf),
               onPressed: () {
                 ref.invalidate(iotLiveProvider);
               },
@@ -123,7 +136,8 @@ class PremiumIoTScreen extends ConsumerWidget {
                         _MetricData(
                           icon: Icons.thermostat,
                           label: 'Temperature',
-                          value: '${device.temperature?.toStringAsFixed(1) ?? '--'}°C',
+                          value:
+                              '${device.temperature?.toStringAsFixed(1) ?? '--'}°C',
                           color: Colors.deepOrange,
                         ),
                         _MetricData(
@@ -135,7 +149,9 @@ class PremiumIoTScreen extends ConsumerWidget {
                         _MetricData(
                           icon: Icons.air,
                           label: 'Air Quality',
-                          value: device.airQuality != null ? _getAirQualityLabel(device.airQuality!.toInt()) : '--',
+                          value: device.airQuality != null
+                              ? _getAirQualityLabel(device.airQuality!.toInt())
+                              : '--',
                           color: _getAirQualityColor(device.airQuality ?? 0),
                         ),
                       ]
@@ -145,15 +161,61 @@ class PremiumIoTScreen extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // IoTSOIL Device Card (Coming Soon)
+              // IoTSOIL Device Card
               _IoTDeviceCard(
                 deviceName: 'IoTSOIL',
                 deviceDescription: 'Soil Monitoring',
-                isOnline: false,
+                isOnline: isSoilOnline,
                 icon: Icons.grass,
                 iconColor: Colors.brown,
-                metrics: const [],
-                comingSoon: true,
+                metrics: latestSoil != null
+                    ? [
+                        _MetricData(
+                          icon: Icons.science_rounded,
+                          label: 'Nitrogen',
+                          value: '${latestSoil.nitrogen.toStringAsFixed(0)}',
+                          color: Colors.green,
+                        ),
+                        _MetricData(
+                          icon: Icons.science_rounded,
+                          label: 'Phosphorus',
+                          value: '${latestSoil.phosphorus.toStringAsFixed(0)}',
+                          color: Colors.orange,
+                        ),
+                        _MetricData(
+                          icon: Icons.science_rounded,
+                          label: 'Potassium',
+                          value: '${latestSoil.potassium.toStringAsFixed(0)}',
+                          color: Colors.blue,
+                        ),
+                        _MetricData(
+                          icon: Icons.opacity_rounded,
+                          label: 'pH Level',
+                          value: '${latestSoil.ph.toStringAsFixed(1)}',
+                          color: Colors.purple,
+                        ),
+                        _MetricData(
+                          icon: Icons.bolt_rounded,
+                          label: 'EC (µS/cm)',
+                          value: '${latestSoil.ec.toStringAsFixed(0)}',
+                          color: Colors.cyan,
+                        ),
+                        _MetricData(
+                          icon: Icons.thermostat_rounded,
+                          label: 'Soil Temp',
+                          value:
+                              '${latestSoil.temperature.toStringAsFixed(1)}°C',
+                          color: Colors.redAccent,
+                        ),
+                        _MetricData(
+                          icon: Icons.water_drop_rounded,
+                          label: 'Soil Moisture',
+                          value: '${latestSoil.humidity.toStringAsFixed(1)}%',
+                          color: Colors.indigo,
+                        ),
+                      ]
+                    : [],
+                lastUpdate: latestSoil?.timestamp,
               ),
 
               const SizedBox(height: 28),
@@ -256,7 +318,6 @@ class _IoTDeviceCard extends StatelessWidget {
   final Color iconColor;
   final List<_MetricData> metrics;
   final DateTime? lastUpdate;
-  final bool comingSoon;
 
   const _IoTDeviceCard({
     required this.deviceName,
@@ -266,7 +327,6 @@ class _IoTDeviceCard extends StatelessWidget {
     required this.iconColor,
     required this.metrics,
     this.lastUpdate,
-    this.comingSoon = false,
   });
 
   @override
@@ -357,152 +417,73 @@ class _IoTDeviceCard extends StatelessWidget {
                   ),
 
                   // Status Indicator
-                  if (comingSoon)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isOnline
+                            ? [
+                                TeaColors.freshLeaf,
+                                TeaColors.freshLeaf.withOpacity(0.8),
+                              ]
+                            : [
+                                Colors.grey.shade400,
+                                Colors.grey.shade300,
+                              ],
                       ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.amber.shade300,
-                            Colors.amber.shade200,
-                          ],
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isOnline ? TeaColors.freshLeaf : Colors.grey)
+                              .withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(
-                            Icons.schedule,
-                            size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isOnline ? 'Online' : 'Offline',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
-                          SizedBox(width: 6),
-                          Text(
-                            'Coming Soon',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: isOnline
-                              ? [
-                                  TeaColors.freshLeaf,
-                                  TeaColors.freshLeaf.withOpacity(0.8),
-                                ]
-                              : [
-                                  Colors.grey.shade400,
-                                  Colors.grey.shade300,
-                                ],
                         ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isOnline ? TeaColors.freshLeaf : Colors.grey)
-                                .withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            isOnline ? 'Online' : 'Offline',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                      ],
                     ),
+                  ),
                 ],
               ),
 
-              if (comingSoon) ...[
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.amber.withOpacity(0.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.construction,
-                          color: Colors.amber.shade700,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          'Soil monitoring device will be available soon with NPK, moisture, and pH sensors',
-                          style: TeaTypography.bodyMedium.copyWith(
-                            color: Colors.amber.shade900,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ] else if (metrics.isNotEmpty) ...[
+              if (metrics.isNotEmpty) ...[
                 const SizedBox(height: 24),
                 const Divider(height: 1),
                 const SizedBox(height: 24),
 
-                // Metrics Grid
-                Row(
-                  children: metrics.map((metric) {
-                    return Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                // Metrics Swipeable Grid
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: metrics.map((metric) {
+                      return Container(
+                        width: 120, // Fixed width for swiping feel
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -544,7 +525,7 @@ class _IoTDeviceCard extends StatelessWidget {
                             Text(
                               metric.value,
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 18, // Slightly smaller to fit units
                                 fontWeight: FontWeight.bold,
                                 color: metric.color,
                                 letterSpacing: -0.5,
@@ -555,7 +536,8 @@ class _IoTDeviceCard extends StatelessWidget {
                               metric.label,
                               style: TeaTypography.bodySmall.copyWith(
                                 color: TeaColors.darkGray,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
                               ),
                               textAlign: TextAlign.center,
                               maxLines: 1,
@@ -563,9 +545,9 @@ class _IoTDeviceCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
 
                 // Last Update
@@ -649,7 +631,7 @@ class _IoTDeviceCard extends StatelessWidget {
 
   String _getTimeAgo(DateTime timestamp) {
     final diff = DateTime.now().difference(timestamp);
-    
+
     if (diff.inSeconds < 60) {
       return '${diff.inSeconds}s ago';
     } else if (diff.inMinutes < 60) {

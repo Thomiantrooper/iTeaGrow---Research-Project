@@ -432,7 +432,7 @@ class _EnhancedDiseaseDetectionScreenState
                       ),
                     ),
                     Text(
-                      iotState.devices.isNotEmpty ? 'Railway IoT Sensor' : 'Fallback values',
+                      iotState.devices.isNotEmpty ? 'IoTENV' : 'Fallback values',
                       style: TextStyle(
                         fontSize: 12,
                         color: iotState.devices.isNotEmpty ? Colors.green : JarvisTheme.textMuted,
