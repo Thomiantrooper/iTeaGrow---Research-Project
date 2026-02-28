@@ -9,6 +9,14 @@ import '../../../../core/animations/tea_animations.dart';
 import '../../../../core/providers/global_iot_provider.dart';
 import '../../../../core/providers/iot_live_provider.dart';
 import '../../../auth/data/providers/auth_provider.dart';
+import '../providers/dashboard_kpi_provider.dart';
+import '../providers/activity_feed_provider.dart';
+import '../providers/alerts_provider.dart';
+import '../../../tour/presentation/providers/tour_provider.dart';
+import '../../../tour/presentation/widgets/tour_overlay.dart';
+import '../../../../core/widgets/inputs/tea_search_bar.dart';
+import '../../../../core/widgets/inputs/tea_category_chips.dart';
+import '../../../../core/widgets/cards/tea_recommendation_row.dart';
 
 /// Premium Farmer Dashboard with 3D hero and modern UI
 class PremiumFarmerDashboard extends ConsumerStatefulWidget {
@@ -24,6 +32,14 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
   final ScrollController _scrollController = ScrollController();
   bool _isScrolled = false;
   bool _isChatbotActive = false;
+
+  // GlobalKeys for tour highlighting
+  final _heroCardKey = GlobalKey();
+  final _metricsKey = GlobalKey();
+  final _quickActionsKey = GlobalKey();
+  final _alertsKey = GlobalKey();
+  bool _tourChecked = false;
+  int _selectedCategoryIndex = 0;
 
   @override
   void initState() {
@@ -50,6 +66,9 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     final authState = ref.watch(authStateProvider);
     final iotState = ref.watch(globalIoTProvider);
     final mqttState = ref.watch(iotLiveProvider);
+    final kpiState = ref.watch(dashboardKpiProvider);
+    final activityState = ref.watch(activityFeedProvider);
+    final alertsState = ref.watch(alertsProvider);
     final user = authState.user;
     final greeting = _getGreeting();
 
@@ -73,12 +92,32 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
             child: SizedBox.expand(),
           ),
 
+          // Tour overlay (renders on top when active)
+          // Trigger auto-start check after first frame
+          Builder(builder: (context) {
+            if (!_tourChecked) {
+              _tourChecked = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                final tourNotifier = ref.read(tourProvider.notifier);
+                if (tourNotifier.shouldAutoStart) {
+                  tourNotifier.startTour(
+                    heroCardKey: _heroCardKey,
+                    metricsKey: _metricsKey,
+                    quickActionsKey: _quickActionsKey,
+                    alertsKey: _alertsKey,
+                  );
+                }
+              });
+            }
+            return const SizedBox.shrink();
+          }),
+
           // Main content
           CustomScrollView(
             controller: _scrollController,
             slivers: [
               // App Bar
-              _buildSliverAppBar(user?.fullName ?? 'User', greeting),
+              _buildSliverAppBar(user?.fullName ?? 'User', greeting, alertsState),
 
               // Content
               SliverPadding(
@@ -87,30 +126,114 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: TeaSpacing.md),
 
+                    // Search Bar
+                    TeaSearchBar(
+                      hintText: 'Search blocks, diseases, reports...',
+                      showFilterIcon: true,
+                      readOnly: true,
+                      onTap: () => context.push('/chatbot'),
+                      onFilterTap: () => context.push('/notifications'),
+                    ),
+
+                    const SizedBox(height: TeaSpacing.md),
+
+                    // Category Chips
+                    TeaCategoryChips(
+                      categories: const [
+                        TeaCategoryItem(label: 'Overview', icon: Icons.dashboard_outlined, iconColor: TeaColors.freshLeaf),
+                        TeaCategoryItem(label: 'Diseases', icon: Icons.bug_report_outlined, iconColor: TeaColors.alertRust),
+                        TeaCategoryItem(label: 'Harvest', icon: Icons.grass_outlined, iconColor: TeaColors.goldenSunlight),
+                        TeaCategoryItem(label: 'IoT', icon: Icons.sensors, iconColor: TeaColors.infoSky),
+                        TeaCategoryItem(label: 'Market', icon: Icons.trending_up, iconColor: TeaColors.warmAmber),
+                      ],
+                      selectedIndex: _selectedCategoryIndex,
+                      onSelected: (index) {
+                        setState(() => _selectedCategoryIndex = index);
+                        // Navigate based on category
+                        switch (index) {
+                          case 1: context.push('/disease-detection');
+                          case 2: context.push('/plants');
+                          case 3: context.push('/iot-devices');
+                          case 4: context.push('/market-analysis');
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: TeaSpacing.lg),
+
                     // Hero Card with 3D-like visualization
-                    _buildHeroCard(),
+                    KeyedSubtree(
+                      key: _heroCardKey,
+                      child: _buildHeroCard(kpiState),
+                    ),
 
                     const SizedBox(height: TeaSpacing.lg),
 
                     // Metrics Row
-                    _buildMetricsRow(iotState, mqttState),
+                    KeyedSubtree(
+                      key: _metricsKey,
+                      child: _buildMetricsRow(iotState, mqttState),
+                    ),
 
                     const SizedBox(height: TeaSpacing.lg),
 
                     // Alerts Section
-                    _buildAlertsSection(),
+                    KeyedSubtree(
+                      key: _alertsKey,
+                      child: _buildAlertsSection(alertsState),
+                    ),
 
                     const SizedBox(height: TeaSpacing.lg),
 
                     // Quick Actions (Unified Premium Grid)
-                    _buildQuickActions(),
+                    KeyedSubtree(
+                      key: _quickActionsKey,
+                      child: _buildQuickActions(),
+                    ),
 
                     const SizedBox(height: TeaSpacing.lg),
+
+                    // Recommended Actions
+                    TeaRecommendationRow(
+                      sectionTitle: 'Recommended',
+                      items: [
+                        TeaRecommendationItem(
+                          title: 'Scan Leaves',
+                          subtitle: 'Disease check',
+                          icon: Icons.camera_alt_outlined,
+                          gradientColors: [Colors.red.shade600, Colors.red.shade400],
+                          badge: 'AI',
+                          onTap: () => context.push('/disease-detection'),
+                        ),
+                        TeaRecommendationItem(
+                          title: 'Soil Health',
+                          subtitle: 'NPK analysis',
+                          icon: Icons.science_outlined,
+                          gradientColors: [TeaColors.richSoil, TeaColors.clayPot],
+                          onTap: () => context.push('/soil-fertilization'),
+                        ),
+                        TeaRecommendationItem(
+                          title: 'Yield Forecast',
+                          subtitle: 'Predict harvest',
+                          icon: Icons.analytics_outlined,
+                          gradientColors: [TeaColors.infoSky, Colors.blue.shade400],
+                          onTap: () => context.push('/yield-prediction'),
+                        ),
+                        TeaRecommendationItem(
+                          title: 'Market Price',
+                          subtitle: 'Tea value',
+                          icon: Icons.trending_up,
+                          gradientColors: [TeaColors.warmAmber, TeaColors.goldenSunlight],
+                          badge: 'LIVE',
+                          onTap: () => context.push('/market-analysis'),
+                        ),
+                      ],
+                    ),
 
                     const SizedBox(height: TeaSpacing.lg),
 
                     // Recent Activity
-                    _buildRecentActivity(),
+                    _buildRecentActivity(activityState),
 
                     const SizedBox(height: TeaSpacing.xxl),
                   ]),
@@ -118,6 +241,13 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
               ),
             ],
           ),
+
+          // Tour overlay - renders on top of all content when active
+          Consumer(builder: (context, ref, _) {
+            final tourState = ref.watch(tourProvider);
+            if (!tourState.isActive) return const SizedBox.shrink();
+            return const TourOverlay();
+          }),
         ],
       ),
       bottomNavigationBar: TeaBottomNavBar(
@@ -158,7 +288,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     );
   }
 
-  Widget _buildSliverAppBar(String userName, String greeting) {
+  Widget _buildSliverAppBar(String userName, String greeting, AlertsState alertsState) {
     return SliverAppBar(
       expandedHeight: 120,
       floating: true,
@@ -202,8 +332,8 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           onPressed: () {
             context.push('/notifications');
           },
-          hasBadge: true,
-          badgeText: '3',
+          hasBadge: alertsState.alertCount > 0,
+          badgeText: '${alertsState.alertCount}',
           tooltip: 'Notifications',
         ),
         // Profile
@@ -231,7 +361,10 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     );
   }
 
-  Widget _buildHeroCard() {
+  Widget _buildHeroCard(DashboardKpiState kpiState) {
+    if (kpiState.isLoading && !kpiState.hasData) {
+      return const TeaSkeletonHeroCard();
+    }
     return TeaCard.elevated(
       padding: EdgeInsets.zero,
       child: Column(
@@ -415,13 +548,21 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                               ),
                               const Divider(height: TeaSpacing.md),
                               _buildMiniStat(
-                                  'Active Blocks', '12', TeaColors.freshLeaf),
-                              _buildMiniStat('Healthy Plants', '87%',
+                                  'Active Blocks',
+                                  kpiState.hasData ? '${kpiState.activeBlocks}' : '--',
+                                  TeaColors.freshLeaf),
+                              _buildMiniStat(
+                                  'Healthy Plants',
+                                  kpiState.hasData ? '${kpiState.healthPercent.toStringAsFixed(0)}%' : '--%',
                                   TeaColors.healthyGreen),
-                              _buildMiniStat('Harvest Ready', '3 Blocks',
+                              _buildMiniStat(
+                                  'Harvest Ready',
+                                  kpiState.hasData ? '${kpiState.harvestReadyBlocks} Blocks' : '-- Blocks',
                                   TeaColors.goldenSunlight),
                               _buildMiniStat(
-                                  'Alerts', '2', TeaColors.warningAmber),
+                                  'Alerts',
+                                  kpiState.hasData ? '${kpiState.alertCount}' : '--',
+                                  TeaColors.warningAmber),
                             ],
                           ),
                         ),
@@ -434,7 +575,9 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                 Positioned(
                   top: TeaSpacing.sm,
                   right: TeaSpacing.sm,
-                  child: TeaStatusBadge.healthy(label: 'Good Health'),
+                  child: TeaStatusBadge.healthy(
+                    label: kpiState.hasData ? kpiState.healthStatusLabel : 'Loading...',
+                  ),
                 ),
               ],
             ),
@@ -456,7 +599,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                           style: TeaTypography.titleMedium,
                         ),
                         Text(
-                          'Uva Highland Estate',
+                          kpiState.hasData ? kpiState.estateName : 'Loading...',
                           style: TeaTypography.bodySmall.copyWith(
                             color: TeaColors.darkGray,
                           ),
@@ -472,8 +615,8 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                   ],
                 ),
                 const SizedBox(height: TeaSpacing.md),
-                const TeaProgressBar(
-                  value: 0.87,
+                TeaProgressBar(
+                  value: kpiState.hasData ? kpiState.healthPercent / 100 : 0,
                   label: 'Overall Health Score',
                   color: TeaColors.healthyGreen,
                 ),
@@ -719,7 +862,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     return const Color(0xFF8E4585); // Purple for hazardous
   }
 
-  Widget _buildAlertsSection() {
+  Widget _buildAlertsSection(AlertsState alertsState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -732,17 +875,66 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           },
         ),
         const SizedBox(height: TeaSpacing.sm),
-        TeaAlertCard.warning(
-          title: 'Block A3: High disease risk',
-          message: 'Blister blight conditions detected. Tap to investigate.',
-          onTap: () => context.push('/disease-detection'),
-        ),
-        const SizedBox(height: TeaSpacing.sm),
-        TeaAlertCard.info(
-          title: 'Harvest reminder',
-          message: 'Block B2 leaves are ready for harvest (P+2 stage)',
-          onTap: () => context.push('/plants'),
-        ),
+        if (alertsState.isLoading && !alertsState.hasData)
+          const TeaSkeletonAlertList()
+        else if (alertsState.alerts.isEmpty)
+          TeaCard.outlined(
+            child: Padding(
+              padding: TeaSpacing.cardPaddingMd,
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle_outline,
+                      color: TeaColors.healthyGreen, size: 20),
+                  const SizedBox(width: TeaSpacing.sm),
+                  Text(
+                    'No active alerts',
+                    style: TeaTypography.bodyMedium.copyWith(
+                      color: TeaColors.darkGray,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...alertsState.alerts.map((alert) {
+            if (alert.isError) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: TeaSpacing.sm),
+                child: TeaAlertCard.error(
+                  title: alert.title,
+                  message: alert.message,
+                  onTap: () => context.push(alert.routePath ?? '/notifications'),
+                ),
+              );
+            } else if (alert.isWarning) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: TeaSpacing.sm),
+                child: TeaAlertCard.warning(
+                  title: alert.title,
+                  message: alert.message,
+                  onTap: () => context.push(alert.routePath ?? '/notifications'),
+                ),
+              );
+            } else {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: TeaSpacing.sm),
+                child: TeaAlertCard.info(
+                  title: alert.title,
+                  message: alert.message,
+                  onTap: () => context.push(alert.routePath ?? '/notifications'),
+                ),
+              );
+            }
+          }),
+        if (alertsState.error != null && !alertsState.hasData)
+          Center(
+            child: TextButton.icon(
+              onPressed: () => ref.read(alertsProvider.notifier).refresh(),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Retry'),
+            ),
+          ),
       ],
     );
   }
@@ -818,7 +1010,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
     );
   }
 
-  Widget _buildRecentActivity() {
+  Widget _buildRecentActivity(ActivityFeedState activityState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -831,38 +1023,85 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           },
         ),
         const SizedBox(height: TeaSpacing.sm),
-        TeaCard.elevated(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              _buildActivityItem(
-                icon: Icons.camera_alt_outlined,
-                title: 'Leaf scan completed',
-                subtitle: 'Block A2 - Healthy detected',
-                time: '2 hours ago',
-                color: TeaColors.healthyGreen,
+        if (activityState.isLoading && !activityState.hasData)
+          const TeaSkeletonActivityList()
+        else if (activityState.activities.isEmpty)
+          TeaCard.outlined(
+            child: Padding(
+              padding: TeaSpacing.cardPaddingMd,
+              child: Row(
+                children: [
+                  Icon(Icons.inbox_outlined,
+                      color: TeaColors.mediumGray, size: 20),
+                  const SizedBox(width: TeaSpacing.sm),
+                  Text(
+                    'No recent activity',
+                    style: TeaTypography.bodyMedium.copyWith(
+                      color: TeaColors.darkGray,
+                    ),
+                  ),
+                ],
               ),
-              const Divider(height: 1),
-              _buildActivityItem(
-                icon: Icons.inventory_2_outlined,
-                title: 'Harvest recorded',
-                subtitle: '245 kg from Block B1',
-                time: '5 hours ago',
-                color: TeaColors.goldenSunlight,
-              ),
-              const Divider(height: 1),
-              _buildActivityItem(
-                icon: Icons.science_outlined,
-                title: 'Soil analysis',
-                subtitle: 'NPK levels optimal',
-                time: 'Yesterday',
-                color: TeaColors.richSoil,
-              ),
-            ],
+            ),
+          )
+        else
+          TeaCard.elevated(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (int i = 0; i < activityState.activities.length && i < 5; i++) ...[
+                  if (i > 0) const Divider(height: 1),
+                  _buildActivityItem(
+                    icon: _getActivityIcon(activityState.activities[i].iconType),
+                    title: activityState.activities[i].title,
+                    subtitle: activityState.activities[i].subtitle,
+                    time: activityState.activities[i].timeAgo,
+                    color: _getActivityColor(activityState.activities[i].iconType),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
+        if (activityState.error != null && !activityState.hasData)
+          Center(
+            child: TextButton.icon(
+              onPressed: () => ref.read(activityFeedProvider.notifier).refresh(),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Retry'),
+            ),
+          ),
       ],
     );
+  }
+
+  IconData _getActivityIcon(IconType type) {
+    switch (type) {
+      case IconType.scan:
+        return Icons.camera_alt_outlined;
+      case IconType.harvest:
+        return Icons.inventory_2_outlined;
+      case IconType.soil:
+        return Icons.science_outlined;
+      case IconType.alert:
+        return Icons.warning_amber_outlined;
+      case IconType.report:
+        return Icons.description_outlined;
+    }
+  }
+
+  Color _getActivityColor(IconType type) {
+    switch (type) {
+      case IconType.scan:
+        return TeaColors.healthyGreen;
+      case IconType.harvest:
+        return TeaColors.goldenSunlight;
+      case IconType.soil:
+        return TeaColors.richSoil;
+      case IconType.alert:
+        return TeaColors.warningAmber;
+      case IconType.report:
+        return TeaColors.infoSky;
+    }
   }
 
   Widget _buildActivityItem({
