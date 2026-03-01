@@ -7,14 +7,13 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../../../core/animations/tea_animations.dart';
 import '../../../../core/providers/iot_live_provider.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 import '../../data/datasources/disease_detection_ml_service.dart';
 import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
 
-/// Premium Disease Detection Screen with modern UI
+/// Premium Disease Detection Screen - Modern clean UI
 class PremiumDiseaseDetectionScreen extends ConsumerStatefulWidget {
   const PremiumDiseaseDetectionScreen({super.key});
 
@@ -24,8 +23,7 @@ class PremiumDiseaseDetectionScreen extends ConsumerStatefulWidget {
 }
 
 class _PremiumDiseaseDetectionScreenState
-    extends ConsumerState<PremiumDiseaseDetectionScreen>
-    with SingleTickerProviderStateMixin {
+    extends ConsumerState<PremiumDiseaseDetectionScreen> {
   final ImagePicker _picker = ImagePicker();
   final DiseaseDetectionMLService _mlService = DiseaseDetectionMLService();
   final DiseaseStorageService _storageService = DiseaseStorageService();
@@ -33,104 +31,77 @@ class _PremiumDiseaseDetectionScreenState
   XFile? _selectedImage;
   Uint8List? _imageBytes;
   DiseaseDetectionResult? _result;
-  FieldAnalysisResult? _fieldResult; // For cumulative/batch analysis
   bool _isProcessing = false;
-  bool _showGradCam = false;
   bool _isBackendConnected = false;
   bool _isCheckingConnection = true;
   bool _savedToDb = false;
   bool _isSavingToDb = false;
   String? _savedDetectionId;
 
-  // Detection mode: 'single' for single leaf, 'field' for field/batch analysis
-  String _detectionMode = 'single';
-
-  late AnimationController _pulseController;
-
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
     _initializeService();
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
   }
 
   Future<void> _initializeService() async {
     setState(() => _isCheckingConnection = true);
     await _mlService.initialize();
-    setState(() {
-      _isBackendConnected = _mlService.isBackendAvailable;
-      _isCheckingConnection = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isBackendConnected = _mlService.isBackendAvailable;
+        _isCheckingConnection = false;
+      });
+    }
   }
 
   Future<void> _refreshConnection() async {
     setState(() => _isCheckingConnection = true);
     final isConnected = await _mlService.checkBackendConnection();
-    setState(() {
-      _isBackendConnected = isConnected;
-      _isCheckingConnection = false;
-    });
     if (mounted) {
+      setState(() {
+        _isBackendConnected = isConnected;
+        _isCheckingConnection = false;
+      });
       if (isConnected) {
-        TeaSnackbar.success(context, 'Connected to ML backend server');
+        TeaSnackbar.success(context, 'Connected to ML backend');
       } else {
-        TeaSnackbar.warning(context, 'Backend not available - using offline mode');
+        TeaSnackbar.warning(context, 'Backend offline — using local mode');
       }
     }
   }
 
-  // Get live sensor values from Railway IoT provider (same pattern as dashboard)
+  // ─── IoT Data Accessors ────────────────────────────────────────────────
+
   double get _liveTemp {
     final mqttState = ref.read(iotLiveProvider);
-    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
-    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
-    
-    if (hasMqtt && mqttDevice.temperature != null) {
-      return mqttDevice.temperature!;
-    }
-    return 26.5; // Fallback
+    final d = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    return (d != null && d.hasData && d.temperature != null)
+        ? d.temperature!
+        : 26.5;
   }
 
   double get _liveHumidity {
     final mqttState = ref.read(iotLiveProvider);
-    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
-    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
-    
-    if (hasMqtt && mqttDevice.humidity != null) {
-      return mqttDevice.humidity!;
-    }
-    return 72.0; // Fallback
+    final d = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    return (d != null && d.hasData && d.humidity != null)
+        ? d.humidity!
+        : 72.0;
   }
 
   double get _liveAirQuality {
     final mqttState = ref.read(iotLiveProvider);
-    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
-    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
-    
-    if (hasMqtt && mqttDevice.airQuality != null) {
-      return mqttDevice.airQuality!.toDouble();
-    }
-    return 45.0; // Fallback
+    final d = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    return (d != null && d.hasData && d.airQuality != null)
+        ? d.airQuality!.toDouble()
+        : 45.0;
   }
 
-  bool get _hasLiveIoTData {
-    final mqttState = ref.read(iotLiveProvider);
-    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
-    return mqttDevice != null && mqttDevice.hasData;
-  }
+  // ─── Image Handling ────────────────────────────────────────────────────
 
   Future<void> _captureImage() async {
     try {
-      final XFile? photo = await _picker.pickImage(
+      final photo = await _picker.pickImage(
         source: ImageSource.camera,
         maxWidth: 1024,
         maxHeight: 1024,
@@ -142,16 +113,18 @@ class _PremiumDiseaseDetectionScreenState
           _selectedImage = photo;
           _imageBytes = bytes;
           _result = null;
+          _savedToDb = false;
+          _savedDetectionId = null;
         });
       }
     } catch (e) {
-      TeaSnackbar.error(context, 'Camera error: $e');
+      if (mounted) TeaSnackbar.error(context, 'Camera error: $e');
     }
   }
 
   Future<void> _pickFromGallery() async {
     try {
-      final XFile? image = await _picker.pickImage(
+      final image = await _picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 1024,
         maxHeight: 1024,
@@ -163,21 +136,48 @@ class _PremiumDiseaseDetectionScreenState
           _selectedImage = image;
           _imageBytes = bytes;
           _result = null;
+          _savedToDb = false;
+          _savedDetectionId = null;
         });
       }
     } catch (e) {
-      TeaSnackbar.error(context, 'Gallery error: $e');
+      if (mounted) TeaSnackbar.error(context, 'Gallery error: $e');
     }
   }
 
-  Future<void> _analyzeImage() async {
-    print('');
-    print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
-    print('%%%%%%%% PREMIUM_DISEASE_SCREEN _analyzeImage %%%%%%%%%%');
-    print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
-    print('');
+  // ─── Analysis ──────────────────────────────────────────────────────────
 
+  Future<void> _analyzeImage() async {
     if (_selectedImage == null) return;
+
+    // File type validation
+    final path = _selectedImage!.path.toLowerCase();
+    final ext = path.contains('.') ? '.${path.split('.').last}' : '';
+    if (ext.isNotEmpty &&
+        !{'.jpg', '.jpeg', '.png', '.webp', '.bmp'}.contains(ext)) {
+      if (mounted) {
+        TeaSnackbar.error(
+            context, 'Unsupported file type: $ext. Use JPG, PNG, or WebP.');
+      }
+      return;
+    }
+
+    // File size validation
+    if (_imageBytes != null) {
+      if (_imageBytes!.length < 5 * 1024) {
+        if (mounted) {
+          TeaSnackbar.error(context,
+              'Image too small (${(_imageBytes!.length / 1024).toStringAsFixed(1)} KB). May be corrupt.');
+        }
+        return;
+      }
+      if (_imageBytes!.length > 20 * 1024 * 1024) {
+        if (mounted) {
+          TeaSnackbar.error(context, 'Image too large. Maximum 20 MB.');
+        }
+        return;
+      }
+    }
 
     setState(() {
       _isProcessing = true;
@@ -186,253 +186,142 @@ class _PremiumDiseaseDetectionScreenState
     });
 
     try {
-      if (_detectionMode == 'field') {
-        // Field/Cumulative analysis - detect multiple leaves in one image
-        final fieldResult = await _mlService.analyzeField(
-          _selectedImage!.path,
-          liveTemperature: _liveTemp,
-          liveHumidity: _liveHumidity,
-          liveAirQuality: _liveAirQuality,
-        );
+      final result = await _mlService.predict(
+        _selectedImage!.path,
+        liveTemperature: _liveTemp,
+        liveHumidity: _liveHumidity,
+        liveAirQuality: _liveAirQuality,
+      );
 
-        print('>>> PREMIUM: Field analysis returned <<<');
-        print('Detected leaves: ${fieldResult.detectedLeafCount}');
-        print('Healthy: ${fieldResult.healthyCount}, Infected: ${fieldResult.infectedCount}');
-        print('Health %: ${fieldResult.healthPercentage}');
+      if (!mounted) return;
 
-        setState(() {
-          _fieldResult = fieldResult;
-          _result = null;
-          _isProcessing = false;
-          _isBackendConnected = _mlService.isBackendAvailable;
-        });
+      setState(() {
+        _result = result;
+        _isProcessing = false;
+        _isBackendConnected = _mlService.isBackendAvailable;
+      });
 
-        // Auto-save field analysis to database (save to local backend regardless of inference backend status)
-        print('>>> PREMIUM: CALLING _saveFieldAnalysisToDatabase() <<<');
-        _saveFieldAnalysisToDatabase();
-      } else {
-        // Single leaf detection
-        final result = await _mlService.predict(
-          _selectedImage!.path,
-          liveTemperature: _liveTemp,
-          liveHumidity: _liveHumidity,
-          liveAirQuality: _liveAirQuality,
-        );
-
-        print('>>> PREMIUM: predict() returned <<<');
-        print('Disease: ${result.diseaseType}');
-        print('Confidence: ${result.confidence}');
-
-        setState(() {
-          _result = result;
-          _fieldResult = null;
-          _isProcessing = false;
-          _isBackendConnected = _mlService.isBackendAvailable;
-        });
-
-        // Auto-save to database if valid leaf (save to local backend regardless of inference backend status)
-        print('>>> PREMIUM: Checking save conditions <<<');
-        print('result.isNotALeaf: ${result.isNotALeaf}');
-
-        if (!result.isNotALeaf) {
-          print('>>> PREMIUM: CALLING _saveToDatabase() <<<');
-          _saveToDatabase();
-        } else {
-          print('>>> PREMIUM: NOT saving - not a leaf');
-        }
+      // Auto-save valid detections
+      if (!result.isNotALeaf) {
+        _saveToDatabase();
       }
     } catch (e) {
-      setState(() => _isProcessing = false);
-      TeaSnackbar.error(context, 'Analysis error: $e');
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        TeaSnackbar.error(context, 'Analysis failed: $e');
+      }
     }
   }
 
   Future<void> _saveToDatabase() async {
-    print('=== PREMIUM: SAVE TO DATABASE CALLED ===');
-    if (_result == null || _selectedImage == null || _savedToDb) {
-      print('!!! Early return - conditions not met');
-      return;
-    }
+    if (_result == null || _selectedImage == null || _savedToDb) return;
 
     setState(() => _isSavingToDb = true);
 
     try {
-      // Get auth token from Riverpod state
       final authState = ref.read(authStateProvider);
       final authToken = authState.accessToken;
-      print('Auth state: isAuthenticated=${authState.isAuthenticated}');
-      print('Auth token present: ${authToken != null && authToken.isNotEmpty}');
-      print('Image path: ${_selectedImage!.path}');
 
       if (authToken == null || authToken.isEmpty) {
-        print('!!! No auth token - showing login message');
         if (mounted) {
-          TeaSnackbar.warning(context, 'Please log in to save scans to database');
+          TeaSnackbar.warning(context, 'Log in to save scans');
         }
         setState(() => _isSavingToDb = false);
         return;
       }
 
-      print('>>> Calling _storageService.saveDetectionWithImage() <<<');
-      final savedResult = await _storageService.saveDetectionWithImage(
+      final saved = await _storageService.saveDetectionWithImage(
         result: _result!,
         imagePath: _selectedImage!.path,
         authToken: authToken,
       );
 
-      if (savedResult != null) {
-        print('>>> Detection saved successfully! <<<');
-        print('Saved ID: ${savedResult['_id'] ?? savedResult['id']}');
-        setState(() {
-          _savedToDb = true;
-          _isSavingToDb = false;
-          _savedDetectionId = savedResult['_id']?.toString() ?? savedResult['id']?.toString();
-        });
-        if (mounted) {
-          TeaSnackbar.success(context, 'Scan saved to database');
-        }
-      } else {
-        print('!!! Failed to save detection');
-        setState(() => _isSavingToDb = false);
-        if (mounted) {
-          TeaSnackbar.error(context, 'Failed to save scan to database');
-        }
-      }
-    } catch (e) {
-      print('!!! Error saving to database: $e');
-      setState(() => _isSavingToDb = false);
       if (mounted) {
-        TeaSnackbar.error(context, 'Error saving: $e');
+        if (saved != null) {
+          setState(() {
+            _savedToDb = true;
+            _isSavingToDb = false;
+            _savedDetectionId =
+                saved['_id']?.toString() ?? saved['id']?.toString();
+          });
+          TeaSnackbar.success(context, 'Scan saved');
+        } else {
+          setState(() => _isSavingToDb = false);
+        }
       }
+    } catch (_) {
+      if (mounted) setState(() => _isSavingToDb = false);
     }
   }
 
-  Future<void> _saveFieldAnalysisToDatabase() async {
-    print('=== PREMIUM: SAVE FIELD ANALYSIS TO DATABASE ===');
-    if (_fieldResult == null || _selectedImage == null || _savedToDb) {
-      print('!!! Early return - conditions not met');
-      return;
-    }
-
-    setState(() => _isSavingToDb = true);
-
-    try {
-      final authState = ref.read(authStateProvider);
-      final authToken = authState.accessToken;
-      print('Auth state: isAuthenticated=${authState.isAuthenticated}');
-
-      if (authToken == null || authToken.isEmpty) {
-        print('!!! No auth token');
-        if (mounted) {
-          TeaSnackbar.warning(context, 'Please log in to save field analysis');
-        }
-        setState(() => _isSavingToDb = false);
-        return;
-      }
-
-      print('>>> Calling _storageService.saveFieldAnalysisWithImage() <<<');
-      final savedResult = await _storageService.saveFieldAnalysisWithImage(
-        result: _fieldResult!,
-        imagePath: _selectedImage!.path,
-        authToken: authToken,
-      );
-
-      if (savedResult != null) {
-        print('>>> Field analysis saved successfully! <<<');
-        setState(() {
-          _savedToDb = true;
-          _isSavingToDb = false;
-        });
-        if (mounted) {
-          TeaSnackbar.success(context, 'Field analysis saved (${_fieldResult!.detectedLeafCount} leaves)');
-        }
-      } else {
-        print('!!! Failed to save field analysis');
-        setState(() => _isSavingToDb = false);
-        if (mounted) {
-          TeaSnackbar.error(context, 'Failed to save field analysis');
-        }
-      }
-    } catch (e) {
-      print('!!! Error saving field analysis: $e');
-      setState(() => _isSavingToDb = false);
-      if (mounted) {
-        TeaSnackbar.error(context, 'Error saving: $e');
-      }
-    }
+  void _resetScan() {
+    setState(() {
+      _selectedImage = null;
+      _imageBytes = null;
+      _result = null;
+      _savedToDb = false;
+      _savedDetectionId = null;
+    });
   }
+
+  // ─── Build ─────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    // Watch both IoT providers (same as dashboard)
-    final mqttState = ref.watch(iotLiveProvider);
+    ref.watch(iotLiveProvider);
 
     return Scaffold(
-      backgroundColor: TeaColors.mistGreen,
+      backgroundColor: const Color(0xFFF6F9F7),
       body: Stack(
         children: [
-          // Background decoration
-          const FloatingLeavesBackground(
-            leafCount: 4,
-            opacity: 0.06,
-            child: SizedBox.expand(),
-          ),
+          // Soft background shapes
+          _buildBackgroundShapes(),
 
           // Main content
           CustomScrollView(
+            physics: const BouncingScrollPhysics(),
             slivers: [
-              // App Bar
               _buildAppBar(),
-
-              // Content
               SliverPadding(
-                padding: TeaSpacing.screenPaddingHorizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    const SizedBox(height: TeaSpacing.md),
+                    const SizedBox(height: 8),
 
-                    // Detection Mode Toggle
-                    _buildModeToggle(),
+                    // Connection status
+                    _buildConnectionBanner(),
+                    const SizedBox(height: 16),
 
-                    const SizedBox(height: TeaSpacing.md),
+                    // Live environment
+                    _buildEnvironmentRow(),
+                    const SizedBox(height: 24),
 
-                    // Live Environment Card (with real IoT data)
-                    _buildLiveEnvironmentCard(mqttState),
-
-                    const SizedBox(height: TeaSpacing.lg),
-
-                    // Image Section
+                    // Image area
                     if (_selectedImage == null)
-                      _buildImageCapturePlaceholder()
+                      _buildUploadArea()
                     else
                       _buildImagePreview(),
 
-                    const SizedBox(height: TeaSpacing.lg),
+                    const SizedBox(height: 16),
 
-                    // Action Buttons
-                    _buildActionButtons(),
+                    // Action buttons
+                    _buildActions(),
 
-                    // Results (single leaf or field analysis)
+                    // Results
                     if (_result != null) ...[
-                      const SizedBox(height: TeaSpacing.lg),
-                      _buildResultsCard(),
-                      const SizedBox(height: TeaSpacing.md),
-                      _buildRecommendationsCard(),
+                      const SizedBox(height: 24),
+                      _buildResultCard(),
+                      const SizedBox(height: 16),
+                      _buildConfidenceDetails(),
+                      const SizedBox(height: 16),
+                      _buildRecommendations(),
                       if (_savedToDb && _savedDetectionId != null) ...[
-                        const SizedBox(height: TeaSpacing.md),
+                        const SizedBox(height: 16),
                         _buildPostScanActions(),
                       ],
                     ],
 
-                    // Field/Cumulative Results
-                    if (_fieldResult != null) ...[
-                      const SizedBox(height: TeaSpacing.lg),
-                      _buildFieldResultsCard(),
-                      const SizedBox(height: TeaSpacing.md),
-                      _buildFieldRecommendationsCard(),
-                    ],
-
-                    const SizedBox(height: TeaSpacing.xxl),
+                    const SizedBox(height: 100),
                   ]),
                 ),
               ),
@@ -443,478 +332,351 @@ class _PremiumDiseaseDetectionScreenState
     );
   }
 
-  Widget _buildModeToggle() {
-    return TeaCard.elevated(
-      padding: const EdgeInsets.all(TeaSpacing.sm),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildModeButton(
-              'Single Leaf',
-              Icons.eco,
-              'single',
-              'Analyze one leaf',
-            ),
-          ),
-          const SizedBox(width: TeaSpacing.sm),
-          Expanded(
-            child: _buildModeButton(
-              'Field View',
-              Icons.grid_view,
-              'field',
-              'Multiple leaves - Cumulative',
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 200.ms);
-  }
+  // ─── Background ────────────────────────────────────────────────────────
 
-  Widget _buildModeButton(String label, IconData icon, String mode, String description) {
-    final isSelected = _detectionMode == mode;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _detectionMode = mode;
-          _result = null;
-          _fieldResult = null;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          vertical: TeaSpacing.smd,
-          horizontal: TeaSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? TeaColors.freshLeaf.withOpacity(0.15)
-              : TeaColors.white,
-          borderRadius: TeaRadius.radiusMd,
-          border: Border.all(
-            color: isSelected ? TeaColors.freshLeaf : TeaColors.lightGray,
-            width: isSelected ? 2 : 1,
+  Widget _buildBackgroundShapes() {
+    return Stack(
+      children: [
+        Positioned(
+          top: -60,
+          right: -40,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(colors: [
+                TeaColors.freshLeaf.withOpacity(0.06),
+                Colors.transparent,
+              ]),
+            ),
           ),
         ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? TeaColors.freshLeaf : TeaColors.darkGray,
-              size: 24,
+        Positioned(
+          bottom: 200,
+          left: -60,
+          child: Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(colors: [
+                TeaColors.goldenSunlight.withOpacity(0.05),
+                Colors.transparent,
+              ]),
             ),
-            const SizedBox(height: TeaSpacing.xs),
-            Text(
-              label,
-              style: TeaTypography.labelMedium.copyWith(
-                color: isSelected ? TeaColors.freshLeaf : TeaColors.nearBlack,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-            Text(
-              description,
-              style: TeaTypography.labelSmall.copyWith(
-                color: TeaColors.mediumGray,
-                fontSize: 10,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
+
+  // ─── App Bar ───────────────────────────────────────────────────────────
 
   Widget _buildAppBar() {
     return SliverAppBar(
-      expandedHeight: 100,
+      expandedHeight: 60,
       floating: true,
       pinned: true,
-      backgroundColor: TeaColors.white,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: TeaColors.nearBlack),
-        onPressed: () => context.pop(),
+      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.white.withOpacity(0.95),
+      leading: GestureDetector(
+        onTap: () => context.pop(),
+        child: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF6F9F7),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(Icons.arrow_back_rounded,
+              color: TeaColors.nearBlack, size: 20),
+        ),
       ),
       title: Text(
         'Disease Detection',
-        style: TeaTypography.titleLarge.copyWith(color: TeaColors.nearBlack),
+        style: TeaTypography.titleLarge.copyWith(fontWeight: FontWeight.w700),
       ),
       actions: [
-        // Connection status indicator
-        _buildConnectionIndicator(),
         if (_selectedImage != null)
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: TeaColors.alertRust),
-            onPressed: () => setState(() {
-              _selectedImage = null;
-              _imageBytes = null;
-              _result = null;
-            }),
-            tooltip: 'Clear image',
+          GestureDetector(
+            onTap: _resetScan,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: TeaColors.alertRust.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.close_rounded,
+                  color: TeaColors.alertRust, size: 18),
+            ),
           ),
-        const SizedBox(width: TeaSpacing.sm),
+        const SizedBox(width: 8),
+        // History
+        GestureDetector(
+          onTap: () => context.push('/scan-history'),
+          child: Container(
+            width: 40,
+            height: 40,
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF6F9F7),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child:
+                const Icon(Icons.history_rounded, color: TeaColors.nearBlack, size: 20),
+          ),
+        ),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                TeaColors.white,
-                TeaColors.mistGreen.withOpacity(0.3),
+    );
+  }
+
+  // ─── Connection Banner ─────────────────────────────────────────────────
+
+  Widget _buildConnectionBanner() {
+    final Color color;
+    final String label;
+    final IconData icon;
+
+    if (_isCheckingConnection) {
+      color = TeaColors.mediumGray;
+      label = 'Checking ML backend...';
+      icon = Icons.sync_rounded;
+    } else if (_isBackendConnected) {
+      color = TeaColors.healthyGreen;
+      label = 'ML Backend Online';
+      icon = Icons.cloud_done_rounded;
+    } else {
+      color = TeaColors.warningAmber;
+      label = 'Offline — Local mode';
+      icon = Icons.cloud_off_rounded;
+    }
+
+    return GestureDetector(
+      onTap: _refreshConnection,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            if (_isCheckingConnection)
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: color),
+              )
+            else
+              Icon(icon, size: 18, color: color),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TeaTypography.labelMedium.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            Icon(Icons.refresh_rounded, size: 16, color: color),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+
+  // ─── Environment Row ───────────────────────────────────────────────────
+
+  Widget _buildEnvironmentRow() {
+    final mqttState = ref.watch(iotLiveProvider);
+    final d = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    final hasData = d != null && d.hasData;
+
+    final temp = hasData && d.temperature != null
+        ? '${d.temperature!.toStringAsFixed(1)}°C'
+        : '--';
+    final humidity =
+        hasData && d.humidity != null ? '${d.humidity}%' : '--';
+
+    return Row(
+      children: [
+        Expanded(
+          child: _buildEnvChip(Icons.thermostat_outlined, temp, 'Temp',
+              const Color(0xFFFF8A65), const Color(0xFFFFF3E0)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildEnvChip(Icons.water_drop_outlined, humidity, 'Humidity',
+              const Color(0xFF42A5F5), const Color(0xFFE3F2FD)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: hasData
+                  ? TeaColors.healthyGreen.withOpacity(0.08)
+                  : Colors.grey.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: hasData ? TeaColors.healthyGreen : TeaColors.mediumGray,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  hasData ? 'Live' : 'Default',
+                  style: TeaTypography.labelSmall.copyWith(
+                    color: hasData ? TeaColors.healthyGreen : TeaColors.mediumGray,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
         ),
-      ),
-    );
+      ],
+    ).animate().fadeIn(duration: 300.ms, delay: 100.ms);
   }
 
-  Widget _buildConnectionIndicator() {
-    return Padding(
-      padding: const EdgeInsets.only(right: TeaSpacing.xs),
-      child: InkWell(
-        onTap: _refreshConnection,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: TeaSpacing.sm,
-            vertical: TeaSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: _isCheckingConnection
-                ? TeaColors.mediumGray.withOpacity(0.1)
-                : (_isBackendConnected
-                    ? TeaColors.healthyGreen.withOpacity(0.1)
-                    : TeaColors.warningAmber.withOpacity(0.1)),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_isCheckingConnection)
-                const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: TeaColors.mediumGray,
-                  ),
-                )
-              else
-                Icon(
-                  _isBackendConnected ? Icons.cloud_done : Icons.cloud_off,
-                  size: 16,
-                  color: _isBackendConnected
-                      ? TeaColors.healthyGreen
-                      : TeaColors.warningAmber,
-                ),
-              const SizedBox(width: 4),
-              Text(
-                _isCheckingConnection
-                    ? 'Checking...'
-                    : (_isBackendConnected ? 'Online' : 'Offline'),
-                style: TeaTypography.labelSmall.copyWith(
-                  color: _isCheckingConnection
-                      ? TeaColors.mediumGray
-                      : (_isBackendConnected
-                          ? TeaColors.healthyGreen
-                          : TeaColors.warningAmber),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
+  Widget _buildEnvChip(
+      IconData icon, String value, String label, Color color, Color bg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(14),
       ),
-    );
-  }
-
-  Widget _buildLiveEnvironmentCard(IoTLiveState mqttState) {
-    // Use same pattern as dashboard for reliability
-    final mqttDevice = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
-    final hasMqtt = mqttDevice != null && mqttDevice.hasData;
-    
-    // Debug: Print values to console (same as dashboard)
-    if (hasMqtt) {
-      debugPrint('[Disease] MQTT Device: T=${mqttDevice.temperature}°C H=${mqttDevice.humidity}% AQ=${mqttDevice.airQuality} TS=${mqttDevice.timestamp}');
-    }
-    
-    // Get values EXACTLY like dashboard does
-    final temperature = hasMqtt && mqttDevice.temperature != null
-        ? mqttDevice.temperature!.toStringAsFixed(1)
-        : '--';
-    final humidity = hasMqtt && mqttDevice.humidity != null
-        ? mqttDevice.humidity!.toString()
-        : '--';
-    final double aqValue = hasMqtt && mqttDevice.airQuality != null
-        ? mqttDevice.airQuality!
-        : -1;
-    final airQuality = aqValue >= 0 ? _getAirQualityLabel(aqValue.toInt()) : '--';
-    final airQualityColor = aqValue >= 0
-        ? _getAirQualityColor(aqValue.toInt())
-        : TeaColors.darkGray;
-
-    return TeaCard.elevated(
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(TeaSpacing.sm),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: hasMqtt
-                        ? [TeaColors.freshLeaf, TeaColors.healthyGreen]
-                        : [TeaColors.mediumGray, TeaColors.darkGray],
-                  ),
-                  borderRadius: TeaRadius.radiusSm,
-                ),
-                child: Icon(
-                  hasMqtt ? Icons.sensors : Icons.sensors_off,
-                  color: TeaColors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: TeaSpacing.smd),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Live Environment', style: TeaTypography.titleSmall),
-                    Text(
-                      hasMqtt ? 'IoTENV' : 'Using default values',
-                      style: TeaTypography.labelSmall.copyWith(
-                        color: hasMqtt ? TeaColors.freshLeaf : TeaColors.mediumGray,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (hasMqtt)
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, child) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: TeaSpacing.sm,
-                        vertical: TeaSpacing.xs,
-                      ),
-                      decoration: BoxDecoration(
-                        color: TeaColors.healthyGreen
-                            .withOpacity(0.1 + _pulseController.value * 0.1),
-                        borderRadius: TeaRadius.radiusRound,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: TeaColors.healthyGreen,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: TeaColors.healthyGreen
-                                      .withOpacity(0.3 + _pulseController.value * 0.3),
-                                  blurRadius: 4,
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'LIVE',
-                            style: TeaTypography.labelSmall.copyWith(
-                              color: TeaColors.healthyGreen,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                )
-              else
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: TeaSpacing.sm,
-                    vertical: TeaSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: TeaColors.warningAmber.withOpacity(0.1),
-                    borderRadius: TeaRadius.radiusRound,
-                  ),
-                  child: Text(
-                    'DEFAULT',
-                    style: TeaTypography.labelSmall.copyWith(
-                      color: TeaColors.warningAmber,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: TeaSpacing.md),
-          Container(
-            padding: const EdgeInsets.all(TeaSpacing.smd),
-            decoration: BoxDecoration(
-              color: TeaColors.leafPale,
-              borderRadius: TeaRadius.radiusMd,
-            ),
-            child: Row(
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildEnvReading(
-                    Icons.thermostat,
-                    temperature == '--' ? '--' : '$temperature°C',
-                    'Temperature',
-                    TeaColors.warningAmber,
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 50,
-                  color: TeaColors.mediumGray.withOpacity(0.3),
-                ),
-                Expanded(
-                  child: _buildEnvReading(
-                    Icons.water_drop,
-                    humidity == '--' ? '--' : '$humidity%',
-                    'Humidity',
-                    TeaColors.infoSky,
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 50,
-                  color: TeaColors.mediumGray.withOpacity(0.3),
-                ),
-                Expanded(
-                  child: _buildEnvReading(
-                    Icons.air,
-                    airQuality,
-                    'AQI',
-                    airQualityColor,
-                  ),
-                ),
+                Text(value,
+                    style: TeaTypography.titleSmall
+                        .copyWith(fontWeight: FontWeight.w700, fontSize: 13)),
+                Text(label,
+                    style:
+                        TeaTypography.labelSmall.copyWith(color: TeaColors.darkGray, fontSize: 9)),
               ],
             ),
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  Widget _buildEnvReading(IconData icon, String value, String label, Color color) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 22),
-        const SizedBox(height: TeaSpacing.xs),
-        Text(
-          value,
-          style: TeaTypography.titleMedium.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          label,
-          style: TeaTypography.labelSmall.copyWith(
-            color: TeaColors.darkGray,
-          ),
-        ),
-      ],
     );
   }
 
-  Widget _buildImageCapturePlaceholder() {
-    return TeaCard.elevated(
-      padding: EdgeInsets.zero,
-      child: Container(
-        height: 300,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              TeaColors.leafPale,
-              TeaColors.freshLeaf.withOpacity(0.08),
-            ],
-          ),
-          borderRadius: TeaRadius.radiusLg,
-          border: Border.all(
-            color: TeaColors.freshLeaf.withOpacity(0.2),
-            width: 2,
-          ),
+  // ─── Upload Area ───────────────────────────────────────────────────────
+
+  Widget _buildUploadArea() {
+    return Container(
+      height: 280,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: TeaColors.freshLeaf.withOpacity(0.2),
+          width: 2,
+          strokeAlign: BorderSide.strokeAlignInside,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            BreathingAnimation(
-              child: Container(
-                padding: const EdgeInsets.all(TeaSpacing.lg),
-                decoration: BoxDecoration(
-                  color: TeaColors.white.withOpacity(0.8),
-                  shape: BoxShape.circle,
-                  boxShadow: TeaShadows.glowPrimary,
-                ),
-                child: const Icon(
-                  Icons.eco,
-                  size: 56,
-                  color: TeaColors.freshLeaf,
-                ),
-              ),
-            ),
-            const SizedBox(height: TeaSpacing.lg),
-            Text(
-              'Capture Tea Leaf',
-              style: TeaTypography.titleMedium.copyWith(
-                color: TeaColors.freshLeaf,
-              ),
-            ),
-            const SizedBox(height: TeaSpacing.sm),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: TeaSpacing.xl),
-              child: Text(
-                'Take a photo or select from gallery to detect diseases',
-                textAlign: TextAlign.center,
-                style: TeaTypography.bodySmall.copyWith(
-                  color: TeaColors.darkGray,
-                ),
-              ),
-            ),
-          ],
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95));
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  TeaColors.freshLeaf.withOpacity(0.1),
+                  TeaColors.freshLeaf.withOpacity(0.05),
+                ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.document_scanner_outlined,
+                size: 36, color: TeaColors.freshLeaf),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Scan a Tea Leaf',
+            style: TeaTypography.titleMedium.copyWith(
+              fontWeight: FontWeight.w700,
+              color: TeaColors.matureLeaf,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Take a clear photo or select from gallery.\nSupported: JPG, PNG, WebP (max 20 MB)',
+              textAlign: TextAlign.center,
+              style: TeaTypography.bodySmall.copyWith(
+                color: TeaColors.darkGray,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).scale(
+        begin: const Offset(0.97, 0.97),
+        end: const Offset(1, 1),
+        duration: 400.ms);
   }
+
+  // ─── Image Preview ─────────────────────────────────────────────────────
 
   Widget _buildImagePreview() {
     if (_imageBytes == null) {
-      return TeaCard.elevated(
-        child: const SizedBox(
-          height: 300,
-          child: Center(
-            child: CircularProgressIndicator(color: TeaColors.freshLeaf),
-          ),
+      return Container(
+        height: 300,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(color: TeaColors.freshLeaf),
         ),
       );
     }
 
-    return TeaCard.elevated(
-      padding: EdgeInsets.zero,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Stack(
         children: [
           ClipRRect(
-            borderRadius: TeaRadius.radiusLg,
+            borderRadius: BorderRadius.circular(24),
             child: Image.memory(
               _imageBytes!,
               height: 300,
@@ -922,94 +684,39 @@ class _PremiumDiseaseDetectionScreenState
               fit: BoxFit.cover,
             ),
           ),
-          if (_showGradCam && _result != null)
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: TeaRadius.radiusLg,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.8,
-                      colors: [
-                        TeaColors.alertRust.withOpacity(0.4),
-                        TeaColors.warningAmber.withOpacity(0.3),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          // GradCAM toggle
-          if (_result != null)
-            Positioned(
-              bottom: TeaSpacing.sm,
-              right: TeaSpacing.sm,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: TeaSpacing.sm,
-                  vertical: TeaSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: TeaColors.nearBlack.withOpacity(0.7),
-                  borderRadius: TeaRadius.radiusRound,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Grad-CAM',
-                      style: TeaTypography.labelSmall.copyWith(
-                        color: TeaColors.white,
-                      ),
-                    ),
-                    const SizedBox(width: TeaSpacing.xs),
-                    SizedBox(
-                      height: 20,
-                      child: Switch(
-                        value: _showGradCam,
-                        onChanged: (value) => setState(() => _showGradCam = value),
-                        thumbColor: WidgetStatePropertyAll(TeaColors.goldenSunlight),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           // Processing overlay
           if (_isProcessing)
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
-                  color: TeaColors.nearBlack.withOpacity(0.6),
-                  borderRadius: TeaRadius.radiusLg,
+                  color: const Color(0xFF1A1A2E).withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(
-                      width: 60,
-                      height: 60,
+                    SizedBox(
+                      width: 56,
+                      height: 56,
                       child: CircularProgressIndicator(
-                        color: TeaColors.white,
+                        color: Colors.white,
                         strokeWidth: 3,
+                        strokeCap: StrokeCap.round,
                       ),
                     ),
-                    const SizedBox(height: TeaSpacing.md),
+                    const SizedBox(height: 16),
                     Text(
                       'Analyzing leaf...',
-                      style: TeaTypography.titleSmall.copyWith(
-                        color: TeaColors.white,
-                      ),
+                      style: TeaTypography.titleSmall
+                          .copyWith(color: Colors.white),
                     ),
-                    const SizedBox(height: TeaSpacing.xs),
+                    const SizedBox(height: 4),
                     Text(
-                      'Using AI to detect diseases',
+                      _isBackendConnected
+                          ? 'Sending to AI model'
+                          : 'Running local analysis',
                       style: TeaTypography.labelSmall.copyWith(
-                        color: TeaColors.white.withOpacity(0.7),
+                        color: Colors.white.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -1021,147 +728,270 @@ class _PremiumDiseaseDetectionScreenState
     ).animate().fadeIn(duration: 300.ms);
   }
 
-  Widget _buildActionButtons() {
+  // ─── Action Buttons ────────────────────────────────────────────────────
+
+  Widget _buildActions() {
     if (_selectedImage == null) {
       return Row(
         children: [
-          Expanded(
-            child: TeaButton.primary(
-              label: 'Camera',
-              icon: Icons.camera_alt,
-              onPressed: _captureImage,
-            ),
-          ),
-          const SizedBox(width: TeaSpacing.smd),
-          Expanded(
-            child: TeaButton.outlined(
-              label: 'Gallery',
-              icon: Icons.photo_library,
-              onPressed: _pickFromGallery,
-            ),
-          ),
+          Expanded(child: _buildActionBtn('Camera', Icons.camera_alt_rounded,
+              const [TeaColors.freshLeaf, TeaColors.matureLeaf], _captureImage)),
+          const SizedBox(width: 12),
+          Expanded(child: _buildActionBtn('Gallery', Icons.photo_library_rounded,
+              [Colors.white, Colors.white], _pickFromGallery,
+              outlined: true)),
         ],
       ).animate().fadeIn(delay: 200.ms);
-    } else if (_result == null) {
-      return TeaButton.primary(
-        label: _isProcessing ? 'Analyzing...' : 'Analyze Leaf',
-        icon: _isProcessing ? null : Icons.search,
-        isLoading: _isProcessing,
-        onPressed: _isProcessing ? null : _analyzeImage,
-        isFullWidth: true,
-      ).animate().fadeIn(delay: 100.ms);
     }
 
-    // After result, show new scan button
-    return TeaButton.outlined(
-      label: 'New Scan',
-      icon: Icons.refresh,
-      onPressed: () => setState(() {
-        _selectedImage = null;
-        _imageBytes = null;
-        _result = null;
-        _fieldResult = null;
-      }),
-      isFullWidth: true,
-    ).animate().fadeIn(delay: 100.ms);
-  }
-
-  Widget _buildResultsCard() {
-    if (_result == null) return const SizedBox.shrink();
-
-    final isHealthy = _result!.diseaseType == 'Healthy';
-    final isNotALeaf = _result!.isNotALeaf;
-
-    Color statusColor;
-    IconData statusIcon;
-    String statusTitle;
-
-    if (isNotALeaf) {
-      statusColor = TeaColors.warningAmber;
-      statusIcon = Icons.image_not_supported;
-      statusTitle = 'Not a Tea Leaf';
-    } else if (isHealthy) {
-      statusColor = TeaColors.healthyGreen;
-      statusIcon = Icons.check_circle;
-      statusTitle = 'Healthy';
-    } else {
-      statusColor = TeaColors.alertRust;
-      statusIcon = Icons.warning_rounded;
-      statusTitle = _result!.diseaseType;
-    }
-
-    return TeaCard.elevated(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(TeaSpacing.smd),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: TeaRadius.radiusMd,
-                ),
-                child: Icon(statusIcon, color: statusColor, size: 28),
-              ),
-              const SizedBox(width: TeaSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isNotALeaf ? 'Detection Result' : 'Disease Status',
-                      style: TeaTypography.labelSmall.copyWith(
-                        color: TeaColors.darkGray,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Text(
-                          statusTitle,
-                          style: TeaTypography.headlineSmall.copyWith(
-                            color: statusColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (_result!.isPotentialFalsePositive) ...[
-                          const SizedBox(width: TeaSpacing.sm),
-                          const Icon(
-                            Icons.error_outline,
-                            color: TeaColors.warningAmber,
-                            size: 20,
-                          ),
-                        ],
-                      ],
+    if (_result == null) {
+      return GestureDetector(
+        onTap: _isProcessing ? null : _analyzeImage,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            gradient: _isProcessing
+                ? LinearGradient(colors: [
+                    TeaColors.mediumGray,
+                    TeaColors.mediumGray.withOpacity(0.8)
+                  ])
+                : const LinearGradient(
+                    colors: [TeaColors.freshLeaf, TeaColors.matureLeaf]),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: _isProcessing
+                ? []
+                : [
+                    BoxShadow(
+                      color: TeaColors.freshLeaf.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
-                ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_isProcessing)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2),
+                )
+              else
+                const Icon(Icons.search_rounded, color: Colors.white, size: 22),
+              const SizedBox(width: 10),
+              Text(
+                _isProcessing ? 'Analyzing...' : 'Analyze Leaf',
+                style: TeaTypography.buttonMedium
+                    .copyWith(color: Colors.white, fontWeight: FontWeight.w700),
               ),
             ],
           ),
+        ),
+      ).animate().fadeIn(delay: 100.ms);
+    }
 
-          // Lighting / FP Warning
-          if (_result!.isPotentialFalsePositive && !isNotALeaf) ...[
-            const SizedBox(height: TeaSpacing.md),
-            Container(
-              padding: const EdgeInsets.all(TeaSpacing.md),
-              decoration: BoxDecoration(
-                color: TeaColors.warningAmber.withOpacity(0.1),
-                borderRadius: TeaRadius.radiusMd,
-                border: Border.all(
-                  color: TeaColors.warningAmber.withOpacity(0.3),
+    // After results — new scan
+    return GestureDetector(
+      onTap: _resetScan,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: TeaColors.freshLeaf.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.refresh_rounded,
+                color: TeaColors.freshLeaf, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'New Scan',
+              style: TeaTypography.buttonMedium.copyWith(
+                color: TeaColors.freshLeaf,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(delay: 100.ms);
+  }
+
+  Widget _buildActionBtn(String label, IconData icon, List<Color> colors,
+      VoidCallback onTap,
+      {bool outlined = false}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient:
+              outlined ? null : LinearGradient(colors: colors),
+          color: outlined ? Colors.white : null,
+          borderRadius: BorderRadius.circular(18),
+          border: outlined
+              ? Border.all(color: TeaColors.freshLeaf.withOpacity(0.3))
+              : null,
+          boxShadow: outlined
+              ? []
+              : [
+                  BoxShadow(
+                    color: colors.first.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                color: outlined ? TeaColors.freshLeaf : Colors.white,
+                size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TeaTypography.buttonMedium.copyWith(
+                color: outlined ? TeaColors.freshLeaf : Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Result Card ───────────────────────────────────────────────────────
+
+  Widget _buildResultCard() {
+    if (_result == null) return const SizedBox.shrink();
+
+    final isHealthy = _result!.isHealthy;
+    final isNotALeaf = _result!.isNotALeaf;
+
+    final Color statusColor;
+    final IconData statusIcon;
+    final String statusLabel;
+    final String statusDesc;
+
+    final isUnavailable = _result!.diseaseType == 'Unavailable';
+
+    if (isUnavailable) {
+      statusColor = TeaColors.mediumGray;
+      statusIcon = Icons.cloud_off_rounded;
+      statusLabel = 'Backend Offline';
+      statusDesc =
+          'The ML server is unavailable. Analysis requires a live connection.';
+    } else if (isNotALeaf) {
+      statusColor = TeaColors.warningAmber;
+      statusIcon = Icons.image_not_supported_rounded;
+      statusLabel = 'Not a Tea Leaf';
+      statusDesc = _result!.validationMessage ??
+          'The uploaded image is not a recognizable tea leaf.';
+    } else if (isHealthy) {
+      statusColor = TeaColors.healthyGreen;
+      statusIcon = Icons.check_circle_rounded;
+      statusLabel = 'Healthy';
+      statusDesc = 'No diseases detected. Leaf appears healthy.';
+    } else {
+      statusColor = TeaColors.alertRust;
+      statusIcon = Icons.warning_rounded;
+      statusLabel = _result!.diseaseType;
+      statusDesc = 'Disease detected with ${_result!.reliabilityLabel.toLowerCase()} confidence.';
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: statusColor.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Status header
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  statusColor.withOpacity(0.08),
+                  statusColor.withOpacity(0.03),
+                ],
+              ),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(statusIcon, color: statusColor, size: 28),
                 ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        statusLabel,
+                        style: TeaTypography.headlineSmall.copyWith(
+                          color: statusColor,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        statusDesc,
+                        style: TeaTypography.bodySmall.copyWith(
+                          color: TeaColors.darkGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // False positive warning
+          if (_result!.isPotentialFalsePositive && !isNotALeaf)
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: TeaColors.warningAmber.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border:
+                    Border.all(color: TeaColors.warningAmber.withOpacity(0.2)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.wb_sunny_outlined, color: TeaColors.warningAmber, size: 20),
-                  const SizedBox(width: TeaSpacing.smd),
+                  const Icon(Icons.wb_sunny_outlined,
+                      color: TeaColors.warningAmber, size: 18),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Potential False Positive: Bright light or reflections detected. The "Blister Blight" detection might be caused by glare.',
-                      style: TeaTypography.bodySmall.copyWith(
+                      'Possible false positive — glare or bright light detected.',
+                      style: TeaTypography.labelSmall.copyWith(
                         color: TeaColors.darkGray,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1170,770 +1000,300 @@ class _PremiumDiseaseDetectionScreenState
                 ],
               ),
             ),
-          ],
 
-          // Invalid image message
-          if (isNotALeaf) ...[
-            const SizedBox(height: TeaSpacing.md),
-            Container(
-              padding: const EdgeInsets.all(TeaSpacing.md),
-              decoration: BoxDecoration(
-                color: TeaColors.warningAmber.withOpacity(0.1),
-                borderRadius: TeaRadius.radiusMd,
-                border: Border.all(
-                  color: TeaColors.warningAmber.withOpacity(0.3),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          // DB save status
+          if (_isSavingToDb || _savedToDb)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.info_outline, color: TeaColors.warningAmber, size: 22),
-                      const SizedBox(width: TeaSpacing.smd),
-                      Expanded(
-                        child: Text(
-                          _result!.validationMessage ?? 'This image does not contain a recognizable tea leaf.',
-                          style: TeaTypography.bodyMedium.copyWith(
-                            color: TeaColors.warningAmber,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: TeaSpacing.smd),
+                  if (_isSavingToDb)
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: TeaColors.freshLeaf),
+                    )
+                  else
+                    const Icon(Icons.cloud_done_rounded,
+                        size: 16, color: TeaColors.healthyGreen),
+                  const SizedBox(width: 8),
                   Text(
-                    'To improve results, ensure the leaf is well-lit, in focus, and occupies most of the frame. Avoid hands, clutter, or extremely dark/blurry backgrounds.',
-                    style: TeaTypography.bodySmall.copyWith(
-                      color: TeaColors.darkGray,
+                    _isSavingToDb ? 'Saving to database...' : 'Saved',
+                    style: TeaTypography.labelSmall.copyWith(
+                      color: _isSavingToDb
+                          ? TeaColors.freshLeaf
+                          : TeaColors.healthyGreen,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
-          ] else ...[
-            const SizedBox(height: TeaSpacing.md),
-            const Divider(),
-            const SizedBox(height: TeaSpacing.md),
-
-            // Quality & Reliability section
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Detection Reliability', style: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray)),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            _getReliabilityIcon(_result!.reliabilityLabel),
-                            size: 16,
-                            color: _getReliabilityColor(_result!.reliabilityLabel),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _result!.reliabilityLabel,
-                            style: TeaTypography.bodyMedium.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: _getReliabilityColor(_result!.reliabilityLabel),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (_result!.imageQualityScore != null)
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('Image Quality', style: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray)),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${(_result!.imageQualityScore! * 100).toStringAsFixed(0)}%',
-                              style: TeaTypography.bodyMedium.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: _getQualityColor(_result!.imageQualityScore!),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.bolt,
-                              size: 16,
-                              color: _getQualityColor(_result!.imageQualityScore!),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: TeaSpacing.md),
-
-            // Confidence meter
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Confidence Score', style: TeaTypography.titleSmall),
-                Text(
-                  '${(_result!.confidence * 100).toStringAsFixed(1)}%',
-                  style: TeaTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: TeaSpacing.sm),
-            ClipRRect(
-              borderRadius: TeaRadius.radiusSm,
-              child: LinearProgressIndicator(
-                value: _result!.confidence,
-                backgroundColor: TeaColors.lightGray,
-                valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                minHeight: 8,
-              ),
-            ),
-
-            // Severity (if not healthy)
-            if (!isHealthy) ...[
-              const SizedBox(height: TeaSpacing.lg),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Severity Level', style: TeaTypography.titleSmall),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: TeaSpacing.smd,
-                      vertical: TeaSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getSeverityColor(_result!.severity).withOpacity(0.1),
-                      borderRadius: TeaRadius.radiusSm,
-                      border: Border.all(
-                        color: _getSeverityColor(_result!.severity).withOpacity(0.3),
-                      ),
-                    ),
-                    child: Text(
-                      _result!.severity,
-                      style: TeaTypography.labelMedium.copyWith(
-                        color: _getSeverityColor(_result!.severity),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-
-            // Environmental factors
-            if (_result!.temperature != null || _result!.humidity != null) ...[
-              const SizedBox(height: TeaSpacing.lg),
-              Row(
-                children: [
-                  const Icon(Icons.eco, color: TeaColors.freshLeaf, size: 18),
-                  const SizedBox(width: TeaSpacing.xs),
-                  Text(
-                    'Environmental Factors at Analysis',
-                    style: TeaTypography.titleSmall,
-                  ),
-                ],
-              ),
-              const SizedBox(height: TeaSpacing.smd),
-              Wrap(
-                spacing: TeaSpacing.sm,
-                runSpacing: TeaSpacing.sm,
-                children: [
-                  if (_result!.temperature != null)
-                    _buildFactorChip(
-                      Icons.thermostat,
-                      '${_result!.temperature!.toStringAsFixed(1)}°C',
-                      TeaColors.warningAmber,
-                    ),
-                  if (_result!.humidity != null)
-                    _buildFactorChip(
-                      Icons.water_drop,
-                      '${_result!.humidity!.toStringAsFixed(0)}%',
-                      TeaColors.infoSky,
-                    ),
-                  if (_result!.airQuality != null)
-                    _buildFactorChip(
-                      Icons.air,
-                      'AQI ${_result!.airQuality!.toStringAsFixed(0)}',
-                      TeaColors.freshLeaf,
-                    ),
-                ],
-              ),
-            ],
-
-            const SizedBox(height: TeaSpacing.md),
-            Text(
-              'Analyzed at: ${_formatTime(_result!.timestamp)}',
-              style: TeaTypography.labelSmall.copyWith(
-                color: TeaColors.mediumGray,
-              ),
-            ),
-          ],
         ],
       ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
   }
 
-  Widget _buildFactorChip(IconData icon, String value, Color color) {
+  // ─── Confidence Details ────────────────────────────────────────────────
+
+  Widget _buildConfidenceDetails() {
+    if (_result == null || _result!.isNotALeaf) return const SizedBox.shrink();
+
+    final confidence = _result!.confidence;
+    final pct = (confidence * 100).toStringAsFixed(1);
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: TeaSpacing.smd,
-        vertical: TeaSpacing.xs,
-      ),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: TeaRadius.radiusSm,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Detection Metrics',
+              style: TeaTypography.titleSmall
+                  .copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 16),
+
+          // Confidence bar
+          Row(
+            children: [
+              Text('Confidence', style: TeaTypography.bodySmall),
+              const Spacer(),
+              Text('$pct%',
+                  style: TeaTypography.titleSmall
+                      .copyWith(fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: confidence,
+              minHeight: 8,
+              backgroundColor: Colors.grey.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation(
+                confidence >= 0.85
+                    ? TeaColors.healthyGreen
+                    : confidence >= 0.70
+                        ? TeaColors.freshLeaf
+                        : confidence >= 0.50
+                            ? TeaColors.warningAmber
+                            : TeaColors.alertRust,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Reliability: ${_result!.reliabilityLabel}',
+            style: TeaTypography.labelSmall.copyWith(color: TeaColors.darkGray),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Detail chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildDetailChip('Severity', _result!.severity,
+                  _result!.severity == 'High'
+                      ? TeaColors.alertRust
+                      : _result!.severity == 'Medium'
+                          ? TeaColors.warningAmber
+                          : TeaColors.healthyGreen),
+              if (_result!.processingTimeMs != null)
+                _buildDetailChip(
+                    'Processing',
+                    '${_result!.processingTimeMs!.toStringAsFixed(0)} ms',
+                    TeaColors.infoSky),
+              if (_result!.imageQualityScore != null)
+                _buildDetailChip(
+                    'Image Quality',
+                    '${(_result!.imageQualityScore! * 100).toStringAsFixed(0)}%',
+                    TeaColors.freshLeaf),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 100.ms);
+  }
+
+  Widget _buildDetailChip(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: TeaTypography.labelMedium.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(label,
+              style: TeaTypography.labelSmall
+                  .copyWith(color: TeaColors.darkGray)),
+          const SizedBox(width: 6),
+          Text(value,
+              style: TeaTypography.labelMedium
+                  .copyWith(color: color, fontWeight: FontWeight.w700)),
         ],
       ),
     );
   }
 
-  Widget _buildRecommendationsCard() {
-    if (_result == null) return const SizedBox.shrink();
+  // ─── Recommendations ───────────────────────────────────────────────────
 
-    final isNotALeaf = _result!.isNotALeaf;
-    final cardColor = isNotALeaf ? TeaColors.warningAmber : TeaColors.goldenSunlight;
+  Widget _buildRecommendations() {
+    if (_result == null || _result!.recommendations.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-    return TeaCard.elevated(
-      padding: EdgeInsets.zero,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              cardColor.withOpacity(0.05),
-              cardColor.withOpacity(0.12),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: TeaColors.freshLeaf.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.lightbulb_outline_rounded,
+                    color: TeaColors.freshLeaf, size: 16),
+              ),
+              const SizedBox(width: 10),
+              Text('Recommendations',
+                  style: TeaTypography.titleSmall
+                      .copyWith(fontWeight: FontWeight.w700)),
             ],
           ),
-          borderRadius: TeaRadius.radiusLg,
-          border: Border.all(
-            color: cardColor.withOpacity(0.2),
-          ),
-        ),
-        padding: TeaSpacing.cardPaddingLg,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(TeaSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: cardColor.withOpacity(0.2),
-                    borderRadius: TeaRadius.radiusSm,
-                  ),
-                  child: Icon(
-                    isNotALeaf ? Icons.tips_and_updates : Icons.lightbulb,
-                    color: cardColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: TeaSpacing.smd),
-                Text(
-                  isNotALeaf ? 'What to Do' : 'Recommendations',
-                  style: TeaTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: TeaSpacing.md),
-            ..._result!.recommendations.asMap().entries.map((entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: TeaSpacing.smd),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [cardColor.withOpacity(0.8), cardColor],
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${entry.key + 1}',
-                            style: TeaTypography.labelSmall.copyWith(
-                              color: TeaColors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+          const SizedBox(height: 14),
+          ...List.generate(_result!.recommendations.length, (i) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    margin: const EdgeInsets.only(top: 2),
+                    decoration: BoxDecoration(
+                      color: TeaColors.freshLeaf.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${i + 1}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: TeaColors.freshLeaf,
                         ),
                       ),
-                      const SizedBox(width: TeaSpacing.smd),
-                      Expanded(
-                        child: Text(
-                          entry.value,
-                          style: TeaTypography.bodyMedium.copyWith(
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),),
-          ],
-        ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _result!.recommendations[i],
+                      style: TeaTypography.bodySmall.copyWith(
+                        color: TeaColors.nearBlack,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
-    ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+    ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
   }
+
+  // ─── Post-Scan Actions ─────────────────────────────────────────────────
 
   Widget _buildPostScanActions() {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => context.push('/reports/preview/$_savedDetectionId'),
-            icon: const Icon(Icons.picture_as_pdf, size: 18),
-            label: const Text('Generate Report'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: TeaColors.freshLeaf,
-              side: const BorderSide(color: TeaColors.freshLeaf),
-              padding: const EdgeInsets.symmetric(vertical: TeaSpacing.smd),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(TeaRadius.md),
+          child: GestureDetector(
+            onTap: () => context.push('/reports/preview/$_savedDetectionId'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: TeaColors.freshLeaf.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.description_outlined,
+                      color: TeaColors.freshLeaf, size: 18),
+                  const SizedBox(width: 8),
+                  Text('View Report',
+                      style: TeaTypography.labelMedium.copyWith(
+                          color: TeaColors.freshLeaf,
+                          fontWeight: FontWeight.w600)),
+                ],
               ),
             ),
           ),
         ),
-        const SizedBox(width: TeaSpacing.sm),
+        const SizedBox(width: 12),
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => context.push('/scan-history'),
-            icon: const Icon(Icons.history, size: 18),
-            label: const Text('Scan History'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: TeaColors.darkGray,
-              side: const BorderSide(color: TeaColors.mediumGray),
-              padding: const EdgeInsets.symmetric(vertical: TeaSpacing.smd),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(TeaRadius.md),
+          child: GestureDetector(
+            onTap: () => context.push('/scan-history'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: TeaColors.infoSky.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.history_rounded,
+                      color: TeaColors.infoSky, size: 18),
+                  const SizedBox(width: 8),
+                  Text('History',
+                      style: TeaTypography.labelMedium.copyWith(
+                          color: TeaColors.infoSky,
+                          fontWeight: FontWeight.w600)),
+                ],
               ),
             ),
           ),
         ),
       ],
-    ).animate().fadeIn(delay: 300.ms, duration: 400.ms);
+    ).animate().fadeIn(duration: 300.ms, delay: 300.ms);
   }
 
-  /// Field/Cumulative Results Card for batch analysis
-  Widget _buildFieldResultsCard() {
-    if (_fieldResult == null) return const SizedBox.shrink();
-
-    final healthPercentage = _fieldResult!.healthPercentage;
-    final isHealthyField = healthPercentage >= 70;
-    final statusColor = isHealthyField
-        ? TeaColors.healthyGreen
-        : (healthPercentage >= 40 ? TeaColors.warningAmber : TeaColors.alertRust);
-
-    return TeaCard.elevated(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(TeaSpacing.smd),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: TeaRadius.radiusMd,
-                ),
-                child: Icon(Icons.grid_view, color: statusColor, size: 28),
-              ),
-              const SizedBox(width: TeaSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Field Analysis',
-                      style: TeaTypography.labelSmall.copyWith(
-                        color: TeaColors.darkGray,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _fieldResult!.overallStatus,
-                      style: TeaTypography.headlineSmall.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: TeaSpacing.md),
-          const Divider(),
-          const SizedBox(height: TeaSpacing.md),
-
-          // Leaf counts
-          Row(
-            children: [
-              Expanded(
-                child: _buildCountCard(
-                  'Total Leaves',
-                  '${_fieldResult!.detectedLeafCount}',
-                  Icons.eco,
-                  TeaColors.freshLeaf,
-                ),
-              ),
-              const SizedBox(width: TeaSpacing.sm),
-              Expanded(
-                child: _buildCountCard(
-                  'Healthy',
-                  '${_fieldResult!.healthyCount}',
-                  Icons.check_circle,
-                  TeaColors.healthyGreen,
-                ),
-              ),
-              const SizedBox(width: TeaSpacing.sm),
-              Expanded(
-                child: _buildCountCard(
-                  'Infected',
-                  '${_fieldResult!.infectedCount}',
-                  Icons.warning,
-                  TeaColors.alertRust,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: TeaSpacing.lg),
-
-          // Health percentage meter
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Health Score', style: TeaTypography.titleSmall),
-              Text(
-                '${healthPercentage.toStringAsFixed(1)}%',
-                style: TeaTypography.titleMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: statusColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: TeaSpacing.sm),
-          ClipRRect(
-            borderRadius: TeaRadius.radiusSm,
-            child: LinearProgressIndicator(
-              value: healthPercentage / 100,
-              backgroundColor: TeaColors.lightGray,
-              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-              minHeight: 10,
-            ),
-          ),
-
-          // Average Confidence (New)
-          if (_fieldResult!.summary?.averageConfidence != null && 
-              _fieldResult!.summary!.averageConfidence > 0) ...[
-            const SizedBox(height: TeaSpacing.md),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Average Confidence', style: TeaTypography.labelSmall.copyWith(color: TeaColors.mediumGray)),
-                Text(
-                  '${(_fieldResult!.summary!.averageConfidence * 100).toStringAsFixed(1)}%',
-                  style: TeaTypography.labelSmall.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: TeaColors.mediumGray,
-                  ),
-                ),
-              ],
-            ),
-          ],
-
-          // Disease breakdown
-          if (_fieldResult!.diseaseCounts.isNotEmpty) ...[
-            const SizedBox(height: TeaSpacing.lg),
-            Text('Disease Breakdown', style: TeaTypography.titleSmall),
-            const SizedBox(height: TeaSpacing.smd),
-            ..._fieldResult!.diseaseCounts.entries.map((entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: TeaSpacing.sm),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: const BoxDecoration(
-                              color: TeaColors.alertRust,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: TeaSpacing.sm),
-                          Text(entry.key, style: TeaTypography.bodyMedium),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: TeaSpacing.sm,
-                          vertical: TeaSpacing.xs,
-                        ),
-                        decoration: BoxDecoration(
-                          color: TeaColors.alertRust.withOpacity(0.1),
-                          borderRadius: TeaRadius.radiusSm,
-                        ),
-                        child: Text(
-                          '${entry.value} leaves',
-                          style: TeaTypography.labelSmall.copyWith(
-                            color: TeaColors.alertRust,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),),
-          ],
-
-          const SizedBox(height: TeaSpacing.md),
-          Text(
-            'Analyzed at: ${_formatTime(_fieldResult!.timestamp)}',
-            style: TeaTypography.labelSmall.copyWith(
-              color: TeaColors.mediumGray,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  Widget _buildCountCard(String label, String count, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(TeaSpacing.smd),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: TeaRadius.radiusMd,
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: TeaSpacing.xs),
-          Text(
-            count,
-            style: TeaTypography.titleLarge.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            label,
-            style: TeaTypography.labelSmall.copyWith(
-              color: TeaColors.darkGray,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFieldRecommendationsCard() {
-    if (_fieldResult == null) return const SizedBox.shrink();
-
-    final cardColor = _fieldResult!.healthPercentage >= 70
-        ? TeaColors.freshLeaf
-        : (_fieldResult!.healthPercentage >= 40
-            ? TeaColors.warningAmber
-            : TeaColors.alertRust);
-
-    return TeaCard.elevated(
-      padding: EdgeInsets.zero,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              cardColor.withOpacity(0.05),
-              cardColor.withOpacity(0.12),
-            ],
-          ),
-          borderRadius: TeaRadius.radiusLg,
-          border: Border.all(
-            color: cardColor.withOpacity(0.2),
-          ),
-        ),
-        padding: TeaSpacing.cardPaddingLg,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(TeaSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: cardColor.withOpacity(0.2),
-                    borderRadius: TeaRadius.radiusSm,
-                  ),
-                  child: Icon(
-                    Icons.recommend,
-                    color: cardColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: TeaSpacing.smd),
-                Text(
-                  'Field Recommendations',
-                  style: TeaTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: TeaSpacing.md),
-            ..._fieldResult!.recommendations.asMap().entries.map((entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: TeaSpacing.smd),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [cardColor.withOpacity(0.8), cardColor],
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${entry.key + 1}',
-                            style: TeaTypography.labelSmall.copyWith(
-                              color: TeaColors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: TeaSpacing.smd),
-                      Expanded(
-                        child: Text(
-                          entry.value,
-                          style: TeaTypography.bodyMedium.copyWith(
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  Color _getSeverityColor(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'critical':
-        return TeaColors.alertRust;
-      case 'high':
-        return Colors.orange.shade800;
-      case 'medium':
-        return TeaColors.warningAmber;
-      case 'low':
-        return TeaColors.infoSky;
-      case 'uncertain':
-        return TeaColors.mediumGray;
-      default:
-        return TeaColors.mediumGray;
-    }
-  }
-
-  Color _getReliabilityColor(String label) {
-    switch (label.toLowerCase()) {
-      case 'very high':
-        return TeaColors.healthyGreen;
-      case 'high':
-        return TeaColors.freshLeaf;
-      case 'moderate':
-        return TeaColors.warningAmber;
-      case 'low':
-      case 'very low':
-        return TeaColors.alertRust;
-      default:
-        return TeaColors.mediumGray;
-    }
-  }
-
-  IconData _getReliabilityIcon(String label) {
-    switch (label.toLowerCase()) {
-      case 'very high':
-        return Icons.verified;
-      case 'high':
-        return Icons.check_circle_outline;
-      case 'moderate':
-        return Icons.info_outline;
-      case 'low':
-      case 'very low':
-        return Icons.warning_amber_rounded;
-      default:
-        return Icons.help_outline;
-    }
-  }
-
-  Color _getQualityColor(double score) {
-    if (score >= 0.8) return TeaColors.healthyGreen;
-    if (score >= 0.6) return TeaColors.freshLeaf;
-    if (score >= 0.4) return TeaColors.warningAmber;
-    return TeaColors.alertRust;
-  }
-
-  String _getAirQualityLabel(int aqi) {
-    if (aqi <= 50) return 'Good';
-    if (aqi <= 100) return 'Moderate';
-    if (aqi <= 150) return 'Unhealthy';
-    if (aqi <= 200) return 'Bad';
-    return 'Hazardous';
-  }
-
-  Color _getAirQualityColor(int aqi) {
-    if (aqi <= 50) return TeaColors.healthyGreen;
-    if (aqi <= 100) return TeaColors.goldenSunlight;
-    if (aqi <= 150) return TeaColors.warningAmber;
-    if (aqi <= 200) return TeaColors.alertRust;
-    return const Color(0xFF8E4585); // Purple for hazardous
-  }
-
-  String _formatTime(DateTime time) {
-    return '${time.hour}:${time.minute.toString().padLeft(2, '0')} - ${time.day}/${time.month}/${time.year}';
-  }
 }

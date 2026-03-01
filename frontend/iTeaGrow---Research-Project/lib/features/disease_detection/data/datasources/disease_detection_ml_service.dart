@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -383,174 +382,87 @@ class DiseaseDetectionMLService {
     return FieldAnalysisResult.fromApiResponse(response);
   }
 
-  /// Offline prediction with simulated results (fallback)
+  /// Offline fallback — returns an explicit "unavailable" result
+  /// instead of randomly guessing diseases which would be misleading.
   Future<DiseaseDetectionResult> _predictOffline(
     String imagePath, {
     double? liveTemperature,
     double? liveHumidity,
     double? liveAirQuality,
   }) async {
-    // Simulate processing delay
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Generate dummy results
-    final diseases = ['Healthy', 'Red Rust', 'Blister Blight'];
-    final random = Random();
-    final diseaseType = diseases[random.nextInt(diseases.length)];
-    final confidence = 0.7 + random.nextDouble() * 0.25;
-
-    final recommendations = diseaseType == 'Healthy'
-        ? ['Continue regular monitoring', 'Maintain current practices']
-        : [
-            'Apply recommended fungicide',
-            'Improve drainage',
-            'Monitor closely for 2 weeks',
-            'Check environmental conditions',
-          ];
+    await Future.delayed(const Duration(seconds: 1));
 
     return DiseaseDetectionResult(
-      diseaseType: diseaseType,
-      confidence: confidence,
-      severity:
-          confidence > 0.85 ? 'High' : (confidence > 0.7 ? 'Medium' : 'Low'),
-      recommendations: recommendations,
+      diseaseType: 'Unavailable',
+      confidence: 0.0,
+      severity: 'None',
+      recommendations: [
+        'The ML backend is currently offline.',
+        'Disease detection requires an active server connection.',
+        'Please check your internet connection and try again.',
+        'Tap the refresh icon to re-check backend connectivity.',
+      ],
       timestamp: DateTime.now(),
-      temperature: liveTemperature ?? (25.0 + random.nextDouble() * 5),
-      humidity: liveHumidity ?? (60.0 + random.nextDouble() * 20),
-      airQuality: liveAirQuality ?? (50.0 + random.nextDouble() * 100),
+      temperature: liveTemperature,
+      humidity: liveHumidity,
+      airQuality: liveAirQuality,
     );
   }
 
-  /// Offline batch prediction (simulated)
+  /// Offline batch fallback — returns unavailable result
   Future<BatchDetectionResult> _predictBatchOffline(
     List<String> imagePaths, {
     double? liveTemperature,
     double? liveHumidity,
     double? liveAirQuality,
   }) async {
-    await Future.delayed(Duration(seconds: imagePaths.length));
-
-    final random = Random();
-    final diseases = ['Healthy', 'Red Rust', 'Blister Blight'];
-    final results = <SingleLeafResult>[];
-
-    int healthyCount = 0;
-    int infectedCount = 0;
-    final diseaseCounts = <String, int>{};
-
-    for (int i = 0; i < imagePaths.length; i++) {
-      final disease = diseases[random.nextInt(diseases.length)];
-      final confidence = 0.7 + random.nextDouble() * 0.25;
-
-      if (disease == 'Healthy') {
-        healthyCount++;
-      } else {
-        infectedCount++;
-        diseaseCounts[disease] = (diseaseCounts[disease] ?? 0) + 1;
-      }
-
-      results.add(SingleLeafResult(
-        imageIndex: i,
-        diseaseType: disease,
-        confidence: confidence,
-        severity: confidence > 0.85 ? 'High' : (confidence > 0.7 ? 'Medium' : 'Low'),
-      ),);
-    }
-
-    final totalCount = imagePaths.length;
-    final healthPercentage = (healthyCount / totalCount) * 100;
-    final overallStatus = healthPercentage >= 70
-        ? 'Healthy Block'
-        : (healthPercentage >= 40 ? 'Moderate Risk' : 'High Risk Block');
+    await Future.delayed(const Duration(seconds: 1));
 
     return BatchDetectionResult(
-      totalImages: totalCount,
-      healthyCount: healthyCount,
-      infectedCount: infectedCount,
-      healthPercentage: healthPercentage,
-      overallStatus: overallStatus,
-      diseaseCounts: diseaseCounts,
-      individualResults: results,
+      totalImages: imagePaths.length,
+      healthyCount: 0,
+      infectedCount: 0,
+      healthPercentage: 0.0,
+      overallStatus: 'Unavailable — Backend Offline',
+      diseaseCounts: {},
+      individualResults: [],
       timestamp: DateTime.now(),
       temperature: liveTemperature,
       humidity: liveHumidity,
-      recommendations: _generateBatchRecommendations(healthPercentage, diseaseCounts),
+      recommendations: [
+        'The ML backend is currently offline.',
+        'Batch detection requires an active server connection.',
+        'Please check your internet connection and try again.',
+      ],
     );
   }
 
-  /// Offline field analysis (simulated)
+  /// Offline field analysis fallback — returns unavailable result
   Future<FieldAnalysisResult> _analyzeFieldOffline(
     String imagePath, {
     double? liveTemperature,
     double? liveHumidity,
     double? liveAirQuality,
   }) async {
-    await Future.delayed(const Duration(seconds: 3));
-
-    final random = Random();
-    final detectedLeaves = 5 + random.nextInt(20); // 5-25 leaves detected
-    final healthyCount = (detectedLeaves * (0.5 + random.nextDouble() * 0.4)).round();
-    final infectedCount = detectedLeaves - healthyCount;
-    final healthPercentage = (healthyCount / detectedLeaves) * 100;
-
-    final diseases = ['Red Rust', 'Blister Blight'];
-    final diseaseCounts = <String, int>{};
-    var remaining = infectedCount;
-    for (final disease in diseases) {
-      if (remaining <= 0) break;
-      final count = random.nextInt(remaining + 1);
-      if (count > 0) {
-        diseaseCounts[disease] = count;
-        remaining -= count;
-      }
-    }
-    if (remaining > 0) {
-      diseaseCounts[diseases[0]] = (diseaseCounts[diseases[0]] ?? 0) + remaining;
-    }
-
-    final overallStatus = healthPercentage >= 70
-        ? 'Healthy Area'
-        : (healthPercentage >= 40 ? 'Moderate Risk' : 'Critical Area');
+    await Future.delayed(const Duration(seconds: 1));
 
     return FieldAnalysisResult(
-      detectedLeafCount: detectedLeaves,
-      healthyCount: healthyCount,
-      infectedCount: infectedCount,
-      healthPercentage: healthPercentage,
-      overallStatus: overallStatus,
-      diseaseCounts: diseaseCounts,
+      detectedLeafCount: 0,
+      healthyCount: 0,
+      infectedCount: 0,
+      healthPercentage: 0.0,
+      overallStatus: 'Unavailable — Backend Offline',
+      diseaseCounts: {},
       timestamp: DateTime.now(),
       temperature: liveTemperature,
       humidity: liveHumidity,
-      recommendations: _generateBatchRecommendations(healthPercentage, diseaseCounts),
-      boundingBoxes: [], // Would contain detected leaf regions from backend
+      recommendations: [
+        'The ML backend is currently offline.',
+        'Field analysis requires an active server connection.',
+        'Please check your internet connection and try again.',
+      ],
+      boundingBoxes: [],
     );
-  }
-
-  List<String> _generateBatchRecommendations(
-    double healthPercentage,
-    Map<String, int> diseaseCounts,
-  ) {
-    final recommendations = <String>[];
-
-    if (healthPercentage >= 80) {
-      recommendations.add('Maintain current management practices');
-      recommendations.add('Continue regular monitoring schedule');
-    } else if (healthPercentage >= 50) {
-      recommendations.add('Increase monitoring frequency');
-      recommendations.add('Apply preventive fungicide treatment');
-      if (diseaseCounts.isNotEmpty) {
-        final mostCommon = diseaseCounts.entries.reduce((a, b) => a.value > b.value ? a : b);
-        recommendations.add('Focus treatment on ${mostCommon.key} (${mostCommon.value} cases)');
-      }
-    } else {
-      recommendations.add('Immediate intervention required');
-      recommendations.add('Apply targeted fungicide treatment');
-      recommendations.add('Isolate severely affected areas');
-      recommendations.add('Review environmental conditions');
-    }
-
-    return recommendations;
   }
 
   /// Get model information from backend
