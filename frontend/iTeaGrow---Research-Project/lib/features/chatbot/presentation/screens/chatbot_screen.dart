@@ -6,9 +6,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/api/api_config.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../core/widgets/jarvis_assistant.dart';
 
-/// Chatbot Screen - AI Tea Assistant
+/// Chatbot Screen - Premium AI Tea Assistant
 class ChatbotScreen extends ConsumerStatefulWidget {
   const ChatbotScreen({super.key});
 
@@ -19,9 +18,9 @@ class ChatbotScreen extends ConsumerStatefulWidget {
 class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
-  bool _isListening = false;
 
   @override
   void initState() {
@@ -30,159 +29,269 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   }
 
   void _addWelcomeMessage() {
-    _messages.add(ChatMessage(
-      text: "Hello! I'm your Tea Garden Assistant. How can I help you today?\n\nYou can ask me about:\n- Disease detection and treatment\n- Plant care and growth stages\n- Weather and soil conditions\n- Harvest recommendations\n- IoT sensor management",
-      isFromUser: false,
-      timestamp: DateTime.now(),
-    ),);
+    _messages.add(
+      ChatMessage(
+        text:
+            "Hello! I'm your Tea Garden Assistant. Ask me about disease detection, plant care, harvest timing, soil health, or IoT sensors.",
+        isFromUser: false,
+        timestamp: DateTime.now(),
+      ),
+    );
   }
 
   @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: TeaColors.mistGreen,
-      appBar: AppBar(
-        backgroundColor: TeaColors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: TeaColors.nearBlack),
-          onPressed: () => context.pop(),
-        ),
-        title: Row(
-          children: [
-            JarvisAssistant(
-              size: 32,
-              isListening: _isListening,
-              isSpeaking: _isTyping,
-            ),
-            const SizedBox(width: TeaSpacing.sm),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: const Color(0xFFF6F9F7),
+      body: Column(
+        children: [
+          // Premium App Bar
+          _buildAppBar(),
+
+          // Messages
+          Expanded(
+            child: Stack(
               children: [
-                Text(
-                  'Tea Assistant',
-                  style: TeaTypography.titleMedium.copyWith(color: TeaColors.nearBlack),
-                ),
-                Text(
-                  _isTyping ? 'Typing...' : 'Online',
-                  style: TeaTypography.labelSmall.copyWith(
-                    color: _isTyping ? TeaColors.warningAmber : TeaColors.healthyGreen,
+                // Background decoration
+                Positioned(
+                  top: -60,
+                  right: -40,
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          TeaColors.freshLeaf.withOpacity(0.05),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
                   ),
+                ),
+
+                ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  itemCount: _messages.length + (_isTyping ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (_isTyping && index == _messages.length) {
+                      return _buildTypingIndicator();
+                    }
+                    return _buildMessageBubble(_messages[index]);
+                  },
                 ),
               ],
             ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: TeaColors.nearBlack),
-            onPressed: () => _showChatOptions(),
+          ),
+
+          // Quick suggestions
+          if (_messages.length <= 2) _buildSuggestions(),
+
+          // Input area
+          _buildInputArea(),
+        ],
+      ),
+    );
+  }
+
+  // ─── App Bar ───────────────────────────────────────────────────────────
+
+  Widget _buildAppBar() {
+    return Container(
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Messages List
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: TeaSpacing.screenPadding,
-              itemCount: _messages.length + (_isTyping ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (_isTyping && index == _messages.length) {
-                  return _buildTypingIndicator();
-                }
-                return _buildMessageBubble(_messages[index], index);
-              },
-            ),
-          ),
-
-          // Quick Suggestions
-          if (_messages.length <= 2)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: TeaSpacing.sm),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: TeaSpacing.screenPaddingHorizontal,
-                child: Row(
-                  children: [
-                    _buildSuggestionChip('How to detect leaf disease?'),
-                    _buildSuggestionChip('When should I harvest?'),
-                    _buildSuggestionChip('Optimal soil conditions'),
-                    _buildSuggestionChip('IoT sensor setup'),
-                  ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        child: Row(
+          children: [
+            // Back button
+            GestureDetector(
+              onTap: () => context.pop(),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF6F9F7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: TeaColors.nearBlack,
+                  size: 20,
                 ),
               ),
             ),
+            const SizedBox(width: 12),
 
-          // Input Area
-          Container(
-            color: TeaColors.white,
-            padding: const EdgeInsets.all(TeaSpacing.md),
-            child: SafeArea(
-              child: Row(
+            // Bot avatar
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [TeaColors.freshLeaf, TeaColors.matureLeaf],
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+
+            // Title & status
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Voice Input Button
-                  GestureDetector(
-                    onLongPressStart: (_) => setState(() => _isListening = true),
-                    onLongPressEnd: (_) {
-                      setState(() => _isListening = false);
-                      _simulateVoiceInput();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(TeaSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: _isListening
-                            ? TeaColors.freshLeaf.withOpacity(0.2)
-                            : TeaColors.mistGreen,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _isListening ? Icons.mic : Icons.mic_none,
-                        color: _isListening ? TeaColors.freshLeaf : TeaColors.darkGray,
-                      ),
+                  Text(
+                    'Tea Assistant',
+                    style: TeaTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(width: TeaSpacing.sm),
-
-                  // Text Input
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        filled: true,
-                        fillColor: TeaColors.mistGreen,
-                        border: OutlineInputBorder(
-                          borderRadius: TeaRadius.radiusRound,
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: TeaSpacing.md,
-                          vertical: TeaSpacing.sm,
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _isTyping
+                              ? TeaColors.warningAmber
+                              : TeaColors.healthyGreen,
                         ),
                       ),
-                      onSubmitted: (_) => _sendMessage(),
+                      const SizedBox(width: 4),
+                      Text(
+                        _isTyping ? 'Typing...' : 'Online',
+                        style: TeaTypography.labelSmall.copyWith(
+                          color: _isTyping
+                              ? TeaColors.warningAmber
+                              : TeaColors.healthyGreen,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Options
+            GestureDetector(
+              onTap: _showChatOptions,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF6F9F7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.more_vert_rounded,
+                  color: TeaColors.nearBlack,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Message Bubble ────────────────────────────────────────────────────
+
+  Widget _buildMessageBubble(ChatMessage message) {
+    final isUser = message.isFromUser;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isUser) ...[
+            // Bot avatar
+            Container(
+              width: 28,
+              height: 28,
+              margin: const EdgeInsets.only(right: 8, bottom: 4),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [TeaColors.freshLeaf, TeaColors.matureLeaf],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.eco_rounded, color: Colors.white, size: 14),
+            ),
+          ],
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.72,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isUser ? TeaColors.freshLeaf : Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: Radius.circular(isUser ? 20 : 6),
+                  bottomRight: Radius.circular(isUser ? 6 : 20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isUser
+                        ? TeaColors.freshLeaf.withOpacity(0.2)
+                        : Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message.text,
+                    style: TeaTypography.bodyMedium.copyWith(
+                      color: isUser ? Colors.white : TeaColors.nearBlack,
+                      height: 1.45,
                     ),
                   ),
-                  const SizedBox(width: TeaSpacing.sm),
-
-                  // Send Button
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: TeaColors.freshLeaf,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: _sendMessage,
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Text(
+                      _formatTime(message.timestamp),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isUser
+                            ? Colors.white.withOpacity(0.6)
+                            : TeaColors.mediumGray,
+                      ),
                     ),
                   ),
                 ],
@@ -191,104 +300,206 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.08, end: 0);
   }
 
-  Widget _buildMessageBubble(ChatMessage message, int index) {
-    return Align(
-      alignment: message.isFromUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(
-          bottom: TeaSpacing.sm,
-          left: message.isFromUser ? 48 : 0,
-          right: message.isFromUser ? 0 : 48,
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: TeaSpacing.md,
-          vertical: TeaSpacing.smd,
-        ),
-        decoration: BoxDecoration(
-          color: message.isFromUser ? TeaColors.freshLeaf : TeaColors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(message.isFromUser ? 16 : 4),
-            bottomRight: Radius.circular(message.isFromUser ? 4 : 16),
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: TeaColors.shadowVale,
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              message.text,
-              style: TeaTypography.bodyMedium.copyWith(
-                color: message.isFromUser ? Colors.white : TeaColors.nearBlack,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _formatTime(message.timestamp),
-              style: TeaTypography.labelSmall.copyWith(
-                color: message.isFromUser
-                    ? Colors.white.withOpacity(0.7)
-                    : TeaColors.mediumGray,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
-  }
+  // ─── Typing Indicator ──────────────────────────────────────────────────
 
   Widget _buildTypingIndicator() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: TeaSpacing.sm, right: 48),
-        padding: const EdgeInsets.all(TeaSpacing.md),
-        decoration: BoxDecoration(
-          color: TeaColors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [TeaColors.freshLeaf, TeaColors.matureLeaf],
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.eco_rounded, color: Colors.white, size: 14),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(3, (index) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _BouncingDot(delay: index * 200),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Suggestions ───────────────────────────────────────────────────────
+
+  Widget _buildSuggestions() {
+    final suggestions = [
+      ('How to detect leaf disease?', Icons.document_scanner_outlined),
+      ('When should I harvest?', Icons.grass_outlined),
+      ('Optimal soil conditions', Icons.science_outlined),
+      ('IoT sensor setup', Icons.sensors_rounded),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(3, (index) {
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              child: _BouncingDot(delay: index * 200),
+          children: suggestions.map((s) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                onTap: () {
+                  _messageController.text = s.$1;
+                  _sendMessage();
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: TeaColors.freshLeaf.withOpacity(0.2),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(s.$2, size: 14, color: TeaColors.freshLeaf),
+                      const SizedBox(width: 6),
+                      Text(
+                        s.$1,
+                        style: TeaTypography.labelSmall.copyWith(
+                          color: TeaColors.freshLeaf,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
-          }),
+          }).toList(),
+        ),
+      ),
+    ).animate().fadeIn(duration: 300.ms, delay: 200.ms);
+  }
+
+  // ─── Input Area ────────────────────────────────────────────────────────
+
+  Widget _buildInputArea() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          child: Row(
+            children: [
+              // Text input
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF6F9F7),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: TextField(
+                    controller: _messageController,
+                    focusNode: _focusNode,
+                    style: TeaTypography.bodyMedium,
+                    decoration: InputDecoration(
+                      hintText: 'Ask about your plantation...',
+                      hintStyle: TeaTypography.bodyMedium.copyWith(
+                        color: TeaColors.mediumGray,
+                      ),
+                      filled: true,
+                      fillColor: Colors.transparent,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                    onSubmitted: (_) => _sendMessage(),
+                    textInputAction: TextInputAction.send,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Send button
+              GestureDetector(
+                onTap: _sendMessage,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [TeaColors.freshLeaf, TeaColors.matureLeaf],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: TeaColors.freshLeaf.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSuggestionChip(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(right: TeaSpacing.sm),
-      child: ActionChip(
-        label: Text(
-          text,
-          style: TeaTypography.labelSmall.copyWith(
-            color: TeaColors.freshLeaf,
-          ),
-        ),
-        backgroundColor: TeaColors.white,
-        side: BorderSide(color: TeaColors.freshLeaf.withOpacity(0.3)),
-        onPressed: () {
-          _messageController.text = text;
-          _sendMessage();
-        },
-      ),
-    );
-  }
+  // ─── Logic ─────────────────────────────────────────────────────────────
 
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
@@ -303,7 +514,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         text: text,
         isFromUser: true,
         timestamp: DateTime.now(),
-      ),);
+      ));
       _messageController.clear();
       _isTyping = true;
     });
@@ -314,37 +525,38 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   Future<void> _fetchBotResponse(String userMessage) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiConfig.chatbotChat),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'message': userMessage,
-          'language': 'en',
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.chatbotChat),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'message': userMessage,
+              'language': 'en',
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (!mounted) return;
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = jsonDecode(response.body);
-        final botReply = data['response'] ?? data['message'] ?? data['answer'] ?? '';
+        final botReply =
+            data['response'] ?? data['message'] ?? data['answer'] ?? '';
         setState(() {
           _isTyping = false;
           _messages.add(ChatMessage(
             text: botReply.toString(),
             isFromUser: false,
             timestamp: DateTime.now(),
-          ),);
+          ));
         });
       } else {
-        // Backend returned an error - fall back to local response
         _addLocalResponse(userMessage);
       }
     } catch (_) {
-      // Network error - fall back to local response
       if (mounted) _addLocalResponse(userMessage);
     }
     _scrollToBottom();
@@ -357,13 +569,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         text: _generateResponse(query),
         isFromUser: false,
         timestamp: DateTime.now(),
-      ),);
+      ));
     });
-  }
-
-  void _simulateVoiceInput() {
-    _messageController.text = 'Check my plant health status';
-    _sendMessage();
   }
 
   void _scrollToBottom() {
@@ -382,26 +589,26 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     final lowerQuery = query.toLowerCase();
 
     if (lowerQuery.contains('disease') || lowerQuery.contains('detect')) {
-      return 'To detect leaf diseases, you can use our AI-powered scanner:\n\n1. Go to Disease Detection from the dashboard\n2. Take a clear photo of the affected leaf\n3. Wait for AI analysis\n\nCommon diseases I can identify include Blister Blight, Brown Blight, and Algal Leaf Spot. Would you like me to navigate you to the scanner?';
+      return 'To detect leaf diseases:\n\n1. Go to Disease Detection from the dashboard\n2. Take a clear photo of the affected leaf\n3. Wait for AI analysis\n\nI can identify Blister Blight, Brown Blight, and Algal Leaf Spot. Would you like me to navigate you to the scanner?';
     }
 
     if (lowerQuery.contains('harvest') || lowerQuery.contains('when')) {
-      return 'Based on your plantation data, here are the harvest recommendations:\n\n- Block B2: Ready now (P+2 stage)\n- Block A1: Ready in 2-3 days\n- Block C3: Ready in 5-7 days\n\nThe optimal harvest time is early morning when moisture content is ideal. Would you like detailed timing for a specific block?';
+      return 'Based on your plantation data:\n\n- Block B2: Ready now (P+2 stage)\n- Block A1: Ready in 2-3 days\n- Block C3: Ready in 5-7 days\n\nOptimal harvest time is early morning when moisture content is ideal.';
     }
 
     if (lowerQuery.contains('soil') || lowerQuery.contains('condition')) {
-      return 'For optimal tea growth, maintain these soil conditions:\n\n- pH Level: 4.5 - 5.5 (acidic)\n- Organic matter: > 2%\n- Drainage: Well-drained\n- Temperature: 20-30°C\n\nYour current readings show optimal conditions in most blocks. Block D1 needs attention - nitrogen levels are slightly low.';
+      return 'For optimal tea growth:\n\n- pH Level: 4.5 - 5.5 (acidic)\n- Organic matter: > 2%\n- Drainage: Well-drained\n- Temperature: 20-30°C\n\nYour current readings show optimal conditions in most blocks.';
     }
 
     if (lowerQuery.contains('iot') || lowerQuery.contains('sensor')) {
-      return "Your IoT system status:\n\n- 3 sensors online\n- Last sync: 5 minutes ago\n- Battery levels: Good\n\nTo add a new sensor:\n1. Go to IoT Devices\n2. Tap 'Add Device'\n3. Follow pairing instructions\n\nNeed help with a specific sensor?";
+      return "IoT system status:\n\n- 3 sensors online\n- Last sync: 5 minutes ago\n- Battery levels: Good\n\nTo add a new sensor:\n1. Go to IoT Devices\n2. Tap 'Add Device'\n3. Follow pairing instructions";
     }
 
     if (lowerQuery.contains('health') || lowerQuery.contains('status')) {
-      return 'Your plantation health overview:\n\n- Overall health score: 87%\n- Healthy plants: 94%\n- Disease detected: 2 blocks (A3, C1)\n- Harvest ready: 3 blocks\n\nI recommend checking Block A3 for blister blight symptoms. Would you like me to schedule a detailed scan?';
+      return 'Plantation health overview:\n\n- Overall health score: 87%\n- Healthy plants: 94%\n- Disease detected: 2 blocks\n- Harvest ready: 3 blocks\n\nI recommend checking Block A3 for blister blight symptoms.';
     }
 
-    return "I understand you're asking about \"$query\". Here's what I can help with:\n\n- Disease detection and treatment plans\n- Plant growth monitoring\n- Harvest scheduling\n- Soil and weather analysis\n- IoT device management\n\nCould you please provide more details about what you need?";
+    return "I can help with:\n\n- Disease detection and treatment\n- Plant growth monitoring\n- Harvest scheduling\n- Soil and weather analysis\n- IoT device management\n\nCould you provide more details about what you need?";
   }
 
   void _showChatOptions() {
@@ -409,26 +616,35 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: TeaColors.white,
-          borderRadius: TeaRadius.topXxl,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: TeaSpacing.sm),
+              const SizedBox(height: 12),
               Container(
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: TeaColors.mediumGray,
+                  color: Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: TeaSpacing.lg),
+              const SizedBox(height: 20),
               ListTile(
-                leading: const Icon(Icons.delete_outline),
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: TeaColors.alertRust.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.delete_outline_rounded,
+                      color: TeaColors.alertRust, size: 18),
+                ),
                 title: const Text('Clear chat history'),
                 onTap: () {
                   Navigator.pop(context);
@@ -439,24 +655,23 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.volume_up_outlined),
-                title: const Text('Enable voice responses'),
-                trailing: Switch(
-                  value: false,
-                  onChanged: (value) {},
-                  thumbColor: WidgetStatePropertyAll(TeaColors.freshLeaf),
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: TeaColors.infoSky.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.help_outline_rounded,
+                      color: TeaColors.infoSky, size: 18),
                 ),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: const Icon(Icons.help_outline),
                 title: const Text('Help & FAQ'),
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/help-center');
                 },
               ),
-              const SizedBox(height: TeaSpacing.lg),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -498,14 +713,12 @@ class _BouncingDotState extends State<_BouncingDot>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _animation = Tween<double>(begin: 0, end: -8).animate(
+    _animation = Tween<double>(begin: 0, end: -6).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
     Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) {
-        _controller.repeat(reverse: true);
-      }
+      if (mounted) _controller.repeat(reverse: true);
     });
   }
 
@@ -523,10 +736,10 @@ class _BouncingDotState extends State<_BouncingDot>
         return Transform.translate(
           offset: Offset(0, _animation.value),
           child: Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: TeaColors.freshLeaf,
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: TeaColors.freshLeaf.withOpacity(0.6),
               shape: BoxShape.circle,
             ),
           ),
