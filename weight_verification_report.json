@@ -1,0 +1,13 @@
+{
+  "timestamp": "C:\\Users\\lenovo\\OneDrive\\Desktop\\Disease",
+  "backend_parameters": 355,
+  "offline_parameters": 0,
+  "matched_tensors": 0,
+  "perfect_matches": 0,
+  "close_matches": 0,
+  "total_backend_params": 11156850,
+  "total_offline_params": 0,
+  "parameter_match": "0.0%",
+  "max_weight_difference": 0.0,
+  "inference_match": true
+}

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:pytorch_lite/pytorch_lite.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_config.dart';
 import '../../../../core/api/api_exceptions.dart';
@@ -21,6 +22,14 @@ class DiseaseDetectionMLService {
   final ApiClient _apiClient = ApiClient();
   bool _isInitialized = false;
   bool _isBackendAvailable = false;
+  
+  // Offline Model properties
+  ModelObjectDetection? _offlineModel;
+  bool _isOfflineModelLoaded = false;
+  static const String _modelPath = 'assets/models/disease_model.ptl';
+  static const int _inputSize = 320;
+  // Classes from our YOLOv8 model
+  final List<String> _classNames = ['blister_blight', 'healthy', 'red_rust'];
 
   /// Initialize the service and check backend connectivity
   Future<void> initialize() async {
@@ -35,7 +44,25 @@ class DiseaseDetectionMLService {
       debugPrint('Disease inference API not available at ${ApiConfig.diseaseInferenceBaseUrl} - using offline mode');
     }
 
+    // Always try to load offline model as fallback
+    if (!kIsWeb) {
+      await _loadOfflineModel();
+    }
+
     _isInitialized = true;
+  }
+
+  Future<void> _loadOfflineModel() async {
+    try {
+      debugPrint('Loading offline YOLOv8 PTL model from $_modelPath...');
+      _offlineModel = await PytorchLite.loadObjectDetectionModel(
+          _modelPath, _classNames.length, _inputSize, _inputSize, labelPath: "assets/models/disease_labels.txt"); 
+      _isOfflineModelLoaded = true;
+      debugPrint('Offline YOLOv8 model loaded successfully!');
+    } catch (e) {
+      debugPrint('Error loading offline model: $e');
+      _isOfflineModelLoaded = false;
+    }
   }
 
   /// Check if the backend server is reachable
@@ -46,9 +73,24 @@ class DiseaseDetectionMLService {
 
       final response = await http
           .get(Uri.parse(healthUrl))
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 10));
 
-      _isBackendAvailable = response.statusCode == 200;
+      if (response.statusCode == 200) {
+        try {
+          final data = json.decode(response.body);
+          // Check for root health or model-specific health
+          final isHealthy = data['status'] == 'healthy' || data['message'] != null;
+          final isInferenceHealthy = data['services']?['inference'] == 'healthy';
+          
+          _isBackendAvailable = isHealthy || isInferenceHealthy || data['status'] == 'degraded';
+        } catch (e) {
+          // Fallback to basic status code check if JSON parsing fails
+          _isBackendAvailable = true;
+        }
+      } else {
+        _isBackendAvailable = false;
+      }
+      
       debugPrint('Disease inference health check: ${response.statusCode} - Available: $_isBackendAvailable');
       return _isBackendAvailable;
     } catch (e) {
@@ -150,9 +192,12 @@ class DiseaseDetectionMLService {
         return result;
       } on ApiException catch (e) {
         debugPrint('!!! Backend API error: $e - falling back to offline mode');
+        // Don't mark backend as offline for a single prediction failure
+        // The backend may still be reachable for next attempt
       } catch (e, stackTrace) {
         debugPrint('!!! Unexpected error: $e - falling back to offline mode');
         debugPrint('!!! Stack trace: $stackTrace');
+        // Don't mark backend as offline for a single prediction failure
       }
     } else {
       debugPrint('!!! Backend NOT available - using offline mode');
@@ -291,12 +336,14 @@ class DiseaseDetectionMLService {
         fields: fields,
       );
     } else {
-      // For mobile, use file path
+      // For mobile, use file path - 30 second timeout for image upload
       response = await _apiClient.postMultipartFromPath(
         ApiConfig.inferenceDetect,
         imagePath: imagePath,
         fields: fields,
-      );
+      ).timeout(const Duration(seconds: 30), onTimeout: () {
+        throw ApiException('Request timed out. Please try again.');
+      });
     }
 
     // Parse response and add IoT data
@@ -382,31 +429,98 @@ class DiseaseDetectionMLService {
     return FieldAnalysisResult.fromApiResponse(response);
   }
 
-  /// Offline fallback — returns an explicit "unavailable" result
-  /// instead of randomly guessing diseases which would be misleading.
+  /// Offline fallback — uses PyTorch Lite model running locally!
   Future<DiseaseDetectionResult> _predictOffline(
     String imagePath, {
     double? liveTemperature,
     double? liveHumidity,
     double? liveAirQuality,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
+    if (kIsWeb || !_isOfflineModelLoaded || _offlineModel == null) {
+      return DiseaseDetectionResult(
+        diseaseType: 'Unavailable',
+        confidence: 0.0,
+        severity: 'None',
+        recommendations: [
+          'The ML backend is currently offline and offline models could not be loaded.',
+          'Please check your internet connection and try again.',
+        ],
+        timestamp: DateTime.now(),
+      );
+    }
 
-    return DiseaseDetectionResult(
-      diseaseType: 'Unavailable',
-      confidence: 0.0,
-      severity: 'None',
-      recommendations: [
-        'The ML backend is currently offline.',
-        'Disease detection requires an active server connection.',
-        'Please check your internet connection and try again.',
-        'Tap the refresh icon to re-check backend connectivity.',
-      ],
-      timestamp: DateTime.now(),
-      temperature: liveTemperature,
-      humidity: liveHumidity,
-      airQuality: liveAirQuality,
-    );
+    try {
+      debugPrint('>>> RUNNING OFFLINE INFERENCE <<<');
+      final imageFile = File(imagePath);
+      final bytes = await imageFile.readAsBytes();
+      
+      // We pass the raw image bytes to PyTorch Lite
+      final List<ResultObjectDetection> results = await _offlineModel!.getImagePrediction(
+          bytes,
+          minimumScore: 0.25,
+          iOUThreshold: 0.45,
+      );
+      
+      if (results.isEmpty) {
+        return DiseaseDetectionResult(
+          diseaseType: 'Healthy', 
+          confidence: 0.5,
+          severity: 'None',
+          recommendations: [
+            'No diseases detected. Continue regular monitoring.',
+            '(Offline analysis mode)'
+          ],
+          timestamp: DateTime.now(),
+        );
+      }
+      
+      // Find the highest confidence result
+      ResultObjectDetection bestDet = results.reduce((curr, next) => curr.score > next.score ? curr : next);
+      
+      // Map class index back to string (since pytorch_lite gives us classIndex)
+      String className = "Healthy";
+      if (bestDet.classIndex < _classNames.length) {
+         className = _classNames[bestDet.classIndex];
+      }
+      
+      // Format correctly
+      String displayType = className.replaceAll('_', ' ').split(' ').map((word) => word.substring(0, 1).toUpperCase() + word.substring(1)).join(' ');
+      String severity = _getSeverity(bestDet.score, displayType);
+      
+      return DiseaseDetectionResult(
+        diseaseType: displayType,
+        confidence: bestDet.score,
+        severity: severity,
+        recommendations: [
+          'Detected $displayType via offline analysis.',
+          if (severity == 'High' || severity == 'Critical') 'URGENT: Isolate affected plants and apply appropriate treatment.',
+          if (severity == 'Medium' || severity == 'Low') 'Monitor the affected area closely.',
+          '(Note: This is an offline prediction. For detailed insights, reconnect to the server.)'
+        ],
+        timestamp: DateTime.now(),
+        temperature: liveTemperature,
+        humidity: liveHumidity,
+        airQuality: liveAirQuality,
+      );
+
+    } catch (e) {
+      debugPrint('Offline inference error: $e');
+      return DiseaseDetectionResult(
+        diseaseType: 'Error',
+        confidence: 0.0,
+        severity: 'None',
+        recommendations: ['Error during offline analysis: $e'],
+        timestamp: DateTime.now(),
+      );
+    }
+  }
+
+  String _getSeverity(double confidence, String diseaseName) {
+    if (diseaseName.toLowerCase() == "healthy") return "None";
+    if (confidence >= 0.80) return confidence >= 0.90 ? "Critical" : "High";
+    if (confidence >= 0.65) return "Medium";
+    if (confidence >= 0.45) return "Low";
+    return "Uncertain";
   }
 
   /// Offline batch fallback — returns unavailable result
