@@ -22,8 +22,10 @@ const _kShadowSoft = Color(0x1A000000); // 10% black shadow
 class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     with TickerProviderStateMixin {
   List<PlantationZone> _zones = [];
+  List<SoilData> _allSoilData = []; // Store full API response
   SoilData? _selectedHectare;
   int? _selectedZoneId;
+  int? _selectedHectareId; // Level 4 navigation state
   late AnimationController _pulseController;
 
   // Search & division filter
@@ -136,7 +138,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         final col = index % 5;
         return SubZone(
           hectareId: hectareId,
-          name: 'Hectare $hectareId',
+          name: 'Block $hectareId',
           zoneId: zoneId,
           position: Offset(col * 0.2, row * 0.2),
           size: const Size(0.18, 0.18),
@@ -147,13 +149,65 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
   }
 
   void _updateZonesWithData(List<SoilData> soilDataList) {
-    // Mapping 1..125 hectares
-    final dataMap = {for (var data in soilDataList) data.hectareId: data};
+    // Merge new API data into _allSoilData without overwriting specifically-loaded
+    // hectare block records (added by _loadHectareData).
+    // Key: "hectareId_blockId". Existing entries win — they are more granular.
+    final Map<String, SoilData> merged = {
+      for (var d in _allSoilData) '${d.hectareId}_${d.blockId}': d,
+    };
+    for (var d in soilDataList) {
+      final key = '${d.hectareId}_${d.blockId}';
+      if (!merged.containsKey(key)) {
+        merged[key] = d;
+      }
+    }
+    _allSoilData = merged.values.toList();
 
+    // Build latestPerHectare from merged data to color H-level blocks
+    final Map<int, SoilData> latestPerHectare = {};
+    for (var data in _allSoilData) {
+      final existing = latestPerHectare[data.hectareId];
+      if (existing == null || data.timestamp.isAfter(existing.timestamp)) {
+        latestPerHectare[data.hectareId] = data;
+      }
+    }
+
+    // Apply to each sub-zone: color the H block only if real data exists for it
     for (var zone in _zones) {
       for (var subZone in zone.subZones) {
-        subZone.latestData = dataMap[subZone.hectareId];
+        subZone.latestData = latestPerHectare[subZone.hectareId];
       }
+    }
+  }
+
+  Future<void> _loadHectareData(int hectareId) async {
+    try {
+      final hectareData =
+          await ref.read(hectareHistoryProvider(hectareId).future);
+
+      if (mounted) {
+        setState(() {
+          // Replace any existing data for this hectare with fresh results
+          _allSoilData.removeWhere((d) => d.hectareId == hectareId);
+          _allSoilData.addAll(hectareData);
+
+          // Also refresh the SubZone's latestData so the H-block color stays accurate
+          if (hectareData.isNotEmpty) {
+            final latest = hectareData.reduce(
+              (a, b) => a.timestamp.isAfter(b.timestamp) ? a : b,
+            );
+            for (var zone in _zones) {
+              for (var subZone in zone.subZones) {
+                if (subZone.hectareId == hectareId) {
+                  subZone.latestData = latest;
+                }
+              }
+            }
+          }
+        });
+      }
+    } catch (e) {
+      // silently fail — grid will just stay grey for this hectare
     }
   }
 
@@ -237,7 +291,9 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             maxScale: 3.0,
             child: _selectedZoneId == null
                 ? _buildOverviewMapLayer()
-                : _buildZoomedMapLayer(),
+                : _selectedHectareId == null
+                    ? _buildDivisionGridLayer()
+                    : _buildSubDivisionGridLayer(),
           ),
         ),
 
@@ -449,7 +505,11 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             // Back Button
             GestureDetector(
               onTap: () => setState(() {
-                _selectedZoneId = null;
+                if (_selectedHectareId != null) {
+                  _selectedHectareId = null;
+                } else {
+                  _selectedZoneId = null;
+                }
                 _selectedHectare = null;
               }),
               child: Container(
@@ -472,7 +532,9 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  zone.name,
+                  _selectedHectareId != null
+                      ? '${zone.name} > Block $_selectedHectareId'
+                      : zone.name,
                   style: TeaTypography.headlineSmall.copyWith(
                     color: _kPrimaryDeep,
                     fontWeight: FontWeight.w900,
@@ -480,7 +542,9 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                   ),
                 ),
                 Text(
-                  '25 sub-zones • live monitoring',
+                  _selectedHectareId != null
+                      ? 'Sub-division mapping • 25 sectors'
+                      : '25 divisions • live monitoring',
                   style: TextStyle(
                     color: Colors.black.withOpacity(0.4),
                     fontSize: 11,
@@ -553,7 +617,11 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             ),
           ),
           const SizedBox(height: 14),
-          _buildLegendRow(const Color(0xFFE53935), 'Critical Status'),
+          _buildLegendRow(TeaColors.healthyGreen, 'Good — Healthy Soil'),
+          const SizedBox(height: 10),
+          _buildLegendRow(TeaColors.warningAmber, 'Fair — Needs Attention'),
+          const SizedBox(height: 10),
+          _buildLegendRow(const Color(0xFFE53935), 'Poor — Critical Status'),
           const SizedBox(height: 10),
           _buildLegendRow(
               TeaColors.mediumGray.withOpacity(0.5), 'No Data / Offline'),
@@ -644,7 +712,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     );
   }
 
-  Widget _buildZoomedMapLayer() {
+  Widget _buildDivisionGridLayer() {
     final zone = _zones.firstWhere((z) => z.id == _selectedZoneId);
     final size = MediaQuery.of(context).size;
 
@@ -653,56 +721,50 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         margin: const EdgeInsets.symmetric(horizontal: 16),
         width: size.width,
         child: GridView.builder(
-          shrinkWrap: true, // Let it adapt height properly
+          shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 5,
-            childAspectRatio:
-                0.85, // Makes the squares a little taller exactly as designed
+            childAspectRatio: 0.85,
             crossAxisSpacing: 6,
             mainAxisSpacing: 6,
           ),
           itemCount: zone.subZones.length,
           itemBuilder: (context, index) {
             final subZone = zone.subZones[index];
-            final isSelected = _selectedHectare?.hectareId == subZone.hectareId;
+            final isSelected = _selectedHectareId == subZone.hectareId;
             final healthColor = subZone.healthColor;
             return GestureDetector(
-              onTap: () {
+              onTap: () async {
                 setState(() {
-                  if (subZone.latestData != null) {
-                    _selectedHectare = subZone.latestData;
-                  }
+                  _selectedHectareId = subZone.hectareId;
                 });
+                // Load hectare-specific data when selected
+                await _loadHectareData(subZone.hectareId);
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? healthColor : healthColor.withOpacity(0.85),
+                  color: isSelected
+                      ? healthColor
+                      : healthColor.withValues(alpha: 0.85),
                   border: Border.all(
                     color: Colors.white,
                     width: isSelected ? 2.5 : 1.5,
                   ),
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
-                    if (isSelected)
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      )
-                    else
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 3,
-                        offset: const Offset(0, 2),
-                      ),
+                    BoxShadow(
+                      color: Colors.black
+                          .withValues(alpha: isSelected ? 0.3 : 0.15),
+                      blurRadius: isSelected ? 8 : 3,
+                      offset: Offset(0, isSelected ? 4 : 2),
+                    ),
                   ],
                 ),
                 child: Center(
                   child: Text(
-                    'A${subZone.hectareId}',
+                    'B${subZone.hectareId}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -710,7 +772,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                           isSelected ? FontWeight.bold : FontWeight.w600,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withValues(alpha: 0.6),
                           blurRadius: 3,
                           offset: const Offset(0, 1),
                         ),
@@ -724,6 +786,108 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         ),
       ),
     );
+  }
+
+  Widget _buildSubDivisionGridLayer() {
+    final size = MediaQuery.of(context).size;
+
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        width: size.width,
+        child: GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 5,
+            childAspectRatio: 0.85,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+          ),
+          itemCount: 25, // 25 sub-blocks per hectare as requested
+          itemBuilder: (context, index) {
+            final blockId = index + 1;
+            final isSelected = _selectedHectare != null &&
+                _selectedHectare!.blockId == blockId &&
+                _selectedHectare!.hectareId == _selectedHectareId;
+
+            // Use the same health color logic but for sub-blocks
+            // In a real app, we'd fetch specific block data
+            final healthColor = _getHealthColorForBlock(blockId);
+
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _triggerSubHectareSelection(blockId);
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? healthColor
+                      : healthColor.withValues(alpha: 0.8),
+                  border: Border.all(
+                    color: Colors.white,
+                    width: isSelected ? 2.0 : 1.0,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Center(
+                  child: Text(
+                    'S$blockId',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Color _getHealthColorForBlock(int blockId) {
+    try {
+      final blockData = _allSoilData.firstWhere(
+        (d) => d.hectareId == _selectedHectareId && d.blockId == blockId,
+      );
+
+      switch (blockData.soilHealth) {
+        case 'Good':
+          return TeaColors.healthyGreen;
+        case 'Fair':
+          return TeaColors.warningAmber;
+        case 'Poor':
+          return TeaColors.alertRust;
+        default:
+          return TeaColors.mediumGray;
+      }
+    } catch (_) {
+      // STRICT LOGIC: No data = strictly grey
+      return TeaColors.mediumGray.withValues(alpha: 0.3);
+    }
+  }
+
+  void _triggerSubHectareSelection(int blockId) {
+    // Only select a block if it has real data — never show fake/cloned values
+    final matches = _allSoilData
+        .where(
+          (d) => d.hectareId == _selectedHectareId && d.blockId == blockId,
+        )
+        .toList();
+    if (matches.isNotEmpty) {
+      // Pick the most recent record for this block
+      matches.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      _selectedHectare = matches.first;
+    } else {
+      _selectedHectare = null; // Grey block — no data, close detail sheet
+    }
   }
 
   Widget _buildDetailsSheet(SoilData data) {
@@ -753,16 +917,80 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Colors.black87),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Sub Division A${data.hectareId} - ${_getZoneNameForHectare(data.hectareId)}',
-                      style: TeaTypography.titleMedium
-                          .copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left,
+                            color: Colors.black54),
+                        onPressed: () {
+                          setState(() {
+                            // Only navigate to blocks that actually have data
+                            final blocksWithData = _allSoilData
+                                .where((d) =>
+                                    d.hectareId == _selectedHectareId &&
+                                    d.blockId != null)
+                                .map((d) => d.blockId!)
+                                .toSet()
+                                .toList()
+                              ..sort();
+                            if (blocksWithData.isEmpty) return;
+                            final currentBlock =
+                                data.blockId ?? blocksWithData.first;
+                            final idx = blocksWithData.indexOf(currentBlock);
+                            final prevIdx =
+                                idx <= 0 ? blocksWithData.length - 1 : idx - 1;
+                            _triggerSubHectareSelection(
+                                blocksWithData[prevIdx]);
+                          });
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.location_on, color: Colors.black87),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _selectedHectare?.blockId != null
+                              ? 'B$_selectedHectareId · Block ${data.blockId}'
+                              : 'Division H${data.hectareId}',
+                          style: TeaTypography.titleMedium
+                              .copyWith(fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right,
+                            color: Colors.black54),
+                        onPressed: () {
+                          setState(() {
+                            // Only navigate to blocks that actually have data
+                            final blocksWithData = _allSoilData
+                                .where((d) =>
+                                    d.hectareId == _selectedHectareId &&
+                                    d.blockId != null)
+                                .map((d) => d.blockId!)
+                                .toSet()
+                                .toList()
+                              ..sort();
+                            if (blocksWithData.isEmpty) return;
+                            final currentBlock =
+                                data.blockId ?? blocksWithData.first;
+                            final idx = blocksWithData.indexOf(currentBlock);
+                            final nextIdx =
+                                idx >= blocksWithData.length - 1 ? 0 : idx + 1;
+                            _triggerSubHectareSelection(
+                                blocksWithData[nextIdx]);
+                          });
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -1080,10 +1308,9 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     return ((raw / max) * 100).clamp(0, 100);
   }
 
-  // Get user-friendly NPK description
+  // Get user-friendly NPK description showing raw value + status
   String _getNPKDescription(String nutrient, double value, String status) {
-    final percentage = _sensorToPercentage(value, 1999);
-    return '$nutrient: $status (${percentage.toStringAsFixed(0)}%)';
+    return '$nutrient: ${value.toStringAsFixed(0)} mg/kg — $status';
   }
 
   // Get EC status

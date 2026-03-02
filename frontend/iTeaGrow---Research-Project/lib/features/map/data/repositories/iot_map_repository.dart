@@ -10,9 +10,7 @@ class IoTMapRepository {
   /// Get latest soil data from all hectares (API max limit is 100)
   Future<List<SoilData>> getLatestData({int limit = 100}) async {
     try {
-      // API has max limit of 100, so fetch maximum available
       final actualLimit = limit > 100 ? 100 : limit;
-      
       final response = await http.get(
         Uri.parse('$baseUrl/farm/latest?limit=$actualLimit'),
         headers: {'Content-Type': 'application/json'},
@@ -20,9 +18,12 @@ class IoTMapRepository {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((e) => SoilData.fromJson(e as Map<String, dynamic>)).toList();
+        return data
+            .map((e) => SoilData.fromJson(e as Map<String, dynamic>))
+            .toList();
       } else {
-        throw Exception('Server returned ${response.statusCode}: ${response.body}');
+        throw Exception(
+            'Server returned ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
       throw Exception('Failed to load latest data: $e');
@@ -30,18 +31,25 @@ class IoTMapRepository {
   }
 
   /// Get historical data for specific hectare
-  Future<List<SoilData>> getHectareHistory(int hectareId, {int limit = 100}) async {
+  Future<List<SoilData>> getHectareHistory(int hectareId,
+      {int limit = 100}) async {
     try {
+      // API has max limit of 100, enforce it here too
+      final actualLimit = limit > 100 ? 100 : limit;
+      
       final response = await http.get(
-        Uri.parse('$baseUrl/hectare/$hectareId?limit=$limit'),
+        Uri.parse('$baseUrl/hectare/$hectareId?limit=$actualLimit'),
         headers: {'Content-Type': 'application/json'},
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((e) => SoilData.fromJson(e as Map<String, dynamic>)).toList();
+        return data
+            .map((e) => SoilData.fromJson(e as Map<String, dynamic>))
+            .toList();
       } else {
-        throw Exception('Server returned ${response.statusCode}: ${response.body}');
+        throw Exception(
+            'Server returned ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
       throw Exception('Failed to load hectare history: $e');

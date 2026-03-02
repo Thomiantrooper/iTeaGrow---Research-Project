@@ -387,9 +387,9 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          TeaColors.matureLeaf.withOpacity(0.15),
-                          TeaColors.freshLeaf.withOpacity(0.25),
-                          TeaColors.leafLight.withOpacity(0.2),
+                          TeaColors.matureLeaf.withValues(alpha: 0.15),
+                          TeaColors.freshLeaf.withValues(alpha: 0.25),
+                          TeaColors.leafLight.withValues(alpha: 0.2),
                         ],
                         stops: const [0.0, 0.5, 1.0],
                       ),
@@ -409,7 +409,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                     height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: TeaColors.freshLeaf.withOpacity(0.1),
+                      color: TeaColors.freshLeaf.withValues(alpha: 0.1),
                     ),
                   ),
                 ),
@@ -421,7 +421,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: TeaColors.goldenSunlight.withOpacity(0.08),
+                      color: TeaColors.goldenSunlight.withValues(alpha: 0.08),
                     ),
                   ),
                 ),
@@ -449,8 +449,8 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                                       shape: BoxShape.circle,
                                       gradient: RadialGradient(
                                         colors: [
-                                          TeaColors.freshLeaf.withOpacity(0.2),
-                                          TeaColors.freshLeaf.withOpacity(0.05),
+                                          TeaColors.freshLeaf.withValues(alpha: 0.2),
+                                          TeaColors.freshLeaf.withValues(alpha: 0.05),
                                           Colors.transparent,
                                         ],
                                       ),
@@ -466,7 +466,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                                       boxShadow: [
                                         BoxShadow(
                                           color: TeaColors.freshLeaf
-                                              .withOpacity(0.3),
+                                              .withValues(alpha: 0.3),
                                           blurRadius: 20,
                                           spreadRadius: 2,
                                         ),
@@ -526,7 +526,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                         child: Container(
                           padding: const EdgeInsets.all(TeaSpacing.smd),
                           decoration: BoxDecoration(
-                            color: TeaColors.white.withOpacity(0.7),
+                            color: TeaColors.white.withValues(alpha: 0.7),
                             borderRadius: TeaRadius.radiusMd,
                           ),
                           child: Column(
@@ -643,7 +643,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -739,7 +739,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                     child: Text(
                       'Ref: ${DateTime.now().difference(mqttState.lastRefreshed!).inSeconds}s',
                       style: TeaTypography.labelSmall.copyWith(
-                        color: TeaColors.darkGray.withOpacity(0.7),
+                        color: TeaColors.darkGray.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -755,10 +755,10 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
                       vertical: TeaSpacing.xxs,
                     ),
                     decoration: BoxDecoration(
-                      color: TeaColors.healthyGreen.withOpacity(0.1),
+                      color: TeaColors.healthyGreen.withValues(alpha: 0.1),
                       borderRadius: TeaRadius.radiusSm,
                       border: Border.all(
-                        color: TeaColors.healthyGreen.withOpacity(0.3),
+                        color: TeaColors.healthyGreen.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -963,7 +963,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
               fallbackIcon: Icons.center_focus_strong,
               gradientColors: [
                 TeaColors.freshLeaf,
-                TeaColors.matureLeaf.withOpacity(0.8),
+                TeaColors.matureLeaf.withValues(alpha: 0.8),
               ],
               borderRadius: TeaRadius.radiusLg,
               onTap: () => context.push('/leaf-maturity'),
@@ -1118,7 +1118,7 @@ class _PremiumFarmerDashboardState extends ConsumerState<PremiumFarmerDashboard>
           Container(
             padding: const EdgeInsets.all(TeaSpacing.sm),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: TeaRadius.radiusSm,
             ),
             child: Icon(icon, color: color, size: 20),
