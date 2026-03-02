@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:printing/printing.dart';
 import 'dart:typed_data';
+import '../services/disease_report_service.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/providers/iot_live_provider.dart';
@@ -37,6 +41,7 @@ class _PremiumDiseaseDetectionScreenState
   bool _savedToDb = false;
   bool _isSavingToDb = false;
   String? _savedDetectionId;
+  bool _showGradCam = false;
 
   @override
   void initState() {
@@ -115,6 +120,7 @@ class _PremiumDiseaseDetectionScreenState
           _result = null;
           _savedToDb = false;
           _savedDetectionId = null;
+          _showGradCam = false;
         });
       }
     } catch (e) {
@@ -138,6 +144,7 @@ class _PremiumDiseaseDetectionScreenState
           _result = null;
           _savedToDb = false;
           _savedDetectionId = null;
+          _showGradCam = false;
         });
       }
     } catch (e) {
@@ -223,11 +230,8 @@ class _PremiumDiseaseDetectionScreenState
       final authToken = authState.accessToken;
 
       if (authToken == null || authToken.isEmpty) {
-        if (mounted) {
-          TeaSnackbar.warning(context, 'Log in to save scans');
-        }
         setState(() => _isSavingToDb = false);
-        return;
+        return; // silently skip — user not logged in
       }
 
       final saved = await _storageService.saveDetectionWithImage(
@@ -254,6 +258,63 @@ class _PremiumDiseaseDetectionScreenState
     }
   }
 
+  Future<void> _generatePdfReport() async {
+    if (_result == null || _imageBytes == null) return;
+    try {
+      final base64Image = base64Encode(_imageBytes!);
+      String? base64Heatmap;
+      if (_result!.heatmapPath != null) {
+        try {
+          final heatmapBytes = await File(_result!.heatmapPath!).readAsBytes();
+          base64Heatmap = base64Encode(heatmapBytes);
+        } catch (_) {}
+      }
+      final reportData = {
+        'detection': {
+          'disease_type': _result!.diseaseType,
+          'confidence': _result!.confidence,
+          'severity': _result!.severity,
+          'recommendations': _result!.recommendations,
+          'timestamp': _result!.timestamp.toIso8601String(),
+          'temperature': _result!.temperature,
+          'humidity': _result!.humidity,
+          'air_quality': _result!.airQuality,
+          'image_data': base64Image,
+          if (base64Heatmap != null) 'heatmap_data': base64Heatmap,
+          'detections': _result!.detections
+              ?.map((d) => {
+                    'class_name': d.className,
+                    'confidence': d.confidence,
+                    'area_percentage': d.areaPercentage,
+                  })
+              .toList(),
+          'summary': _result!.summary?.toJson(),
+        },
+        'farmer': {'name': 'Current User', 'location': 'Tea Plantation'},
+        'organization': {
+          'name': 'iTeaGrow',
+          'description': 'Tea Plantation Management System',
+        },
+        'report_id':
+            'DD-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
+        'generated_at': DateTime.now().toIso8601String(),
+      };
+      final pdfBytes = await DiseaseReportService().generateReport(reportData);
+      await Printing.layoutPdf(
+        onLayout: (format) async => pdfBytes,
+        name:
+            'tea_disease_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to generate report: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
+  }
+
   void _resetScan() {
     setState(() {
       _selectedImage = null;
@@ -261,6 +322,7 @@ class _PremiumDiseaseDetectionScreenState
       _result = null;
       _savedToDb = false;
       _savedDetectionId = null;
+      _showGradCam = false;
     });
   }
 
@@ -315,6 +377,22 @@ class _PremiumDiseaseDetectionScreenState
                       _buildConfidenceDetails(),
                       const SizedBox(height: 16),
                       _buildRecommendations(),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: _generatePdfReport,
+                        icon: const Icon(Icons.picture_as_pdf),
+                        label: const Text('Generate PDF Report'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: TeaColors.freshLeaf,
+                          side: const BorderSide(
+                              color: TeaColors.freshLeaf),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
                       if (_savedToDb && _savedDetectionId != null) ...[
                         const SizedBox(height: 16),
                         _buildPostScanActions(),
@@ -405,11 +483,11 @@ class _PremiumDiseaseDetectionScreenState
               margin: const EdgeInsets.symmetric(vertical: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: TeaColors.alertRust.withOpacity(0.1),
+                color: TeaColors.mediumGray.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.close_rounded,
-                  color: TeaColors.alertRust, size: 18),
+                  color: TeaColors.mediumGray, size: 18),
             ),
           ),
         const SizedBox(width: 8),
@@ -677,12 +755,19 @@ class _PremiumDiseaseDetectionScreenState
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
-            child: Image.memory(
-              _imageBytes!,
-              height: 300,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+            child: _showGradCam && _result?.heatmapPath != null
+                ? Image.file(
+                    File(_result!.heatmapPath!),
+                    height: 300,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  )
+                : Image.memory(
+                    _imageBytes!,
+                    height: 300,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
           ),
           // Processing overlay
           if (_isProcessing)
@@ -718,6 +803,35 @@ class _PremiumDiseaseDetectionScreenState
                       style: TeaTypography.labelSmall.copyWith(
                         color: Colors.white.withOpacity(0.6),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          // Grad-CAM Controls
+          if (_result?.heatmapPath != null)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Grad-CAM',
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                    const SizedBox(width: 4),
+                    Switch(
+                      value: _showGradCam,
+                      onChanged: (v) => setState(() => _showGradCam = v),
+                      activeThumbColor: TeaColors.freshLeaf,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ],
                 ),

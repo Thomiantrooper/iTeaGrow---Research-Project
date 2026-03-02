@@ -112,13 +112,13 @@ class JarvisTheme {
 
   static List<BoxShadow> get cardShadow => [
         BoxShadow(
-          color: teaGreenDark.withOpacity(0.08),
+          color: teaGreenDark.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 8),
           spreadRadius: 0,
         ),
         BoxShadow(
-          color: Colors.black.withOpacity(0.04),
+          color: Colors.black.withValues(alpha: 0.04),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
@@ -126,13 +126,13 @@ class JarvisTheme {
 
   static List<BoxShadow> get elevatedShadow => [
         BoxShadow(
-          color: teaGreenDark.withOpacity(0.15),
+          color: teaGreenDark.withValues(alpha: 0.15),
           blurRadius: 30,
           offset: const Offset(0, 15),
           spreadRadius: -5,
         ),
         BoxShadow(
-          color: Colors.black.withOpacity(0.08),
+          color: Colors.black.withValues(alpha: 0.08),
           blurRadius: 15,
           offset: const Offset(0, 8),
         ),
@@ -140,12 +140,12 @@ class JarvisTheme {
 
   static List<BoxShadow> get glowShadow => [
         BoxShadow(
-          color: hologramGreen.withOpacity(0.3),
+          color: hologramGreen.withValues(alpha: 0.3),
           blurRadius: 20,
           spreadRadius: 2,
         ),
         BoxShadow(
-          color: hologramCyan.withOpacity(0.2),
+          color: hologramCyan.withValues(alpha: 0.2),
           blurRadius: 40,
           spreadRadius: 5,
         ),
@@ -153,7 +153,7 @@ class JarvisTheme {
 
   static List<BoxShadow> statusGlow(Color color) => [
         BoxShadow(
-          color: color.withOpacity(0.4),
+          color: color.withValues(alpha: 0.4),
           blurRadius: 12,
           spreadRadius: 2,
         ),
@@ -357,7 +357,7 @@ class JarvisTheme {
 
       // Divider
       dividerTheme: DividerThemeData(
-        color: teaGreenMuted.withOpacity(0.2),
+        color: teaGreenMuted.withValues(alpha: 0.2),
         thickness: 1,
         space: spacingMd,
       ),
@@ -380,7 +380,7 @@ class JarvisTheme {
       ),
 
       // Dialog
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: mistWhitePure,
         elevation: 8,
         shape: RoundedRectangleBorder(

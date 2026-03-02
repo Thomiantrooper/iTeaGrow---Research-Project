@@ -7,6 +7,7 @@ import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_config.dart';
 import '../../../../core/api/api_exceptions.dart';
 import '../../domain/entities/disease_detection_result.dart';
+import 'disease_gradcam_service.dart';
 
 /// Image validation constants
 const int _maxImageSizeBytes = 20 * 1024 * 1024; // 20 MB
@@ -20,15 +21,16 @@ class DiseaseDetectionMLService {
   DiseaseDetectionMLService._internal();
 
   final ApiClient _apiClient = ApiClient();
+  final DiseaseGradCAMService _gradCamService = DiseaseGradCAMService();
   bool _isInitialized = false;
   bool _isBackendAvailable = false;
   
   // Offline Model properties
-  ModelObjectDetection? _offlineModel;
+  ClassificationModel? _offlineModel;
   bool _isOfflineModelLoaded = false;
   static const String _modelPath = 'assets/models/disease_model.ptl';
-  static const int _inputSize = 320;
-  // Classes from our YOLOv8 model
+  static const int _inputSize = 224;
+  // Classes from the classification model
   final List<String> _classNames = ['blister_blight', 'healthy', 'red_rust'];
 
   /// Initialize the service and check backend connectivity
@@ -47,6 +49,10 @@ class DiseaseDetectionMLService {
     // Always try to load offline model as fallback
     if (!kIsWeb) {
       await _loadOfflineModel();
+      // Pre-warm GradCAM service in background (non-blocking)
+      _gradCamService.initialize().catchError((e) {
+        debugPrint('GradCAM pre-warm failed (will retry on first use): $e');
+      });
     }
 
     _isInitialized = true;
@@ -54,11 +60,12 @@ class DiseaseDetectionMLService {
 
   Future<void> _loadOfflineModel() async {
     try {
-      debugPrint('Loading offline YOLOv8 PTL model from $_modelPath...');
-      _offlineModel = await PytorchLite.loadObjectDetectionModel(
-          _modelPath, _classNames.length, _inputSize, _inputSize, labelPath: "assets/models/disease_labels.txt"); 
+      debugPrint('Loading offline classification PTL model from $_modelPath...');
+      _offlineModel = await PytorchLite.loadClassificationModel(
+        _modelPath, _inputSize, _inputSize, _classNames.length,
+      );
       _isOfflineModelLoaded = true;
-      debugPrint('Offline YOLOv8 model loaded successfully!');
+      debugPrint('Offline classification model loaded successfully!');
     } catch (e) {
       debugPrint('Error loading offline model: $e');
       _isOfflineModelLoaded = false;
@@ -159,6 +166,12 @@ class DiseaseDetectionMLService {
         ],
         timestamp: DateTime.now(),
       );
+    }
+
+    // Re-check backend if previously unavailable — status may have changed
+    if (!_isBackendAvailable) {
+      _isBackendAvailable = await checkBackendConnection();
+      debugPrint('Re-checked backend availability: $_isBackendAvailable');
     }
 
     debugPrint('>>> PREDICT CALLED <<<');
@@ -324,7 +337,7 @@ class DiseaseDetectionMLService {
     if (liveHumidity != null) fields['humidity'] = liveHumidity.toString();
     if (liveAirQuality != null) fields['air_quality'] = liveAirQuality.toString();
     fields['request_explainability'] = requestExplainability.toString();
-    fields['skip_quality_check'] = 'false';
+    fields['skip_quality_check'] = 'true'; // always attempt inference; quality gate is mobile-unfriendly
 
     Map<String, dynamic> response;
 
@@ -349,6 +362,19 @@ class DiseaseDetectionMLService {
     // Parse response and add IoT data
     final result = DiseaseDetectionResult.fromApiResponse(response);
 
+    // Run GradCAM locally so the heatmap toggle is always available
+    String? heatmapPath;
+    if (!kIsWeb) {
+      try {
+        final bytes = await File(imagePath).readAsBytes();
+        final camResult = await _gradCamService.predict(bytes);
+        heatmapPath = camResult.heatmapPath;
+        debugPrint('>>> Backend+GradCAM heatmap: $heatmapPath');
+      } catch (e) {
+        debugPrint('GradCAM (backend path) failed: $e');
+      }
+    }
+
     // Return result with IoT context + quality/validation data
     return DiseaseDetectionResult(
       diseaseType: result.diseaseType,
@@ -366,6 +392,7 @@ class DiseaseDetectionMLService {
       summary: result.summary,
       imageQualityScore: result.imageQualityScore,
       validationMessage: result.validationMessage,
+      heatmapPath: heatmapPath,
     );
   }
 
@@ -429,7 +456,7 @@ class DiseaseDetectionMLService {
     return FieldAnalysisResult.fromApiResponse(response);
   }
 
-  /// Offline fallback — uses PyTorch Lite model running locally!
+  /// Offline fallback — uses PyTorch Lite model running locally with Grad-CAM!
   Future<DiseaseDetectionResult> _predictOffline(
     String imagePath, {
     double? liveTemperature,
@@ -450,57 +477,76 @@ class DiseaseDetectionMLService {
     }
 
     try {
-      debugPrint('>>> RUNNING OFFLINE INFERENCE <<<');
+      debugPrint('>>> RUNNING OFFLINE CLASSIFICATION INFERENCE <<<');
       final imageFile = File(imagePath);
       final bytes = await imageFile.readAsBytes();
-      
-      // We pass the raw image bytes to PyTorch Lite
-      final List<ResultObjectDetection> results = await _offlineModel!.getImagePrediction(
-          bytes,
-          minimumScore: 0.25,
-          iOUThreshold: 0.45,
-      );
-      
-      if (results.isEmpty) {
-        return DiseaseDetectionResult(
-          diseaseType: 'Healthy', 
-          confidence: 0.5,
-          severity: 'None',
-          recommendations: [
-            'No diseases detected. Continue regular monitoring.',
-            '(Offline analysis mode)'
-          ],
-          timestamp: DateTime.now(),
-        );
+
+      // ── Try GradCAM explain model first (classification + heatmap) ──
+      String? heatmapPath;
+      String displayType;
+      double bestScore;
+      String severity;
+
+      try {
+        final camResult = await _gradCamService.predict(bytes);
+        displayType  = camResult.displayName;
+        bestScore    = camResult.confidence.clamp(0.0, 1.0);
+        heatmapPath  = camResult.heatmapPath;
+        severity     = _getSeverity(bestScore, displayType);
+        debugPrint('>>> GradCAM inference: $displayType (${(bestScore * 100).toStringAsFixed(1)}%)');
+      } catch (camError) {
+        // GradCAM model not available — fall back to standard classifier
+        debugPrint('GradCAM unavailable ($camError), using standard classifer');
+
+        // Classification model — getImagePredictionListProbabilities returns
+        // softmax probabilities (0‑1) for each class
+        final List<double> scores =
+            await _offlineModel!.getImagePredictionListProbabilities(bytes);
+
+        if (scores.isEmpty) {
+          return DiseaseDetectionResult(
+            diseaseType: 'Healthy',
+            confidence: 0.5,
+            severity: 'None',
+            recommendations: [
+              'No diseases detected. Continue regular monitoring.',
+              '(Offline analysis mode)',
+            ],
+            timestamp: DateTime.now(),
+          );
+        }
+
+        int bestIdx = 0;
+        for (int i = 1; i < scores.length; i++) {
+          if (scores[i] > scores[bestIdx]) bestIdx = i;
+        }
+        bestScore = scores[bestIdx].clamp(0.0, 1.0);
+        final String className = bestIdx < _classNames.length ? _classNames[bestIdx] : 'healthy';
+        displayType = className
+            .replaceAll('_', ' ')
+            .split(' ')
+            .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
+            .join(' ');
+        severity = _getSeverity(bestScore, displayType);
       }
-      
-      // Find the highest confidence result
-      ResultObjectDetection bestDet = results.reduce((curr, next) => curr.score > next.score ? curr : next);
-      
-      // Map class index back to string (since pytorch_lite gives us classIndex)
-      String className = "Healthy";
-      if (bestDet.classIndex < _classNames.length) {
-         className = _classNames[bestDet.classIndex];
-      }
-      
-      // Format correctly
-      String displayType = className.replaceAll('_', ' ').split(' ').map((word) => word.substring(0, 1).toUpperCase() + word.substring(1)).join(' ');
-      String severity = _getSeverity(bestDet.score, displayType);
-      
+
       return DiseaseDetectionResult(
         diseaseType: displayType,
-        confidence: bestDet.score,
+        confidence: bestScore,
         severity: severity,
         recommendations: [
           'Detected $displayType via offline analysis.',
-          if (severity == 'High' || severity == 'Critical') 'URGENT: Isolate affected plants and apply appropriate treatment.',
-          if (severity == 'Medium' || severity == 'Low') 'Monitor the affected area closely.',
-          '(Note: This is an offline prediction. For detailed insights, reconnect to the server.)'
+          if (severity == 'High' || severity == 'Critical')
+            'URGENT: Isolate affected plants and apply appropriate treatment.',
+          if (severity == 'Medium' || severity == 'Low')
+            'Monitor the affected area closely.',
+          '(Note: Offline prediction. Reconnect to server for detailed insights.)',
         ],
         timestamp: DateTime.now(),
         temperature: liveTemperature,
         humidity: liveHumidity,
         airQuality: liveAirQuality,
+        heatmapPath: heatmapPath,
       );
 
     } catch (e) {

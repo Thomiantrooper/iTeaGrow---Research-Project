@@ -1,8 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'api_config.dart';
 import 'api_exceptions.dart';
+
+/// Determine MIME type from file extension (defaults to image/jpeg)
+MediaType _imageMimeType(String path) {
+  final ext = path.toLowerCase().split('.').last;
+  switch (ext) {
+    case 'png': return MediaType('image', 'png');
+    case 'webp': return MediaType('image', 'webp');
+    case 'bmp': return MediaType('image', 'bmp');
+    case 'gif': return MediaType('image', 'gif');
+    default: return MediaType('image', 'jpeg'); // jpg / jpeg / unknown
+  }
+}
 
 /// HTTP client for communicating with the backend API
 class ApiClient {
@@ -88,10 +101,11 @@ class ApiClient {
       // Add headers
       request.headers.addAll({...ApiConfig.defaultHeaders, ...?headers});
 
-      // Add image file
+      // Add image file with explicit content type so backend doesn't get octet-stream
       request.files.add(await http.MultipartFile.fromPath(
         'image',
         imageFile.path,
+        contentType: _imageMimeType(imageFile.path),
       ),);
 
       // Add additional fields
@@ -128,10 +142,11 @@ class ApiClient {
       // Add headers
       request.headers.addAll({...ApiConfig.defaultHeaders, ...?headers});
 
-      // Add image file from path
+      // Add image file from path with explicit content type so backend doesn't get octet-stream
       request.files.add(await http.MultipartFile.fromPath(
         'image',
         imagePath,
+        contentType: _imageMimeType(imagePath),
       ),);
 
       // Add additional fields

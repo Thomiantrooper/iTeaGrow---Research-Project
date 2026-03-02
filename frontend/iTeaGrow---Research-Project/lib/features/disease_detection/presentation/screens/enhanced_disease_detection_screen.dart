@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:printing/printing.dart';
 import 'dart:typed_data';
+import '../services/disease_report_service.dart';
 import '../../../../core/theme/jarvis_theme.dart';
 import '../../../../core/widgets/hologram_card.dart';
 import '../../../../core/widgets/floating_tea_leaf.dart';
@@ -86,6 +90,7 @@ class _EnhancedDiseaseDetectionScreenState
           _imageBytes = bytes;
           _result = null;
           _savedToDb = false;
+          _showGradCam = false;
         });
       }
     } catch (e) {
@@ -109,6 +114,7 @@ class _EnhancedDiseaseDetectionScreenState
           _imageBytes = bytes;
           _result = null;
           _savedToDb = false;
+          _showGradCam = false;
         });
       }
     } catch (e) {
@@ -194,6 +200,58 @@ class _EnhancedDiseaseDetectionScreenState
     }
   }
 
+  Future<void> _generatePdfReport() async {
+    if (_result == null || _imageBytes == null) return;
+    try {
+      final base64Image = base64Encode(_imageBytes!);
+      String? base64Heatmap;
+      if (_result!.heatmapPath != null) {
+        try {
+          final heatmapBytes = await File(_result!.heatmapPath!).readAsBytes();
+          base64Heatmap = base64Encode(heatmapBytes);
+        } catch (_) {}
+      }
+      final reportData = {
+        'detection': {
+          'disease_type': _result!.diseaseType,
+          'confidence': _result!.confidence,
+          'severity': _result!.severity,
+          'recommendations': _result!.recommendations,
+          'timestamp': _result!.timestamp.toIso8601String(),
+          'temperature': _result!.temperature,
+          'humidity': _result!.humidity,
+          'air_quality': _result!.airQuality,
+          'image_data': base64Image,
+          if (base64Heatmap != null) 'heatmap_data': base64Heatmap,
+          'detections': _result!.detections
+              ?.map((d) => {
+                    'class_name': d.className,
+                    'confidence': d.confidence,
+                    'area_percentage': d.areaPercentage,
+                  })
+              .toList(),
+          'summary': _result!.summary?.toJson(),
+        },
+        'farmer': {'name': 'Current User', 'location': 'Tea Plantation'},
+        'organization': {
+          'name': 'iTeaGrow',
+          'description': 'Tea Plantation Management System',
+        },
+        'report_id':
+            'DD-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
+        'generated_at': DateTime.now().toIso8601String(),
+      };
+      final pdfBytes = await DiseaseReportService().generateReport(reportData);
+      await Printing.layoutPdf(
+        onLayout: (format) async => pdfBytes,
+        name:
+            'tea_disease_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+    } catch (e) {
+      _showError('Failed to generate report: $e');
+    }
+  }
+
   Future<void> _saveToDatabase() async {
     print('=== EnhancedScreen: SAVE TO DATABASE CALLED ===');
     if (_result == null || _selectedImage == null || _savedToDb) {
@@ -212,24 +270,8 @@ class _EnhancedDiseaseDetectionScreenState
       print('Image path: ${_selectedImage!.path}');
 
       if (authToken == null || authToken.isEmpty) {
-        print('!!! No auth token - showing login message');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.warning_amber, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('Please log in to save scans to database'),
-                ],
-              ),
-              backgroundColor: JarvisTheme.warning,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
         setState(() => _isSavingToDb = false);
-        return;
+        return; // silently skip — user not logged in
       }
 
       print('>>> Calling _storageService.saveDetectionWithImage() <<<');
@@ -321,6 +363,22 @@ class _EnhancedDiseaseDetectionScreenState
                         _buildResultCard(),
                         const SizedBox(height: JarvisTheme.spacingMd),
                         _buildRecommendationsCard(),
+                        const SizedBox(height: JarvisTheme.spacingMd),
+                        OutlinedButton.icon(
+                          onPressed: _generatePdfReport,
+                          icon: const Icon(Icons.picture_as_pdf),
+                          label: const Text('Generate PDF Report'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: JarvisTheme.healthy,
+                            side: const BorderSide(
+                                color: JarvisTheme.healthy),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
                       ],
 
                       const SizedBox(height: JarvisTheme.spacingXxl),
@@ -584,22 +642,13 @@ class _EnhancedDiseaseDetectionScreenState
             ),
 
           // Grad-CAM overlay
-          if (_showGradCam && _result != null)
+          if (_showGradCam && _result?.heatmapPath != null)
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(JarvisTheme.radiusLg),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.8,
-                      colors: [
-                        JarvisTheme.critical.withOpacity(0.4),
-                        JarvisTheme.warning.withOpacity(0.3),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
+                child: Image.file(
+                  File(_result!.heatmapPath!),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
@@ -610,7 +659,7 @@ class _EnhancedDiseaseDetectionScreenState
             right: 10,
             child: Row(
               children: [
-                if (_result != null)
+                if (_result?.heatmapPath != null)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
@@ -639,6 +688,7 @@ class _EnhancedDiseaseDetectionScreenState
                     _selectedImage = null;
                     _imageBytes = null;
                     _result = null;
+                    _showGradCam = false;
                   }),
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -949,6 +999,7 @@ class _EnhancedDiseaseDetectionScreenState
                   _selectedImage = null;
                   _imageBytes = null;
                   _result = null;
+                  _showGradCam = false;
                 }),
                 icon: const Icon(Icons.refresh),
                 label: const Text('Try Again'),

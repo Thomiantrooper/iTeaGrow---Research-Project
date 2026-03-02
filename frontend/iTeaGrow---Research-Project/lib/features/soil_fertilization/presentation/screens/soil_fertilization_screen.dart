@@ -16,9 +16,6 @@ class SoilFertilizationScreen extends ConsumerStatefulWidget {
 
 class _SoilFertilizationScreenState
     extends ConsumerState<SoilFertilizationScreen> {
-  double _blockSize = 1.0; // In Hectares
-  String _selectedZoneFilter = 'All'; // All, North, East, South, West, Central
-  String _selectedHealthFilter = 'All'; // All, Good, Fair, Poor
 
   String _getZoneName(int id) {
     if (id <= 25) return 'North';
@@ -29,7 +26,7 @@ class _SoilFertilizationScreenState
   }
 
   String _getHectareLabel(int id) {
-    return '${_getZoneName(id)} A$id';
+    return '${_getZoneName(id)} H$id';
   }
 
   @override
@@ -90,16 +87,29 @@ class _SoilFertilizationScreenState
   }
 
   Widget _buildPremiumHeader(SoilHealthRecord? record) {
+    final state = ref.watch(soilHealthProvider);
+    final notifier = ref.read(soilHealthProvider.notifier);
+    final isNested = state.selectedZoneId != null;
+
+    String headerTitle = 'Soil Health Report';
+    if (state.selectedBlockId != null) {
+      headerTitle = 'Block ${state.selectedBlockId} Highlights';
+    } else if (state.selectedHectareId != null) {
+      headerTitle = 'Block ${state.selectedHectareId} Analysis';
+    } else if (state.selectedZoneId != null) {
+      headerTitle = '${_getZoneName(state.selectedZoneId! * 25)} Zone Overview';
+    }
+
     return Center(
       child: Container(
         margin: const EdgeInsets.only(top: 24, bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.9),
           borderRadius: BorderRadius.circular(50),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x1A000000), // _kShadowSoft
+              color: Color(0x1A000000),
               blurRadius: 15,
               offset: Offset(0, 5),
             ),
@@ -109,15 +119,29 @@ class _SoilFertilizationScreenState
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.spa_rounded, color: Color(0xFF2E7D32), size: 22),
-            const SizedBox(width: 12),
-            Text(
-              'Soil Health Report',
-              style: TeaTypography.headlineSmall.copyWith(
+            if (isNested) ...[
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
                 color: TeaColors.deepForest,
-                fontWeight: FontWeight.w900,
-                fontSize: 20,
-                letterSpacing: -0.5,
+                onPressed: () => notifier.navigateUp(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 12),
+            ] else
+              const Icon(Icons.spa_rounded, color: Color(0xFF2E7D32), size: 22),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                headerTitle,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TeaTypography.headlineSmall.copyWith(
+                  color: TeaColors.deepForest,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  letterSpacing: -0.5,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -130,7 +154,7 @@ class _SoilFertilizationScreenState
             IconButton(
               icon: const Icon(Icons.refresh_rounded, size: 22),
               color: TeaColors.deepForest.withOpacity(0.8),
-              onPressed: () => ref.read(soilHealthProvider.notifier).refresh(),
+              onPressed: () => notifier.refresh(),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
@@ -163,166 +187,292 @@ class _SoilFertilizationScreenState
   }
 
   Widget _buildHectareSelector(SoilHealthState state) {
-    if (state.records.isEmpty) return const SizedBox.shrink();
+    if (state.selectedZoneId == null) {
+      return _buildZoneSelector(state);
+    } else if (state.selectedHectareId == null) {
+      return _buildDivisionSelector(state);
+    } else {
+      return _buildSubDivisionSelector(state);
+    }
+  }
 
-    // 1. Filter the records
-    final filteredRecords = state.records.where((record) {
-      final zoneMatch = _selectedZoneFilter == 'All' ||
-          _getZoneName(record.hectareId) == _selectedZoneFilter;
-      final healthMatch = _selectedHealthFilter == 'All' ||
-          record.healthStatus.label == _selectedHealthFilter;
-      return zoneMatch && healthMatch;
-    }).toList();
+  Widget _buildZoneSelector(SoilHealthState state) {
+    final zones = ['North', 'East', 'South', 'West', 'Central'];
+    final notifier = ref.read(soilHealthProvider.notifier);
 
     return Column(
       children: [
-        // Zone Filter
-        SizedBox(
-          height: 40,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            children: [
-              'All',
-              'North',
-              'East',
-              'South',
-              'West',
-              'Central',
-            ].map((zone) {
-              final isSelected = _selectedZoneFilter == zone;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(zone, style: const TextStyle(fontSize: 12)),
-                  selected: isSelected,
-                  onSelected: (val) {
-                    if (val) setState(() => _selectedZoneFilter = zone);
-                  },
-                  selectedColor: TeaColors.deepForest.withOpacity(0.2),
-                  labelStyle: TextStyle(
-                    color: isSelected ? TeaColors.deepForest : Colors.grey,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              );
-            }).toList(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Select Plantation Zone',
+              style: TextStyle(
+                color: TeaColors.deepForest.withOpacity(0.6),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        // Health Filter
-        SizedBox(
-          height: 40,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            children: [
-              'All',
-              'Good',
-              'Fair',
-              'Poor',
-            ].map((health) {
-              final isSelected = _selectedHealthFilter == health;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(health, style: const TextStyle(fontSize: 12)),
-                  selected: isSelected,
-                  onSelected: (val) {
-                    if (val) setState(() => _selectedHealthFilter = health);
-                  },
-                  selectedColor: health == 'Good'
-                      ? TeaColors.healthyGreen.withOpacity(0.2)
-                      : health == 'Fair'
-                          ? TeaColors.warningAmber.withOpacity(0.2)
-                          : health == 'Poor'
-                              ? TeaColors.alertRust.withOpacity(0.2)
-                              : TeaColors.deepForest.withOpacity(0.2),
-                  labelStyle: TextStyle(
-                    color: isSelected
-                        ? (health == 'Good'
-                            ? TeaColors.healthyGreen
-                            : health == 'Fair'
-                                ? TeaColors.warningAmber
-                                : health == 'Poor'
-                                    ? TeaColors.alertRust
-                                    : TeaColors.deepForest)
-                        : Colors.grey,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Hectare Chips
         SizedBox(
           height: 60,
-          child: filteredRecords.isEmpty
-              ? const Center(
-                  child: Text('No hectares match these filters',
-                      style: TextStyle(fontSize: 12, color: Colors.grey)))
-              : ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  itemCount: filteredRecords.length,
-                  itemBuilder: (context, index) {
-                    final record = filteredRecords[index];
-                    final hectareId = record.hectareId;
-                    final isSelected = state.selectedHectareId == hectareId;
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            itemCount: zones.length,
+            itemBuilder: (context, index) {
+              final zone = zones[index];
+              final zoneId = index + 1;
 
-                    return GestureDetector(
-                      onTap: () => ref
-                          .read(soilHealthProvider.notifier)
-                          .selectHectare(hectareId),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.only(right: 12),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
+              return GestureDetector(
+                onTap: () => notifier.selectZone(zoneId),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(right: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: TeaColors.deepForest.withOpacity(0.1),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
                         decoration: BoxDecoration(
-                          color:
-                              isSelected ? TeaColors.deepForest : Colors.white,
-                          borderRadius: BorderRadius.circular(25),
-                          border: Border.all(
-                            color: isSelected
-                                ? TeaColors.deepForest
-                                : TeaColors.deepForest.withOpacity(0.1),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            if (isSelected)
-                              BoxShadow(
-                                color: TeaColors.deepForest.withOpacity(0.2),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            _getHectareLabel(hectareId),
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : TeaColors.deepForest,
-                              fontWeight: isSelected
-                                  ? FontWeight.w900
-                                  : FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
+                          color: _getZoneColor(zoneId),
+                          shape: BoxShape.circle,
                         ),
                       ),
-                    );
-                  },
+                      const SizedBox(width: 8),
+                      Text(
+                        zone,
+                        style: TextStyle(
+                          color: TeaColors.deepForest,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              );
+            },
+          ),
         ),
       ],
     );
+  }
+
+  Widget _buildDivisionSelector(SoilHealthState state) {
+    final notifier = ref.read(soilHealthProvider.notifier);
+    final zoneId = state.selectedZoneId!;
+    final hectares = List.generate(25, (i) => (zoneId - 1) * 25 + i + 1);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Select Division (Block)',
+              style: TextStyle(
+                color: TeaColors.deepForest.withValues(alpha: 0.6),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            itemCount: hectares.length,
+            itemBuilder: (context, index) {
+              final hId = hectares[index];
+              final hectareRecords =
+                  state.records.where((r) => r.hectareId == hId).toList();
+              final hasData = hectareRecords.isNotEmpty;
+              final isSelected = state.selectedHectareId == hId;
+
+              // Determine health color from first available record
+              Color statusColor = TeaColors.mediumGray.withValues(alpha: 0.1);
+              if (hasData) {
+                final status = hectareRecords.first.healthStatus;
+                if (status == SoilHealthStatus.good) {
+                  statusColor = TeaColors.healthyGreen.withValues(alpha: 0.15);
+                } else if (status == SoilHealthStatus.fair) {
+                  statusColor = TeaColors.warningAmber.withValues(alpha: 0.15);
+                } else {
+                  statusColor = TeaColors.alertRust.withValues(alpha: 0.15);
+                }
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ActionChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('B$hId'),
+                      if (hasData) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.white
+                                : _getStatusColor(
+                                    hectareRecords.first.healthStatus),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  onPressed: () => notifier.selectHectare(hId),
+                  backgroundColor:
+                      isSelected ? TeaColors.deepForest : statusColor,
+                  side: BorderSide(
+                      color: isSelected
+                          ? TeaColors.deepForest
+                          : TeaColors.deepForest.withValues(alpha: 0.1)),
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : TeaColors.deepForest,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubDivisionSelector(SoilHealthState state) {
+    final notifier = ref.read(soilHealthProvider.notifier);
+    final hId = state.selectedHectareId!;
+    final blocks = List.generate(25, (i) => i + 1);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Select Sub-Division blocks for B$hId',
+              style: TextStyle(
+                color: TeaColors.deepForest.withValues(alpha: 0.6),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            itemCount: blocks.length,
+            itemBuilder: (context, index) {
+              final bId = blocks[index];
+              final isSelected = state.selectedBlockId == bId;
+              final record = state.records
+                  .where((r) => r.hectareId == hId && r.blockId == bId)
+                  .toList();
+              final hasData = record.isNotEmpty;
+
+              // Strict Color Logic
+              Color statusColor = TeaColors.mediumGray.withValues(alpha: 0.1);
+              if (hasData) {
+                final status = record.first.healthStatus;
+                if (status == SoilHealthStatus.good) {
+                  statusColor = TeaColors.healthyGreen.withValues(alpha: 0.1);
+                } else if (status == SoilHealthStatus.fair) {
+                  statusColor = TeaColors.warningAmber.withValues(alpha: 0.1);
+                } else {
+                  statusColor = TeaColors.alertRust.withValues(alpha: 0.1);
+                }
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('B$bId'),
+                      if (hasData) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.white
+                                : _getStatusColor(record.first.healthStatus),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  selected: isSelected,
+                  onSelected: (val) {
+                    if (val) notifier.selectBlock(bId);
+                  },
+                  backgroundColor: statusColor,
+                  selectedColor: TeaColors.deepForest,
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : TeaColors.deepForest,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _getZoneColor(int zoneId) {
+    switch (zoneId) {
+      case 1:
+        return const Color(0xFFE53935);
+      case 2:
+        return const Color(0xFFE53935);
+      case 3:
+        return const Color(0xFF43A047);
+      case 4:
+        return const Color(0xFF43A047);
+      default:
+        return const Color(0xFFFFB300);
+    }
   }
 
   Widget _buildMainReport(SoilHealthRecord? record) {
@@ -358,9 +508,44 @@ class _SoilFertilizationScreenState
           // 4. Timestamp & Meta
           Center(
             child: Text(
-              'Report generated at ${record.formattedTime} for ${_getHectareLabel(record.hectareId)}',
+              _selectedHectareLabel(record),
               style: TeaTypography.bodySmall,
             ),
+          ),
+          const SizedBox(height: 16),
+          // ── Sequential Survey Navigation ──
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      ref.read(soilHealthProvider.notifier).selectPrevious(),
+                  icon: const Icon(Icons.chevron_left),
+                  label: const Text('PREVIOUS BLOCK'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () =>
+                      ref.read(soilHealthProvider.notifier).selectNext(),
+                  icon: const Icon(Icons.chevron_right),
+                  label: const Text('NEXT BLOCK'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: TeaColors.deepForest,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 40),
         ],
@@ -446,8 +631,6 @@ class _SoilFertilizationScreenState
         ),
         const SizedBox(height: 16),
         ...advice.map((line) => _buildPremiumActionCard(line)),
-        const SizedBox(height: 16),
-        _buildPremiumCalculator(record),
       ],
     );
   }
@@ -491,110 +674,6 @@ class _SoilFertilizationScreenState
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildPremiumCalculator(SoilHealthRecord record) {
-    bool hasUreaCount = record.sanitizedAdvice.any((a) => a.contains('Urea'));
-    if (!hasUreaCount) return const SizedBox.shrink();
-
-    double bagsNeeded = (_blockSize * 50) / 50;
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            TeaColors.deepForest,
-            TeaColors.deepForest.withOpacity(0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: TeaColors.deepForest.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.calculate_rounded,
-                  color: Colors.white, size: 20),
-              const SizedBox(width: 12),
-              Text(
-                'Procurement Estimator',
-                style: TeaTypography.titleSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              _buildModernChip(1.0),
-              _buildModernChip(2.5),
-              _buildModernChip(5.0),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${bagsNeeded.ceil()} BAGS',
-                    style: TeaTypography.headlineSmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  Text(
-                    'UREA REQ.',
-                    style: TeaTypography.bodySmall.copyWith(
-                      color: Colors.white60,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModernChip(double size) {
-    bool isSelected = _blockSize == size;
-    return GestureDetector(
-      onTap: () => setState(() => _blockSize = size),
-      child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? Colors.white : Colors.white24,
-            width: 1,
-          ),
-        ),
-        child: Text(
-          '${size}ha',
-          style: TextStyle(
-            color: isSelected ? TeaColors.deepForest : Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-          ),
-        ),
       ),
     );
   }
@@ -705,6 +784,13 @@ class _SoilFertilizationScreenState
         ],
       ),
     );
+  }
+
+  String _selectedHectareLabel(SoilHealthRecord record) {
+    if (record.blockId != null) {
+      return 'Report for ${_getZoneName(record.hectareId)} Div B${record.hectareId} - Sub-block S${record.blockId} at ${record.formattedTime}';
+    }
+    return 'Report generated at ${record.formattedTime} for ${_getHectareLabel(record.hectareId)}';
   }
 
   Color _getStatusColor(SoilHealthStatus status) {
