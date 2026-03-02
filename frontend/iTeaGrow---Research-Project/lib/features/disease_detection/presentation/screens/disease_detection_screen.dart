@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:printing/printing.dart';
 import 'dart:typed_data';
+import '../services/disease_report_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/data/providers/auth_provider.dart';
@@ -29,12 +33,12 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
   Uint8List? _imageBytes;
   DiseaseDetectionResult? _result;
   bool _isProcessing = false;
-  bool _showGradCam = false;
   bool _isBackendConnected = false;
   bool _isCheckingConnection = true;
   bool _isSavingToDb = false;
   bool _savedToDb = false;
   String? _savedDetectionId;
+  bool _showGradCam = false;
 
   // Animation controllers
   late AnimationController _scanAnimationController;
@@ -121,6 +125,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           _result = null;
           _savedToDb = false;
           _savedDetectionId = null;
+          _showGradCam = false;
         });
       }
     } catch (e) {
@@ -145,6 +150,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           _result = null;
           _savedToDb = false;
           _savedDetectionId = null;
+          _showGradCam = false;
         });
       }
     } catch (e) {
@@ -267,23 +273,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
 
       // Check if user is logged in
       if (authToken == null || authToken.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.warning_amber, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('Please log in to save scans to database'),
-                ],
-              ),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
         setState(() => _isSavingToDb = false);
-        return;
+        return; // silently skip — user not logged in
       }
 
       final response = await _storageService.saveDetectionWithImage(
@@ -351,6 +342,58 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     );
   }
 
+  Future<void> _generatePdfReport() async {
+    if (_result == null || _imageBytes == null) return;
+    try {
+      final base64Image = base64Encode(_imageBytes!);
+      String? base64Heatmap;
+      if (_result!.heatmapPath != null) {
+        try {
+          final heatmapBytes = await File(_result!.heatmapPath!).readAsBytes();
+          base64Heatmap = base64Encode(heatmapBytes);
+        } catch (_) {}
+      }
+      final reportData = {
+        'detection': {
+          'disease_type': _result!.diseaseType,
+          'confidence': _result!.confidence,
+          'severity': _result!.severity,
+          'recommendations': _result!.recommendations,
+          'timestamp': _result!.timestamp.toIso8601String(),
+          'temperature': _result!.temperature,
+          'humidity': _result!.humidity,
+          'air_quality': _result!.airQuality,
+          'image_data': base64Image,
+          if (base64Heatmap != null) 'heatmap_data': base64Heatmap,
+          'detections': _result!.detections
+              ?.map((d) => {
+                    'class_name': d.className,
+                    'confidence': d.confidence,
+                    'area_percentage': d.areaPercentage,
+                  })
+              .toList(),
+          'summary': _result!.summary?.toJson(),
+        },
+        'farmer': {'name': 'Current User', 'location': 'Tea Plantation'},
+        'organization': {
+          'name': 'iTeaGrow',
+          'description': 'Tea Plantation Management System',
+        },
+        'report_id':
+            'DD-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
+        'generated_at': DateTime.now().toIso8601String(),
+      };
+      final pdfBytes = await DiseaseReportService().generateReport(reportData);
+      await Printing.layoutPdf(
+        onLayout: (format) async => pdfBytes,
+        name:
+            'tea_disease_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+    } catch (e) {
+      _showError('Failed to generate report: $e');
+    }
+  }
+
   void _resetScan() {
     setState(() {
       _selectedImage = null;
@@ -358,6 +401,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       _result = null;
       _savedToDb = false;
       _savedDetectionId = null;
+      _showGradCam = false;
     });
   }
 
@@ -464,6 +508,22 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                       const SizedBox(height: 16),
                     ],
                     _buildRecommendationsCard(),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: _generatePdfReport,
+                      icon: const Icon(Icons.picture_as_pdf),
+                      label: const Text('Generate PDF Report'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primaryGreen,
+                        side:
+                            const BorderSide(color: AppTheme.primaryGreen),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     _buildActionButtons(),
                     const SizedBox(height: 20), // Bottom padding
@@ -660,21 +720,32 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
             ),
           ),
 
-        // Grad-CAM overlay
-        if (_showGradCam && _result != null && !_isProcessing)
-          Positioned.fill(
+        // Grad-CAM toggle
+        if (_result?.heatmapPath != null && !_isProcessing)
+          Positioned(
+            top: 16,
+            right: 24,
             child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 0.8,
-                  colors: [
-                    Colors.red.withOpacity(0.5),
-                    Colors.yellow.withOpacity(0.3),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Grad-CAM',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  const SizedBox(width: 4),
+                  Switch(
+                    value: _showGradCam,
+                    onChanged: (v) => setState(() => _showGradCam = v),
+                    activeThumbColor: AppTheme.primaryGreen,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ],
               ),
             ),
           ),
@@ -688,30 +759,6 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Grad-CAM toggle
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.visibility, color: Colors.white, size: 18),
-                      const SizedBox(width: 8),
-                      const Text('Heatmap', style: TextStyle(color: Colors.white, fontSize: 12)),
-                      const SizedBox(width: 8),
-                      Switch(
-                        value: _showGradCam,
-                        onChanged: (value) => setState(() => _showGradCam = value),
-                        activeThumbColor: AppTheme.accentAmber,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ],
-                  ),
-                ),
-
                 // Database status
                 if (_savedToDb)
                   Container(

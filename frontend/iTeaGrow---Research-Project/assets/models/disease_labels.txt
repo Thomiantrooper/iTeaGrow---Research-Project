@@ -1,3 +1,4 @@
 blister_blight
 healthy
 red_rust
+red_rust

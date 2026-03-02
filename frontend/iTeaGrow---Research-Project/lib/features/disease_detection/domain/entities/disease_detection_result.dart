@@ -168,6 +168,9 @@ class DiseaseDetectionResult {
   final String? validationMessage;
   final bool isPotentialFalsePositive;
 
+  // On-device Grad-CAM heatmap path (local temp file)
+  final String? heatmapPath;
+
   /// Check if the result indicates the image is not a valid leaf
   bool get isNotALeaf => diseaseType == 'Not A Leaf' || 
     (summary?.dominantDisease == 'not_a_leaf');
@@ -205,6 +208,7 @@ class DiseaseDetectionResult {
     this.imageQualityScore,
     this.validationMessage,
     this.isPotentialFalsePositive = false,
+    this.heatmapPath,
   });
 
   /// Create from API response
@@ -358,6 +362,7 @@ class DiseaseDetectionResult {
     'summary': summary?.toJson(),
     'image_quality_score': imageQualityScore,
     'validation_message': validationMessage,
+    // heatmapPath is temp-file only; not persisted to storage
   };
 
   /// Create from stored JSON
@@ -379,6 +384,7 @@ class DiseaseDetectionResult {
       summary: json['summary'] != null ? DetectionSummary.fromJson(json['summary']) : null,
       imageQualityScore: (json['image_quality_score'] as num?)?.toDouble(),
       validationMessage: json['validation_message'],
+      // heatmapPath is not persisted; always null from stored JSON
     );
   }
 }
