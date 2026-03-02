@@ -8,7 +8,7 @@ class ApiConfig {
   // This will be for auth, users, storage, IoT when deployed to production
   // =========================================================================
   static const String productionBaseUrl =
-      'https://iteagrow-main-prod.up.railway.app'; // TODO: Update when deployed
+      'https://tea-leaf-disease-api-prod.up.railway.app'; // Hosted Backend
 
   // =========================================================================
   // DISEASE ML INFERENCE - Railway Production (ACTIVE)
@@ -18,8 +18,7 @@ class ApiConfig {
       'https://tea-leaf-disease-api-prod.up.railway.app';
 
   // Set to true to always use production backend (recommended for mobile app)
-  // NOTE: This only affects main backend (auth, storage, IoT)
-  // Disease ML and Yield Prediction use their own separate URLs
+  // NOTE: Set to false since only Disease ML is hosted on Railway
   static const bool useProductionBackend = false;
 
   // Base URL - Automatically detects platform and mode

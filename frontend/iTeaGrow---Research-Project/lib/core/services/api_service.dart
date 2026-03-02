@@ -70,7 +70,7 @@ class ApiService {
       final response = await http.get(
         Uri.parse(url),
         headers: _headers,
-      );
+      ).timeout(const Duration(seconds: 3));
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
@@ -97,7 +97,7 @@ class ApiService {
         Uri.parse(url),
         headers: _headers,
         body: body != null ? jsonEncode(body) : null,
-      );
+      ).timeout(const Duration(seconds: 3));
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
@@ -124,7 +124,7 @@ class ApiService {
         Uri.parse(url),
         headers: _headers,
         body: body != null ? jsonEncode(body) : null,
-      );
+      ).timeout(const Duration(seconds: 3));
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
@@ -149,7 +149,7 @@ class ApiService {
       final response = await http.delete(
         Uri.parse(url),
         headers: _headers,
-      );
+      ).timeout(const Duration(seconds: 3));
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {

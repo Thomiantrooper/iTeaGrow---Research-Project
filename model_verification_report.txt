@@ -1,0 +1,25 @@
+======================================================================
+MODEL VERIFICATION REPORT
+======================================================================
+
+FILE INFORMATION:
+  best.pt:          21.48 MB
+  disease_model.ptl: 42.53 MB
+  Size ratio: PTL is 1.98x larger
+
+LOADING WITH ULTRALYTICS YOLO:
+  Loading best.pt with YOLO...
+  [OK] Loaded successfully
+    Model: DetectionModel
+    Classes: {0: 'blister_blight', 1: 'healthy', 2: 'red_rust'}
+
+  Loading disease_model.ptl with YOLO...
+  [OK] Loaded successfully
+    Model: str
+  [ERROR] Error loading disease_model.ptl: frontend/iTeaGrow---Research-Project/assets/models/disease_model.ptl acceptable suffix is {'.pt'}, not .ptl
+
+
+DETAILED ANALYSIS:
+----------------------------------------------------------------------
+
+======================================================================
