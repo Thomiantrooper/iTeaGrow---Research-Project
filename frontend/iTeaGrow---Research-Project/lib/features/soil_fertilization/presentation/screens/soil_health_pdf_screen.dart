@@ -21,7 +21,13 @@ class SoilHealthPdfScreen extends StatelessWidget {
   }
 
   String _getHectareLabel(int id) {
-    return '${_getZoneName(id)} A$id';
+    return '${_getZoneName(id)} B$id';
+  }
+
+  String _getLocationLabel(SoilHealthRecord r) {
+    final base = _getHectareLabel(r.hectareId);
+    if (r.blockId != null) return '$base · Block ${r.blockId}';
+    return base;
   }
 
   Future<Uint8List> _generatePdf(PdfPageFormat format) async {
@@ -71,9 +77,13 @@ class SoilHealthPdfScreen extends StatelessWidget {
                       style: pw.TextStyle(
                           font: fontBold, fontSize: 24, color: primaryGreen)),
                   pw.SizedBox(height: 4),
-                  pw.Text('Location: ${_getHectareLabel(record.hectareId)}',
+                  pw.Text('Location: ${_getLocationLabel(record)}',
                       style: pw.TextStyle(
                           font: fontBold, fontSize: 14, color: accentGreen)),
+                  if (record.blockId != null)
+                    pw.Text('Sub-division block ${record.blockId}',
+                        style: pw.TextStyle(
+                            font: font, fontSize: 11, color: PdfColors.grey700)),
                 ],
               ),
               pw.Column(
@@ -112,7 +122,7 @@ class SoilHealthPdfScreen extends StatelessWidget {
                         letterSpacing: 1.5)),
                 pw.SizedBox(height: 8),
                 pw.Text(
-                  'The soil analysis for ${_getHectareLabel(record.hectareId)} indicates an overall condition of ${record.healthStatus.label.toUpperCase()}. '
+                  'The soil analysis for ${_getLocationLabel(record)} indicates an overall condition of ${record.healthStatus.label.toUpperCase()}. '
                   'Immediate actions are recommended based on the chemistry breakdown below.',
                   style:
                       pw.TextStyle(font: font, fontSize: 12, lineSpacing: 1.5),
@@ -142,35 +152,45 @@ class SoilHealthPdfScreen extends StatelessWidget {
               ),
               _buildDataRow(
                   'Nitrogen (N)',
-                  '${(record.nitrogen / 1999 * 100).toStringAsFixed(0)}%',
-                  '7-13%',
+                  '${record.nitrogen.toStringAsFixed(0)} mg/kg',
+                  '150 – 250 mg/kg',
                   _getStatus(record.nitrogen, 150, 250),
                   font),
               _buildDataRow(
                   'Phosphorus (P)',
-                  '${(record.phosphorus / 1999 * 100).toStringAsFixed(0)}%',
-                  '4-8%',
+                  '${record.phosphorus.toStringAsFixed(0)} mg/kg',
+                  '80 – 150 mg/kg',
                   _getStatus(record.phosphorus, 80, 150),
                   font),
               _buildDataRow(
                   'Potassium (K)',
-                  '${(record.potassium / 1999 * 100).toStringAsFixed(0)}%',
-                  '7-13%',
+                  '${record.potassium.toStringAsFixed(0)} mg/kg',
+                  '150 – 250 mg/kg',
                   _getStatus(record.potassium, 150, 250),
                   font),
               _buildDataRow(
                   'Soil pH',
                   record.ph.toStringAsFixed(1),
-                  '4.5 - 5.5',
-                  record.ph >= 4.5 && record.ph <= 5.5 ? 'Optimal' : 'Alert',
+                  '4.5 – 5.5',
+                  _getStatus(record.ph, 4.5, 5.5),
                   font),
               _buildDataRow(
-                  'Moisture',
+                  'Soil Moisture',
                   '${record.humidity.toStringAsFixed(1)}%',
-                  '60-80%',
-                  record.humidity >= 60 && record.humidity <= 80
-                      ? 'Optimal'
-                      : 'Alert',
+                  '40 – 70%',
+                  _getStatus(record.humidity, 40, 70),
+                  font),
+              _buildDataRow(
+                  'Electrical Conductivity',
+                  '${(record.ec * 1000).toStringAsFixed(0)} µS/cm',
+                  '100 – 500 µS/cm',
+                  _getStatus(record.ec * 1000, 100, 500),
+                  font),
+              _buildDataRow(
+                  'Temperature',
+                  '${record.temperature.toStringAsFixed(1)} °C',
+                  '18 – 25 °C',
+                  _getStatus(record.temperature, 18, 25),
                   font),
             ],
           ),
@@ -270,7 +290,7 @@ class SoilHealthPdfScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Export Report: ${_getHectareLabel(record.hectareId)}'),
+        title: Text('Export Report: ${_getLocationLabel(record)}'),
         backgroundColor: TeaColors.deepForest,
         foregroundColor: Colors.white,
       ),
@@ -283,7 +303,7 @@ class SoilHealthPdfScreen extends StatelessWidget {
         allowPrinting: true,
         initialPageFormat: PdfPageFormat.a4,
         pdfFileName:
-            'iTeaGrow_Soil_Report_${_getHectareLabel(record.hectareId)}.pdf',
+            'iTeaGrow_Soil_Report_${_getLocationLabel(record).replaceAll(' ', '_').replaceAll('·', 'B')}.pdf',
       ),
     );
   }
