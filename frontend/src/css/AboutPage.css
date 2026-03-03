@@ -276,6 +276,29 @@
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
+/* Supervisor Cards */
+.supervisor-card {
+    border-left: 3px solid #a8e063;
+}
+
+.supervisor-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    background: #a8e063;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+.co-supervisor-tag {
+    background: #63c5e0;
+    color: #1a1a1a;
+}
+
 /* Professional Footer */
 .research-footer {
     text-align: center;

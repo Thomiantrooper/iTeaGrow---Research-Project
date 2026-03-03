@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Cpu, Wifi, Globe, Activity, Users, Award, ShieldCheck, Microscope, Linkedin, Github } from 'lucide-react';
+import { Cpu, Wifi, Globe, Activity, Users, Award, ShieldCheck, Microscope, Linkedin, Github, ExternalLink, GraduationCap } from 'lucide-react';
 import '../css/AboutPage.css';
 
 const AboutPage = () => {
@@ -97,6 +97,41 @@ const AboutPage = () => {
                     </div>
                 </section>
 
+
+                {/* Research Supervision Section */}
+                <section className="research-section team-research">
+                    <div className="section-header centered">
+                        <GraduationCap className="section-icon" />
+                        <h2>Research Supervision</h2>
+                    </div>
+
+                    <div className="formal-team-grid">
+                        <div className="member-row glass-panel supervisor-card">
+                            <div className="member-info">
+                                <span className="supervisor-tag">Research Supervisor</span>
+                                <h3>Ms. Shashika Lokuliyana</h3>
+                                <span className="member-role">Senior Lecturer, Sri Lanka Institute of Information Technology</span>
+                                <div className="member-socials">
+                                    <a href="https://www.sliit.lk/faculty-of-computing/staff/shashika.l/" target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink size={18} />
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="member-row glass-panel supervisor-card">
+                            <div className="member-info">
+                                <span className="supervisor-tag co-supervisor-tag">Research Co-Supervisor</span>
+                                <h3>Mr. Uditha Dharmakeerthi</h3>
+                                <span className="member-role">Academic Fellow / Lecturer, Sri Lanka Institute of Information Technology</span>
+                                <div className="member-socials">
+                                    <a href="https://www.sliit.lk/faculty-of-computing/staff/uditha.d/" target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink size={18} />
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 {/* Formal Team Section */}
                 <section className="research-section team-research">
