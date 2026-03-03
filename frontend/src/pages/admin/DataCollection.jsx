@@ -8,14 +8,14 @@ import '../../css/DataCollection.css';
 // ---------------------------------------------------------------
 // Config: data sources
 // ---------------------------------------------------------------
-const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const DATA_SOURCES = [
     {
         key: 'soil',
         label: 'Soil IoT',
         subtitle: 'tea_soil_db → predictions',
-        endpoint: `${BACKEND}/api/data/soil`,
+        endpoint: `${API_BASE}/data/soil`,
         icon: Leaf,
         color: '#8B5E3C',
         gradient: 'linear-gradient(135deg, rgba(139,94,60,0.2), rgba(80,40,10,0.1))',
@@ -25,7 +25,7 @@ const DATA_SOURCES = [
         key: 'env-iot',
         label: 'Environment IoT',
         subtitle: 'iteagrow → iot_data',
-        endpoint: `${BACKEND}/api/data/env-iot`,
+        endpoint: `${API_BASE}/data/env-iot`,
         icon: Wifi,
         color: '#3498db',
         gradient: 'linear-gradient(135deg, rgba(52,152,219,0.2), rgba(20,60,100,0.1))',
@@ -35,7 +35,7 @@ const DATA_SOURCES = [
         key: 'yield',
         label: 'Yield Data',
         subtitle: 'tea_yield_db + iteagrow → yield collections',
-        endpoint: `${BACKEND}/api/data/yield`,
+        endpoint: `${API_BASE}/data/yield`,
         icon: Activity,
         color: '#2ecc71',
         gradient: 'linear-gradient(135deg, rgba(46,204,113,0.2), rgba(10,60,30,0.1))',
@@ -45,7 +45,7 @@ const DATA_SOURCES = [
         key: 'market',
         label: 'Market Value',
         subtitle: 'tea_powder_db → admin_market_value',
-        endpoint: `${BACKEND}/api/data/market`,
+        endpoint: `${API_BASE}/data/market`,
         icon: BarChart2,
         color: '#9b59b6',
         gradient: 'linear-gradient(135deg, rgba(155,89,182,0.2), rgba(60,10,80,0.1))',
