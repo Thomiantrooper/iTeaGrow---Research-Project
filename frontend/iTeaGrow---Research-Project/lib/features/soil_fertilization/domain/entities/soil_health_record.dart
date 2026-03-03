@@ -48,8 +48,35 @@ class SoilHealthRecord {
   });
 
   factory SoilHealthRecord.fromJson(Map<String, dynamic> json) {
+    // The backend MQTT handler already converts the ESP32 raw index to an
+    // absolute hectare_id before inserting into MongoDB:
+    //   absolute = (block_id - 1) * 10 + raw_esp32_hectare_id
+    // So we MUST use the stored value directly — applying the formula here
+    // again would double-transform and produce wrong sector assignments.
+    final absoluteHectareId = (json['hectare_id'] as num?)?.toInt() ?? 0;
+    final rawBlockId = (json['block_id'] as num?)?.toInt();
+
+    // Validation: confirm hectare_id falls within the expected range for
+    // its block_id. This is a debug-only sanity check — it does not modify
+    // the value, only logs a warning if the DB record looks inconsistent.
+    assert(() {
+      if (rawBlockId != null && rawBlockId > 0 && absoluteHectareId > 0) {
+        final lo = (rawBlockId - 1) * 10 + 1;
+        final hi = rawBlockId * 10;
+        if (absoluteHectareId < lo || absoluteHectareId > hi) {
+          // ignore: avoid_print
+          print(
+            '[SoilHealthRecord] WARNING: hectare_id=$absoluteHectareId '
+            'is outside expected range [$lo–$hi] for block_id=$rawBlockId. '
+            'Possible data inconsistency.',
+          );
+        }
+      }
+      return true;
+    }());
+
     return SoilHealthRecord(
-      hectareId: json['hectare_id'] ?? 0,
+      hectareId: absoluteHectareId,
       healthStatus: SoilHealthStatus.fromString(json['soil_health']),
       fertilizerAdvice: List<String>.from(json['fertilizer'] ?? []),
       timestamp: DateTime.tryParse(json['timestamp'] ?? '')?.toLocal() ??
@@ -61,7 +88,7 @@ class SoilHealthRecord {
       ec: (json['EC'] as num?)?.toDouble() ?? 0.0,
       temperature: (json['temperature'] as num?)?.toDouble() ?? 0.0,
       humidity: (json['humidity'] as num?)?.toDouble() ?? 0.0,
-      blockId: json['block_id'],
+      blockId: (json['block_id'] as num?)?.toInt(),
     );
   }
 
