@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 import { Leaf, Lock, Mail, ArrowRight, Home, User, Phone } from 'lucide-react';
 import TeaBackground from '../components/TeaBackground';
 import '../css/LoginPage.css';
@@ -16,11 +17,23 @@ const LoginPage = () => {
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const { login } = useAuth();
+    const { login, googleLogin } = useAuth();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setError('');
+        const result = await googleLogin(credentialResponse.credential);
+        if (result.success) {
+            // Google login is blocked for admins at the API level (403).
+            // All successful Google logins are farmers/managers → always go to home.
+            navigate('/', { replace: true });
+        } else {
+            setError(result.message);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -216,10 +229,17 @@ const LoginPage = () => {
                     <span>OR</span>
                 </div>
 
-                <button className="social-login-btn">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="google-icon" />
-                    <span>Connect with Google</span>
-                </button>
+                <div className="google-login-wrapper">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError('Google login failed. Please try again.')}
+                        theme="filled_black"
+                        size="large"
+                        text="continue_with"
+                        shape="rectangular"
+                        width="340"
+                    />
+                </div>
                 
                 {isLogin && (
                     <div style={{ 

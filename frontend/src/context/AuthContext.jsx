@@ -1,6 +1,8 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
+const AUTH_API = import.meta.env.VITE_AUTH_API_URL || 'https://authentication-iteagrow-api.up.railway.app';
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -83,6 +85,38 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const googleLogin = async (idToken) => {
+        try {
+            const response = await fetch(`${AUTH_API}/api/users/google-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_token: idToken }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Auth API returns { access_token, user: { id, username, full_name, email, role, ... } }
+                // Normalize to match the regular login shape used across the app (user.name, user._id)
+                const userData = {
+                    ...data.user,
+                    _id: data.user.id,
+                    name: data.user.full_name,          // Google gives full_name → map to name
+                    username: data.user.username,       // auto-generated from email prefix
+                    token: data.access_token,
+                };
+                setUser(userData);
+                sessionStorage.setItem('iteagrow_session_active', 'true');
+                return { success: true, user: userData };
+            } else {
+                return { success: false, message: data.detail || 'Google login failed' };
+            }
+        } catch (error) {
+            console.error('Google Login Error:', error);
+            return { success: false, message: 'Unable to connect. Please try again.' };
+        }
+    };
+
     const updateProfile = async (profileData) => {
         try {
             const response = await fetch('/api/auth/profile', {
@@ -118,7 +152,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, updateProfile, loading, isAuthenticated: !!user }}>
+        <AuthContext.Provider value={{ user, login, googleLogin, logout, updateProfile, loading, isAuthenticated: !!user }}>
             {!loading && children}
         </AuthContext.Provider>
     );

@@ -232,32 +232,20 @@
     background: rgba(255, 255, 255, 0.05);
 }
 
-.social-login-btn {
-    width: 100%;
-    padding: 16px;
-    border-radius: 14px;
-    background: white;
-    border: none;
+.google-login-wrapper {
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    color: #212121;
-    font-family: 'Poppins', sans-serif;
+    align-items: center;
+    width: 100%;
 }
 
-.social-login-btn:hover {
-    background: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+/* Make the Google button full-width inside its container */
+.google-login-wrapper > div {
+    width: 100% !important;
 }
 
-.google-icon {
-    width: 22px;
-    height: 22px;
+.google-login-wrapper iframe {
+    border-radius: 14px !important;
 }
 
 .return-home-floating {
