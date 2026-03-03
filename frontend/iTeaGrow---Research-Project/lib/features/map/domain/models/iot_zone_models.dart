@@ -136,8 +136,10 @@ class SoilData {
   });
 
   factory SoilData.fromJson(Map<String, dynamic> json) {
+    // hectare_id from the API is already the globally unique absolute position
+    // (transformed by the backend before insert_one). Use it directly.
     return SoilData(
-      hectareId: json['hectare_id'] as int,
+      hectareId: (json['hectare_id'] as num).toInt(),
       soilHealth: json['soil_health'] as String,
       temperature: (json['temperature'] as num).toDouble(),
       humidity: (json['humidity'] as num).toDouble(),

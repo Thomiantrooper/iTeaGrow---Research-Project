@@ -1518,7 +1518,6 @@ class _PremiumFarmerDashboardState
                   () => context.push('/help-center')),
               const Divider(height: 1),
               _buildMenuItem(Icons.logout_rounded, 'Log Out', () async {
-                Navigator.pop(context);
                 await ref.read(authStateProvider.notifier).logout();
                 if (context.mounted) context.go('/login');
               }, isDestructive: true),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_config.dart';
 import 'local_auth_service.dart' show sharedPreferencesProvider;
@@ -25,7 +26,24 @@ class ApiService {
   final SharedPreferences _prefs;
   static const String _tokenKey = 'api_access_token';
 
+  /// Persistent HTTP client — reuses TCP connections & TLS sessions across
+  /// all requests, eliminating per-call handshake overhead (~300-500 ms).
+  static final http.Client _client = http.Client();
+
   ApiService(this._prefs);
+
+  /// Fire-and-forget warm-up ping so Railway is awake before the user
+  /// taps Login (called once on app start from AuthNotifier._initializeAuth).
+  static void warmUp() {
+    _client
+        .get(
+          Uri.parse('${ApiConfig.authMicroserviceBaseUrl}/health'),
+          headers: const {'Accept': 'application/json'},
+        )
+        .timeout(const Duration(seconds: 15))
+        .then((_) => debugPrint('[ApiService] Railway warm-up done'))
+        .catchError((e) => debugPrint('[ApiService] Railway warm-up: $e'));
+  }
 
   /// Get stored access token
   String? get accessToken => _prefs.getString(_tokenKey);
@@ -67,10 +85,10 @@ class ApiService {
           ? endpoint
           : '${ApiConfig.effectiveBaseUrl}$endpoint';
 
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse(url),
         headers: _headers,
-      ).timeout(const Duration(seconds: 3));
+      ).timeout(const Duration(seconds: 10));
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
@@ -93,11 +111,11 @@ class ApiService {
           ? endpoint
           : '${ApiConfig.effectiveBaseUrl}$endpoint';
 
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse(url),
         headers: _headers,
         body: body != null ? jsonEncode(body) : null,
-      ).timeout(const Duration(seconds: 3));
+      ).timeout(const Duration(seconds: 10));
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
@@ -120,11 +138,11 @@ class ApiService {
           ? endpoint
           : '${ApiConfig.effectiveBaseUrl}$endpoint';
 
-      final response = await http.put(
+      final response = await _client.put(
         Uri.parse(url),
         headers: _headers,
         body: body != null ? jsonEncode(body) : null,
-      ).timeout(const Duration(seconds: 3));
+      ).timeout(const Duration(seconds: 10));
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
@@ -146,10 +164,10 @@ class ApiService {
           ? endpoint
           : '${ApiConfig.effectiveBaseUrl}$endpoint';
 
-      final response = await http.delete(
+      final response = await _client.delete(
         Uri.parse(url),
         headers: _headers,
-      ).timeout(const Duration(seconds: 3));
+      ).timeout(const Duration(seconds: 10));
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {

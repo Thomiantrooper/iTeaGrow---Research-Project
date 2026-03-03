@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import '../../../../core/api/api_config.dart';
 import '../../domain/entities/soil_health_record.dart';
 
 // Sentinel to distinguish "not passed" from explicit null in copyWith.
@@ -28,32 +27,35 @@ class SoilHealthState {
     this.selectedBlockId,
   });
 
-  /// Returns the record for the selected block/hectare.
-  /// Returns null when the selected block has no data — never shows fake fallback data.
+  /// Returns the record for the current navigation level.
+  /// — Sector selected (selectedBlockId = 1–25): returns record at blockBase + blockId - 1
+  /// — Block selected (no sector): returns most recent across the 25-sector block range
+  /// — No selection: returns the most recent overall record
   SoilHealthRecord? get latest {
     if (records.isEmpty) return null;
 
-    // If a specific block is selected, only return its record — null if no data
+    // Sector selected: sectorHectareId = blockBase + sectorIndex - 1
     if (selectedHectareId != null && selectedBlockId != null) {
-      final matches = records
-          .where((r) =>
-              r.hectareId == selectedHectareId && r.blockId == selectedBlockId)
-          .toList();
-      if (matches.isEmpty) return null; // No data for this block — show nothing
-      matches.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      return matches.first;
-    }
-
-    // Hectare selected but no specific block — return most recent for that hectare
-    if (selectedHectareId != null) {
-      final matches =
-          records.where((r) => r.hectareId == selectedHectareId).toList();
+      final sectorHId = selectedHectareId! + selectedBlockId! - 1;
+      final matches = records.where((r) => r.hectareId == sectorHId).toList();
       if (matches.isEmpty) return null;
       matches.sort((a, b) => b.timestamp.compareTo(a.timestamp));
       return matches.first;
     }
 
-    // No selection at all — return the most recent overall record
+    // Block selected: return most recent record within the 25-sector block range
+    if (selectedHectareId != null) {
+      final blockEnd = selectedHectareId! + 24;
+      final matches = records
+          .where((r) =>
+              r.hectareId >= selectedHectareId! && r.hectareId <= blockEnd)
+          .toList();
+      if (matches.isEmpty) return null;
+      matches.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return matches.first;
+    }
+
+    // No selection: most recent overall
     final sorted = [...records]
       ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return sorted.first;
@@ -104,36 +106,40 @@ class SoilHealthNotifier extends StateNotifier<SoilHealthState> {
     _timer = Timer.periodic(_pollInterval, (_) => _backgroundRefresh());
   }
 
-  /// Merges incoming records into existing without overwriting per-hectare
-  /// loaded records. Key = "hectareId_blockId" ensures one entry per block.
+  /// Merges incoming records into existing, keeping the most recent per hectare_id.
+  /// One record per hectare_id — matches the map screen's _allSoilData behaviour.
   List<SoilHealthRecord> _mergeRecords(
       List<SoilHealthRecord> existing, List<SoilHealthRecord> incoming) {
-    final map = <String, SoilHealthRecord>{
-      for (var r in existing) '${r.hectareId}_${r.blockId}': r,
+    final map = <int, SoilHealthRecord>{
+      for (var r in existing) r.hectareId: r,
     };
     for (var r in incoming) {
-      final key = '${r.hectareId}_${r.blockId}';
-      if (!map.containsKey(key)) map[key] = r;
+      final cur = map[r.hectareId];
+      if (cur == null || r.timestamp.isAfter(cur.timestamp)) {
+        map[r.hectareId] = r;
+      }
     }
     return map.values.toList();
   }
 
   /// Full refresh triggered by user — shows loading indicator.
+  /// Uses /farm/by-hectare which runs a MongoDB aggregation returning exactly
+  /// ONE record per hectare (always the newest), so scan-round accumulation
+  /// never causes the 100-record limit to drop older hectares.
   Future<void> refresh() async {
     state = state.copyWith(isLoading: true);
     try {
-      // /farm/latest?limit=100 returns ALL per-block records, not aggregated
       final response = await http.get(
-        Uri.parse('$_baseUrl/farm/latest?limit=100'),
+        Uri.parse('$_baseUrl/farm/by-hectare'),
         headers: {'Accept': 'application/json', 'Cache-Control': 'no-cache'},
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final fresh = data.map((j) => SoilHealthRecord.fromJson(j)).toList();
-        final merged = _mergeRecords(state.records, fresh);
+        // Fresh already contains 1 record per hectare (newest). Full replace is safe.
         state = state.copyWith(
-          records: merged,
+          records: fresh,
           isLoading: false,
           lastRefreshed: DateTime.now(),
         );
@@ -152,15 +158,17 @@ class SoilHealthNotifier extends StateNotifier<SoilHealthState> {
   }
 
   /// Background refresh — silent, preserves selected state.
+  /// Also uses /farm/by-hectare so scan-round accumulation never causes stale data.
   Future<void> _backgroundRefresh() async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/farm/latest?limit=100'),
+        Uri.parse('$_baseUrl/farm/by-hectare'),
         headers: {'Accept': 'application/json', 'Cache-Control': 'no-cache'},
       ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final fresh = data.map((j) => SoilHealthRecord.fromJson(j)).toList();
+        // Merge with any block-range records already loaded for the selected block.
         state = state.copyWith(
           records: _mergeRecords(state.records, fresh),
           lastRefreshed: DateTime.now(),
@@ -171,22 +179,25 @@ class SoilHealthNotifier extends StateNotifier<SoilHealthState> {
     }
   }
 
-  /// Loads ALL block records for a given hectare from /hectare/{id}.
-  /// Mirrors map screen's _loadHectareData. Called automatically on selectHectare.
-  Future<void> loadHectareData(int hectareId) async {
+  /// Loads all 25 sector records for a block via /farm/range (mirrors map screen logic).
+  /// [blockBase] = selectedHectareId (the block’s first hectare_id, e.g. 1 for North B1).
+  Future<void> loadHectareData(int blockBase) async {
     try {
+      final blockEnd = blockBase + 24;
       final response = await http.get(
-        Uri.parse('${ApiConfig.soilHectareData(hectareId)}?limit=100'),
-        headers: {'Accept': 'application/json'},
+        Uri.parse(
+            '$_baseUrl/farm/range?start_hectare=$blockBase&end_hectare=$blockEnd&limit=1000'),
+        headers: {'Accept': 'application/json', 'Cache-Control': 'no-cache'},
       ).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        final hectareRecords =
+        final blockRecords =
             data.map((j) => SoilHealthRecord.fromJson(j)).toList();
-        // Replace ALL records for this hectare with the freshly loaded set
+        // Replace existing records in this block range with fresh data
         final updated = [
-          ...state.records.where((r) => r.hectareId != hectareId),
-          ...hectareRecords,
+          ...state.records
+              .where((r) => r.hectareId < blockBase || r.hectareId > blockEnd),
+          ...blockRecords,
         ];
         state = state.copyWith(records: updated);
       }
@@ -218,50 +229,50 @@ class SoilHealthNotifier extends StateNotifier<SoilHealthState> {
 
   void selectNext() {
     if (state.selectedHectareId == null) return;
-
-    // Only navigate to blocks that actually have data for the current hectare
-    final blocksWithData = state.records
-        .where(
-            (r) => r.hectareId == state.selectedHectareId && r.blockId != null)
-        .map((r) => r.blockId!)
+    final blockBase = state.selectedHectareId!;
+    final blockEnd = blockBase + 24;
+    // Navigate only through sectors that actually have data in this block range
+    final sectorsWithData = state.records
+        .where((r) => r.hectareId >= blockBase && r.hectareId <= blockEnd)
+        .map((r) => r.hectareId - blockBase + 1) // sector index 1-25
         .toSet()
         .toList()
       ..sort();
 
-    if (blocksWithData.isEmpty) return;
+    if (sectorsWithData.isEmpty) return;
 
     if (state.selectedBlockId == null) {
-      selectBlock(blocksWithData.first);
+      selectBlock(sectorsWithData.first);
       return;
     }
 
-    final idx = blocksWithData.indexOf(state.selectedBlockId!);
-    final nextIdx = idx >= blocksWithData.length - 1 ? 0 : idx + 1;
-    selectBlock(blocksWithData[nextIdx]);
+    final idx = sectorsWithData.indexOf(state.selectedBlockId!);
+    final nextIdx = idx >= sectorsWithData.length - 1 ? 0 : idx + 1;
+    selectBlock(sectorsWithData[nextIdx]);
   }
 
   void selectPrevious() {
     if (state.selectedHectareId == null) return;
-
-    // Only navigate to blocks that actually have data for the current hectare
-    final blocksWithData = state.records
-        .where(
-            (r) => r.hectareId == state.selectedHectareId && r.blockId != null)
-        .map((r) => r.blockId!)
+    final blockBase = state.selectedHectareId!;
+    final blockEnd = blockBase + 24;
+    // Navigate only through sectors that actually have data in this block range
+    final sectorsWithData = state.records
+        .where((r) => r.hectareId >= blockBase && r.hectareId <= blockEnd)
+        .map((r) => r.hectareId - blockBase + 1) // sector index 1-25
         .toSet()
         .toList()
       ..sort();
 
-    if (blocksWithData.isEmpty) return;
+    if (sectorsWithData.isEmpty) return;
 
     if (state.selectedBlockId == null) {
-      selectBlock(blocksWithData.last);
+      selectBlock(sectorsWithData.last);
       return;
     }
 
-    final idx = blocksWithData.indexOf(state.selectedBlockId!);
-    final prevIdx = idx <= 0 ? blocksWithData.length - 1 : idx - 1;
-    selectBlock(blocksWithData[prevIdx]);
+    final idx = sectorsWithData.indexOf(state.selectedBlockId!);
+    final prevIdx = idx <= 0 ? sectorsWithData.length - 1 : idx - 1;
+    selectBlock(sectorsWithData[prevIdx]);
   }
 
   void navigateUp() {

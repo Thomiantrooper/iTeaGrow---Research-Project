@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/local_auth_service.dart';
 import '../../../../core/services/google_auth_service.dart';
+import '../../../../core/services/api_service.dart';
 import '../repositories/auth_repository.dart';
 import '../../domain/models/user.dart';
 
@@ -72,6 +73,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Initialize authentication state from stored session
   Future<void> _initializeAuth() async {
     state = state.copyWith(status: AuthStatus.loading);
+
+    // Pre-warm the Railway API server immediately so it's awake
+    // by the time the user taps Login (fire-and-forget).
+    ApiService.warmUp();
 
     try {
       debugPrint('Initializing auth state...');
@@ -532,12 +537,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'Google user session saved from backend: ${authResponse.user.username}');
         return true;
       } else {
-        // Backend rejected the login (e.g., they are not a manager, or not registered)
+        // Backend rejected (e.g., admin account or deactivated)
         state = const AuthState(
           status: AuthStatus.unauthenticated,
-          errorMessage: 'Login failed. Ensure you are a registered Manager.',
+          errorMessage: 'Google Sign-In failed. Account not registered or deactivated.',
         );
-        // Ensure we sign out of Google locally so they can try another account next time
+        // Sign out of Google so they can try another account next time
         await _googleAuthService.signOut();
         return false;
       }
