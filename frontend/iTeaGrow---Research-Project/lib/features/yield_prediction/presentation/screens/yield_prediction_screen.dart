@@ -23,13 +23,13 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
   // Form fields
   String _divisionId = 'LN';
-  int _laborTotal = 56;
-  double _fieldSize = 6.59;
-  double _cropHarvested = 1036;
-  double _gPct = 39;
-  double _cPct = 47;
-  double _dPct = 14;
-  int _predictionDays = 7;
+  int _laborTotal = 0;
+  double _fieldSize = 0;
+  double _cropHarvested = 0;
+  double _gPct = 0;
+  double _cPct = 0;
+  double _dPct = 0;
+  int _predictionDays = 1;
 
   @override
   void initState() {
@@ -206,9 +206,9 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Labor Total
             TextFormField(
-              initialValue: _laborTotal.toString(),
               decoration: const InputDecoration(
                 labelText: 'Number of Workers',
+                hintText: 'e.g. 56',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.people),
               ),
@@ -230,9 +230,9 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Field Size
             TextFormField(
-              initialValue: _fieldSize.toString(),
               decoration: const InputDecoration(
                 labelText: 'Field Size (hectares)',
+                hintText: 'e.g. 6.59',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.landscape),
               ),
@@ -255,9 +255,9 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Crop Harvested
             TextFormField(
-              initialValue: _cropHarvested.toString(),
               decoration: const InputDecoration(
                 labelText: 'Crop Harvested (kg)',
+                hintText: 'e.g. 1036',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.grass),
               ),
@@ -287,9 +287,9 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Grade G%
             TextFormField(
-              initialValue: _gPct.toString(),
               decoration: const InputDecoration(
                 labelText: 'Grade G (%)',
+                hintText: 'e.g. 39',
                 border: OutlineInputBorder(),
               ),
               keyboardType:
@@ -313,9 +313,9 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Grade C%
             TextFormField(
-              initialValue: _cPct.toString(),
               decoration: const InputDecoration(
                 labelText: 'Grade C (%)',
+                hintText: 'e.g. 47',
                 border: OutlineInputBorder(),
               ),
               keyboardType:
@@ -339,9 +339,9 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Grade D%
             TextFormField(
-              initialValue: _dPct.toString(),
               decoration: const InputDecoration(
                 labelText: 'Grade D (%)',
+                hintText: 'e.g. 14',
                 border: OutlineInputBorder(),
               ),
               keyboardType:
