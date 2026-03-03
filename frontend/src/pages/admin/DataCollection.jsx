@@ -671,9 +671,10 @@ const DataCollection = () => {
                             key={source.key}
                             className={`dc-tab ${isActive ? 'dc-tab-active' : ''}`}
                             style={isActive ? {
-                                background: source.gradient,
-                                borderColor: source.border,
-                                boxShadow: `0 4px 20px ${source.color}30`,
+                                background: `rgba(12, 12, 14, 0.96)`,
+                                borderColor: source.color,
+                                borderWidth: '1.5px',
+                                boxShadow: `0 4px 22px ${source.color}60, 0 2px 12px rgba(0,0,0,0.7)`,
                             } : {}}
                             onClick={() => handleTabClick(source)}
                         >
