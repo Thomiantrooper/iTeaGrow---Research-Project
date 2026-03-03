@@ -138,17 +138,28 @@ exports.getAlertStats = asyncHandler(async (req, res) => {
 exports.getRecentActivity = asyncHandler(async (req, res) => {
     const Contact = require('../models/contact.model');
     const LoginLog = require('../models/loginLog.model');
+    const { getIteagrowDb } = require('../config/iteagrowDb');
     
-    // Get latest contacts
-    const contacts = await Contact.find().sort({ createdAt: -1 }).limit(3).select('name email createdAt');
-    
-    // Get latest logins
-    const logins = await LoginLog.find().sort({ loginTime: -1 }).limit(2).select('email loginTime');
-    
-    // Get latest alerts
-    const alerts = await AlertHistory.find().sort({ createdAt: -1 }).limit(2).select('systemName issues createdAt');
-    
-    // Combine and format activities
+    // Fetch web DBsources + Atlas login_logs in parallel
+    const [contacts, webLogins, alerts] = await Promise.all([
+        Contact.find().sort({ createdAt: -1 }).limit(3).select('name email createdAt'),
+        LoginLog.find({ status: 'success' }).sort({ loginTime: -1 }).limit(4).select('email loginTime'),
+        AlertHistory.find().sort({ createdAt: -1 }).limit(2).select('systemName issues createdAt'),
+    ]);
+
+    // Also pull recent logins from Atlas (mobile app logins)
+    let atlasLogins = [];
+    try {
+        const db = await getIteagrowDb();
+        atlasLogins = await db.collection('login_logs')
+            .find({ success: true })
+            .sort({ timestamp: -1 })
+            .limit(4)
+            .toArray();
+    } catch (e) {
+        console.warn('[Dashboard] Could not fetch Atlas login_logs:', e.message);
+    }
+
     const activities = [
         ...contacts.map(c => ({
             type: 'contact',
@@ -156,22 +167,25 @@ exports.getRecentActivity = asyncHandler(async (req, res) => {
             email: c.email,
             time: c.createdAt
         })),
-        ...logins.map(l => ({
+        ...webLogins.map(l => ({
             type: 'login',
-            text: `User login: ${l.email}`,
+            text: `Web login: ${l.email}`,
             time: l.loginTime
+        })),
+        ...atlasLogins.map(l => ({
+            type: 'login',
+            text: `Mobile login: ${l.username || l.email || 'User'}`,
+            time: l.timestamp
         })),
         ...alerts.map(a => ({
             type: 'alert',
-            text: `System alert: ${a.systemName || 'System'} - ${a.issues[0] || 'Issue detected'}`,
+            text: `System alert: ${a.systemName || 'System'} — ${a.issues?.[0] || 'Issue detected'}`,
             time: a.createdAt
         }))
     ];
     
-    // Sort by time and return top 5
     activities.sort((a, b) => new Date(b.time) - new Date(a.time));
-    
-    res.json(activities.slice(0, 5));
+    res.json(activities.slice(0, 7));
 });
 
 // @desc    Get all alert history with filtering

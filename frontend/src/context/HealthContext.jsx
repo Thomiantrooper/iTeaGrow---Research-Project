@@ -35,6 +35,26 @@ export const HealthProvider = ({ children }) => {
     const [webAppLoading, setWebAppLoading] = useState(true);
     const [webAppRefreshing, setWebAppRefreshing] = useState(false);
 
+    // --- Auth API State ---
+    const [authHealthData, setAuthHealthData] = useState(null);
+    const [authLoading, setAuthLoading] = useState(true);
+    const [authRefreshing, setAuthRefreshing] = useState(false);
+
+    // --- Environment IoT API State ---
+    const [envIotHealthData, setEnvIotHealthData] = useState(null);
+    const [envIotLoading, setEnvIotLoading] = useState(true);
+    const [envIotRefreshing, setEnvIotRefreshing] = useState(false);
+
+    // --- Soil IoT API State ---
+    const [soilIotHealthData, setSoilIotHealthData] = useState(null);
+    const [soilIotLoading, setSoilIotLoading] = useState(true);
+    const [soilIotRefreshing, setSoilIotRefreshing] = useState(false);
+
+    // --- Market/Powder API State ---
+    const [marketHealthData, setMarketHealthData] = useState(null);
+    const [marketLoading, setMarketLoading] = useState(true);
+    const [marketRefreshing, setMarketRefreshing] = useState(false);
+
     // --- Terminal History State ---
     const [terminalHistory, setTerminalHistory] = useState([
         { type: 'info', content: 'System Health Monitor v1.0.0' },
@@ -178,6 +198,98 @@ export const HealthProvider = ({ children }) => {
         }
     };
 
+    // --- Auth API Check ---
+    const checkAuthHealth = async () => {
+        setAuthRefreshing(true);
+        if (!authHealthData) setAuthLoading(true);
+        const baseUrl = 'https://authentication-iteagrow-api.up.railway.app';
+        try {
+            const start = Date.now();
+            const res = await fetch(`${baseUrl}/health`);
+            const end = Date.now();
+            if (res.ok) {
+                const data = await res.json();
+                setAuthHealthData({ status: 'online', latency: end - start, ...data });
+            } else throw new Error('Auth API not OK');
+        } catch (err) {
+            console.error('Auth API Error:', err);
+            setAuthHealthData(null);
+            triggerAlert('Auth API', ['Authentication service is UNREACHABLE.']);
+        } finally {
+            setAuthLoading(false);
+            setAuthRefreshing(false);
+        }
+    };
+
+    // --- Environment IoT API Check ---
+    const checkEnvIotHealth = async () => {
+        setEnvIotRefreshing(true);
+        if (!envIotHealthData) setEnvIotLoading(true);
+        const baseUrl = 'https://iteagrow-environment-monitoring-iot-api.up.railway.app';
+        try {
+            const start = Date.now();
+            const res = await fetch(`${baseUrl}/health`);
+            const end = Date.now();
+            if (res.ok) {
+                const data = await res.json();
+                setEnvIotHealthData({ status: 'online', latency: end - start, ...data });
+            } else throw new Error('Env IoT API not OK');
+        } catch (err) {
+            console.error('Env IoT API Error:', err);
+            setEnvIotHealthData(null);
+            triggerAlert('Environment IoT', ['Environment IoT API is UNREACHABLE.']);
+        } finally {
+            setEnvIotLoading(false);
+            setEnvIotRefreshing(false);
+        }
+    };
+
+    // --- Soil IoT API Check ---
+    const checkSoilIotHealth = async () => {
+        setSoilIotRefreshing(true);
+        if (!soilIotHealthData) setSoilIotLoading(true);
+        const baseUrl = 'https://iteagrow-soil-monitoring-iot-api.up.railway.app';
+        try {
+            const start = Date.now();
+            const res = await fetch(`${baseUrl}/health`);
+            const end = Date.now();
+            if (res.ok) {
+                const data = await res.json();
+                setSoilIotHealthData({ status: 'online', latency: end - start, ...data });
+            } else throw new Error('Soil IoT API not OK');
+        } catch (err) {
+            console.error('Soil IoT API Error:', err);
+            setSoilIotHealthData(null);
+            triggerAlert('Soil IoT', ['Soil Monitoring IoT API is UNREACHABLE.']);
+        } finally {
+            setSoilIotLoading(false);
+            setSoilIotRefreshing(false);
+        }
+    };
+
+    // --- Market/Powder API Check ---
+    const checkMarketHealth = async () => {
+        setMarketRefreshing(true);
+        if (!marketHealthData) setMarketLoading(true);
+        const baseUrl = 'https://tea-powder-classification-market-value-api.up.railway.app';
+        try {
+            const start = Date.now();
+            const res = await fetch(`${baseUrl}/health`);
+            const end = Date.now();
+            if (res.ok) {
+                const data = await res.json();
+                setMarketHealthData({ status: 'online', latency: end - start, ...data });
+            } else throw new Error('Market API not OK');
+        } catch (err) {
+            console.error('Market API Error:', err);
+            setMarketHealthData(null);
+            triggerAlert('Market API', ['Tea Powder Market API is UNREACHABLE.']);
+        } finally {
+            setMarketLoading(false);
+            setMarketRefreshing(false);
+        }
+    };
+
     // --- Web App Check ---
     const checkWebAppHealth = async () => {
         setWebAppRefreshing(true);
@@ -210,6 +322,10 @@ export const HealthProvider = ({ children }) => {
         checkYieldHealth();
         checkMaturityHealth();
         checkWebAppHealth();
+        checkAuthHealth();
+        checkEnvIotHealth();
+        checkSoilIotHealth();
+        checkMarketHealth();
     };
 
     useEffect(() => {
@@ -260,14 +376,51 @@ export const HealthProvider = ({ children }) => {
         }
     }, [webAppHealthData, webAppLoading]);
 
+    useEffect(() => {
+        if (!authLoading) {
+            const status = authHealthData ? 'ONLINE' : 'OFFLINE';
+            const type = authHealthData ? 'success' : 'error';
+            setTerminalHistory(prev => [...prev, { type, content: `[${new Date().toLocaleTimeString()}] Auth API Check: ${status}` }]);
+        }
+    }, [authHealthData, authLoading]);
+
+    useEffect(() => {
+        if (!envIotLoading) {
+            const status = envIotHealthData ? 'ONLINE' : 'OFFLINE';
+            const type = envIotHealthData ? 'success' : 'error';
+            setTerminalHistory(prev => [...prev, { type, content: `[${new Date().toLocaleTimeString()}] Environment IoT API Check: ${status}` }]);
+        }
+    }, [envIotHealthData, envIotLoading]);
+
+    useEffect(() => {
+        if (!soilIotLoading) {
+            const status = soilIotHealthData ? 'ONLINE' : 'OFFLINE';
+            const type = soilIotHealthData ? 'success' : 'error';
+            setTerminalHistory(prev => [...prev, { type, content: `[${new Date().toLocaleTimeString()}] Soil IoT API Check: ${status}` }]);
+        }
+    }, [soilIotHealthData, soilIotLoading]);
+
+    useEffect(() => {
+        if (!marketLoading) {
+            const status = marketHealthData ? 'ONLINE' : 'OFFLINE';
+            const type = marketHealthData ? 'success' : 'error';
+            setTerminalHistory(prev => [...prev, { type, content: `[${new Date().toLocaleTimeString()}] Market API Check: ${status}` }]);
+        }
+    }, [marketHealthData, marketLoading]);
+
     const value = {
         healthData, loading, refreshing, error, internalLatency,
         aiHealthData, aiModelData, aiLoading, aiRefreshing,
         yieldHealthData, yieldDbStats, yieldLoading, yieldRefreshing,
         maturityHealthData, maturityModelData, maturityLoading, maturityRefreshing,
         webAppHealthData, webAppLoading, webAppRefreshing,
+        authHealthData, authLoading, authRefreshing,
+        envIotHealthData, envIotLoading, envIotRefreshing,
+        soilIotHealthData, soilIotLoading, soilIotRefreshing,
+        marketHealthData, marketLoading, marketRefreshing,
         terminalHistory, setTerminalHistory,
-        refreshAll, checkHealth, checkAiHealth, checkYieldHealth, checkMaturityHealth, checkWebAppHealth, triggerAlert
+        refreshAll, checkHealth, checkAiHealth, checkYieldHealth, checkMaturityHealth, checkWebAppHealth,
+        checkAuthHealth, checkEnvIotHealth, checkSoilIotHealth, checkMarketHealth, triggerAlert
     };
 
     return <HealthContext.Provider value={value}>{children}</HealthContext.Provider>;

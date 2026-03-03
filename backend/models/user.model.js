@@ -7,6 +7,11 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    username: {
+        type: String,
+        required: false,
+        default: null
+    },
     email: {
         type: String,
         required: true,
@@ -29,6 +34,19 @@ const userSchema = mongoose.Schema({
     phoneNumber: {
         type: String,
         required: true
+    },
+    access: {
+        type: String,
+        enum: ['mobile', 'web', 'both'],
+        default: 'both'
+    },
+    googleEmail: {
+        type: String,
+        default: null
+    },
+    lastLogin: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true
@@ -42,7 +60,7 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
 // Encrypt password using bcrypt
 userSchema.pre('save', async function(next) {
     if (!this.isModified('password')) {
-        next();
+        return next();
     }
 
     const salt = await bcrypt.genSalt(10);

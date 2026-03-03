@@ -1,0 +1,534 @@
+/* ---------------------------------------------------------------
+   DataCollection.css — iTeaGrow Admin Data Collection Page
+--------------------------------------------------------------- */
+
+.dc-container {
+    position: relative;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0 10px;
+    box-sizing: border-box;
+    color: #e0e0e0;
+}
+
+/* Header */
+.dc-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 36px;
+}
+
+.dc-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fff, #aaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 6px 0;
+}
+
+.dc-subtitle {
+    color: #888;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.dc-header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Buttons */
+.dc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.dc-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.dc-btn-refresh {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #ccc;
+}
+
+.dc-btn-refresh:not(:disabled):hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.dc-btn-download {
+    background: rgba(46, 204, 113, 0.15);
+    border-color: rgba(46, 204, 113, 0.4);
+    color: #2ecc71;
+}
+
+.dc-btn-download:not(:disabled):hover {
+    background: rgba(46, 204, 113, 0.25);
+    box-shadow: 0 4px 14px rgba(46, 204, 113, 0.25);
+}
+
+/* Tab Bar */
+.dc-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1200px) {
+    .dc-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 800px) {
+    .dc-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 500px) {
+    .dc-tabs { grid-template-columns: 1fr; }
+}
+
+.dc-tab {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.25s ease;
+}
+
+.dc-tab:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dc-tab-active {
+    transform: translateY(-2px);
+}
+
+.dc-tab-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dc-tab-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.dc-tab-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: color 0.2s;
+    white-space: nowrap;
+}
+
+.dc-tab-sub {
+    font-size: 0.7rem;
+    color: #aaa;
+    font-family: 'Fira Code', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dc-tab-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Data Panel */
+.dc-panel {
+    background: rgba(15, 15, 15, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+}
+
+.dc-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+}
+
+.dc-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.dc-collection-badge {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 3px 10px;
+    border-radius: 6px;
+    color: #aaa;
+}
+
+.dc-panel-body {
+    padding: 0 0 20px 0;
+    min-height: 300px;
+}
+
+/* States */
+.dc-placeholder,
+.dc-loading,
+.dc-error,
+.dc-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 60px 20px;
+    color: #555;
+    text-align: center;
+}
+
+.dc-error {
+    color: #e74c3c;
+}
+
+.dc-error p {
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Table */
+.dc-table-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.dc-table-scroll {
+    overflow-x: auto;
+    padding: 0 20px;
+}
+
+.dc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.dc-table thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: #bbb;
+    background: rgba(255, 255, 255, 0.03);
+    white-space: nowrap;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.78rem;
+}
+
+.dc-table tbody td {
+    padding: 10px 14px;
+    color: #ccc;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+}
+
+.dc-row:hover td {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Pagination */
+.dc-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px 0;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dc-page-info {
+    font-size: 0.82rem;
+    color: #666;
+}
+
+.dc-page-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.dc-page-btns button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ccc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.dc-page-btns button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.dc-page-btns button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------
+   Market Value — metadata bar + price matrix
+--------------------------------------------------------------- */
+.dc-market-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    background: rgba(155, 89, 182, 0.06);
+    border: 1px solid rgba(155, 89, 182, 0.2);
+    border-radius: 10px;
+}
+
+.dc-meta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1 1 220px;
+}
+
+.dc-meta-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(155, 89, 182, 0.8);
+    font-weight: 600;
+}
+
+.dc-meta-value {
+    font-size: 0.85rem;
+    color: #ddd;
+    line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------
+   Export Modal
+--------------------------------------------------------------- */
+.dc-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.dc-modal {
+    background: #121212;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 780px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.85);
+    overflow: hidden;
+}
+
+.dc-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 28px 22px;
+    flex-shrink: 0;
+}
+
+.dc-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.dc-modal-close {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #777;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+.dc-modal-close:hover { background: rgba(255,255,255,0.12); color: #ccc; }
+
+.dc-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.dc-modal-section { display: flex; flex-direction: column; gap: 14px; }
+
+.dc-modal-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #555;
+    font-weight: 700;
+    margin: 0;
+}
+
+.dc-modal-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dc-col-count {
+    font-size: 0.78rem;
+    color: #555;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+}
+
+.dc-col-actions {
+    display: flex;
+    gap: 8px;
+}
+.dc-col-actions button {
+    font-size: 0.74rem;
+    padding: 4px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.dc-col-actions button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+/* Format buttons */
+.dc-format-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+@media (max-width: 560px) { .dc-format-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.dc-format-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 8px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: #555;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+.dc-format-btn:hover { background: rgba(255,255,255,0.07); color: #ccc; border-color: rgba(255,255,255,0.16); }
+.dc-format-active { background: transparent !important; }
+
+.dc-format-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+.dc-format-desc {
+    font-size: 0.68rem;
+    color: #555;
+    text-align: center;
+    line-height: 1.3;
+}
+.dc-format-active .dc-format-desc { color: inherit; opacity: 0.65; }
+
+/* Column chips */
+.dc-col-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dc-col-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+    color: #555;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.dc-col-chip:hover { border-color: rgba(255,255,255,0.22); color: #aaa; }
+.dc-col-checked { font-weight: 500; }
+
+.dc-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 28px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
+}
+

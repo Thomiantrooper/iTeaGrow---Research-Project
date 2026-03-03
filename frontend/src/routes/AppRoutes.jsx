@@ -8,10 +8,12 @@ import ProfilePage from '../pages/ProfilePage';
 import AdminLayout from '../layouts/AdminLayout';
 import AdminDashboard from '../pages/admin/Dashboard';
 import UserManagement from '../pages/admin/UserManagement';
-import DummyPage from '../pages/admin/DummyPage';
-import Feedback from '../pages/admin/Feedback';
 import SystemHealth from '../pages/admin/SystemHealth';
 import IssuesBugs from '../pages/admin/IssuesBugs';
+import MarketAuction from '../pages/admin/MarketAuction';
+import Devices from '../pages/admin/Devices';
+import DataCollection from '../pages/admin/DataCollection';
+import Feedback from '../pages/admin/Feedback';
 import LoginPage from '../pages/LoginPage';
 import ProtectedRoute from '../components/ProtectedRoute';
 
@@ -40,8 +42,9 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
-          <Route path="devices" element={<DummyPage title="Device Tracking" description="Tracking active IoT devices and sensor nodes across the estate." />} />
-          <Route path="data" element={<DummyPage title="Data Collection" description="Collecting environmental data including soil moisture, temperature, and humidity." />} />
+          <Route path="devices" element={<Devices />} />
+          <Route path="data" element={<DataCollection />} />
+          <Route path="market-auction" element={<MarketAuction />} />
           <Route path="health" element={<SystemHealth />} />
           <Route path="issues" element={<IssuesBugs />} />
           <Route path="feedback" element={<Feedback />} />

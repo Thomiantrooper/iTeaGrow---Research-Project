@@ -39,6 +39,7 @@ const AdminLayout = () => {
                         <li><Link to="/admin/users" className="nav-link">User Management</Link></li>
                         <li><Link to="/admin/devices" className="nav-link">Device Tracking</Link></li>
                         <li><Link to="/admin/data" className="nav-link">Data Collection</Link></li>
+                        <li><Link to="/admin/market-auction" className="nav-link">Market Auction</Link></li>
                         <li><Link to="/admin/health" className="nav-link">System Health</Link></li>
                         <li><Link to="/admin/issues" className="nav-link">Issues & Bugs</Link></li>
                         <li><Link to="/admin/feedback" className="nav-link">Feedback</Link></li>

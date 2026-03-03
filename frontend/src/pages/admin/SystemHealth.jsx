@@ -10,8 +10,13 @@ const SystemHealth = () => {
         yieldHealthData, yieldDbStats, yieldLoading, yieldRefreshing,
         maturityHealthData, maturityModelData, maturityLoading, maturityRefreshing,
         webAppHealthData, webAppLoading, webAppRefreshing,
+        authHealthData, authLoading, authRefreshing,
+        envIotHealthData, envIotLoading, envIotRefreshing,
+        soilIotHealthData, soilIotLoading, soilIotRefreshing,
+        marketHealthData, marketLoading, marketRefreshing,
         terminalHistory, setTerminalHistory,
-        refreshAll, checkHealth, checkAiHealth, checkYieldHealth, checkMaturityHealth, checkWebAppHealth
+        refreshAll, checkHealth, checkAiHealth, checkYieldHealth, checkMaturityHealth, checkWebAppHealth,
+        checkAuthHealth, checkEnvIotHealth, checkSoilIotHealth, checkMarketHealth
     } = useHealth();
 
     // --- Sidebar State ---
@@ -58,7 +63,7 @@ const SystemHealth = () => {
 
             switch (command) {
                 case 'help':
-                    newHistory.push({ type: 'response', content: 'Available commands:\n  help              - Show this help message\n  status            - Check internal system status\n  refresh           - Refresh all connection data\n  disease_ai_status - Check/Wake Up Disease AI\n  yield_ai_status   - Check/Wake Up Yield AI\n  clear             - Clear terminal history\n  docs              - Open documentation sidebar' });
+                    newHistory.push({ type: 'response', content: 'Available commands:\n  help              - Show this help message\n  status            - Check internal system status\n  refresh           - Refresh all connection data\n  disease_ai_status - Check/Wake Up Disease AI\n  yield_ai_status   - Check/Wake Up Yield AI\n  maturity_ai_status - Check/Wake Up Maturity AI\n  webapp_status     - Check Main Web App\n  auth_api_status   - Check Authentication API\n  env_iot_status    - Check Environment IoT API\n  soil_iot_status   - Check Soil Monitoring IoT API\n  market_ai_status  - Check Market/Powder AI API\n  clear             - Clear terminal history\n  docs              - Open documentation sidebar' });
                     break;
                 case 'status':
                     newHistory.push({ type: 'response', content: 'Checking internal system status...' });
@@ -73,6 +78,10 @@ const SystemHealth = () => {
                     await checkYieldHealth();
                     await checkMaturityHealth();
                     await checkWebAppHealth();
+                    await checkAuthHealth();
+                    await checkEnvIotHealth();
+                    await checkSoilIotHealth();
+                    await checkMarketHealth();
                     return;
                 case 'disease_ai_status':
                 case 'wake_disease_ai':
@@ -97,6 +106,26 @@ const SystemHealth = () => {
                     newHistory.push({ type: 'response', content: 'Pinging Main Web Application...' });
                     setTerminalHistory(newHistory);
                     await checkWebAppHealth();
+                    return;
+                case 'auth_api_status':
+                    newHistory.push({ type: 'response', content: 'Pinging Authentication API...' });
+                    setTerminalHistory(newHistory);
+                    await checkAuthHealth();
+                    return;
+                case 'env_iot_status':
+                    newHistory.push({ type: 'response', content: 'Pinging Environment IoT API...' });
+                    setTerminalHistory(newHistory);
+                    await checkEnvIotHealth();
+                    return;
+                case 'soil_iot_status':
+                    newHistory.push({ type: 'response', content: 'Pinging Soil Monitoring IoT API...' });
+                    setTerminalHistory(newHistory);
+                    await checkSoilIotHealth();
+                    return;
+                case 'market_ai_status':
+                    newHistory.push({ type: 'response', content: 'Pinging Tea Powder Market API...' });
+                    setTerminalHistory(newHistory);
+                    await checkMarketHealth();
                     return;
                 case 'troubleshoot':
                 case 'debug':
@@ -131,6 +160,26 @@ const SystemHealth = () => {
                         issues.push('Maturity AI: UNREACHABLE. Suggested: Verify deployment at iteagrow-tea-leaf-maturity-prod.up.railway.app.');
                     }
 
+                    // Check Auth API
+                    if (authHealthData?.status !== 'healthy' && !authLoading) {
+                        issues.push('Auth API: UNREACHABLE. Suggested: Verify Railway deployment at authentication-iteagrow-api.up.railway.app.');
+                    }
+
+                    // Check Env IoT API
+                    if (envIotHealthData?.status !== 'healthy' && !envIotLoading) {
+                        issues.push('Env IoT API: UNREACHABLE. Suggested: Verify Railway deployment at iteagrow-environment-monitoring-iot-api.up.railway.app.');
+                    }
+
+                    // Check Soil IoT API
+                    if (soilIotHealthData?.status !== 'healthy' && !soilIotLoading) {
+                        issues.push('Soil IoT API: UNREACHABLE. Suggested: Verify Railway deployment at iteagrow-soil-monitoring-iot-api.up.railway.app.');
+                    }
+
+                    // Check Market AI
+                    if (marketHealthData?.status !== 'healthy' && !marketLoading) {
+                        issues.push('Market AI: UNREACHABLE. Suggested: Verify Railway deployment at tea-powder-classification-market-value-api.up.railway.app.');
+                    }
+
                     if (issues.length === 0) {
                         newHistory.push({ type: 'success', content: '✓ No critical issues detected. All systems nominal.' });
                     } else {
@@ -156,7 +205,17 @@ const SystemHealth = () => {
     };
 
     return (
-        <div className="dashboard-container" style={{ position: 'relative' }}>
+        <div
+            className="dashboard-container"
+            style={{
+                position: 'relative',
+                maxWidth: '100%',
+                width: '100%',
+                margin: 0,
+                padding: '0 10px',
+                boxSizing: 'border-box'
+            }}
+        >
             <header className="dashboard-header" style={{ marginBottom: '40px' }}>
                 <div>
                     <h1 style={{ fontSize: '2.5rem', background: 'linear-gradient(90deg, #fff, #aaa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>System Health</h1>
@@ -170,7 +229,7 @@ const SystemHealth = () => {
                                 setTerminalHistory(prev => [...prev, { type: 'info', content: `[${new Date().toLocaleTimeString()}] Initiating Manual Wake-Up for All Systems...` }]);
                                 refreshAll();
                             }} 
-                            disabled={aiRefreshing || yieldRefreshing || maturityRefreshing || webAppRefreshing}
+                            disabled={aiRefreshing || yieldRefreshing || maturityRefreshing || webAppRefreshing || authRefreshing || envIotRefreshing || soilIotRefreshing || marketRefreshing}
                             title="Wake All Systems"
                             style={{ 
                                 background: 'rgba(255, 255, 255, 0.05)',
@@ -252,10 +311,10 @@ const SystemHealth = () => {
             {/* --- Internal Health Grid --- */}
             <div className="dashboard-grid" style={{ display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
                 
-                {/* Unified System Status Card (App | DB | AI Services) */}
+                {/* Unified System Status Card (App | DB | AI + IoT Services) */}
                 <div className="dashboard-card stat-card modern-card" style={{ 
-                    flex: '5', 
-                    minWidth: '1000px', // Increased min-width for 5 columns
+                    flex: '1 1 100%',
+                    minWidth: '100%',
                     position: 'relative', 
                     overflow: 'hidden', 
                     display: 'flex', 
@@ -264,14 +323,20 @@ const SystemHealth = () => {
                 }}>
                     <div className="card-bg-glow" style={{ background: 'linear-gradient(45deg, #2ecc71, #27ae60, #16a085)' }}></div>
                     
-                    {/* Top Row: The 5 Columns */}
-                    <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    {/* Top: Responsive grid of service tiles */}
+                    <div
+                        className="service-grid"
+                        style={{
+                            padding: '20px',
+                            borderBottom: '1px solid rgba(255,255,255,0.05)'
+                        }}
+                    >
                         
                         {/* Column 0: Main Web App */}
                         <div style={{ 
-                            flex: 1, 
-                            padding: '24px', 
-                            borderRight: '1px solid rgba(255,255,255,0.1)',
+                            padding: '18px', 
+                            borderRadius: '12px',
+                            background: 'rgba(0,0,0,0.28)',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'center'
@@ -295,9 +360,9 @@ const SystemHealth = () => {
 
                         {/* Column 1: Database (Static) */}
                         <div style={{ 
-                            flex: 1, 
-                            padding: '24px', // Increased padding
-                            borderRight: '1px solid rgba(255,255,255,0.1)',
+                            padding: '18px',
+                            borderRadius: '12px',
+                            background: 'rgba(0,0,0,0.28)',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'center'
@@ -320,15 +385,14 @@ const SystemHealth = () => {
                         </div>
 
                         {/* Column 2: Disease AI (Toggle) */}
-                         <div 
+                            <div 
                             onClick={(e) => { e.stopPropagation(); setShowAiSection(!showAiSection); }}
                             style={{ 
-                                flex: 1, 
-                                padding: '24px', 
-                                borderRight: '1px solid rgba(255,255,255,0.1)',
+                                padding: '18px', 
+                                borderRadius: '12px',
                                 cursor: 'pointer', 
                                 transition: 'background 0.3s',
-                                background: showAiSection ? 'rgba(46, 204, 113, 0.1)' : 'transparent',
+                                background: showAiSection ? 'rgba(46, 204, 113, 0.14)' : 'rgba(0,0,0,0.28)',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'center'
@@ -357,11 +421,11 @@ const SystemHealth = () => {
                         <div 
                             onClick={(e) => { e.stopPropagation(); setShowYieldSection(!showYieldSection); }}
                             style={{ 
-                                flex: 1, 
-                                padding: '24px', 
+                                padding: '18px', 
+                                borderRadius: '12px',
                                 cursor: 'pointer', 
                                 transition: 'background 0.3s',
-                                background: showYieldSection ? 'rgba(46, 204, 113, 0.1)' : 'transparent',
+                                background: showYieldSection ? 'rgba(46, 204, 113, 0.14)' : 'rgba(0,0,0,0.28)',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'center'
@@ -390,11 +454,11 @@ const SystemHealth = () => {
                         <div 
                             onClick={(e) => { e.stopPropagation(); setShowMaturitySection(!showMaturitySection); }}
                             style={{ 
-                                flex: 1, 
-                                padding: '24px', 
+                                padding: '18px', 
+                                borderRadius: '12px',
                                 cursor: 'pointer', 
                                 transition: 'background 0.3s',
-                                background: showMaturitySection ? 'rgba(46, 204, 113, 0.1)' : 'transparent',
+                                background: showMaturitySection ? 'rgba(46, 204, 113, 0.14)' : 'rgba(0,0,0,0.28)',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'center'
@@ -418,11 +482,115 @@ const SystemHealth = () => {
                                 Click for details
                             </div>
                         </div>
+
+                        {/* Column 5: Auth API */}
+                        <div style={{ 
+                            padding: '18px', 
+                            borderRadius: '12px',
+                            background: 'rgba(0,0,0,0.28)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                <div className="stat-icon-wrapper" style={{ 
+                                    background: authHealthData ? '#2ecc7120' : 'rgba(255,255,255,0.05)',
+                                    width: '32px', height: '32px', borderRadius: '8px', padding: '6px'
+                                }}>
+                                    <Power size={20} color={authHealthData ? '#2ecc71' : '#ccc'} />
+                                </div>
+                                <h3 className="card-title" style={{ margin: 0, fontSize: '0.85rem', color: '#aaa', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>AUTH API</h3>
+                            </div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: authHealthData ? '#2ecc71' : '#e74c3c', whiteSpace: 'nowrap' }}>
+                                {authLoading ? 'CHECKING...' : (authHealthData ? 'ONLINE' : 'OFFLINE')}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px', whiteSpace: 'nowrap' }}>
+                                {authHealthData ? `${authHealthData.latency}ms Latency` : 'Check Logs'}
+                            </div>
+                        </div>
+
+                        {/* Column 6: Environment IoT API */}
+                        <div style={{ 
+                            padding: '18px', 
+                            borderRadius: '12px',
+                            background: 'rgba(0,0,0,0.28)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                <div className="stat-icon-wrapper" style={{ 
+                                    background: envIotHealthData ? '#2ecc7120' : 'rgba(255,255,255,0.05)',
+                                    width: '32px', height: '32px', borderRadius: '8px', padding: '6px'
+                                }}>
+                                    <Wifi size={20} color={envIotHealthData ? '#2ecc71' : '#ccc'} />
+                                </div>
+                                <h3 className="card-title" style={{ margin: 0, fontSize: '0.85rem', color: '#aaa', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>ENV IOT</h3>
+                            </div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: envIotHealthData ? '#2ecc71' : '#e74c3c', whiteSpace: 'nowrap' }}>
+                                {envIotLoading ? 'CHECKING...' : (envIotHealthData ? 'ONLINE' : 'OFFLINE')}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px', whiteSpace: 'nowrap' }}>
+                                {envIotHealthData ? `${envIotHealthData.latency}ms Latency` : 'Check Logs'}
+                            </div>
+                        </div>
+
+                        {/* Column 7: Soil IoT API */}
+                        <div style={{ 
+                            padding: '18px', 
+                            borderRadius: '12px',
+                            background: 'rgba(0,0,0,0.28)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                <div className="stat-icon-wrapper" style={{ 
+                                    background: soilIotHealthData ? '#2ecc7120' : 'rgba(255,255,255,0.05)',
+                                    width: '32px', height: '32px', borderRadius: '8px', padding: '6px'
+                                }}>
+                                    <Zap size={20} color={soilIotHealthData ? '#2ecc71' : '#ccc'} />
+                                </div>
+                                <h3 className="card-title" style={{ margin: 0, fontSize: '0.85rem', color: '#aaa', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>SOIL IOT</h3>
+                            </div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: soilIotHealthData ? '#2ecc71' : '#e74c3c', whiteSpace: 'nowrap' }}>
+                                {soilIotLoading ? 'CHECKING...' : (soilIotHealthData ? 'ONLINE' : 'OFFLINE')}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px', whiteSpace: 'nowrap' }}>
+                                {soilIotHealthData ? `${soilIotHealthData.latency}ms Latency` : 'Check Logs'}
+                            </div>
+                        </div>
+
+                        {/* Column 8: Market/Powder AI */}
+                        <div style={{ 
+                            padding: '18px', 
+                            borderRadius: '12px',
+                            background: 'rgba(0,0,0,0.28)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                <div className="stat-icon-wrapper" style={{ 
+                                    background: marketHealthData ? '#2ecc7120' : 'rgba(255,255,255,0.05)',
+                                    width: '32px', height: '32px', borderRadius: '8px', padding: '6px'
+                                }}>
+                                    <BookOpen size={20} color={marketHealthData ? '#2ecc71' : '#ccc'} />
+                                </div>
+                                <h3 className="card-title" style={{ margin: 0, fontSize: '0.85rem', color: '#aaa', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>MARKET AI</h3>
+                            </div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: marketHealthData ? '#2ecc71' : '#e74c3c', whiteSpace: 'nowrap' }}>
+                                {marketLoading ? 'CHECKING...' : (marketHealthData ? 'ONLINE' : 'OFFLINE')}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px', whiteSpace: 'nowrap' }}>
+                                {marketHealthData ? `${marketHealthData.latency}ms Latency` : 'Check Logs'}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* System Uptime & Comprehensive Diagnostics */}
-                <div className="dashboard-card stat-card modern-card" style={{ flex: '1', minWidth: '1000px', padding: 0, overflow: 'hidden' }}>
+                <div className="dashboard-card stat-card modern-card" style={{ flex: '1 1 100%', minWidth: '100%', padding: 0, overflow: 'hidden' }}>
                      <div className="card-bg-glow" style={{ background: 'linear-gradient(135deg, #9b59b6, #8e44ad, #2c3e50)' }}></div>
                      
                      <div style={{ display: 'flex', width: '100%', height: '100%', minHeight: '120px' }}>
@@ -963,11 +1131,27 @@ const SystemHealth = () => {
                             <div style={{ marginTop: '5px', fontSize: '0.85rem' }}>Pings the Tea Yield AI service.</div>
                         </li>
                         <li style={{ marginBottom: '10px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
-                            <code style={{ color: '#2ecc71', fontWeight: 'bold' }}>maturity_ai_status</code> 
+                            <code style={{ color: '#2ecc71', fontWeight: 'bold' }}>maturity_ai_status</code>
                             <div style={{ marginTop: '5px', fontSize: '0.85rem' }}>Pings the Tea Leaf Maturity AI service.</div>
                         </li>
                         <li style={{ marginBottom: '10px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
-                            <code style={{ color: '#2ecc71', fontWeight: 'bold' }}>troubleshoot</code> 
+                            <code style={{ color: '#2ecc71', fontWeight: 'bold' }}>auth_api_status</code>
+                            <div style={{ marginTop: '5px', fontSize: '0.85rem' }}>Pings the Authentication API.</div>
+                        </li>
+                        <li style={{ marginBottom: '10px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
+                            <code style={{ color: '#2ecc71', fontWeight: 'bold' }}>env_iot_status</code>
+                            <div style={{ marginTop: '5px', fontSize: '0.85rem' }}>Pings the Environment IoT API.</div>
+                        </li>
+                        <li style={{ marginBottom: '10px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
+                            <code style={{ color: '#2ecc71', fontWeight: 'bold' }}>soil_iot_status</code>
+                            <div style={{ marginTop: '5px', fontSize: '0.85rem' }}>Pings the Soil Monitoring IoT API.</div>
+                        </li>
+                        <li style={{ marginBottom: '10px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
+                            <code style={{ color: '#2ecc71', fontWeight: 'bold' }}>market_ai_status</code>
+                            <div style={{ marginTop: '5px', fontSize: '0.85rem' }}>Pings the Tea Powder Market API.</div>
+                        </li>
+                        <li style={{ marginBottom: '10px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
+                            <code style={{ color: '#2ecc71', fontWeight: 'bold' }}>troubleshoot</code>
                             <div style={{ marginTop: '5px', fontSize: '0.85rem' }}>Aggregates all current issues and suggests debugging steps.</div>
                         </li>
                         <li style={{ marginBottom: '10px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
@@ -1065,6 +1249,34 @@ const SystemHealth = () => {
                 }
                 @keyframes blink {
                     50% { opacity: 0; }
+                }
+
+                /* Responsive grid for top service tiles */
+                .service-grid {
+                    display: grid;
+                    grid-template-columns: repeat(5, minmax(0, 1fr));
+                    gap: 16px;
+                    width: 100%;
+                }
+                @media (max-width: 1600px) {
+                    .service-grid {
+                        grid-template-columns: repeat(4, minmax(0, 1fr));
+                    }
+                }
+                @media (max-width: 1300px) {
+                    .service-grid {
+                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                    }
+                }
+                @media (max-width: 1000px) {
+                    .service-grid {
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                    }
+                }
+                @media (max-width: 700px) {
+                    .service-grid {
+                        grid-template-columns: repeat(1, minmax(0, 1fr));
+                    }
                 }
             `}</style>
         </div>

@@ -21,6 +21,9 @@ const loginUser = asyncHandler(async (req, res) => {
     if (user && (await user.matchPassword(password))) {
         console.log(`User attempting login: ${user.email} | Role: ${user.role}`); 
 
+        // Stamp lastLogin
+        await User.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
+
         try {
             // Log the successful login
             await LoginLog.create({

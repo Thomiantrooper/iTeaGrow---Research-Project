@@ -18,11 +18,13 @@ app.use(express.json());
 const contactRoutes = require('./routes/contact.routes');
 const authRoutes = require('./routes/auth.routes');
 const alertRoutes = require('./routes/alert.routes');
+const dataRoutes = require('./routes/data.routes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 app.use('/api/contact', contactRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/admin', alertRoutes);
+app.use('/api/data', dataRoutes);
 
 // Health Check Endpoint
 app.use('/api/health', async (req, res) => {
@@ -88,4 +90,41 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  // ---------------------------------------------------------------
+  // Keep-Alive: Prevent Railway free-tier services from sleeping.
+  // Runs from within Railway so it works 24/7 regardless of local machine.
+  // ---------------------------------------------------------------
+  const https = require('https');
+  const KEEP_ALIVE_INTERVAL = 4 * 60 * 1000; // every 4 minutes
+
+  const keepAliveEndpoints = [
+    'https://iteagrow.up.railway.app/api/health',                                   // This Backend
+    'https://tea-leaf-disease-api-prod.up.railway.app/health',                     // Disease AI
+    'https://iteagrow-tea-yield-prod.up.railway.app/health',                       // Yield AI
+    'https://iteagrow-tea-leaf-maturity-prod.up.railway.app/health',               // Maturity AI
+    'https://authentication-iteagrow-api.up.railway.app/api/health',               // Auth API
+    'https://tea-powder-classification-market-value-api.up.railway.app/health',    // Market AI
+    'https://iteagrow-environment-monitoring-iot-api.up.railway.app/health',        // Env IoT
+    'https://iteagrow-soil-monitoring-iot-api.up.railway.app/health',              // Soil IoT
+  ];
+
+  function keepAlivePing(url) {
+    https.get(url, (res) => {
+      console.log(`[KeepAlive] ${url} - ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.warn(`[KeepAlive] Failed: ${url} - ${err.message}`);
+    });
+  }
+
+  function runKeepAlive() {
+    console.log(`[KeepAlive] Pinging ${keepAliveEndpoints.length} services...`);
+    keepAliveEndpoints.forEach(keepAlivePing);
+  }
+
+  // Start after 30s (let the server fully boot first)
+  setTimeout(() => {
+    runKeepAlive();
+    setInterval(runKeepAlive, KEEP_ALIVE_INTERVAL);
+  }, 30 * 1000);
 });

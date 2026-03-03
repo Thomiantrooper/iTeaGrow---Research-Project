@@ -16,12 +16,16 @@ const AdminDashboard = () => {
         loading: true
     });
     const [activities, setActivities] = useState([]);
+    const [lastUpdated, setLastUpdated] = useState(null);
 
     useEffect(() => {
-        // Only fetch data if user is authenticated
         if (user && user.token) {
             fetchDashboardData();
         }
+        const interval = setInterval(() => {
+            if (user && user.token) fetchDashboardData();
+        }, 30000);
+        return () => clearInterval(interval);
     }, [user]);
 
     const fetchDashboardData = async () => {
@@ -54,6 +58,7 @@ const AdminDashboard = () => {
 
             setStats({ users, contacts, alerts, loading: false });
             setActivities(activity);
+            setLastUpdated(new Date());
         } catch (error) {
             console.error('❌ Error fetching dashboard data:', error);
             setStats(prev => ({ ...prev, loading: false }));
@@ -137,7 +142,9 @@ const AdminDashboard = () => {
                             <span style={{ color: '#2ecc71', fontSize: '0.85rem', fontWeight: '500' }}>System Online</span>
                         </div>
                         <span style={{ color: '#aaa', fontSize: '0.85rem', fontWeight: '500' }}>
-                            Updated: Just now
+                            {lastUpdated
+                                ? `Updated: ${lastUpdated.toLocaleTimeString()}`
+                                : 'Updating...'}
                         </span>
                     </div>
                 </div>
@@ -157,7 +164,7 @@ const AdminDashboard = () => {
                             </span>
                         </div>
                         <p className="card-sub">
-                            {(stats.users.breakdown?.admin || 0)} Admin, {((stats.users.breakdown?.farmer || 0) + (stats.users.breakdown?.researcher || 0))} Normal Users
+                            {(stats.users.breakdown?.manager || 0)} Managers, {(stats.users.breakdown?.farmer || 0)} Farmers
                         </p>
                     </div>
                 </div>
