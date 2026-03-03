@@ -108,21 +108,19 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background: rgba(40, 44, 48, 0.78);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(20, 30, 20, 0.70);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     cursor: pointer;
     text-align: left;
-    transition: all 0.25s ease;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
 }
 
 .dc-tab:hover {
-    background: rgba(55, 60, 66, 0.88);
-    border-color: rgba(255, 255, 255, 0.30);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    background: rgba(28, 40, 28, 0.82);
+    border-color: rgba(255, 255, 255, 0.18);
 }
 
 .dc-tab-active {
@@ -170,14 +168,13 @@
 
 /* Data Panel */
 .dc-panel {
-    background: rgba(38, 42, 46, 0.88);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
+    background: rgba(20, 30, 20, 0.70);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 12px;
     overflow: hidden;
     transition: border-color 0.3s;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .dc-panel-header {
