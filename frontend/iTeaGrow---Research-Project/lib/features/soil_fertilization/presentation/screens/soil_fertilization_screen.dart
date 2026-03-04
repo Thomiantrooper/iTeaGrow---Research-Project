@@ -17,16 +17,36 @@ class SoilFertilizationScreen extends ConsumerStatefulWidget {
 class _SoilFertilizationScreenState
     extends ConsumerState<SoilFertilizationScreen> {
 
-  String _getZoneName(int id) {
-    if (id <= 25) return 'North';
-    if (id <= 50) return 'East';
-    if (id <= 75) return 'South';
-    if (id <= 100) return 'West';
+  // Zone name from zone ID (1-5)
+  String _zoneNameForId(int zoneId) {
+    const names = ['North', 'East', 'South', 'West', 'Central'];
+    return names[(zoneId - 1).clamp(0, 4)];
+  }
+
+  // Zone name derived from a hectare_id (625 hectares per zone — matches the map screen)
+  String _zoneNameForHectare(int hectareId) {
+    if (hectareId <= 625) return 'North';
+    if (hectareId <= 1250) return 'East';
+    if (hectareId <= 1875) return 'South';
+    if (hectareId <= 2500) return 'West';
     return 'Central';
   }
 
-  String _getHectareLabel(int id) {
-    return '${_getZoneName(id)} H$id';
+  // Block display number B1-B25 from a block base hectare_id
+  int _getBlockDisplayNum(int blockBase) {
+    const zoneBases = [1, 626, 1251, 1876, 2501];
+    for (final zb in zoneBases) {
+      if (blockBase >= zb && blockBase < zb + 625) {
+        return (blockBase - zb) ~/ 25 + 1;
+      }
+    }
+    return 1;
+  }
+
+  // First hectare_id of a zone
+  int _zoneBase(int zoneId) {
+    const bases = [1, 626, 1251, 1876, 2501];
+    return bases[(zoneId - 1).clamp(0, 4)];
   }
 
   @override
@@ -92,12 +112,13 @@ class _SoilFertilizationScreenState
     final isNested = state.selectedZoneId != null;
 
     String headerTitle = 'Soil Health Report';
-    if (state.selectedBlockId != null) {
-      headerTitle = 'Block ${state.selectedBlockId} Highlights';
+    if (state.selectedBlockId != null && state.selectedHectareId != null) {
+      headerTitle =
+          'B${_getBlockDisplayNum(state.selectedHectareId!)} · S${state.selectedBlockId} Analysis';
     } else if (state.selectedHectareId != null) {
-      headerTitle = 'Block ${state.selectedHectareId} Analysis';
+      headerTitle = 'Block ${_getBlockDisplayNum(state.selectedHectareId!)} Analysis';
     } else if (state.selectedZoneId != null) {
-      headerTitle = '${_getZoneName(state.selectedZoneId! * 25)} Zone Overview';
+      headerTitle = '${_zoneNameForId(state.selectedZoneId!)} Zone Overview';
     }
 
     return Center(
@@ -282,7 +303,10 @@ class _SoilFertilizationScreenState
   Widget _buildDivisionSelector(SoilHealthState state) {
     final notifier = ref.read(soilHealthProvider.notifier);
     final zoneId = state.selectedZoneId!;
-    final hectares = List.generate(25, (i) => (zoneId - 1) * 25 + i + 1);
+    // Block bases: 25 blocks per zone, each block spans 25 consecutive hectare_ids.
+    // Matches the map screen's _createSubZones() zone base offsets.
+    final zoneBase = _zoneBase(zoneId);
+    final blockBases = List.generate(25, (i) => zoneBase + i * 25);
 
     return Column(
       children: [
@@ -291,7 +315,7 @@ class _SoilFertilizationScreenState
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Select Division (Block)',
+              'Select Block (${_zoneNameForId(zoneId)} Zone)',
               style: TextStyle(
                 color: TeaColors.deepForest.withValues(alpha: 0.6),
                 fontSize: 12,
@@ -306,18 +330,25 @@ class _SoilFertilizationScreenState
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            itemCount: hectares.length,
+            itemCount: blockBases.length,
             itemBuilder: (context, index) {
-              final hId = hectares[index];
-              final hectareRecords =
-                  state.records.where((r) => r.hectareId == hId).toList();
-              final hasData = hectareRecords.isNotEmpty;
-              final isSelected = state.selectedHectareId == hId;
+              final blockBase = blockBases[index];
+              final displayNum = index + 1; // B1–B25
+              // Block has data when ANY of its 25 sectors has a record
+              final blockRecords = state.records
+                  .where((r) =>
+                      r.hectareId >= blockBase &&
+                      r.hectareId <= blockBase + 24)
+                  .toList();
+              final hasData = blockRecords.isNotEmpty;
+              final isSelected = state.selectedHectareId == blockBase;
 
-              // Determine health color from first available record
+              // Health color based on most recent record in this block
               Color statusColor = TeaColors.mediumGray.withValues(alpha: 0.1);
               if (hasData) {
-                final status = hectareRecords.first.healthStatus;
+                blockRecords.sort(
+                    (a, b) => b.timestamp.compareTo(a.timestamp));
+                final status = blockRecords.first.healthStatus;
                 if (status == SoilHealthStatus.good) {
                   statusColor = TeaColors.healthyGreen.withValues(alpha: 0.15);
                 } else if (status == SoilHealthStatus.fair) {
@@ -333,7 +364,7 @@ class _SoilFertilizationScreenState
                   label: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('B$hId'),
+                      Text('B$displayNum'),
                       if (hasData) ...[
                         const SizedBox(width: 4),
                         Container(
@@ -343,14 +374,14 @@ class _SoilFertilizationScreenState
                             color: isSelected
                                 ? Colors.white
                                 : _getStatusColor(
-                                    hectareRecords.first.healthStatus),
+                                    blockRecords.first.healthStatus),
                             shape: BoxShape.circle,
                           ),
                         ),
                       ],
                     ],
                   ),
-                  onPressed: () => notifier.selectHectare(hId),
+                  onPressed: () => notifier.selectHectare(blockBase),
                   backgroundColor:
                       isSelected ? TeaColors.deepForest : statusColor,
                   side: BorderSide(
@@ -372,8 +403,10 @@ class _SoilFertilizationScreenState
 
   Widget _buildSubDivisionSelector(SoilHealthState state) {
     final notifier = ref.read(soilHealthProvider.notifier);
-    final hId = state.selectedHectareId!;
-    final blocks = List.generate(25, (i) => i + 1);
+    // blockBase = selectedHectareId (block's first hectare_id).
+    // S1 = blockBase+0, S2 = blockBase+1, ..., S25 = blockBase+24.
+    final blockBase = state.selectedHectareId!;
+    final blockDisplayNum = _getBlockDisplayNum(blockBase);
 
     return Column(
       children: [
@@ -382,7 +415,7 @@ class _SoilFertilizationScreenState
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Select Sub-Division blocks for B$hId',
+              'Select Sector for B$blockDisplayNum',
               style: TextStyle(
                 color: TeaColors.deepForest.withValues(alpha: 0.6),
                 fontSize: 12,
@@ -397,19 +430,22 @@ class _SoilFertilizationScreenState
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            itemCount: blocks.length,
+            itemCount: 25,
             itemBuilder: (context, index) {
-              final bId = blocks[index];
-              final isSelected = state.selectedBlockId == bId;
+              final sIdx = index + 1; // Sector number S1-S25
+              final sectorHId = blockBase + index; // actual hectare_id in DB
+              final isSelected = state.selectedBlockId == sIdx;
               final record = state.records
-                  .where((r) => r.hectareId == hId && r.blockId == bId)
-                  .toList();
+                  .where((r) => r.hectareId == sectorHId)
+                  .toList()
+                ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
               final hasData = record.isNotEmpty;
+              // Always use the most recent read (newest scan round first)
+              final latestRecord = hasData ? record.first : null;
 
-              // Strict Color Logic
               Color statusColor = TeaColors.mediumGray.withValues(alpha: 0.1);
               if (hasData) {
-                final status = record.first.healthStatus;
+                final status = latestRecord!.healthStatus;
                 if (status == SoilHealthStatus.good) {
                   statusColor = TeaColors.healthyGreen.withValues(alpha: 0.1);
                 } else if (status == SoilHealthStatus.fair) {
@@ -425,7 +461,7 @@ class _SoilFertilizationScreenState
                   label: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('B$bId'),
+                      Text('S$sIdx'),
                       if (hasData) ...[
                         const SizedBox(width: 4),
                         Container(
@@ -434,7 +470,7 @@ class _SoilFertilizationScreenState
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? Colors.white
-                                : _getStatusColor(record.first.healthStatus),
+                                : _getStatusColor(latestRecord!.healthStatus),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -443,7 +479,7 @@ class _SoilFertilizationScreenState
                   ),
                   selected: isSelected,
                   onSelected: (val) {
-                    if (val) notifier.selectBlock(bId);
+                    if (val) notifier.selectBlock(sIdx);
                   },
                   backgroundColor: statusColor,
                   selectedColor: TeaColors.deepForest,
@@ -787,10 +823,17 @@ class _SoilFertilizationScreenState
   }
 
   String _selectedHectareLabel(SoilHealthRecord record) {
-    if (record.blockId != null) {
-      return 'Report for ${_getZoneName(record.hectareId)} Div B${record.hectareId} - Sub-block S${record.blockId} at ${record.formattedTime}';
+    final state = ref.read(soilHealthProvider);
+    final zoneName = _zoneNameForHectare(record.hectareId);
+    if (state.selectedBlockId != null && state.selectedHectareId != null) {
+      final blockNum = _getBlockDisplayNum(state.selectedHectareId!);
+      return 'Report for $zoneName B$blockNum · S${state.selectedBlockId} at ${record.formattedTime}';
     }
-    return 'Report generated at ${record.formattedTime} for ${_getHectareLabel(record.hectareId)}';
+    if (state.selectedHectareId != null) {
+      final blockNum = _getBlockDisplayNum(state.selectedHectareId!);
+      return 'Report for $zoneName B$blockNum at ${record.formattedTime}';
+    }
+    return 'Report for $zoneName S${record.hectareId} at ${record.formattedTime}';
   }
 
   Color _getStatusColor(SoilHealthStatus status) {

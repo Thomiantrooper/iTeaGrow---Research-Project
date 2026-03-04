@@ -177,25 +177,21 @@ class ApiConfig {
   static const String authMicroserviceBaseUrl =
       'https://authentication-iteagrow-api.up.railway.app';
 
-  // Use the remote auth microservice in production, but prefer the local
-  // backend for auth endpoints during development so local Mongo users
-  // (e.g. seeded `farmer`) are used.
-  static String get _authBaseUrl => (kReleaseMode || useProductionBackend)
-      ? authMicroserviceBaseUrl
-      : effectiveBaseUrl;
+  // Auth microservice is always deployed on Railway — always use it regardless of dev/prod mode
+  static String get _authBaseUrl => authMicroserviceBaseUrl;
 
-  static String get authLogin => '$_authBaseUrl/api/$apiVersion/users/login';
+  static String get authLogin => '$_authBaseUrl/api/users/login';
   static String get authGoogleLogin =>
-      '$_authBaseUrl/api/$apiVersion/users/google-login';
+      '$_authBaseUrl/api/users/google-login';
   static String get authRegister =>
-      '$_authBaseUrl/api/$apiVersion/users/register';
+      '$_authBaseUrl/api/users/register';
   static String get authVerifyToken =>
-      '$_authBaseUrl/api/$apiVersion/users/verify-token';
-  static String get authProfile => '$_authBaseUrl/api/$apiVersion/users/me';
+      '$_authBaseUrl/api/users/verify-token';
+  static String get authProfile => '$_authBaseUrl/api/users/me';
   static String get authChangePassword =>
-      '$_authBaseUrl/api/$apiVersion/users/change-password';
+      '$_authBaseUrl/api/users/change-password';
   static String get authLogout =>
-      '$_authBaseUrl/api/$apiVersion/users/logout'; // Not currently implemented in backend but keeping for future
+      '$_authBaseUrl/api/users/logout'; // Not currently implemented in backend but keeping for future
 
   // Feedback & Retraining Endpoints
   static String get feedbackSubmit => '$apiBaseUrl/feedback/submit';

@@ -10,6 +10,8 @@ class User {
   final String? phone;
   final DateTime? createdAt;
   final bool isActive;
+  final String access;       // 'mobile' | 'web' | 'both'
+  final String? googleEmail; // Gmail registered for Google Sign-In
 
   User({
     required this.id,
@@ -21,6 +23,8 @@ class User {
     this.phone,
     this.createdAt,
     this.isActive = true,
+    this.access = 'both',
+    this.googleEmail,
   });
 
   /// Create user from local database map (int id)
@@ -41,6 +45,8 @@ class User {
           ? DateTime.tryParse(map['created_at'].toString())
           : null,
       isActive: map['is_active'] as bool? ?? true,
+      access: map['access'] as String? ?? 'both',
+      googleEmail: map['google_email'] as String?,
     );
   }
 
@@ -58,6 +64,8 @@ class User {
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
       isActive: json['is_active'] as bool? ?? true,
+      access: json['access'] as String? ?? 'both',
+      googleEmail: json['google_email'] as String?,
     );
   }
 
@@ -72,6 +80,8 @@ class User {
       'phone': phone,
       'created_at': createdAt?.toIso8601String(),
       'is_active': isActive,
+      'access': access,
+      'google_email': googleEmail,
     };
   }
 
@@ -98,6 +108,8 @@ class User {
     String? phone,
     DateTime? createdAt,
     bool? isActive,
+    String? access,
+    String? googleEmail,
   }) {
     return User(
       id: id ?? this.id,
@@ -109,6 +121,8 @@ class User {
       phone: phone ?? this.phone,
       createdAt: createdAt ?? this.createdAt,
       isActive: isActive ?? this.isActive,
+      access: access ?? this.access,
+      googleEmail: googleEmail ?? this.googleEmail,
     );
   }
 }

@@ -20,6 +20,15 @@ final hectareHistoryProvider =
   return await repository.getHectareHistory(hectareId, limit: 100);
 });
 
+/// Provider for a block's full range of sector data
+/// blockBase = the starting hectare_id of the block (e.g. B1 of North = 1)
+final blockRangeProvider =
+    FutureProvider.family<List<SoilData>, ({int start, int end})>(
+        (ref, range) async {
+  final repository = ref.read(iotMapRepositoryProvider);
+  return await repository.getRangeData(range.start, range.end);
+});
+
 /// Provider for API health check
 final apiHealthProvider = FutureProvider<bool>((ref) async {
   final repository = ref.read(iotMapRepositoryProvider);

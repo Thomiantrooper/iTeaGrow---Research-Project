@@ -92,7 +92,8 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         accentColor: const Color(0xFFE53935), // Red
         position: const Offset(0.3, 0.2),
         size: const Size(0.4, 0.3),
-        subZones: _createSubZones(1, 1, 25),
+        // Zone base hectare_id = 1 → B1 covers h_id 1-25, B2 covers 26-50, ...
+        subZones: _createSubZones(1, 1),
       ),
       PlantationZone(
         id: 2,
@@ -100,7 +101,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         accentColor: const Color(0xFFE53935), // Red
         position: const Offset(0.7, 0.5),
         size: const Size(0.25, 0.3),
-        subZones: _createSubZones(2, 26, 50),
+        subZones: _createSubZones(2, 626),
       ),
       PlantationZone(
         id: 3,
@@ -108,7 +109,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         accentColor: const Color(0xFF43A047), // Green
         position: const Offset(0.5, 0.8),
         size: const Size(0.5, 0.2),
-        subZones: _createSubZones(3, 51, 75),
+        subZones: _createSubZones(3, 1251),
       ),
       PlantationZone(
         id: 4,
@@ -116,7 +117,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         accentColor: const Color(0xFF43A047), // Green
         position: const Offset(0.2, 0.6),
         size: const Size(0.3, 0.4),
-        subZones: _createSubZones(4, 76, 100),
+        subZones: _createSubZones(4, 1876),
       ),
       PlantationZone(
         id: 5,
@@ -124,82 +125,102 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         accentColor: const Color(0xFFFFB300), // Yellow
         position: const Offset(0.45, 0.55),
         size: const Size(0.4, 0.3),
-        subZones: _createSubZones(5, 101, 125),
+        subZones: _createSubZones(5, 2501),
       ),
     ];
   }
 
-  List<SubZone> _createSubZones(int zoneId, int startId, int endId) {
-    return List.generate(
-      endId - startId + 1,
-      (index) {
-        final hectareId = startId + index;
-        final row = index ~/ 5;
-        final col = index % 5;
-        return SubZone(
-          hectareId: hectareId,
-          name: 'Block $hectareId',
-          zoneId: zoneId,
-          position: Offset(col * 0.2, row * 0.2),
-          size: const Size(0.18, 0.18),
-          latestData: null,
-        );
-      },
-    );
+  /// Creates 25 sub-zones (blocks) for a zone.
+  /// [zoneBase] is the starting hectare_id for Block 1 of this zone.
+  /// Each block covers 25 sequential hectare_ids:
+  ///   B1 = zoneBase to zoneBase+24
+  ///   B2 = zoneBase+25 to zoneBase+49  ... etc.
+  List<SubZone> _createSubZones(int zoneId, int zoneBase) {
+    return List.generate(25, (blockIndex) {
+      // hectareId here is the BLOCK BASE — the starting h_id of this block
+      final blockBaseId = zoneBase + blockIndex * 25;
+      final row = blockIndex ~/ 5;
+      final col = blockIndex % 5;
+      return SubZone(
+        hectareId: blockBaseId,
+        name: 'Block ${blockIndex + 1}',
+        zoneId: zoneId,
+        position: Offset(col * 0.2, row * 0.2),
+        size: const Size(0.18, 0.18),
+        latestData: null,
+      );
+    });
   }
 
   void _updateZonesWithData(List<SoilData> soilDataList) {
-    // Merge new API data into _allSoilData without overwriting specifically-loaded
-    // hectare block records (added by _loadHectareData).
-    // Key: "hectareId_blockId". Existing entries win — they are more granular.
-    final Map<String, SoilData> merged = {
-      for (var d in _allSoilData) '${d.hectareId}_${d.blockId}': d,
-    };
-    for (var d in soilDataList) {
-      final key = '${d.hectareId}_${d.blockId}';
-      if (!merged.containsKey(key)) {
-        merged[key] = d;
+    // ALWAYS replace with what the API returns — stale in-memory data must not
+    // survive a DB wipe. Block-range loaded sectors (_loadHectareData) are kept
+    // only if they are for hectare_ids NOT present in the fresh API response.
+    final freshIds = soilDataList.map((d) => d.hectareId).toSet();
+    // Drop everything that the API now covers (could be empty after a DB drop)
+    _allSoilData.removeWhere((d) =>
+        freshIds.isEmpty || freshIds.contains(d.hectareId));
+    // If the API returned nothing at all, wipe everything
+    if (soilDataList.isEmpty) {
+      _allSoilData = [];
+    } else {
+      // Merge fresh records (newer wins)
+      final Map<int, SoilData> merged = {
+        for (var d in _allSoilData) d.hectareId: d,
+      };
+      for (var d in soilDataList) {
+        final existing = merged[d.hectareId];
+        if (existing == null || d.timestamp.isAfter(existing.timestamp)) {
+          merged[d.hectareId] = d;
+        }
       }
-    }
-    _allSoilData = merged.values.toList();
-
-    // Build latestPerHectare from merged data to color H-level blocks
-    final Map<int, SoilData> latestPerHectare = {};
-    for (var data in _allSoilData) {
-      final existing = latestPerHectare[data.hectareId];
-      if (existing == null || data.timestamp.isAfter(existing.timestamp)) {
-        latestPerHectare[data.hectareId] = data;
-      }
+      _allSoilData = merged.values.toList();
     }
 
-    // Apply to each sub-zone: color the H block only if real data exists for it
+    // Color each BLOCK (subZone) if ANY of its 25 sector slots have data.
+    // subZone.hectareId = blockBase; the 25 sectors = blockBase to blockBase+24.
     for (var zone in _zones) {
       for (var subZone in zone.subZones) {
-        subZone.latestData = latestPerHectare[subZone.hectareId];
+        final blockEnd = subZone.hectareId + 24;
+        final blockRecords = _allSoilData
+            .where((d) =>
+                d.hectareId >= subZone.hectareId && d.hectareId <= blockEnd)
+            .toList();
+        if (blockRecords.isNotEmpty) {
+          blockRecords.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          subZone.latestData = blockRecords.first;
+        } else {
+          subZone.latestData = null;
+        }
       }
     }
   }
 
-  Future<void> _loadHectareData(int hectareId) async {
+  /// Load all 25 sector records for a block.
+  /// [blockBase] = subZone.hectareId (the starting hectare_id of the block).
+  Future<void> _loadHectareData(int blockBase) async {
     try {
-      final hectareData =
-          await ref.read(hectareHistoryProvider(hectareId).future);
+      final blockEnd = blockBase + 24;
+      final blockData = await ref
+          .read(blockRangeProvider((start: blockBase, end: blockEnd)).future);
 
       if (mounted) {
         setState(() {
-          // Replace any existing data for this hectare with fresh results
-          _allSoilData.removeWhere((d) => d.hectareId == hectareId);
-          _allSoilData.addAll(hectareData);
+          // Replace any existing data in this block range
+          _allSoilData.removeWhere(
+              (d) => d.hectareId >= blockBase && d.hectareId <= blockEnd);
+          _allSoilData.addAll(blockData);
 
-          // Also refresh the SubZone's latestData so the H-block color stays accurate
-          if (hectareData.isNotEmpty) {
-            final latest = hectareData.reduce(
-              (a, b) => a.timestamp.isAfter(b.timestamp) ? a : b,
-            );
-            for (var zone in _zones) {
-              for (var subZone in zone.subZones) {
-                if (subZone.hectareId == hectareId) {
-                  subZone.latestData = latest;
+          // Refresh the block's color
+          for (var zone in _zones) {
+            for (var subZone in zone.subZones) {
+              if (subZone.hectareId == blockBase) {
+                final records = blockData;
+                if (records.isNotEmpty) {
+                  records.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+                  subZone.latestData = records.first;
+                } else {
+                  subZone.latestData = null;
                 }
               }
             }
@@ -207,7 +228,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         });
       }
     } catch (e) {
-      // silently fail — grid will just stay grey for this hectare
+      // silently fail — sectors will just stay grey for this block
     }
   }
 
@@ -533,7 +554,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
               children: [
                 Text(
                   _selectedHectareId != null
-                      ? '${zone.name} > Block $_selectedHectareId'
+                      ? '${zone.name} > Block ${_getDisplayBlockNumber(_selectedHectareId!)}'
                       : zone.name,
                   style: TeaTypography.headlineSmall.copyWith(
                     color: _kPrimaryDeep,
@@ -715,6 +736,8 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
   Widget _buildDivisionGridLayer() {
     final zone = _zones.firstWhere((z) => z.id == _selectedZoneId);
     final size = MediaQuery.of(context).size;
+    // subZones are already in order: B1 (base=zoneBase), B2 (base=zoneBase+25) ...
+    // No sorting needed — order is fixed by the zone's block sequence.
 
     return Center(
       child: Container(
@@ -732,6 +755,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
           itemCount: zone.subZones.length,
           itemBuilder: (context, index) {
             final subZone = zone.subZones[index];
+            final displayBlockNum = index + 1; // B1, B2, B3 ...
             final isSelected = _selectedHectareId == subZone.hectareId;
             final healthColor = subZone.healthColor;
             return GestureDetector(
@@ -764,7 +788,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                 ),
                 child: Center(
                   child: Text(
-                    'B${subZone.hectareId}',
+                    'B$displayBlockNum',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -790,6 +814,9 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
 
   Widget _buildSubDivisionGridLayer() {
     final size = MediaQuery.of(context).size;
+    // _selectedHectareId is the BLOCK BASE hectare_id (e.g. 1 for B1 of North)
+    // S1 = hectare_id: blockBase+0, S2 = blockBase+1, ..., S25 = blockBase+24
+    final blockBase = _selectedHectareId!;
 
     return Center(
       child: Container(
@@ -804,21 +831,29 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             crossAxisSpacing: 4,
             mainAxisSpacing: 4,
           ),
-          itemCount: 25, // 25 sub-blocks per hectare as requested
+          itemCount: 25,
           itemBuilder: (context, index) {
-            final blockId = index + 1;
-            final isSelected = _selectedHectare != null &&
-                _selectedHectare!.blockId == blockId &&
-                _selectedHectare!.hectareId == _selectedHectareId;
-
-            // Use the same health color logic but for sub-blocks
-            // In a real app, we'd fetch specific block data
-            final healthColor = _getHealthColorForBlock(blockId);
+            final sectorNum = index + 1; // S1-S25
+            final sectorHectareId = blockBase + index; // direct h_id for this sector
+            // Most-recent record stored at this exact hectare_id
+            final sectorData = _allSoilData
+                .where((d) => d.hectareId == sectorHectareId)
+                .fold<SoilData?>(
+                    null,
+                    (best, d) => best == null ||
+                            d.timestamp.isAfter(best.timestamp)
+                        ? d
+                        : best);
+            final isSelected =
+                _selectedHectare?.hectareId == sectorHectareId;
+            final healthColor = sectorData != null
+                ? _soilHealthToColor(sectorData.soilHealth)
+                : TeaColors.mediumGray.withValues(alpha: 0.3);
 
             return GestureDetector(
               onTap: () {
                 setState(() {
-                  _triggerSubHectareSelection(blockId);
+                  _selectedHectare = sectorData; // null = grey sector (no data)
                 });
               },
               child: AnimatedContainer(
@@ -835,7 +870,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                 ),
                 child: Center(
                   child: Text(
-                    'S$blockId',
+                    'S$sectorNum',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -852,42 +887,55 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     );
   }
 
-  Color _getHealthColorForBlock(int blockId) {
-    try {
-      final blockData = _allSoilData.firstWhere(
-        (d) => d.hectareId == _selectedHectareId && d.blockId == blockId,
-      );
-
-      switch (blockData.soilHealth) {
-        case 'Good':
-          return TeaColors.healthyGreen;
-        case 'Fair':
-          return TeaColors.warningAmber;
-        case 'Poor':
-          return TeaColors.alertRust;
-        default:
-          return TeaColors.mediumGray;
-      }
-    } catch (_) {
-      // STRICT LOGIC: No data = strictly grey
-      return TeaColors.mediumGray.withValues(alpha: 0.3);
+  /// Map soil_health string → display color
+  Color _soilHealthToColor(String health) {
+    switch (health) {
+      case 'Good':
+        return TeaColors.healthyGreen;
+      case 'Fair':
+        return TeaColors.warningAmber;
+      case 'Poor':
+        return TeaColors.alertRust;
+      default:
+        return TeaColors.mediumGray;
     }
   }
 
-  void _triggerSubHectareSelection(int blockId) {
-    // Only select a block if it has real data — never show fake/cloned values
-    final matches = _allSoilData
-        .where(
-          (d) => d.hectareId == _selectedHectareId && d.blockId == blockId,
-        )
-        .toList();
-    if (matches.isNotEmpty) {
-      // Pick the most recent record for this block
-      matches.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      _selectedHectare = matches.first;
-    } else {
-      _selectedHectare = null; // Grey block — no data, close detail sheet
+  /// Block display number: subZone list index + 1 (B1, B2, B3...)
+  /// [blockBaseHectareId] = subZone.hectareId (block's starting h_id)
+  int _getDisplayBlockNumber(int blockBaseHectareId) {
+    for (var zone in _zones) {
+      final idx =
+          zone.subZones.indexWhere((s) => s.hectareId == blockBaseHectareId);
+      if (idx >= 0) return idx + 1;
     }
+    return 1;
+  }
+
+  /// Sector display number: data.hectareId - blockBase + 1 (S1, S2, S3...)
+  int _getSectorDisplayNumber(SoilData data) {
+    for (var zone in _zones) {
+      for (var subZone in zone.subZones) {
+        if (data.hectareId >= subZone.hectareId &&
+            data.hectareId <= subZone.hectareId + 24) {
+          return data.hectareId - subZone.hectareId + 1;
+        }
+      }
+    }
+    return data.hectareId;
+  }
+
+  void _triggerSubHectareSelection(int sectorIndex) {
+    // sectorIndex is 0-based within the block (0=S1, 1=S2, ...)
+    // Direct mapping: sectorHectareId = blockBase + sectorIndex
+    final sectorHectareId = _selectedHectareId! + sectorIndex;
+    _selectedHectare = _allSoilData
+        .where((d) => d.hectareId == sectorHectareId)
+        .fold<SoilData?>(
+            null,
+            (best, d) => best == null || d.timestamp.isAfter(best.timestamp)
+                ? d
+                : best);
   }
 
   Widget _buildDetailsSheet(SoilData data) {
@@ -925,23 +973,22 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                             color: Colors.black54),
                         onPressed: () {
                           setState(() {
-                            // Only navigate to blocks that actually have data
-                            final blocksWithData = _allSoilData
+                            // Navigate between sectors that have data in this block
+                            final blockBase = _selectedHectareId!;
+                            final sectorsWithData = _allSoilData
                                 .where((d) =>
-                                    d.hectareId == _selectedHectareId &&
-                                    d.blockId != null)
-                                .map((d) => d.blockId!)
-                                .toSet()
+                                    d.hectareId >= blockBase &&
+                                    d.hectareId <= blockBase + 24)
                                 .toList()
-                              ..sort();
-                            if (blocksWithData.isEmpty) return;
-                            final currentBlock =
-                                data.blockId ?? blocksWithData.first;
-                            final idx = blocksWithData.indexOf(currentBlock);
-                            final prevIdx =
-                                idx <= 0 ? blocksWithData.length - 1 : idx - 1;
-                            _triggerSubHectareSelection(
-                                blocksWithData[prevIdx]);
+                              ..sort((a, b) =>
+                                  a.hectareId.compareTo(b.hectareId));
+                            if (sectorsWithData.isEmpty) return;
+                            final curIdx = sectorsWithData.indexWhere(
+                                (d) => d.hectareId == data.hectareId);
+                            final prevIdx = curIdx <= 0
+                                ? sectorsWithData.length - 1
+                                : curIdx - 1;
+                            _selectedHectare = sectorsWithData[prevIdx];
                           });
                         },
                         padding: EdgeInsets.zero,
@@ -952,9 +999,9 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          _selectedHectare?.blockId != null
-                              ? 'B$_selectedHectareId · Block ${data.blockId}'
-                              : 'Division H${data.hectareId}',
+                          _selectedHectareId != null
+                              ? 'B${_getDisplayBlockNumber(_selectedHectareId!)} · S${_getSectorDisplayNumber(data)}'
+                              : 'Division ${data.hectareId}',
                           style: TeaTypography.titleMedium
                               .copyWith(fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
@@ -967,23 +1014,23 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                             color: Colors.black54),
                         onPressed: () {
                           setState(() {
-                            // Only navigate to blocks that actually have data
-                            final blocksWithData = _allSoilData
+                            // Navigate between sectors that have data in this block
+                            final blockBase = _selectedHectareId!;
+                            final sectorsWithData = _allSoilData
                                 .where((d) =>
-                                    d.hectareId == _selectedHectareId &&
-                                    d.blockId != null)
-                                .map((d) => d.blockId!)
-                                .toSet()
+                                    d.hectareId >= blockBase &&
+                                    d.hectareId <= blockBase + 24)
                                 .toList()
-                              ..sort();
-                            if (blocksWithData.isEmpty) return;
-                            final currentBlock =
-                                data.blockId ?? blocksWithData.first;
-                            final idx = blocksWithData.indexOf(currentBlock);
+                              ..sort((a, b) =>
+                                  a.hectareId.compareTo(b.hectareId));
+                            if (sectorsWithData.isEmpty) return;
+                            final curIdx = sectorsWithData.indexWhere(
+                                (d) => d.hectareId == data.hectareId);
                             final nextIdx =
-                                idx >= blocksWithData.length - 1 ? 0 : idx + 1;
-                            _triggerSubHectareSelection(
-                                blocksWithData[nextIdx]);
+                                curIdx >= sectorsWithData.length - 1
+                                    ? 0
+                                    : curIdx + 1;
+                            _selectedHectare = sectorsWithData[nextIdx];
                           });
                         },
                         padding: EdgeInsets.zero,
@@ -1349,11 +1396,13 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     };
   }
 
+  // Zone boundaries: 5 zones × 25 blocks × 25 sectors = 625 hectares per zone.
+  // North=1-625, East=626-1250, South=1251-1875, West=1876-2500, Central=2501-3125
   String _getZoneNameForHectare(int hectareId) {
-    if (hectareId <= 25) return 'North Zone';
-    if (hectareId <= 50) return 'East Zone';
-    if (hectareId <= 75) return 'South Zone';
-    if (hectareId <= 100) return 'West Zone';
+    if (hectareId <= 625) return 'North Zone';
+    if (hectareId <= 1250) return 'East Zone';
+    if (hectareId <= 1875) return 'South Zone';
+    if (hectareId <= 2500) return 'West Zone';
     return 'Central Zone';
   }
 }

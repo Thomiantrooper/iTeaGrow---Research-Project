@@ -56,23 +56,20 @@ class LocalAuthService {
     String? accessToken,
     bool rememberMe = false,
   }) async {
-    await _prefs.setString(AuthKeys.userId, user.id);
-    await _prefs.setBool(AuthKeys.isLoggedIn, true);
-    await _prefs.setBool(AuthKeys.rememberMe, rememberMe);
-    await _prefs.setString(
-        AuthKeys.lastLoginTime, DateTime.now().toIso8601String());
-
-    // Store API token if provided
+    // Write all prefs in parallel — avoids 5 sequential disk flushes.
+    final writes = <Future>[
+      _prefs.setString(AuthKeys.userId, user.id),
+      _prefs.setBool(AuthKeys.isLoggedIn, true),
+      _prefs.setBool(AuthKeys.rememberMe, rememberMe),
+      _prefs.setString(AuthKeys.lastLoginTime, DateTime.now().toIso8601String()),
+    ];
     if (accessToken != null && accessToken.isNotEmpty) {
-      await _prefs.setString(AuthKeys.apiToken, accessToken);
+      writes.add(_prefs.setString(AuthKeys.apiToken, accessToken));
     }
-
-    // Always store full user data for web and as backup
-    // But only persist if rememberMe is true
     if (rememberMe) {
-      final userData = jsonEncode(user.toMap());
-      await _prefs.setString(AuthKeys.userData, userData);
+      writes.add(_prefs.setString(AuthKeys.userData, jsonEncode(user.toMap())));
     }
+    await Future.wait(writes);
 
     debugPrint(
         'Session saved for user: ${user.username} (Remember: $rememberMe)');

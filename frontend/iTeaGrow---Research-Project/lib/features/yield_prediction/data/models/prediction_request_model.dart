@@ -17,7 +17,7 @@ class PredictionRequestModel {
     required this.gPct,
     required this.cPct,
     required this.dPct,
-    this.predictionDays = 7,
+    this.predictionDays = 1,
   });
 
   /// Validate request data
