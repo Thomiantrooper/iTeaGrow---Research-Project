@@ -771,7 +771,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                 decoration: BoxDecoration(
                   color: isSelected
                       ? healthColor
-                      : healthColor.withValues(alpha: 0.85),
+                      : healthColor.withOpacity( 0.85),
                   border: Border.all(
                     color: Colors.white,
                     width: isSelected ? 2.5 : 1.5,
@@ -780,7 +780,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black
-                          .withValues(alpha: isSelected ? 0.3 : 0.15),
+                          .withOpacity( isSelected ? 0.3 : 0.15),
                       blurRadius: isSelected ? 8 : 3,
                       offset: Offset(0, isSelected ? 4 : 2),
                     ),
@@ -796,7 +796,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                           isSelected ? FontWeight.bold : FontWeight.w600,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withValues(alpha: 0.6),
+                          color: Colors.black.withOpacity( 0.6),
                           blurRadius: 3,
                           offset: const Offset(0, 1),
                         ),
@@ -848,7 +848,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                 _selectedHectare?.hectareId == sectorHectareId;
             final healthColor = sectorData != null
                 ? _soilHealthToColor(sectorData.soilHealth)
-                : TeaColors.mediumGray.withValues(alpha: 0.3);
+                : TeaColors.mediumGray.withOpacity( 0.3);
 
             return GestureDetector(
               onTap: () {
@@ -861,7 +861,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                 decoration: BoxDecoration(
                   color: isSelected
                       ? healthColor
-                      : healthColor.withValues(alpha: 0.8),
+                      : healthColor.withOpacity( 0.8),
                   border: Border.all(
                     color: Colors.white,
                     width: isSelected ? 2.0 : 1.0,

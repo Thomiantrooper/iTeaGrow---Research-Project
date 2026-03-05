@@ -3,12 +3,225 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
+import '../../data/datasources/multi_leaf_scan_service.dart';
 
 class DiseaseReportService {
   static final DiseaseReportService _instance =
       DiseaseReportService._internal();
   factory DiseaseReportService() => _instance;
   DiseaseReportService._internal();
+
+  /// Generate a multi-leaf session report containing per-leaf results and
+  /// an overall summary with recommendations.
+  Future<Uint8List> generateMultiLeafReport({
+    required List<LeafScanEntry> entries,
+    required MultiLeafSummary summary,
+    Map<String, dynamic>? farmer,
+    Map<String, dynamic>? organization,
+    double? temperature,
+    double? humidity,
+  }) async {
+    final pdf = pw.Document();
+    final dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
+    final reportId =
+        'ML-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+    final generatedAt = DateTime.now().toIso8601String();
+    final org = organization ??
+        {
+          'name': 'iTeaGrow',
+          'description': 'Tea Plantation Management System',
+        };
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(40),
+        header: (context) => _buildHeader(),
+        footer: (context) => _buildFooter(reportId, generatedAt, org),
+        build: (context) => [
+          // Title
+          pw.Center(
+            child: pw.Text(
+              'Multi-Leaf Disease Analysis Report',
+              style: pw.TextStyle(
+                fontSize: 20,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColor.fromHex('#2E7D32'),
+              ),
+            ),
+          ),
+          pw.SizedBox(height: 6),
+          pw.Center(
+            child: pw.Text(
+              'Report ID: $reportId  |  Leaves Scanned: ${entries.length}',
+              style:
+                  const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+            ),
+          ),
+          pw.SizedBox(height: 20),
+          pw.Divider(color: PdfColor.fromHex('#4CAF50'), thickness: 2),
+          pw.SizedBox(height: 16),
+
+          // Overall Summary
+          _buildSectionTitle('Overall Plant Assessment'),
+          pw.SizedBox(height: 10),
+          pw.Row(
+            children: [
+              Expanded(
+                child: _buildSummaryCard(
+                    'Status', summary.overallStatus,
+                    color: summary.healthyCount == summary.totalLeaves
+                        ? PdfColors.green
+                        : PdfColors.red),
+              ),
+              pw.SizedBox(width: 10),
+              Expanded(
+                child: _buildSummaryCard(
+                    'Severity', summary.overallSeverity),
+              ),
+              pw.SizedBox(width: 10),
+              Expanded(
+                child: _buildSummaryCard(
+                    'Avg Confidence',
+                    '${(summary.averageConfidence * 100).toStringAsFixed(1)}%'),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 12),
+
+          // Summary Statistics Table
+          _buildMultiLeafStatsTable(summary),
+          pw.SizedBox(height: 20),
+
+          // Per-Leaf Breakdown
+          _buildSectionTitle('Individual Leaf Results'),
+          pw.SizedBox(height: 10),
+          _buildPerLeafTable(entries, dateFormat),
+          pw.SizedBox(height: 20),
+
+          // Environmental Conditions
+          if (temperature != null || humidity != null) ...[
+            _buildSectionTitle('Environmental Conditions (IoT Snapshot)'),
+            pw.SizedBox(height: 10),
+            pw.Row(
+              children: [
+                if (temperature != null)
+                  Expanded(
+                    child: _buildEnvCard(
+                        'Temperature', '${temperature.toStringAsFixed(1)} \u00b0C'),
+                  ),
+                if (temperature != null && humidity != null)
+                  pw.SizedBox(width: 12),
+                if (humidity != null)
+                  Expanded(
+                    child: _buildEnvCard(
+                        'Humidity', '${humidity.toStringAsFixed(1)} %'),
+                  ),
+              ],
+            ),
+            pw.SizedBox(height: 20),
+          ],
+
+          // Recommendations
+          _buildRecommendations(
+            summary.overallStatus,
+            summary.recommendations,
+          ),
+        ],
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  pw.Widget _buildSummaryCard(String label, String value,
+      {PdfColor? color}) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(10),
+      decoration: pw.BoxDecoration(
+        color: PdfColor.fromHex('#E8F5E9'),
+        borderRadius: pw.BorderRadius.circular(6),
+        border: pw.Border.all(color: PdfColor.fromHex('#A5D6A7')),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Text(label,
+              style:
+                  const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+          pw.SizedBox(height: 4),
+          pw.Text(value,
+              style: pw.TextStyle(
+                  fontSize: 12,
+                  fontWeight: pw.FontWeight.bold,
+                  color: color)),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildMultiLeafStatsTable(MultiLeafSummary summary) {
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.grey300),
+      columnWidths: {
+        0: const pw.FlexColumnWidth(3),
+        1: const pw.FlexColumnWidth(2),
+      },
+      children: [
+        pw.TableRow(
+          decoration: pw.BoxDecoration(color: PdfColor.fromHex('#C8E6C9')),
+          children: [
+            _cell('Metric', isHeader: true),
+            _cell('Value', isHeader: true),
+          ],
+        ),
+        _statsRow('Total Leaves Scanned', '${summary.totalLeaves}'),
+        _statsRow('Healthy', '${summary.healthyCount}'),
+        _statsRow('Red Rust', '${summary.redRustCount}'),
+        _statsRow('Blister Blight', '${summary.blisterBlightCount}'),
+        _statsRow('Health %',
+            '${summary.healthPercentage.toStringAsFixed(1)}%'),
+        _statsRow('Requires Action', summary.requiresAction ? 'Yes' : 'No'),
+      ],
+    );
+  }
+
+  pw.TableRow _statsRow(String label, String value) {
+    return pw.TableRow(children: [_cell(label), _cell(value)]);
+  }
+
+  pw.Widget _buildPerLeafTable(
+      List<LeafScanEntry> entries, DateFormat dateFormat) {
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.grey300),
+      columnWidths: {
+        0: const pw.FlexColumnWidth(1),
+        1: const pw.FlexColumnWidth(3),
+        2: const pw.FlexColumnWidth(2),
+        3: const pw.FlexColumnWidth(2),
+        4: const pw.FlexColumnWidth(3),
+      },
+      children: [
+        pw.TableRow(
+          decoration: pw.BoxDecoration(color: PdfColor.fromHex('#FFCDD2')),
+          children: [
+            _cell('#', isHeader: true),
+            _cell('Disease', isHeader: true),
+            _cell('Confidence', isHeader: true),
+            _cell('Severity', isHeader: true),
+            _cell('Scan Time', isHeader: true),
+          ],
+        ),
+        ...entries.map((e) => pw.TableRow(children: [
+              _cell('${e.leafIndex}'),
+              _cell(e.result.diseaseType),
+              _cell(
+                  '${(e.result.confidence * 100).toStringAsFixed(1)}%'),
+              _cell(e.result.severity),
+              _cell(dateFormat.format(e.scannedAt)),
+            ])),
+      ],
+    );
+  }
 
   Future<Uint8List> generateReport(Map<String, dynamic> reportData) async {
     final pdf = pw.Document();

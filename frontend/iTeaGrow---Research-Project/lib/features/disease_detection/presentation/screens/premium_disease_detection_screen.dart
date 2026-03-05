@@ -830,7 +830,7 @@ class _PremiumDiseaseDetectionScreenState
                     Switch(
                       value: _showGradCam,
                       onChanged: (v) => setState(() => _showGradCam = v),
-                      activeThumbColor: TeaColors.freshLeaf,
+                      thumbColor: const WidgetStatePropertyAll(TeaColors.freshLeaf),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ],

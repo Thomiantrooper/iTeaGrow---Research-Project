@@ -7,6 +7,7 @@ import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_config.dart';
 import '../../../../core/api/api_exceptions.dart';
 import '../../domain/entities/disease_detection_result.dart';
+import 'disease_color_analyzer.dart';
 import 'disease_gradcam_service.dart';
 
 /// Image validation constants
@@ -22,6 +23,7 @@ class DiseaseDetectionMLService {
 
   final ApiClient _apiClient = ApiClient();
   final DiseaseGradCAMService _gradCamService = DiseaseGradCAMService();
+  final DiseaseColorAnalyzer _colorAnalyzer = DiseaseColorAnalyzer();
   bool _isInitialized = false;
   bool _isBackendAvailable = false;
   
@@ -179,11 +181,13 @@ class DiseaseDetectionMLService {
     debugPrint('Image path: $imagePath');
     debugPrint('Is Web: $kIsWeb');
 
-    // Try backend API first
+    // Try backend API first, then offline fallback
+    DiseaseDetectionResult? mlResult;
+
     if (_isBackendAvailable) {
       try {
         debugPrint('>>> CALLING BACKEND API <<<');
-        final result = await _predictWithBackend(
+        mlResult = await _predictWithBackend(
           imagePath,
           liveTemperature: liveTemperature,
           liveHumidity: liveHumidity,
@@ -193,37 +197,115 @@ class DiseaseDetectionMLService {
           locationLng: locationLng,
           requestExplainability: requestExplainability,
         );
-        debugPrint('>>> BACKEND SUCCESS: ${result.diseaseType} <<<');
-        debugPrint('>>> Confidence: ${result.confidence} <<<');
-        debugPrint('>>> Returning result from predict() <<<');
-        debugPrint('');
-        debugPrint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-        debugPrint('!!! RESULT OBJECT CREATED SUCCESSFULLY !!!');
-        debugPrint('!!! About to return to caller !!!');
-        debugPrint('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-        debugPrint('');
-        return result;
+        debugPrint('>>> BACKEND SUCCESS: ${mlResult.diseaseType} (${mlResult.confidence}) <<<');
       } on ApiException catch (e) {
         debugPrint('!!! Backend API error: $e - falling back to offline mode');
-        // Don't mark backend as offline for a single prediction failure
-        // The backend may still be reachable for next attempt
       } catch (e, stackTrace) {
         debugPrint('!!! Unexpected error: $e - falling back to offline mode');
         debugPrint('!!! Stack trace: $stackTrace');
-        // Don't mark backend as offline for a single prediction failure
       }
     } else {
       debugPrint('!!! Backend NOT available - using offline mode');
     }
 
-    // Offline fallback with dummy data
-    debugPrint('>>> USING OFFLINE MODE ( DATA) <<<');
-    return _predictOffline(
-      imagePath,
-      liveTemperature: liveTemperature,
-      liveHumidity: liveHumidity,
-      liveAirQuality: liveAirQuality,
-    );
+    // Offline fallback
+    if (mlResult == null) {
+      debugPrint('>>> USING OFFLINE MODE <<<');
+      mlResult = await _predictOffline(
+        imagePath,
+        liveTemperature: liveTemperature,
+        liveHumidity: liveHumidity,
+        liveAirQuality: liveAirQuality,
+      );
+    }
+
+    // ── Colour cross-validation layer ───────────────────────────────────
+    // Run pixel-level colour analysis and cross-validate with model output
+    // to catch misclassifications (e.g. model says "Healthy" on a clearly
+    // diseased leaf).
+    if (!mlResult.isNotALeaf && !kIsWeb) {
+      try {
+        final imageBytes = await File(imagePath).readAsBytes();
+        final colorResult = await _colorAnalyzer.analyze(imageBytes);
+        debugPrint('>>> COLOR ANALYSIS: blister=${colorResult.blisterScore.toStringAsFixed(3)}, '
+            'rust=${colorResult.rustScore.toStringAsFixed(3)}, '
+            'green=${colorResult.greenScore.toStringAsFixed(3)}, '
+            'suggested=${colorResult.suggestedDisease}(${colorResult.suggestedConfidence.toStringAsFixed(2)})');
+
+        final corrected = DiseaseColorAnalyzer.crossValidate(
+          modelDisease: mlResult.diseaseType,
+          modelConfidence: mlResult.confidence,
+          colorResult: colorResult,
+        );
+
+        debugPrint('>>> CORRECTED: ${corrected.diseaseType} (${corrected.confidence.toStringAsFixed(2)}) [${corrected.source}]');
+
+        // Apply correction if it changed something
+        if (corrected.diseaseType != mlResult.diseaseType ||
+            corrected.confidence != mlResult.confidence) {
+          final newSeverity = _getSeverity(corrected.confidence, corrected.diseaseType);
+          mlResult = DiseaseDetectionResult(
+            diseaseType: corrected.diseaseType,
+            confidence: corrected.confidence,
+            severity: newSeverity,
+            recommendations: _getRecommendations(corrected.diseaseType, newSeverity),
+            timestamp: mlResult.timestamp,
+            temperature: mlResult.temperature,
+            humidity: mlResult.humidity,
+            airQuality: mlResult.airQuality,
+            requestId: mlResult.requestId,
+            imageId: mlResult.imageId,
+            processingTimeMs: mlResult.processingTimeMs,
+            detections: mlResult.detections,
+            summary: mlResult.summary,
+            imageQualityScore: mlResult.imageQualityScore,
+            validationMessage: mlResult.validationMessage,
+            heatmapPath: mlResult.heatmapPath,
+          );
+        }
+      } catch (e) {
+        debugPrint('Color cross-validation failed (non-fatal): $e');
+      }
+    }
+
+    return mlResult!;
+  }
+
+  /// Generate appropriate recommendations for a disease + severity.
+  List<String> _getRecommendations(String diseaseType, String severity) {
+    switch (diseaseType) {
+      case 'Healthy':
+        return [
+          'No diseases detected. The leaf appears healthy.',
+          'Continue regular monitoring and standard cultural practices.',
+        ];
+      case 'Blister Blight':
+        return [
+          'Blister Blight (Exobasidium vexans) detected.',
+          'Apply systemic fungicide (e.g., triadimefon or copper oxychloride).',
+          'Carry out skiffing to remove infected shoots promptly.',
+          'Avoid overhead irrigation which promotes spore dispersal.',
+          if (severity == 'High' || severity == 'Critical')
+            'URGENT: Isolate affected plants and consult plantation agronomist.',
+          'Increase monitoring frequency during cool, humid weather.',
+        ];
+      case 'Red Rust':
+        return [
+          'Red Rust (Cephaleuros parasiticus) detected.',
+          'Apply copper-based fungicide as a preventive/curative measure.',
+          'Improve canopy ventilation by selective pruning.',
+          'Remove and destroy heavily infected leaves to reduce inoculum.',
+          if (severity == 'High' || severity == 'Critical')
+            'URGENT: Isolate affected plants and apply treatment immediately.',
+          'Monitor neighboring plants for spread.',
+        ];
+      default:
+        return [
+          'Disease detected: $diseaseType.',
+          'Consult your plantation agronomist for a detailed treatment plan.',
+          'Isolate affected plants where possible.',
+        ];
+    }
   }
 
   /// Batch detection for multiple leaves (Cumulative Score)

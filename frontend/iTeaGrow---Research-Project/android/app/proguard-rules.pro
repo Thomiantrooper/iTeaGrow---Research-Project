@@ -85,6 +85,12 @@
 -keep class com.juul.kable.** { *; }
 -dontwarn com.juul.kable.**
 
+# PyTorch Lite (on-device ML inference)
+-keep class org.pytorch.** { *; }
+-keep class com.facebook.jni.** { *; }
+-dontwarn org.pytorch.**
+-dontwarn com.facebook.jni.**
+
 # TensorFlow Lite
 -keep class org.tensorflow.lite.** { *; }
 -keep class org.tensorflow.lite.gpu.** { *; }

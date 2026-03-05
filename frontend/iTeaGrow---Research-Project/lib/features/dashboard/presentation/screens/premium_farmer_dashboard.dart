@@ -58,9 +58,6 @@ class _PremiumFarmerDashboardState
     final authState = ref.watch(authStateProvider);
     final iotState = ref.watch(globalIoTProvider);
     final mqttState = ref.watch(iotLiveProvider);
-    final kpiState = ref.watch(dashboardKpiProvider);
-    final activityState = ref.watch(activityFeedProvider);
-    final alertsState = ref.watch(alertsProvider);
     final user = authState.user;
     final greeting = _getGreeting();
     final screenWidth = MediaQuery.of(context).size.width;
@@ -97,7 +94,7 @@ class _PremiumFarmerDashboardState
             physics: const BouncingScrollPhysics(),
             slivers: [
               _buildSliverAppBar(
-                  user?.fullName ?? 'Farmer', greeting, alertsState),
+                  user?.fullName ?? 'Farmer', greeting),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverList(
@@ -107,14 +104,6 @@ class _PremiumFarmerDashboardState
                     // Global Search Bar
                     _buildSearchBar(),
                     const SizedBox(height: 16),
-
-                    // Welcome Hero Card
-                    KeyedSubtree(
-                      key: _heroCardKey,
-                      child: _buildWelcomeHero(kpiState),
-                    ),
-
-                    const SizedBox(height: 24),
 
                     // Live Metrics
                     KeyedSubtree(
@@ -129,19 +118,6 @@ class _PremiumFarmerDashboardState
                       key: _quickActionsKey,
                       child: _buildQuickActions(),
                     ),
-
-                    const SizedBox(height: 24),
-
-                    // Alerts
-                    KeyedSubtree(
-                      key: _alertsKey,
-                      child: _buildAlerts(alertsState),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Recent Activity
-                    _buildRecentActivity(activityState),
 
                     const SizedBox(height: 100),
                   ]),
@@ -295,7 +271,7 @@ class _PremiumFarmerDashboardState
   // ─── App Bar ───────────────────────────────────────────────────────────
 
   Widget _buildSliverAppBar(
-      String userName, String greeting, AlertsState alertsState) {
+      String userName, String greeting) {
     return SliverAppBar(
       expandedHeight: 110,
       floating: true,
@@ -333,13 +309,6 @@ class _PremiumFarmerDashboardState
         ),
       ),
       actions: [
-        // Notification bell
-        _buildAppBarAction(
-          icon: Icons.notifications_outlined,
-          badge: alertsState.alertCount > 0 ? '${alertsState.alertCount}' : null,
-          onTap: () => context.push('/notifications'),
-        ),
-        const SizedBox(width: 8),
         // Profile avatar
         Padding(
           padding: const EdgeInsets.only(right: 16),
