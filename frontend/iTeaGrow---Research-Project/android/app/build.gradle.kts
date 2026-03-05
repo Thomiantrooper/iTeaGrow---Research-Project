@@ -60,6 +60,9 @@ android {
             } else {
                 // Fallback to debug keys if release keys not configured
                 storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
             }
         }
     }

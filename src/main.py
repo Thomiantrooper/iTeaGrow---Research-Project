@@ -19,7 +19,7 @@ from src.api.middleware import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
 )
-from src.api.routes import inference, iot, recommendations, sync, health, feedback, chatbot, bluetooth, users
+from src.api.routes import inference, iot, recommendations, sync, health, feedback, chatbot, bluetooth, users, disease_storage
 
 setup_logging(log_level=settings.log_level, json_format=not settings.debug)
 logger = get_logger(__name__)
@@ -148,6 +148,7 @@ in Sri Lankan plantations using AI-powered image analysis.
     app.include_router(feedback.router)
     app.include_router(chatbot.router)  # Tea plantation expert chatbot
     app.include_router(bluetooth.router)  # Bluetooth IoT for offline sensor data
+    app.include_router(disease_storage.router)  # Disease detection storage (MongoDB)
 
     @app.exception_handler(BaseAppException)
     async def app_exception_handler(request: Request, exc: BaseAppException):

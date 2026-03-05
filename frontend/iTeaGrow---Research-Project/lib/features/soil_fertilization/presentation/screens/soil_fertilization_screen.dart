@@ -317,7 +317,7 @@ class _SoilFertilizationScreenState
             child: Text(
               'Select Block (${_zoneNameForId(zoneId)} Zone)',
               style: TextStyle(
-                color: TeaColors.deepForest.withValues(alpha: 0.6),
+                color: TeaColors.deepForest.withOpacity( 0.6),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.0,
@@ -344,17 +344,17 @@ class _SoilFertilizationScreenState
               final isSelected = state.selectedHectareId == blockBase;
 
               // Health color based on most recent record in this block
-              Color statusColor = TeaColors.mediumGray.withValues(alpha: 0.1);
+              Color statusColor = TeaColors.mediumGray.withOpacity( 0.1);
               if (hasData) {
                 blockRecords.sort(
                     (a, b) => b.timestamp.compareTo(a.timestamp));
                 final status = blockRecords.first.healthStatus;
                 if (status == SoilHealthStatus.good) {
-                  statusColor = TeaColors.healthyGreen.withValues(alpha: 0.15);
+                  statusColor = TeaColors.healthyGreen.withOpacity( 0.15);
                 } else if (status == SoilHealthStatus.fair) {
-                  statusColor = TeaColors.warningAmber.withValues(alpha: 0.15);
+                  statusColor = TeaColors.warningAmber.withOpacity( 0.15);
                 } else {
-                  statusColor = TeaColors.alertRust.withValues(alpha: 0.15);
+                  statusColor = TeaColors.alertRust.withOpacity( 0.15);
                 }
               }
 
@@ -387,7 +387,7 @@ class _SoilFertilizationScreenState
                   side: BorderSide(
                       color: isSelected
                           ? TeaColors.deepForest
-                          : TeaColors.deepForest.withValues(alpha: 0.1)),
+                          : TeaColors.deepForest.withOpacity( 0.1)),
                   labelStyle: TextStyle(
                     color: isSelected ? Colors.white : TeaColors.deepForest,
                     fontWeight: FontWeight.bold,
@@ -417,7 +417,7 @@ class _SoilFertilizationScreenState
             child: Text(
               'Select Sector for B$blockDisplayNum',
               style: TextStyle(
-                color: TeaColors.deepForest.withValues(alpha: 0.6),
+                color: TeaColors.deepForest.withOpacity( 0.6),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.0,
@@ -443,15 +443,15 @@ class _SoilFertilizationScreenState
               // Always use the most recent read (newest scan round first)
               final latestRecord = hasData ? record.first : null;
 
-              Color statusColor = TeaColors.mediumGray.withValues(alpha: 0.1);
+              Color statusColor = TeaColors.mediumGray.withOpacity( 0.1);
               if (hasData) {
                 final status = latestRecord!.healthStatus;
                 if (status == SoilHealthStatus.good) {
-                  statusColor = TeaColors.healthyGreen.withValues(alpha: 0.1);
+                  statusColor = TeaColors.healthyGreen.withOpacity( 0.1);
                 } else if (status == SoilHealthStatus.fair) {
-                  statusColor = TeaColors.warningAmber.withValues(alpha: 0.1);
+                  statusColor = TeaColors.warningAmber.withOpacity( 0.1);
                 } else {
-                  statusColor = TeaColors.alertRust.withValues(alpha: 0.1);
+                  statusColor = TeaColors.alertRust.withOpacity( 0.1);
                 }
               }
 
