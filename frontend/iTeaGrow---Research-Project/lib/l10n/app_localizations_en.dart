@@ -2013,7 +2013,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_about_sub => 'Version 1.0.0';
 
   @override
-  String get settings_section_danger => 'Danger Zone';
+  String get settings_section_danger => 'Account Actions';
 
   @override
   String get settings_delete_account => 'Delete Account';

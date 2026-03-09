@@ -3949,7 +3949,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_section_danger.
   ///
   /// In en, this message translates to:
-  /// **'Danger Zone'**
+  /// **'Account Actions'**
   String get settings_section_danger;
 
   /// No description provided for @settings_delete_account.

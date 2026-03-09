@@ -2045,7 +2045,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get settings_about_sub => 'பதிப்பு 1.0.0';
 
   @override
-  String get settings_section_danger => 'அபாயகரமான பகுதி';
+  String get settings_section_danger => 'கணக்கு செயல்கள்';
 
   @override
   String get settings_delete_account => 'கணக்கை நீக்கவும்';

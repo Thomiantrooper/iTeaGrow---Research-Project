@@ -6,8 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 
 import '../../../auth/data/providers/auth_provider.dart';
-import '../providers/activity_feed_provider.dart';
-import '../providers/alerts_provider.dart';
 import '../../../tour/presentation/providers/tour_provider.dart';
 import '../../../tour/presentation/widgets/tour_overlay.dart';
 
@@ -32,9 +30,6 @@ class _PremiumFarmerDashboardState
   final _bottomNavKey = GlobalKey();
   final _chatFabKey = GlobalKey();
   bool _tourChecked = false;
-
-  // Search
-  bool _isSearchOpen = false;
 
   @override
   void initState() {
@@ -151,7 +146,6 @@ class _PremiumFarmerDashboardState
   Widget _buildSearchBar() {
     return GestureDetector(
       onTap: () {
-        setState(() => _isSearchOpen = true);
         _showSearchOverlay();
       },
       child: Container(
@@ -211,7 +205,6 @@ class _PremiumFarmerDashboardState
         },
       ),
     ).whenComplete(() {
-      setState(() => _isSearchOpen = false);
     });
   }
 
@@ -345,60 +338,6 @@ class _PremiumFarmerDashboardState
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildAppBarAction({
-    required IconData icon,
-    String? badge,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(icon, color: TeaColors.nearBlack, size: 20),
-            if (badge != null)
-              Positioned(
-                top: 6,
-                right: 6,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: const BoxDecoration(
-                    color: TeaColors.alertRust,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      badge,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -666,298 +605,7 @@ class _PremiumFarmerDashboardState
     );
   }
 
-  // ─── Alerts ────────────────────────────────────────────────────────────
 
-  Widget _buildAlerts(AlertsState alertsState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              AppLocalizations.of(context)!.dashboard_alerts,
-              style: TeaTypography.titleMedium
-                  .copyWith(fontWeight: FontWeight.w700),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => context.push('/notifications'),
-              child: Text(
-                AppLocalizations.of(context)!.dashboard_see_all,
-                style: TeaTypography.labelMedium.copyWith(
-                  color: TeaColors.freshLeaf,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (alertsState.isLoading && !alertsState.hasData)
-          _buildAlertSkeleton()
-        else if (alertsState.alerts.isEmpty)
-          _buildEmptyState(
-            icon: Icons.check_circle_outline_rounded,
-            color: TeaColors.healthyGreen,
-            message: AppLocalizations.of(context)!.dashboard_all_clear,
-          )
-        else
-          ...alertsState.alerts.map((alert) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _buildAlertCard(alert),
-              )),
-      ],
-    ).animate().fadeIn(duration: 400.ms, delay: 300.ms);
-  }
-
-  Widget _buildAlertCard(AlertData alert) {
-    final Color color;
-    final IconData icon;
-    if (alert.isError) {
-      color = TeaColors.alertRust;
-      icon = Icons.error_outline_rounded;
-    } else if (alert.isWarning) {
-      color = TeaColors.warningAmber;
-      icon = Icons.warning_amber_rounded;
-    } else {
-      color = TeaColors.infoSky;
-      icon = Icons.info_outline_rounded;
-    }
-
-    return GestureDetector(
-      onTap: () => context.push(alert.routePath ?? '/notifications'),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    alert.title,
-                    style: TeaTypography.titleSmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (alert.message.isNotEmpty)
-                    Text(
-                      alert.message,
-                      style: TeaTypography.bodySmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded,
-                color: TeaColors.mediumGray, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlertSkeleton() {
-    return Column(
-      children: List.generate(
-        2,
-        (i) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Container(
-            height: 72,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─── Recent Activity ───────────────────────────────────────────────────
-
-  Widget _buildRecentActivity(ActivityFeedState activityState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              AppLocalizations.of(context)!.dashboard_recent_activity,
-              style: TeaTypography.titleMedium
-                  .copyWith(fontWeight: FontWeight.w700),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => context.push('/activity-history'),
-              child: Text(
-                AppLocalizations.of(context)!.dashboard_view_all,
-                style: TeaTypography.labelMedium.copyWith(
-                  color: TeaColors.freshLeaf,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (activityState.isLoading && !activityState.hasData)
-          _buildActivitySkeleton()
-        else if (activityState.activities.isEmpty)
-          _buildEmptyState(
-            icon: Icons.inbox_outlined,
-            color: TeaColors.mediumGray,
-            message: AppLocalizations.of(context)!.dashboard_no_activity,
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                for (int i = 0;
-                    i < activityState.activities.length && i < 5;
-                    i++) ...[
-                  if (i > 0)
-                    Divider(
-                        height: 1,
-                        indent: 68,
-                        color: Colors.grey.withOpacity(0.1)),
-                  _buildActivityItem(activityState.activities[i]),
-                ],
-              ],
-            ),
-          ),
-      ],
-    ).animate().fadeIn(duration: 400.ms, delay: 400.ms);
-  }
-
-  Widget _buildActivityItem(ActivityItem item) {
-    final color = _getActivityColor(item.iconType);
-    final icon = _getActivityIcon(item.iconType);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: TeaTypography.titleSmall.copyWith(fontSize: 13),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (item.subtitle.isNotEmpty)
-                  Text(
-                    item.subtitle,
-                    style: TeaTypography.bodySmall.copyWith(fontSize: 11),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-          ),
-          Text(
-            item.timeAgo,
-            style: TeaTypography.labelSmall.copyWith(
-              color: TeaColors.mediumGray,
-              fontSize: 10,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActivitySkeleton() {
-    return Container(
-      height: 200,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-    );
-  }
-
-  // ─── Empty State ───────────────────────────────────────────────────────
-
-  Widget _buildEmptyState({
-    required IconData icon,
-    required Color color,
-    required String message,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            message,
-            style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ─── Bottom Navigation ─────────────────────────────────────────────────
 
@@ -1063,36 +711,6 @@ class _PremiumFarmerDashboardState
           duration: 2000.ms,
           curve: Curves.easeInOut,
         );
-  }
-
-  IconData _getActivityIcon(IconType type) {
-    switch (type) {
-      case IconType.scan:
-        return Icons.camera_alt_outlined;
-      case IconType.harvest:
-        return Icons.inventory_2_outlined;
-      case IconType.soil:
-        return Icons.science_outlined;
-      case IconType.alert:
-        return Icons.warning_amber_outlined;
-      case IconType.report:
-        return Icons.description_outlined;
-    }
-  }
-
-  Color _getActivityColor(IconType type) {
-    switch (type) {
-      case IconType.scan:
-        return TeaColors.healthyGreen;
-      case IconType.harvest:
-        return TeaColors.goldenSunlight;
-      case IconType.soil:
-        return TeaColors.richSoil;
-      case IconType.alert:
-        return TeaColors.warningAmber;
-      case IconType.report:
-        return TeaColors.infoSky;
-    }
   }
 
   String _getGreeting(AppLocalizations l10n) {
@@ -1223,20 +841,12 @@ const _allSearchEntries = <_SearchEntry>[
       ['yield', 'forecast', 'predict', 'harvest']),
   _SearchEntry('Plantation Map', 'Field map view', Icons.map_rounded, '/map',
       ['map', 'field', 'location', 'plantation']),
-  _SearchEntry(
-      'Notifications',
-      'Alerts and updates',
-      Icons.notifications_outlined,
-      '/notifications',
-      ['notification', 'alert', 'update']),
   _SearchEntry('Settings', 'App preferences', Icons.settings_outlined,
       '/settings', ['setting', 'preference', 'config']),
   _SearchEntry('Profile', 'Your account', Icons.person_outlined, '/profile',
       ['profile', 'account', 'user']),
   _SearchEntry('Help & Support', 'FAQ and contact', Icons.help_outline_rounded,
       '/help-center', ['help', 'support', 'faq', 'contact']),
-  _SearchEntry('Activity History', 'Recent actions', Icons.access_time_rounded,
-      '/activity-history', ['activity', 'history', 'recent', 'action']),
   _SearchEntry('Chatbot', 'AI assistant', Icons.chat_bubble_outlined,
       '/chatbot', ['chat', 'bot', 'assistant', 'ai', 'help']),
 ];

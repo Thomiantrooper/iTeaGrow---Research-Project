@@ -758,7 +758,7 @@
   "settings_feedback_sub": "යෙදුම වැඩිදියුණු කිරීමට අපට උදව් කරන්න",
   "settings_about": "ගැන",
   "settings_about_sub": "අනුවාදය 1.0.0",
-  "settings_section_danger": "භයානක කලාපය",
+  "settings_section_danger": "ගිණුම් ක්‍රියාවන්",
   "settings_delete_account": "ගිණුම මකන්න",
   "settings_delete_account_sub": "ඔබගේ ගිණුම ස්ථිරවම මකන්න",
   "settings_dialog_change_password": "මුරපදය වෙනස් කරන්න",

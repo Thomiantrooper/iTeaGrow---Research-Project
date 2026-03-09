@@ -762,7 +762,7 @@
   "settings_feedback_sub": "Help us improve the app",
   "settings_about": "About",
   "settings_about_sub": "Version 1.0.0",
-  "settings_section_danger": "Danger Zone",
+  "settings_section_danger": "Account Actions",
   "settings_delete_account": "Delete Account",
   "settings_delete_account_sub": "Permanently delete your account",
   "settings_dialog_change_password": "Change Password",

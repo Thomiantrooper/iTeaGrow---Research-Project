@@ -762,7 +762,7 @@
   "settings_feedback_sub": "பயன்பாட்டை மேம்படுத்த உதவுங்கள்",
   "settings_about": "பற்றி",
   "settings_about_sub": "பதிப்பு 1.0.0",
-  "settings_section_danger": "அபாயகரமான பகுதி",
+  "settings_section_danger": "கணக்கு செயல்கள்",
   "settings_delete_account": "கணக்கை நீக்கவும்",
   "settings_delete_account_sub": "உங்கள் கணக்கை நிரந்தரமாக நீக்கவும்",
   "settings_dialog_change_password": "கடவுச்சொல் மாற்றவும்",

@@ -2019,7 +2019,7 @@ class AppLocalizationsSi extends AppLocalizations {
   String get settings_about_sub => 'අනුවාදය 1.0.0';
 
   @override
-  String get settings_section_danger => 'භයානක කලාපය';
+  String get settings_section_danger => 'ගිණුම් ක්‍රියාවන්';
 
   @override
   String get settings_delete_account => 'ගිණුම මකන්න';
