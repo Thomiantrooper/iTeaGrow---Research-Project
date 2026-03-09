@@ -34,10 +34,17 @@ class LeafValidationService {
   LeafValidationService._internal();
 
   // Thresholds (tuned for tea-leaf photos taken on mobile)
-  static const double _minGreenRatio = 0.06;
+  // Raised from 0.06 → 0.12: 6 % was too lenient and allowed non-leaf images
+  // (e.g. photos with minor green tint) to pass the gate.
+  static const double _minGreenRatio = 0.12;
   static const double _minSharpness = 12.0;
   static const double _minColourVariance = 180.0;
   static const int _minDimension = 64;
+  // Max fraction of inorganic pixels (very dark + metallic grey).
+  // Catches electronic devices, cables, metal objects that have enough
+  // green background to pass the green-ratio check.
+  // Lowered 45 % → 35 %: dark-mode app screenshots are ~40–50 % near-black.
+  static const double _maxInorganicRatio = 0.35;
 
   /// Validate image bytes. Runs heavy pixel work on an isolate.
   Future<LeafValidationResult> validate(Uint8List imageBytes) async {
@@ -79,6 +86,7 @@ class LeafValidationService {
     final greenScore = _computeGreenRatio(analysisImg);
     final sharpness = _computeSharpness(analysisImg);
     final colourVariance = _computeColourVariance(analysisImg);
+    final inorganicRatio = _computeInorganicRatio(analysisImg);
 
     // --- Decision logic ---
     if (sharpness < _minSharpness) {
@@ -97,6 +105,20 @@ class LeafValidationService {
         isValid: false,
         message:
             'The image does not appear to contain a leaf. Please scan a real tea leaf.',
+        greenScore: greenScore,
+        sharpnessScore: sharpness,
+        leafLikelihood: 0.0,
+      );
+    }
+
+    // Reject images dominated by inorganic surfaces (cables, electronic
+    // devices, metallic objects). These pass the green check when the
+    // background has colourful fabric/objects but the subject is not a leaf.
+    if (inorganicRatio > _maxInorganicRatio) {
+      return LeafValidationResult(
+        isValid: false,
+        message:
+            'No leaf detected. Please point the camera directly at a tea leaf in good lighting.',
         greenScore: greenScore,
         sharpnessScore: sharpness,
         leafLikelihood: 0.0,
@@ -130,26 +152,50 @@ class LeafValidationService {
     );
   }
 
-  /// Fraction of pixels where the green channel dominates (G > R and G > B)
-  /// with a tolerance for brownish/yellowish diseased leaves.
+  /// Fraction of pixels that match natural leaf colour using HSV hue ranges.
+  ///
+  /// Uses HSV instead of raw channel dominance so that UI/app teal/cyan
+  /// colours (H ~160–200°) are NOT counted as leaf green (H 60–155°).
+  ///
+  ///  * Leaf green:        H 60–155°, S > 0.15, V > 0.12
+  ///  * Diseased/brownish: H 20–80°,  S > 0.20, V > 0.15  (warm-leaf tones)
   static double _computeGreenRatio(img.Image image) {
     int greenPixels = 0;
-    int naturalPixels = 0; // includes brownish/reddish leaf tones
+    int naturalPixels = 0;
     final totalPixels = image.width * image.height;
 
     for (int y = 0; y < image.height; y++) {
       for (int x = 0; x < image.width; x++) {
         final pixel = image.getPixel(x, y);
-        final r = pixel.r.toInt();
-        final g = pixel.g.toInt();
-        final b = pixel.b.toInt();
+        final r = pixel.r.toDouble();
+        final g = pixel.g.toDouble();
+        final b = pixel.b.toDouble();
 
-        // Pure green dominance
-        if (g > r && g > b && g > 40) {
+        final maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
+        final minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+        final v = maxC / 255.0;
+        final delta = maxC - minC;
+        final s = maxC > 0 ? delta / maxC : 0.0;
+
+        double hue = 0.0;
+        if (delta > 0) {
+          if (maxC == r) {
+            hue = 60.0 * (((g - b) / delta) % 6);
+          } else if (maxC == g) {
+            hue = 60.0 * ((b - r) / delta + 2);
+          } else {
+            hue = 60.0 * ((r - g) / delta + 4);
+          }
+          if (hue < 0) hue += 360.0;
+        }
+
+        // Leaf-like green: hue 60–155°, not too desaturated, not too dark.
+        // Excludes teal/cyan (H > 155°) and blue (H > 200°) used in UI.
+        if (hue >= 60 && hue <= 155 && s > 0.15 && v > 0.12) {
           greenPixels++;
         }
-        // Brownish / reddish-green tones typical of diseased leaves
-        if (g > 30 && (g + r) > (b * 2 + 40) && r < 220 && b < 180) {
+        // Diseased / brownish-green leaf tones (warm hues with visible green)
+        if (hue >= 20 && hue <= 80 && s > 0.20 && v > 0.15 && g > 40) {
           naturalPixels++;
         }
       }
@@ -214,6 +260,41 @@ class LeafValidationService {
     final varB = (sumB2 / n) - (sumB / n) * (sumB / n);
 
     return varR + varG + varB;
+  }
+
+  /// Fraction of pixels that are clearly inorganic:
+  ///  * Very dark  (V < 0.10)          — black cables, dark plastic
+  ///  * Metallic grey (S < 0.16, V 0.12–0.72) — electronic devices, metal
+  ///
+  /// High values indicate electronic equipment, not a natural leaf.
+  static double _computeInorganicRatio(img.Image image) {
+    int inorganicPixels = 0;
+    final totalPixels = image.width * image.height;
+
+    for (int y = 0; y < image.height; y++) {
+      for (int x = 0; x < image.width; x++) {
+        final pixel = image.getPixel(x, y);
+        final r = pixel.r.toDouble();
+        final g = pixel.g.toDouble();
+        final b = pixel.b.toDouble();
+
+        final maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
+        final minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+        final v = maxC / 255.0;
+        final s = maxC > 0 ? (maxC - minC) / maxC : 0.0;
+
+        // Very dark: cables, pitch-black plastic
+        if (v < 0.10) {
+          inorganicPixels++;
+        }
+        // Metallic / grey: circuit boards, metal casings, plastic housings
+        else if (s < 0.16 && v >= 0.12 && v <= 0.72) {
+          inorganicPixels++;
+        }
+      }
+    }
+
+    return inorganicPixels / totalPixels;
   }
 
   static double _clamp01(double v) => v < 0 ? 0 : (v > 1 ? 1 : v);

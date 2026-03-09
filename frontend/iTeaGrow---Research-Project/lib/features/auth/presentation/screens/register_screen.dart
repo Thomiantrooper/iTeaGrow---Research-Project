@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../data/providers/auth_provider.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -37,12 +38,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the terms and conditions'),
+        SnackBar(
+          content: Text(l10n.register_accept_terms_error),
           backgroundColor: TeaColors.alertRust,
         ),
       );
@@ -70,7 +72,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final errorMessage = ref.read(authStateProvider).errorMessage;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessage ?? 'Registration failed'),
+          content: Text(errorMessage ?? l10n.register_failed),
           backgroundColor: TeaColors.alertRust,
         ),
       );
@@ -122,6 +124,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         // Logo
@@ -156,7 +159,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         const SizedBox(height: TeaSpacing.md),
 
         Text(
-          'Create Account',
+          l10n.register_title,
           style: TeaTypography.headlineMedium.copyWith(
             color: TeaColors.nearBlack,
             fontWeight: FontWeight.bold,
@@ -166,7 +169,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         const SizedBox(height: TeaSpacing.xs),
 
         Text(
-          'Join iTeaGrow to manage your tea plantation',
+          l10n.register_subtitle,
           style: TeaTypography.bodyMedium.copyWith(
             color: TeaColors.darkGray,
           ),
@@ -177,6 +180,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildForm(bool isLoading) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(TeaSpacing.lg),
       decoration: BoxDecoration(
@@ -198,14 +202,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // Full Name Field
             _buildTextField(
               controller: _fullNameController,
-              label: 'Full Name',
+              label: l10n.register_full_name,
               icon: Icons.person_outline,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your full name';
+                  return l10n.register_full_name_required;
                 }
                 if (value.length < 2) {
-                  return 'Name must be at least 2 characters';
+                  return l10n.register_full_name_min;
                 }
                 return null;
               },
@@ -216,17 +220,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // Username Field
             _buildTextField(
               controller: _usernameController,
-              label: 'Username',
+              label: l10n.register_username,
               icon: Icons.alternate_email,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a username';
+                  return l10n.register_username_required;
                 }
                 if (value.length < 3) {
-                  return 'Username must be at least 3 characters';
+                  return l10n.register_username_min;
                 }
                 if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
-                  return 'Username can only contain letters, numbers, and underscores';
+                  return l10n.register_username_invalid;
                 }
                 return null;
               },
@@ -237,14 +241,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // Email Field (Optional)
             _buildTextField(
               controller: _emailController,
-              label: 'Email (Optional)',
+              label: l10n.register_email_optional,
               icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
                 if (value != null && value.isNotEmpty) {
                   if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
                       .hasMatch(value)) {
-                    return 'Please enter a valid email';
+                    return l10n.register_email_invalid;
                   }
                 }
                 return null;
@@ -256,7 +260,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // Phone Field (Optional)
             _buildTextField(
               controller: _phoneController,
-              label: 'Phone (Optional)',
+              label: l10n.register_phone_optional,
               icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
             ),
@@ -266,7 +270,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // Password Field
             _buildTextField(
               controller: _passwordController,
-              label: 'Password',
+              label: l10n.register_password,
               icon: Icons.lock_outline,
               obscureText: _obscurePassword,
               suffixIcon: IconButton(
@@ -278,10 +282,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a password';
+                  return l10n.register_password_required;
                 }
                 if (value.length < 6) {
-                  return 'Password must be at least 6 characters';
+                  return l10n.register_password_min;
                 }
                 return null;
               },
@@ -292,7 +296,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // Confirm Password Field
             _buildTextField(
               controller: _confirmPasswordController,
-              label: 'Confirm Password',
+              label: l10n.register_confirm_password,
               icon: Icons.lock_outline,
               obscureText: _obscureConfirmPassword,
               suffixIcon: IconButton(
@@ -307,10 +311,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please confirm your password';
+                  return l10n.register_confirm_required;
                 }
                 if (value != _passwordController.text) {
-                  return 'Passwords do not match';
+                  return l10n.register_passwords_match;
                 }
                 return null;
               },
@@ -331,11 +335,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     onTap: () => setState(() => _acceptTerms = !_acceptTerms),
                     child: Text.rich(
                       TextSpan(
-                        text: 'I agree to the ',
+                        text: l10n.register_accept_terms,
                         style: TeaTypography.bodySmall,
                         children: [
                           TextSpan(
-                            text: 'Terms and Conditions',
+                            text: l10n.register_terms_link,
                             style: TeaTypography.bodySmall.copyWith(
                               color: TeaColors.freshLeaf,
                               fontWeight: FontWeight.w600,
@@ -374,7 +378,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       )
                     : Text(
-                        'Create Account',
+                        l10n.register_button,
                         style: TeaTypography.titleSmall.copyWith(
                           color: TeaColors.white,
                           fontWeight: FontWeight.w600,
@@ -441,11 +445,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildLoginLink() {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Already have an account? ',
+          l10n.register_have_account,
           style: TeaTypography.bodyMedium.copyWith(
             color: TeaColors.darkGray,
           ),
@@ -453,7 +458,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         TextButton(
           onPressed: () => context.pop(),
           child: Text(
-            'Sign In',
+            l10n.register_sign_in,
             style: TeaTypography.bodyMedium.copyWith(
               color: TeaColors.freshLeaf,
               fontWeight: FontWeight.w600,

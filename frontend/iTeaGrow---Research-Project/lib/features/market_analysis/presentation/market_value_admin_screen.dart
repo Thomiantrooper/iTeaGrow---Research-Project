@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:iteagrow/core/design_system/design_system.dart';
 import 'dart:async';
 import '../../../../core/services/connectivity_service.dart';
@@ -101,8 +102,8 @@ class _MarketValueAdminScreenState
     try {
       await api.publishMarketValues(update);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Prices published to AI Model!'),
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(AppLocalizations.of(context)!.market_published),
             backgroundColor: Colors.green));
         // Refresh grid
         ref.invalidate(marketPricesProvider);
@@ -110,7 +111,7 @@ class _MarketValueAdminScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+            SnackBar(content: Text('${AppLocalizations.of(context)!.common_error}: $e'), backgroundColor: Colors.red));
       }
     }
   }
@@ -130,12 +131,16 @@ class _MarketValueAdminScreenState
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
-        title: const Text('Admin Price Update'),
+        title: Text(
+          AppLocalizations.of(context)!.market_admin_title,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
         backgroundColor: TeaColors.freshLeaf,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.share, color: Colors.white),
             onPressed: () {
               final res = ref.read(marketPricesProvider).value;
               if (res != null) {
@@ -149,14 +154,12 @@ class _MarketValueAdminScreenState
               children: [
                 Icon(
                   isOnline ? Icons.cloud_done : Icons.cloud_off,
-                  color: isOnline
-                      ? TeaColors.healthyGreen
-                      : TeaColors.warningAmber,
+                  color: isOnline ? Colors.white : TeaColors.warningAmber,
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  isOnline ? 'Online' : 'Offline',
-                  style: const TextStyle(fontSize: 12),
+                  isOnline ? AppLocalizations.of(context)!.common_online : AppLocalizations.of(context)!.common_offline,
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
                 ),
               ],
             ),
@@ -180,7 +183,7 @@ class _MarketValueAdminScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Enter Weekly Auction Prices',
+                Text(AppLocalizations.of(context)!.market_weekly_prices,
                     style: TeaTypography.headlineMedium),
                 const SizedBox(height: 16),
                 _buildPriceGrid(),
@@ -195,15 +198,15 @@ class _MarketValueAdminScreenState
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30)),
                   ),
-                  child: const Text('Save & Publish Prices',
-                      style: TextStyle(fontSize: 18, color: Colors.white)),
+                  child: Text(AppLocalizations.of(context)!.market_save_publish,
+                      style: const TextStyle(fontSize: 18, color: Colors.white)),
                 ),
                 const SizedBox(height: 16),
                 Center(
                   child: Text(
                     isOnline
-                        ? 'Connected to Server'
-                        : 'Disconnected - Check your internet',
+                        ? AppLocalizations.of(context)!.market_connected
+                        : AppLocalizations.of(context)!.market_disconnected,
                     style: TextStyle(
                       color: isOnline
                           ? TeaColors.healthyGreen
@@ -219,7 +222,7 @@ class _MarketValueAdminScreenState
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text("Failed to load prices: $e")),
+        error: (e, _) => Center(child: Text('${AppLocalizations.of(context)!.market_load_failed}: $e')),
       ),
     );
   }
@@ -274,8 +277,8 @@ class _MarketValueAdminScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Market Source',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context)!.market_source,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           TextField(
             controller: _sourceController,
@@ -286,8 +289,8 @@ class _MarketValueAdminScreenState
             ),
           ),
           const SizedBox(height: 16),
-          const Text('Auction Notes',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context)!.market_auction_notes,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           TextField(
             controller: _notesController,
@@ -315,7 +318,7 @@ class _MarketValueAdminScreenState
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        title: Text('Previous Auction Prices', style: TeaTypography.titleLarge),
+        title: Text(AppLocalizations.of(context)!.market_prev_auctions, style: TeaTypography.titleLarge),
         tilePadding: EdgeInsets.zero,
         children: historyKeys.map((week) {
           final prices = res.marketPrices[week] ?? {};
@@ -333,7 +336,7 @@ class _MarketValueAdminScreenState
                       const Icon(Icons.date_range,
                           color: TeaColors.freshLeaf, size: 18),
                       const SizedBox(width: 8),
-                      Text('Week of: $week',
+                      Text('${AppLocalizations.of(context)!.market_week_of}: $week',
                           style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16)),
                     ],

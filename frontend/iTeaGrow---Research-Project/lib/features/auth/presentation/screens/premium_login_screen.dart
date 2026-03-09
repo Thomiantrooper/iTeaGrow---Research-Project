@@ -7,6 +7,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../../core/validators/tea_validators.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../data/providers/auth_provider.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 /// Premium Login Screen with glass-morphism and animations
 class PremiumLoginScreen extends ConsumerStatefulWidget {
@@ -66,6 +67,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
   }
 
   Future<void> _handleLogin() async {
+    final l10n = AppLocalizations.of(context)!;
     // Clear previous error
     setState(() => _errorMessage = null);
 
@@ -105,7 +107,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
         final authState = ref.read(authStateProvider);
         setState(() {
           _errorMessage =
-              authState.errorMessage ?? 'Invalid username or password';
+              authState.errorMessage ?? l10n.login_error;
         });
         // Shake animation on error
         _formKey.currentState?.validate();
@@ -113,7 +115,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'An error occurred. Please try again.';
+          _errorMessage = l10n.login_error_generic;
         });
       }
     } finally {
@@ -155,9 +157,10 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
   }
 
   Future<void> _submitPin() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_enteredPin.length < 4) {
       setState(() {
-        _errorMessage = 'PIN must be at least 4 digits';
+        _errorMessage = l10n.login_pin_min_digits;
       });
       return;
     }
@@ -176,14 +179,14 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
       } else if (mounted) {
         final authState = ref.read(authStateProvider);
         setState(() {
-          _errorMessage = authState.errorMessage ?? 'Invalid PIN code';
+          _errorMessage = authState.errorMessage ?? l10n.login_pin_invalid;
           _enteredPin = ''; // Reset on failure
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'PIN login failed. Please try again.';
+          _errorMessage = l10n.login_pin_failed;
           _enteredPin = '';
         });
       }
@@ -195,6 +198,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
   }
 
   Future<void> _handleBiometricLogin() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _errorMessage = null;
       _isLoading = true;
@@ -210,13 +214,13 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
         final authState = ref.read(authStateProvider);
         setState(() {
           _errorMessage =
-              authState.errorMessage ?? 'Biometric authentication failed';
+              authState.errorMessage ?? l10n.login_biometric_failed_auth;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Biometric login failed. Please try again.';
+          _errorMessage = l10n.login_biometric_failed;
         });
       }
     } finally {
@@ -227,6 +231,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
   }
 
   Future<void> _handleGoogleSignIn() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _errorMessage = null;
       _isLoading = true;
@@ -241,13 +246,13 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
       } else if (mounted) {
         final authState = ref.read(authStateProvider);
         setState(() {
-          _errorMessage = authState.errorMessage ?? 'Google Sign-In failed';
+          _errorMessage = authState.errorMessage ?? l10n.login_google_failed;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Google Sign-In failed. Please try again.';
+          _errorMessage = l10n.login_google_failed_retry;
         });
       }
     } finally {
@@ -294,10 +299,6 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                         ? _buildPinCard(isSmallScreen)
                         : _buildLoginCard(isSmallScreen),
 
-                    const SizedBox(height: TeaSpacing.lg),
-
-                    // Demo credentials hint
-                    _buildDemoHint(),
                   ],
                 ),
               ),
@@ -327,6 +328,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
   }
 
   Widget _buildLogo() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         Container(
@@ -353,7 +355,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
           ),
         ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
         Text(
-          'Tea Plantation Management',
+          l10n.login_app_tagline,
           style: TeaTypography.bodyMedium.copyWith(
             color: TeaColors.darkGray,
           ),
@@ -363,6 +365,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
   }
 
   Widget _buildLoginCard(bool isSmallScreen) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       constraints: const BoxConstraints(maxWidth: 400),
       child: TeaCard.glass(
@@ -391,20 +394,20 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                     ),
                     const SizedBox(width: TeaSpacing.smd),
                     Text(
-                      'Welcome Back',
+                      l10n.login_welcome_back_heading,
                       style: TeaTypography.headlineSmall,
                     ),
                   ],
                 ),
               ] else ...[
                 Text(
-                  'Welcome Back',
+                  l10n.login_welcome_back_heading,
                   style: TeaTypography.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: TeaSpacing.xs),
                 Text(
-                  'Sign in to continue to your plantation',
+                  l10n.login_subtitle,
                   style: TeaTypography.bodyMedium.copyWith(
                     color: TeaColors.darkGray,
                   ),
@@ -426,8 +429,8 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
               TeaTextField(
                 controller: _usernameController,
                 focusNode: _usernameFocus,
-                label: 'Username',
-                hint: 'Enter your username',
+                label: l10n.login_username,
+                hint: l10n.login_username_hint,
                 prefixIcon: const Icon(Icons.person_outline),
                 textInputAction: TextInputAction.next,
                 validator: TeaValidators.username,
@@ -444,12 +447,12 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
               TeaTextField.password(
                 controller: _passwordController,
                 focusNode: _passwordFocus,
-                label: 'Password',
-                hint: 'Enter your password',
+                label: l10n.login_password,
+                hint: l10n.login_password_hint,
                 textInputAction: TextInputAction.done,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Password is required';
+                    return l10n.login_password_required;
                   }
                   return null;
                 },
@@ -462,67 +465,48 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
 
               const SizedBox(height: TeaSpacing.md),
 
-              // Remember me & Forgot password
-              Row(
-                children: [
-                  // Remember me
-                  GestureDetector(
-                    onTap: () => setState(() => _rememberMe = !_rememberMe),
+              // Forgot password
+              Align(
+                alignment: Alignment.centerRight,
+                child: InkWell(
+                  onTap: () => context.push('/forgot-password'),
+                  borderRadius: TeaRadius.radiusSm,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: TeaColors.freshLeaf.withOpacity(0.08),
+                      borderRadius: TeaRadius.radiusSm,
+                      border: Border.all(
+                          color: TeaColors.freshLeaf.withOpacity(0.2)),
+                    ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: _rememberMe
-                                ? TeaColors.freshLeaf
-                                : Colors.transparent,
-                            border: Border.all(
-                              color: _rememberMe
-                                  ? TeaColors.freshLeaf
-                                  : TeaColors.mediumGray,
-                              width: 2,
-                            ),
-                            borderRadius: TeaRadius.radiusXs,
-                          ),
-                          child: _rememberMe
-                              ? const Icon(
-                                  Icons.check,
-                                  size: 14,
-                                  color: TeaColors.white,
-                                )
-                              : null,
+                        const Icon(
+                          Icons.lock_reset,
+                          size: 16,
+                          color: TeaColors.freshLeaf,
                         ),
-                        const SizedBox(width: TeaSpacing.sm),
+                        const SizedBox(width: 6),
                         Text(
-                          'Remember me',
-                          style: TeaTypography.bodySmall,
+                          l10n.login_forgot_password,
+                          style: TeaTypography.bodySmall.copyWith(
+                            color: TeaColors.freshLeaf,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const Spacer(),
-                  // Forgot password
-                  TextButton(
-                    onPressed: () {
-                      context.push('/forgot-password');
-                    },
-                    child: Text(
-                      'Forgot Password?',
-                      style: TeaTypography.bodySmall.copyWith(
-                        color: TeaColors.freshLeaf,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
 
               const SizedBox(height: TeaSpacing.xl),
 
               // Sign in button
               TeaButton.primary(
-                label: 'Sign In',
+                label: l10n.login_button,
                 icon: Icons.login,
                 isLoading: _isLoading,
                 isFullWidth: true,
@@ -537,7 +521,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
               if (_pinEnabled) ...[
                 const SizedBox(height: TeaSpacing.md),
                 TeaButton.secondary(
-                  label: 'Sign In with PIN',
+                  label: l10n.login_sign_in_pin,
                   icon: Icons.pin_outlined,
                   isLoading: _isLoading,
                   isFullWidth: true,
@@ -553,7 +537,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
               if (_biometricAvailable && _biometricEnabled) ...[
                 const SizedBox(height: TeaSpacing.md),
                 TeaButton.secondary(
-                  label: 'Sign In with Biometrics',
+                  label: l10n.login_sign_in_biometrics,
                   icon: Icons.fingerprint,
                   isLoading: _isLoading,
                   isFullWidth: true,
@@ -575,7 +559,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: TeaSpacing.md),
                     child: Text(
-                      'Or continue with',
+                      l10n.login_or_continue_with,
                       style: TeaTypography.labelSmall,
                     ),
                   ),
@@ -585,16 +569,55 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
 
               const SizedBox(height: TeaSpacing.lg),
 
-              // Social login buttons (placeholder)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildSocialButton(Icons.g_mobiledata, 'Google'),
-                  const SizedBox(width: TeaSpacing.md),
-                  _buildSocialButton(Icons.apple, 'Apple'),
-                  const SizedBox(width: TeaSpacing.md),
-                  _buildSocialButton(Icons.business, 'SSO'),
-                ],
+              // Premium Google Login Button
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _isLoading ? null : _handleGoogleSignIn,
+                  borderRadius: TeaRadius.radiusMd,
+                  child: Container(
+                    width: double.infinity,
+                    padding:
+                        const EdgeInsets.symmetric(vertical: TeaSpacing.md),
+                    decoration: BoxDecoration(
+                      color: TeaColors.white,
+                      border: Border.all(color: TeaColors.lightGray),
+                      borderRadius: TeaRadius.radiusMd,
+                      boxShadow: [
+                        BoxShadow(
+                          color: TeaColors.nearBlack.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.g_mobiledata,
+                            size: 28,
+                            color: TeaColors.nearBlack,
+                          ),
+                        ),
+                        const SizedBox(width: TeaSpacing.sm),
+                        Text(
+                          l10n.login_continue_google,
+                          style: TeaTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: TeaColors.nearBlack,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ).animate().fadeIn(delay: 600.ms, duration: 300.ms),
 
               const SizedBox(height: TeaSpacing.lg),
@@ -606,7 +629,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                 children: [
                   Flexible(
                     child: Text(
-                      "Don't have an account? ",
+                      l10n.login_no_account,
                       style: TeaTypography.bodySmall.copyWith(
                         color: TeaColors.darkGray,
                       ),
@@ -619,7 +642,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                     ),
                     onPressed: () => context.push('/register'),
                     child: Text(
-                      'Create Account',
+                      l10n.login_create_account,
                       style: TeaTypography.bodySmall.copyWith(
                         color: TeaColors.freshLeaf,
                         fontWeight: FontWeight.w600,
@@ -628,6 +651,22 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                   ),
                 ],
               ).animate().fadeIn(delay: 700.ms, duration: 300.ms),
+
+              const SizedBox(height: TeaSpacing.md),
+
+              // Contact Us Link below Register
+              Center(
+                child: TextButton(
+                  onPressed: () => context.push('/contact-us'),
+                  child: Text(
+                    l10n.login_contact_support,
+                    style: TeaTypography.bodySmall.copyWith(
+                      color: TeaColors.darkGray,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ).animate().fadeIn(delay: 800.ms, duration: 300.ms),
             ],
           ),
         ),
@@ -638,119 +677,10 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
         .scale(begin: const Offset(0.95, 0.95), duration: 500.ms);
   }
 
-  Widget _buildSocialButton(IconData icon, String label) {
-    return Tooltip(
-      message: 'Sign in with $label',
-      child: InkWell(
-        onTap: _isLoading
-            ? null
-            : () {
-                if (label == 'Google') {
-                  _handleGoogleSignIn();
-                } else {
-                  TeaSnackbar.info(context, '$label sign in coming soon!');
-                }
-              },
-        borderRadius: TeaRadius.radiusSm,
-        child: Container(
-          padding: const EdgeInsets.all(TeaSpacing.smd),
-          decoration: BoxDecoration(
-            border: Border.all(color: TeaColors.lightGray),
-            borderRadius: TeaRadius.radiusSm,
-          ),
-          child: Icon(
-            icon,
-            size: 24,
-            color: _isLoading ? TeaColors.mediumGray : TeaColors.darkGray,
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildDemoHint() {
-    return Container(
-      padding: TeaSpacing.cardPaddingMd,
-      decoration: BoxDecoration(
-        color: TeaColors.infoSky.withOpacity(0.1),
-        borderRadius: TeaRadius.radiusMd,
-        border: Border.all(
-          color: TeaColors.infoSky.withOpacity(0.3),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.info_outline,
-                size: 16,
-                color: TeaColors.infoSky,
-              ),
-              const SizedBox(width: TeaSpacing.xs),
-              Text(
-                'Demo Credentials',
-                style: TeaTypography.labelMedium.copyWith(
-                  color: TeaColors.infoSky,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: TeaSpacing.sm),
-          _buildCredentialRow('Admin', 'admin', 'admin123'),
-          _buildCredentialRow('Manager', 'manager', 'manager123'),
-          _buildCredentialRow('Farmer', 'farmer', 'farmer123'),
-        ],
-      ),
-    ).animate().fadeIn(delay: 700.ms, duration: 400.ms);
-  }
-
-  Widget _buildCredentialRow(String role, String username, String password) {
-    return Padding(
-      padding: const EdgeInsets.only(top: TeaSpacing.xs),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 60,
-            child: Text(
-              role,
-              style: TeaTypography.labelSmall.copyWith(
-                color: TeaColors.darkGray,
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                _usernameController.text = username;
-                _passwordController.text = password;
-                TeaSnackbar.info(context, '$role credentials filled');
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: TeaSpacing.sm,
-                  vertical: TeaSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: TeaColors.white.withOpacity(0.5),
-                  borderRadius: TeaRadius.radiusXs,
-                ),
-                child: Text(
-                  '$username / $password',
-                  style: TeaTypography.dataSmall.copyWith(
-                    color: TeaColors.darkGray,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPinCard(bool isSmallScreen) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       constraints: const BoxConstraints(maxWidth: 400),
       child: TeaCard.glass(
@@ -775,10 +705,10 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
                   ),
                 ),
                 const SizedBox(width: TeaSpacing.smd),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Enter PIN to Login',
-                    style: TextStyle(
+                    l10n.login_pin_title,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: TeaColors.nearBlack,
@@ -818,7 +748,7 @@ class _PremiumLoginScreenState extends ConsumerState<PremiumLoginScreen>
 
             // Submit Button
             TeaButton.primary(
-              label: 'Login',
+              label: l10n.login_pin_button,
               icon: Icons.login,
               isLoading: _isLoading,
               isFullWidth: true,

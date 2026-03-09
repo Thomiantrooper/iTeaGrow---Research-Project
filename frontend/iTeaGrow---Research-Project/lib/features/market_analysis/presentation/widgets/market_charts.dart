@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:iteagrow/core/design_system/design_system.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import '../../data/models/market_models.dart';
 
 class GradeValueChart extends StatelessWidget {
@@ -121,7 +122,7 @@ class MarketTrendChart extends StatelessWidget {
       ..sort((a, b) => a.compareTo(b)); // Chronological
 
     if (keys.isEmpty)
-      return const Center(child: Text('No trend data available'));
+      return Center(child: Text(AppLocalizations.of(context)!.chart_no_trend_data));
 
     final spots = <FlSpot>[];
     for (int i = 0; i < keys.length; i++) {
@@ -133,14 +134,26 @@ class MarketTrendChart extends StatelessWidget {
     }
 
     if (spots.isEmpty)
-      return const Center(child: Text('No trend data for selected grade'));
+      return Center(child: Text(AppLocalizations.of(context)!.chart_no_trend_grade));
+
+    final minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    final maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    final double range = maxY - minY;
+    final double yInterval = range > 300 ? 100 : 50;
+
+    // Provide more breathing room at the bottom to avoid overlap with X-axis
+    final double chartMinY = (minY / yInterval).floor() * yInterval - yInterval;
+    final double chartMaxY =
+        (maxY / yInterval).ceil() * yInterval + (yInterval / 2);
 
     return AspectRatio(
       aspectRatio: 1.5,
       child: LineChart(
         LineChartData(
-          minX: -0.5,
-          maxX: keys.length.toDouble() - 0.5,
+          minX: 0,
+          maxX: (keys.length - 1).toDouble(),
+          minY: chartMinY,
+          maxY: chartMaxY,
           lineBarsData: [
             LineChartBarData(
               spots: spots,
@@ -160,25 +173,31 @@ class MarketTrendChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 interval: 1,
+                reservedSize: 32,
                 getTitlesWidget: (value, meta) {
-                  final index = value.toInt();
+                  final index = value.round();
+                  // Strictly only show at exact integer positions
+                  if ((value - index).abs() > 0.05)
+                    return const SizedBox.shrink();
+
                   if (index >= 0 && index < keys.length) {
                     final bool isFirst = index == 0;
                     final bool isLast = index == keys.length - 1;
                     final bool isMiddle =
-                        keys.length >= 4 && index == (keys.length / 2).floor();
+                        keys.length > 2 && index == (keys.length / 2).floor();
 
-                    if (isFirst || isLast || (keys.length < 4) || isMiddle) {
+                    if (isFirst || isLast || isMiddle) {
                       final dateStr = keys[index];
                       return SideTitleWidget(
                         axisSide: meta.axisSide,
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            left: isFirst ? 10 : 0,
-                            right: isLast ? 10 : 0,
+                        space: 8,
+                        child: Text(
+                          dateStr.length > 5 ? dateStr.substring(5) : dateStr,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: TeaColors.darkGray,
                           ),
-                          child: Text(dateStr.substring(5),
-                              style: const TextStyle(fontSize: 10)),
                         ),
                       );
                     }
@@ -190,13 +209,20 @@ class MarketTrendChart extends StatelessWidget {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 40,
+                reservedSize: 45,
+                interval: yInterval,
                 getTitlesWidget: (value, meta) {
                   return SideTitleWidget(
                     axisSide: meta.axisSide,
-                    child: Text(value.toInt().toString(),
-                        style: const TextStyle(
-                            fontSize: 9, color: TeaColors.darkGray)),
+                    space: 8,
+                    child: Text(
+                      value.toInt().toString(),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: TeaColors.darkGray,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   );
                 },
               ),
@@ -235,6 +261,7 @@ class QualityRadarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AspectRatio(
       aspectRatio: 1.3,
       child: RadarChart(
@@ -274,11 +301,11 @@ class QualityRadarChart extends StatelessWidget {
           getTitle: (index, angle) {
             switch (index) {
               case 0:
-                return const RadarChartTitle(text: 'Color');
+                return RadarChartTitle(text: l10n.chart_radar_color);
               case 1:
-                return const RadarChartTitle(text: 'Aroma');
+                return RadarChartTitle(text: l10n.chart_radar_aroma);
               case 2:
-                return const RadarChartTitle(text: 'Freshness');
+                return RadarChartTitle(text: l10n.chart_radar_freshness);
               default:
                 return const RadarChartTitle(text: '');
             }
@@ -300,12 +327,13 @@ class RadarChartLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildLegendItem('Your Batch', TeaColors.freshLeaf),
+        _buildLegendItem(l10n.chart_your_batch, TeaColors.freshLeaf),
         const SizedBox(width: 24),
-        _buildLegendItem('Premium Target', TeaColors.goldenSunlight),
+        _buildLegendItem(l10n.chart_premium_target, TeaColors.goldenSunlight),
       ],
     );
   }

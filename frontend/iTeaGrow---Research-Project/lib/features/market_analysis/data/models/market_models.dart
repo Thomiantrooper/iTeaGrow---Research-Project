@@ -124,24 +124,50 @@ class ClassificationResult {
   final double confidence;
   final String source; // 'online' or 'offline'
   final File? imageFile;
-  final String? heatmapPath;
+
+  /// True when a pre-flight or model-level validation check failed.
+  final bool isValidationFailure;
+
+  /// Human-readable reason for the validation failure (if [isValidationFailure]).
+  final String? validationMessage;
+
+  /// Confidence band: 'High' ≥0.85 / 'Moderate' ≥0.70 / 'Low' ≥0.55 / 'Uncertain'.
+  final String confidenceLabel;
+
+  /// True when the top-1 and top-2 class probabilities are within the
+  /// ambiguity threshold — the model is not strongly confident.
+  final bool isAmbiguous;
 
   ClassificationResult({
     required this.grade,
     required this.confidence,
     required this.source,
     this.imageFile,
-    this.heatmapPath,
+    this.isValidationFailure = false,
+    this.validationMessage,
+    this.confidenceLabel = 'High',
+    this.isAmbiguous = false,
   });
 
   factory ClassificationResult.fromJson(Map<String, dynamic> json,
-      {File? imageFile, String? heatmapPath}) {
+      {File? imageFile}) {
+    final confidence = (json['confidence'] as num?)?.toDouble() ?? 0.0;
+    final String labelFromConf;
+    if (confidence >= 85.0) {
+      labelFromConf = 'High';
+    } else if (confidence >= 70.0) {
+      labelFromConf = 'Moderate';
+    } else if (confidence >= 55.0) {
+      labelFromConf = 'Low';
+    } else {
+      labelFromConf = 'Uncertain';
+    }
     return ClassificationResult(
       grade: json['grade']?.toString() ?? 'Unknown',
-      confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+      confidence: confidence,
       source: 'online',
       imageFile: imageFile,
-      heatmapPath: heatmapPath,
+      confidenceLabel: labelFromConf,
     );
   }
 }

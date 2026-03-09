@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 /// Notifications Screen
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -32,6 +33,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
@@ -42,7 +44,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Notifications',
+          l10n.notif_title,
           style: TeaTypography.titleLarge.copyWith(color: TeaColors.nearBlack),
         ),
         actions: [
@@ -54,9 +56,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                   n.isRead = true;
                 }
               });
-              TeaSnackbar.success(context, 'All notifications marked as read');
+              TeaSnackbar.success(context, l10n.notif_all_marked_read);
             },
-            tooltip: 'Mark all as read',
+            tooltip: l10n.notif_mark_all_read,
           ),
         ],
         bottom: TabBar(
@@ -69,7 +71,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('All'),
+                  Text(l10n.notif_tab_all),
                   const SizedBox(width: 4),
                   _buildBadge(_allNotifications.length),
                 ],
@@ -79,7 +81,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Alerts'),
+                  Text(l10n.notif_tab_alerts),
                   const SizedBox(width: 4),
                   _buildBadge(_allNotifications.where((n) => n.type == NotificationType.alert).length),
                 ],
@@ -89,7 +91,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Updates'),
+                  Text(l10n.notif_tab_updates),
                   const SizedBox(width: 4),
                   _buildBadge(_allNotifications.where((n) => n.type == NotificationType.update).length),
                 ],

@@ -38,28 +38,26 @@ class ManagerDashboardSimple extends ConsumerWidget {
                   children: [
                     Text(
                       'Welcome, ${user?.fullName ?? "Manager"}!',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                     const SizedBox(height: 8),
-                    const Text('Analytics & Management Dashboard', style: TextStyle(color: AppTheme.textSecondary)),
+                    const Text('Analytics & Management Dashboard',
+                        style: TextStyle(color: AppTheme.textSecondary)),
                   ],
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
-
             Text(
               'Analytics Summary',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
-
             const SizedBox(height: 16),
-
             const Row(
               children: [
                 Expanded(
@@ -81,18 +79,14 @@ class ManagerDashboardSimple extends ConsumerWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
-
             Text(
               'Management Tools',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
-
             const SizedBox(height: 16),
-
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -113,13 +107,6 @@ class ManagerDashboardSimple extends ConsumerWidget {
                   subtitle: 'Scan & Detect',
                   color: AppTheme.statusWarning,
                   onTap: () => context.push('/dashboard/manager/disease'),
-                ),
-                _DashboardCard(
-                  icon: Icons.history,
-                  title: 'Scan History',
-                  subtitle: 'Past Results',
-                  color: Colors.blue,
-                  onTap: () => context.push('/dashboard/manager/history'),
                 ),
                 _DashboardCard(
                   icon: Icons.description,
@@ -144,18 +131,14 @@ class ManagerDashboardSimple extends ConsumerWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
-
             Text(
               'Sensor Overview',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
-
             const SizedBox(height: 16),
-
             const _SensorCard(
               title: 'NPK Levels',
               value: 'N:45 P:32 K:28',
@@ -250,23 +233,29 @@ class _MetricCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+            Text(title,
+                style: const TextStyle(
+                    fontSize: 12, color: AppTheme.textSecondary)),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(value,
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             Row(
               children: [
                 Icon(
                   trendUp ? Icons.trending_up : Icons.trending_down,
                   size: 16,
-                  color: trendUp ? AppTheme.statusGood : AppTheme.statusCritical,
+                  color:
+                      trendUp ? AppTheme.statusGood : AppTheme.statusCritical,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   trend,
                   style: TextStyle(
                     fontSize: 12,
-                    color: trendUp ? AppTheme.statusGood : AppTheme.statusCritical,
+                    color:
+                        trendUp ? AppTheme.statusGood : AppTheme.statusCritical,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -303,9 +292,13 @@ class _SensorCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 14, color: AppTheme.textSecondary)),
                   const SizedBox(height: 4),
-                  Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(value,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -317,7 +310,10 @@ class _SensorCard extends StatelessWidget {
               ),
               child: Text(
                 status,
-                style: TextStyle(color: statusColor, fontWeight: FontWeight.w600, fontSize: 12),
+                style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12),
               ),
             ),
           ],

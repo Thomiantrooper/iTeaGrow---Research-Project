@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import '../../../../core/design_system/tea_colors.dart';
 import '../../../../core/design_system/tea_typography.dart';
 import '../../data/providers/soil_health_provider.dart';
@@ -16,20 +17,21 @@ class SoilFertilizationScreen extends ConsumerStatefulWidget {
 
 class _SoilFertilizationScreenState
     extends ConsumerState<SoilFertilizationScreen> {
-
   // Zone name from zone ID (1-5)
   String _zoneNameForId(int zoneId) {
-    const names = ['North', 'East', 'South', 'West', 'Central'];
+    final l = AppLocalizations.of(context)!;
+    final names = [l.zone_north, l.zone_east, l.zone_south, l.zone_west, l.zone_central];
     return names[(zoneId - 1).clamp(0, 4)];
   }
 
   // Zone name derived from a hectare_id (625 hectares per zone — matches the map screen)
   String _zoneNameForHectare(int hectareId) {
-    if (hectareId <= 625) return 'North';
-    if (hectareId <= 1250) return 'East';
-    if (hectareId <= 1875) return 'South';
-    if (hectareId <= 2500) return 'West';
-    return 'Central';
+    final l = AppLocalizations.of(context)!;
+    if (hectareId <= 625) return l.zone_north;
+    if (hectareId <= 1250) return l.zone_east;
+    if (hectareId <= 1875) return l.zone_south;
+    if (hectareId <= 2500) return l.zone_west;
+    return l.zone_central;
   }
 
   // Block display number B1-B25 from a block base hectare_id
@@ -111,20 +113,25 @@ class _SoilFertilizationScreenState
     final notifier = ref.read(soilHealthProvider.notifier);
     final isNested = state.selectedZoneId != null;
 
-    String headerTitle = 'Soil Health Report';
+    final l = AppLocalizations.of(context)!;
+    String headerTitle = l.soil_report_title;
     if (state.selectedBlockId != null && state.selectedHectareId != null) {
       headerTitle =
-          'B${_getBlockDisplayNum(state.selectedHectareId!)} · S${state.selectedBlockId} Analysis';
+          'B${_getBlockDisplayNum(state.selectedHectareId!)} · S${state.selectedBlockId} ${l.soil_analysis}';
     } else if (state.selectedHectareId != null) {
-      headerTitle = 'Block ${_getBlockDisplayNum(state.selectedHectareId!)} Analysis';
+      headerTitle =
+          '${l.soil_block} ${_getBlockDisplayNum(state.selectedHectareId!)} ${l.soil_analysis}';
     } else if (state.selectedZoneId != null) {
-      headerTitle = '${_zoneNameForId(state.selectedZoneId!)} Zone Overview';
+      headerTitle = '${_zoneNameForId(state.selectedZoneId!)} ${l.soil_zone_overview}';
     }
 
     return Center(
       child: Container(
         margin: const EdgeInsets.only(top: 24, bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width - 48,
+        ),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.9),
           borderRadius: BorderRadius.circular(50),
@@ -140,17 +147,20 @@ class _SoilFertilizationScreenState
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (isNested) ...[
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-                color: TeaColors.deepForest,
-                onPressed: () => notifier.navigateUp(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              const SizedBox(width: 12),
-            ] else
+            // Back arrow: exits screen at top level, goes up within hierarchy when nested
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+              color: TeaColors.deepForest,
+              onPressed: isNested
+                  ? () => notifier.navigateUp()
+                  : () => Navigator.of(context).pop(),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            if (!isNested) ...[
+              const SizedBox(width: 8),
               const Icon(Icons.spa_rounded, color: Color(0xFF2E7D32), size: 22),
+            ],
             const SizedBox(width: 12),
             Flexible(
               child: Text(
@@ -160,7 +170,7 @@ class _SoilFertilizationScreenState
                 style: TeaTypography.headlineSmall.copyWith(
                   color: TeaColors.deepForest,
                   fontWeight: FontWeight.w900,
-                  fontSize: 18,
+                  fontSize: 16,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -218,7 +228,8 @@ class _SoilFertilizationScreenState
   }
 
   Widget _buildZoneSelector(SoilHealthState state) {
-    final zones = ['North', 'East', 'South', 'West', 'Central'];
+    final l = AppLocalizations.of(context)!;
+    final zones = [l.zone_north, l.zone_east, l.zone_south, l.zone_west, l.zone_central];
     final notifier = ref.read(soilHealthProvider.notifier);
 
     return Column(
@@ -228,7 +239,7 @@ class _SoilFertilizationScreenState
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Select Plantation Zone',
+              l.soil_select_zone,
               style: TextStyle(
                 color: TeaColors.deepForest.withOpacity(0.6),
                 fontSize: 12,
@@ -315,9 +326,9 @@ class _SoilFertilizationScreenState
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Select Block (${_zoneNameForId(zoneId)} Zone)',
+              '${AppLocalizations.of(context)!.soil_select_block} (${_zoneNameForId(zoneId)} ${AppLocalizations.of(context)!.zone_label})',
               style: TextStyle(
-                color: TeaColors.deepForest.withOpacity( 0.6),
+                color: TeaColors.deepForest.withOpacity(0.6),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.0,
@@ -337,24 +348,22 @@ class _SoilFertilizationScreenState
               // Block has data when ANY of its 25 sectors has a record
               final blockRecords = state.records
                   .where((r) =>
-                      r.hectareId >= blockBase &&
-                      r.hectareId <= blockBase + 24)
+                      r.hectareId >= blockBase && r.hectareId <= blockBase + 24)
                   .toList();
               final hasData = blockRecords.isNotEmpty;
               final isSelected = state.selectedHectareId == blockBase;
 
               // Health color based on most recent record in this block
-              Color statusColor = TeaColors.mediumGray.withOpacity( 0.1);
+              Color statusColor = TeaColors.mediumGray.withOpacity(0.1);
               if (hasData) {
-                blockRecords.sort(
-                    (a, b) => b.timestamp.compareTo(a.timestamp));
+                blockRecords.sort((a, b) => b.timestamp.compareTo(a.timestamp));
                 final status = blockRecords.first.healthStatus;
                 if (status == SoilHealthStatus.good) {
-                  statusColor = TeaColors.healthyGreen.withOpacity( 0.15);
+                  statusColor = TeaColors.healthyGreen.withOpacity(0.15);
                 } else if (status == SoilHealthStatus.fair) {
-                  statusColor = TeaColors.warningAmber.withOpacity( 0.15);
+                  statusColor = TeaColors.warningAmber.withOpacity(0.15);
                 } else {
-                  statusColor = TeaColors.alertRust.withOpacity( 0.15);
+                  statusColor = TeaColors.alertRust.withOpacity(0.15);
                 }
               }
 
@@ -387,7 +396,7 @@ class _SoilFertilizationScreenState
                   side: BorderSide(
                       color: isSelected
                           ? TeaColors.deepForest
-                          : TeaColors.deepForest.withOpacity( 0.1)),
+                          : TeaColors.deepForest.withOpacity(0.1)),
                   labelStyle: TextStyle(
                     color: isSelected ? Colors.white : TeaColors.deepForest,
                     fontWeight: FontWeight.bold,
@@ -415,9 +424,9 @@ class _SoilFertilizationScreenState
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Select Sector for B$blockDisplayNum',
+              '${AppLocalizations.of(context)!.soil_select_sector} B$blockDisplayNum',
               style: TextStyle(
-                color: TeaColors.deepForest.withOpacity( 0.6),
+                color: TeaColors.deepForest.withOpacity(0.6),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.0,
@@ -443,15 +452,15 @@ class _SoilFertilizationScreenState
               // Always use the most recent read (newest scan round first)
               final latestRecord = hasData ? record.first : null;
 
-              Color statusColor = TeaColors.mediumGray.withOpacity( 0.1);
+              Color statusColor = TeaColors.mediumGray.withOpacity(0.1);
               if (hasData) {
                 final status = latestRecord!.healthStatus;
                 if (status == SoilHealthStatus.good) {
-                  statusColor = TeaColors.healthyGreen.withOpacity( 0.1);
+                  statusColor = TeaColors.healthyGreen.withOpacity(0.1);
                 } else if (status == SoilHealthStatus.fair) {
-                  statusColor = TeaColors.warningAmber.withOpacity( 0.1);
+                  statusColor = TeaColors.warningAmber.withOpacity(0.1);
                 } else {
-                  statusColor = TeaColors.alertRust.withOpacity( 0.1);
+                  statusColor = TeaColors.alertRust.withOpacity(0.1);
                 }
               }
 
@@ -513,10 +522,10 @@ class _SoilFertilizationScreenState
 
   Widget _buildMainReport(SoilHealthRecord? record) {
     if (record == null)
-      return const Center(
+      return Center(
           child: Padding(
-        padding: EdgeInsets.all(40.0),
-        child: Text('No data report generated'),
+        padding: const EdgeInsets.all(40.0),
+        child: Text(AppLocalizations.of(context)!.soil_no_data),
       ));
 
     return Padding(
@@ -535,7 +544,7 @@ class _SoilFertilizationScreenState
           const SizedBox(height: 32),
 
           // 3. Detailed Soil Metrics
-          Text('Soil Chemistry Details', style: TeaTypography.titleLarge),
+          Text(AppLocalizations.of(context)!.soil_chemistry_details, style: TeaTypography.titleLarge),
           const SizedBox(height: 16),
           _buildDetailedMetrics(record),
 
@@ -557,7 +566,7 @@ class _SoilFertilizationScreenState
                   onPressed: () =>
                       ref.read(soilHealthProvider.notifier).selectPrevious(),
                   icon: const Icon(Icons.chevron_left),
-                  label: const Text('PREVIOUS BLOCK'),
+                  label: Text(AppLocalizations.of(context)!.soil_prev_block),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -571,7 +580,7 @@ class _SoilFertilizationScreenState
                   onPressed: () =>
                       ref.read(soilHealthProvider.notifier).selectNext(),
                   icon: const Icon(Icons.chevron_right),
-                  label: const Text('NEXT BLOCK'),
+                  label: Text(AppLocalizations.of(context)!.soil_next_block),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: TeaColors.deepForest,
                     foregroundColor: Colors.white,
@@ -613,7 +622,7 @@ class _SoilFertilizationScreenState
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            'SOIL CONDITION REPORT',
+            AppLocalizations.of(context)!.soil_condition_label,
             style: TeaTypography.labelSmall.copyWith(
               color: TeaColors.deepForest.withOpacity(0.5),
               letterSpacing: 2.0,
@@ -622,7 +631,7 @@ class _SoilFertilizationScreenState
           ),
           const SizedBox(height: 12),
           Text(
-            status.label.toUpperCase(),
+            _localizeSoilHealthStatus(status, AppLocalizations.of(context)!).toUpperCase(),
             style: TeaTypography.displayMedium.copyWith(
               color: color,
               fontWeight: FontWeight.w900,
@@ -634,8 +643,8 @@ class _SoilFertilizationScreenState
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               isGood
-                  ? 'Optimal condition. No major fertilizer adjustments required.'
-                  : 'Action required. Significant imbalances found in Nitrogen/Soil Chemistry.',
+                  ? AppLocalizations.of(context)!.soil_optimal_msg
+                  : AppLocalizations.of(context)!.soil_action_msg,
               textAlign: TextAlign.center,
               style: TeaTypography.bodyMedium.copyWith(
                 color: TeaColors.deepForest.withOpacity(0.7),
@@ -658,7 +667,7 @@ class _SoilFertilizationScreenState
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: Text(
-            'Required Actions',
+            AppLocalizations.of(context)!.soil_required_actions,
             style: TeaTypography.titleLarge.copyWith(
               color: TeaColors.deepForest,
               fontWeight: FontWeight.w900,
@@ -666,7 +675,7 @@ class _SoilFertilizationScreenState
           ),
         ),
         const SizedBox(height: 16),
-        ...advice.map((line) => _buildPremiumActionCard(line)),
+        ...advice.map((line) => _buildPremiumActionCard(_localizeFertilizerRec(line, AppLocalizations.of(context)!))),
       ],
     );
   }
@@ -715,37 +724,39 @@ class _SoilFertilizationScreenState
   }
 
   Widget _buildDetailedMetrics(SoilHealthRecord record) {
+    final l = AppLocalizations.of(context)!;
     return Column(
       children: [
         _buildMetricBar(
-            'Nitrogen (N)', record.nitrogen, 150, 250, 'Sensor Level'),
+            l.soil_nitrogen, record.nitrogen, 150, 250, l.soil_sensor_level),
         const SizedBox(height: 12),
         _buildMetricBar(
-            'Phosphorus (P)', record.phosphorus, 80, 150, 'Sensor Level'),
+            l.soil_phosphorus, record.phosphorus, 80, 150, l.soil_sensor_level),
         const SizedBox(height: 12),
         _buildMetricBar(
-            'Potassium (K)', record.potassium, 150, 250, 'Sensor Level'),
+            l.soil_potassium, record.potassium, 150, 250, l.soil_sensor_level),
         const SizedBox(height: 24),
-        _buildMetricBar('Soil pH', record.ph, 4.5, 5.5, 'pH'),
+        _buildMetricBar(l.soil_ph, record.ph, 4.5, 5.5, 'pH'),
         const SizedBox(height: 12),
-        _buildMetricBar('Humidity', record.humidity, 40, 70, '%'),
+        _buildMetricBar(l.soil_humidity, record.humidity, 40, 70, '%'),
       ],
     );
   }
 
   Widget _buildMetricBar(
       String label, double value, double min, double max, String unit) {
-    final status = value < min
-        ? 'Low'
+    final l = AppLocalizations.of(context)!;
+    final statusLabel = value < min
+        ? l.soil_status_low
         : value > max
-            ? 'High'
-            : 'Optimal';
+            ? l.soil_status_high
+            : l.soil_status_optimal;
     final color =
-        status == 'Optimal' ? TeaColors.healthyGreen : TeaColors.alertRust;
+        statusLabel == l.soil_status_optimal ? TeaColors.healthyGreen : TeaColors.alertRust;
 
     // Convert to percentage for user-friendly display
     final percentage = ((value / 1999) * 100).clamp(0, 100);
-    final displayValue = unit == 'Sensor Level'
+    final displayValue = unit == l.soil_sensor_level
         ? '${percentage.toStringAsFixed(0)}%'
         : '${value.toStringAsFixed(1)} $unit';
 
@@ -810,7 +821,7 @@ class _SoilFertilizationScreenState
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Status: $status (Optimal Range: ${((min / 1999) * 100).toStringAsFixed(0)}-${((max / 1999) * 100).toStringAsFixed(0)}%)',
+              '${l.soil_status_label}: $statusLabel (${l.soil_optimal_range}: ${((min / 1999) * 100).toStringAsFixed(0)}-${((max / 1999) * 100).toStringAsFixed(0)}%)',
               style: TeaTypography.bodySmall.copyWith(
                 color: Colors.black.withOpacity(0.4),
                 fontSize: 10,
@@ -824,16 +835,53 @@ class _SoilFertilizationScreenState
 
   String _selectedHectareLabel(SoilHealthRecord record) {
     final state = ref.read(soilHealthProvider);
+    final l = AppLocalizations.of(context)!;
     final zoneName = _zoneNameForHectare(record.hectareId);
     if (state.selectedBlockId != null && state.selectedHectareId != null) {
       final blockNum = _getBlockDisplayNum(state.selectedHectareId!);
-      return 'Report for $zoneName B$blockNum · S${state.selectedBlockId} at ${record.formattedTime}';
+      return '${l.soil_report_for} $zoneName B$blockNum · S${state.selectedBlockId} ${l.soil_at} ${record.formattedTime}';
     }
     if (state.selectedHectareId != null) {
       final blockNum = _getBlockDisplayNum(state.selectedHectareId!);
-      return 'Report for $zoneName B$blockNum at ${record.formattedTime}';
+      return '${l.soil_report_for} $zoneName B$blockNum ${l.soil_at} ${record.formattedTime}';
     }
-    return 'Report for $zoneName S${record.hectareId} at ${record.formattedTime}';
+    return '${l.soil_report_for} $zoneName S${record.hectareId} ${l.soil_at} ${record.formattedTime}';
+  }
+
+  String _localizeSoilHealthStatus(SoilHealthStatus status, AppLocalizations l10n) {
+    switch (status) {
+      case SoilHealthStatus.good:
+        return l10n.soil_health_good;
+      case SoilHealthStatus.fair:
+        return l10n.soil_health_fair;
+      case SoilHealthStatus.poor:
+        return l10n.soil_health_poor;
+      default:
+        return l10n.soil_health_unknown;
+    }
+  }
+
+  String _localizeFertilizerRec(String rec, AppLocalizations l10n) {
+    final c = rec.replaceAll(RegExp(r'[^\x20-\x7E\u00A0-\u00FF]'), '').trim();
+    if (c.contains('nitrogen fertilizer')) return l10n.soil_rec_n_low;
+    if (c.contains('phosphorus fertilizer')) return l10n.soil_rec_p_low;
+    if (c.contains('potassium fertilizer')) return l10n.soil_rec_k_low;
+    if (c.contains('lime to increase pH')) return l10n.soil_rec_ph_low;
+    if (c.contains('organic matter addition') && !c.contains('amendment')) return l10n.soil_rec_ec_low;
+    if (c.toLowerCase().contains('soil temperature low')) return l10n.soil_rec_temp_low;
+    if (c.contains('Irrigation needed')) return l10n.soil_rec_humidity_low;
+    if (c.toUpperCase().contains('REDUCE') && c.toLowerCase().contains('nitrogen')) return l10n.soil_rec_n_high;
+    if (c.toUpperCase().contains('REDUCE') && c.toLowerCase().contains('phosphorus')) return l10n.soil_rec_p_high;
+    if (c.toUpperCase().contains('REDUCE') && c.toLowerCase().contains('potassium')) return l10n.soil_rec_k_high;
+    if (c.contains('sulfur to lower pH')) return l10n.soil_rec_ph_high;
+    if (c.contains('salinity')) return l10n.soil_rec_ec_high;
+    if (c.toLowerCase().contains('temperature too high')) return l10n.soil_rec_temp_high;
+    if (c.toLowerCase().contains('humidity too high')) return l10n.soil_rec_humidity_high;
+    if (c.toLowerCase().contains('maintain current')) return l10n.soil_rec_maintain;
+    if (c.contains('health is optimal')) return l10n.soil_rec_soil_good;
+    if (c.contains('health is poor') || c.contains('detailed soil analysis')) return l10n.soil_rec_poor_general;
+    if (c.contains('soil amendment')) return l10n.soil_rec_amendment;
+    return c;
   }
 
   Color _getStatusColor(SoilHealthStatus status) {

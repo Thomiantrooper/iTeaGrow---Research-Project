@@ -14,13 +14,16 @@ import '../../../../core/providers/iot_live_provider.dart';
 import '../../data/datasources/disease_detection_ml_service.dart';
 import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
+import '../../data/datasources/leaf_validation_service.dart';
 import 'scan_history_screen.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 class DiseaseDetectionScreen extends ConsumerStatefulWidget {
   const DiseaseDetectionScreen({super.key});
 
   @override
-  ConsumerState<DiseaseDetectionScreen> createState() => _DiseaseDetectionScreenState();
+  ConsumerState<DiseaseDetectionScreen> createState() =>
+      _DiseaseDetectionScreenState();
 }
 
 class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
@@ -28,6 +31,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
   final ImagePicker _picker = ImagePicker();
   final DiseaseDetectionMLService _mlService = DiseaseDetectionMLService();
   final DiseaseStorageService _storageService = DiseaseStorageService();
+  final LeafValidationService _leafValidator = LeafValidationService();
 
   XFile? _selectedImage;
   Uint8List? _imageBytes;
@@ -38,7 +42,6 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
   bool _isSavingToDb = false;
   bool _savedToDb = false;
   String? _savedDetectionId;
-  bool _showGradCam = false;
 
   // Animation controllers
   late AnimationController _scanAnimationController;
@@ -59,7 +62,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       vsync: this,
     );
     _scanAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _scanAnimationController, curve: Curves.easeInOut),
+      CurvedAnimation(
+          parent: _scanAnimationController, curve: Curves.easeInOut),
     );
 
     _pulseController = AnimationController(
@@ -97,16 +101,16 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isConnected
-              ? 'Connected to backend server'
-              : 'Backend not available - using offline mode',),
+          content: Text(
+            isConnected
+                ? AppLocalizations.of(context)!.disease_connected_backend
+                : AppLocalizations.of(context)!.disease_backend_unavailable,
+          ),
           backgroundColor: isConnected ? Colors.green : Colors.orange,
         ),
       );
     }
   }
-
-
 
   Future<void> _captureImage() async {
     try {
@@ -125,11 +129,10 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           _result = null;
           _savedToDb = false;
           _savedDetectionId = null;
-          _showGradCam = false;
         });
       }
     } catch (e) {
-      _showError('Camera error: $e');
+      _showError(AppLocalizations.of(context)!.error_camera(e.toString()));
     }
   }
 
@@ -150,11 +153,10 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           _result = null;
           _savedToDb = false;
           _savedDetectionId = null;
-          _showGradCam = false;
         });
       }
     } catch (e) {
-      _showError('Gallery error: $e');
+      _showError(AppLocalizations.of(context)!.error_gallery(e.toString()));
     }
   }
 
@@ -167,6 +169,17 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     print('>>> _analyzeImage() CALLED <<<');
     if (_selectedImage == null) return;
 
+    // ── Pre-scan leaf validation ──────────────────────────────────────────
+    // Checks: min resolution, sharpness, colour variance, green-leaf ratio.
+    // Blocks non-leaf images before they reach the ML backend.
+    if (_imageBytes != null) {
+      final validation = await _leafValidator.validate(_imageBytes!);
+      if (!validation.isValid) {
+        _showError(validation.message);
+        return;
+      }
+    }
+
     setState(() => _isProcessing = true);
     _scanAnimationController.repeat();
     _pulseController.repeat(reverse: true);
@@ -175,8 +188,9 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       print('>>> Calling _mlService.predict() <<<');
       // Get live IoT data for ML prediction
       final iotData = ref.read(iotLiveProvider);
-      final device = iotData.deviceList.isNotEmpty ? iotData.deviceList.first : null;
-      
+      final device =
+          iotData.deviceList.isNotEmpty ? iotData.deviceList.first : null;
+
       final result = await _mlService.predict(
         _selectedImage!.path,
         liveTemperature: device?.temperature ?? 26.5,
@@ -191,53 +205,31 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       _pulseController.stop();
       _pulseController.reset();
 
-      print('>>> Calling setState <<<');
       setState(() {
         _result = result;
         _isProcessing = false;
         _isBackendConnected = _mlService.isBackendAvailable;
       });
-      print('>>> setState DONE <<<');
-
-      // Debug: Print result info
-      print('=== SCAN RESULT ===');
-      print('Disease Type: ${result.diseaseType}');
-      print('Confidence: ${result.confidence}');
-      print('Is Not A Leaf: ${result.isNotALeaf}');
-      print('Backend Connected: $_isBackendConnected');
-      print('Summary: ${result.summary}');
-      print('===================');
 
       // Show result snackbar so user knows scan completed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Detected: ${result.diseaseType} (${(result.confidence * 100).toStringAsFixed(1)}%)'),
-            backgroundColor: result.diseaseType == 'Healthy' ? Colors.green : Colors.orange,
+            content: Text(
+                AppLocalizations.of(context)!.disease_detected_result(
+                  result.diseaseType,
+                  (result.confidence * 100).toStringAsFixed(1),
+                )),
+            backgroundColor:
+                result.diseaseType == 'Healthy' ? Colors.green : Colors.orange,
             duration: const Duration(seconds: 2),
           ),
         );
       }
 
       // Auto-save to database if connected and valid leaf
-      print('>>> CHECKING IF SHOULD SAVE <<<');
-      print('_isBackendConnected: $_isBackendConnected');
-      print('result.isNotALeaf: ${result.isNotALeaf}');
-      print('result.diseaseType: ${result.diseaseType}');
-
       if (_isBackendConnected && !result.isNotALeaf) {
-        print('>>> CALLING _saveToDatabase() <<<');
         _saveToDatabase();
-      } else {
-        print('!!! NOT SAVING: backendConnected=$_isBackendConnected, isNotALeaf=${result.isNotALeaf}');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Not saving: backend=$_isBackendConnected, notLeaf=${result.isNotALeaf}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
       }
     } catch (e) {
       _scanAnimationController.stop();
@@ -245,33 +237,19 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       _pulseController.stop();
       _pulseController.reset();
       setState(() => _isProcessing = false);
-      _showError('Analysis error: $e');
+      _showError(AppLocalizations.of(context)!.error_analysis(e.toString()));
     }
   }
 
   Future<void> _saveToDatabase() async {
-    print('=== SAVE TO DATABASE CALLED ===');
-    print('_result: $_result');
-    print('_selectedImage: $_selectedImage');
-    print('_savedToDb: $_savedToDb');
-
-    if (_result == null || _selectedImage == null || _savedToDb) {
-      print('!!! Early return - conditions not met');
-      return;
-    }
+    if (_result == null || _selectedImage == null || _savedToDb) return;
 
     setState(() => _isSavingToDb = true);
-    print('>>> Starting database save process <<<');
 
     try {
-      // Get auth token from Riverpod state
       final authState = ref.read(authStateProvider);
       final authToken = authState.accessToken;
-      print('Auth state: isAuthenticated=${authState.isAuthenticated}');
-      print('Auth token present: ${authToken != null && authToken.isNotEmpty}');
-      print('Image path: ${_selectedImage!.path}');
 
-      // Check if user is logged in
       if (authToken == null || authToken.isEmpty) {
         setState(() => _isSavingToDb = false);
         return; // silently skip — user not logged in
@@ -291,12 +269,12 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('Scan saved to database'),
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(AppLocalizations.of(context)!.disease_scan_saved),
                 ],
               ),
               backgroundColor: Colors.green,
@@ -308,12 +286,14 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
         // Response was null - likely auth or server error
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.error_outline, color: Colors.white),
-                  SizedBox(width: 8),
-                  Expanded(child: Text('Could not save to database. Check connection or login status.')),
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: Text(
+                          AppLocalizations.of(context)!.disease_save_db_failed)),
                 ],
               ),
               backgroundColor: Colors.red,
@@ -326,7 +306,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save: $e'),
+            content: Text(AppLocalizations.of(context)!.disease_save_failed),
             backgroundColor: Colors.red,
           ),
         );
@@ -386,11 +366,10 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       final pdfBytes = await DiseaseReportService().generateReport(reportData);
       await Printing.layoutPdf(
         onLayout: (format) async => pdfBytes,
-        name:
-            'tea_disease_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        name: 'tea_disease_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
       );
     } catch (e) {
-      _showError('Failed to generate report: $e');
+      _showError(AppLocalizations.of(context)!.error_report_failed(e.toString()));
     }
   }
 
@@ -401,7 +380,6 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       _result = null;
       _savedToDb = false;
       _savedDetectionId = null;
-      _showGradCam = false;
     });
   }
 
@@ -413,12 +391,13 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text(
-          'Disease Detection',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.disease_title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
@@ -428,7 +407,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           IconButton(
             icon: const Icon(Icons.history),
             onPressed: _openHistory,
-            tooltip: 'Scan History',
+            tooltip: l10n.disease_scan_history,
           ),
           IconButton(
             icon: _isCheckingConnection
@@ -442,18 +421,20 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                   )
                 : Icon(
                     _isBackendConnected ? Icons.cloud_done : Icons.cloud_off,
-                    color: _isBackendConnected ? Colors.white : Colors.orange.shade200,
+                    color: _isBackendConnected
+                        ? Colors.white
+                        : Colors.orange.shade200,
                   ),
             onPressed: _refreshConnection,
             tooltip: _isBackendConnected
-                ? 'Connected to server'
-                : 'Offline mode - tap to reconnect',
+                ? l10n.common_online
+                : l10n.common_offline,
           ),
           if (_selectedImage != null)
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: _resetScan,
-              tooltip: 'New Scan',
+              tooltip: l10n.disease_new_scan,
             ),
         ],
       ),
@@ -491,10 +472,11 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                       // Chart Section Header
                       Row(
                         children: [
-                          const Icon(Icons.analytics, color: AppTheme.primaryGreen, size: 20),
+                          const Icon(Icons.analytics,
+                              color: AppTheme.primaryGreen, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            'Detection Analysis',
+                            AppLocalizations.of(context)!.disease_detection_analysis,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -512,13 +494,10 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                     OutlinedButton.icon(
                       onPressed: _generatePdfReport,
                       icon: const Icon(Icons.picture_as_pdf),
-                      label: const Text('Generate PDF Report'),
+                      label: Text(AppLocalizations.of(context)!.common_generate_report),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.primaryGreen,
-                        side:
-                            const BorderSide(color: AppTheme.primaryGreen),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: AppTheme.primaryGreen),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -592,7 +571,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Capture or upload an image of a tea leaf to detect diseases',
+              AppLocalizations.of(context)!.disease_placeholder_subtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey.shade600,
@@ -634,7 +613,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
             borderRadius: BorderRadius.circular(16),
             child: Image.memory(
               _imageBytes!,
-              fit: BoxFit.contain,  // Show full image without cropping
+              fit: BoxFit.contain, // Show full image without cropping
               width: double.infinity,
             ),
           ),
@@ -720,36 +699,6 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
             ),
           ),
 
-        // Grad-CAM toggle
-        if (_result?.heatmapPath != null && !_isProcessing)
-          Positioned(
-            top: 16,
-            right: 24,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Grad-CAM',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                  const SizedBox(width: 4),
-                  Switch(
-                    value: _showGradCam,
-                    onChanged: (v) => setState(() => _showGradCam = v),
-                    activeThumbColor: AppTheme.primaryGreen,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
         // Controls overlay
         if (_result != null && !_isProcessing)
           Positioned(
@@ -762,31 +711,37 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                 // Database status
                 if (_savedToDb)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.cloud_done, color: Colors.white, size: 18),
-                        SizedBox(width: 6),
-                        Text('Saved', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        const Icon(Icons.cloud_done, color: Colors.white, size: 18),
+                        const SizedBox(width: 6),
+                        Text(AppLocalizations.of(context)!.disease_saved,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold)),
                       ],
                     ),
                   )
                 else if (_isSavingToDb)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.blue.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 14,
                           height: 14,
                           child: CircularProgressIndicator(
@@ -794,8 +749,10 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(width: 6),
-                        Text('Saving...', style: TextStyle(color: Colors.white, fontSize: 12)),
+                        const SizedBox(width: 6),
+                        Text(AppLocalizations.of(context)!.disease_saving,
+                            style:
+                                const TextStyle(color: Colors.white, fontSize: 12)),
                       ],
                     ),
                   ),
@@ -837,7 +794,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.sensors, color: Colors.white, size: 20),
+                  child:
+                      const Icon(Icons.sensors, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
                 const Column(
@@ -845,7 +803,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                   children: [
                     Text(
                       'Environment Monitor',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     Text(
                       'Real-time conditions',
@@ -868,12 +827,15 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                 builder: (context, ref, child) {
                   // Get live IoT data
                   final iotData = ref.watch(iotLiveProvider);
-                  final device = iotData.deviceList.isNotEmpty ? iotData.deviceList.first : null;
-                  
+                  final device = iotData.deviceList.isNotEmpty
+                      ? iotData.deviceList.first
+                      : null;
+
                   final temp = device?.temperature?.toStringAsFixed(1) ?? '--';
                   final humidity = device?.humidity?.toString() ?? '--';
-                  final airQuality = device?.airQuality?.toStringAsFixed(0) ?? '--';
-                  
+                  final airQuality =
+                      device?.airQuality?.toStringAsFixed(0) ?? '--';
+
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -883,14 +845,16 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                         'Temperature',
                         Colors.deepOrange,
                       ),
-                      Container(width: 1, height: 50, color: Colors.grey.shade300),
+                      Container(
+                          width: 1, height: 50, color: Colors.grey.shade300),
                       _buildLiveReadingItem(
                         Icons.water_drop,
                         '${humidity}%',
                         'Humidity',
                         Colors.blue,
                       ),
-                      Container(width: 1, height: 50, color: Colors.grey.shade300),
+                      Container(
+                          width: 1, height: 50, color: Colors.grey.shade300),
                       _buildLiveReadingItem(
                         Icons.air,
                         airQuality,
@@ -946,7 +910,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     );
   }
 
-  Widget _buildLiveReadingItem(IconData icon, String value, String label, Color color) {
+  Widget _buildLiveReadingItem(
+      IconData icon, String value, String label, Color color) {
     return Expanded(
       child: Column(
         children: [
@@ -976,7 +941,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           child: ElevatedButton.icon(
             onPressed: _captureImage,
             icon: const Icon(Icons.camera_alt, size: 24),
-            label: const Text('Camera', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            label: Text(AppLocalizations.of(context)!.common_camera,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryGreen,
               foregroundColor: Colors.white,
@@ -993,7 +959,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           child: OutlinedButton.icon(
             onPressed: _pickFromGallery,
             icon: const Icon(Icons.photo_library, size: 24),
-            label: const Text('Gallery', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            label: Text(AppLocalizations.of(context)!.common_gallery,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primaryGreen,
               side: const BorderSide(color: AppTheme.primaryGreen, width: 2),
@@ -1015,7 +982,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           ? const SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.white),
             )
           : const Icon(Icons.search, size: 26),
       label: Text(
@@ -1125,12 +1093,14 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.orange.shade700, size: 24),
+                    Icon(Icons.info_outline,
+                        color: Colors.orange.shade700, size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Please capture a clear image of a tea leaf for accurate disease detection.',
-                        style: TextStyle(fontSize: 14, color: Colors.orange.shade800),
+                        style: TextStyle(
+                            fontSize: 14, color: Colors.orange.shade800),
                       ),
                     ),
                   ],
@@ -1244,7 +1214,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text('Severity Level', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        Text(AppLocalizations.of(context)!.disease_severity_level,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
@@ -1284,11 +1255,16 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           if (_result!.temperature != null)
-            _buildMiniReading(Icons.thermostat, '${_result!.temperature!.toStringAsFixed(1)}°C', Colors.orange),
+            _buildMiniReading(Icons.thermostat,
+                '${_result!.temperature!.toStringAsFixed(1)}°C', Colors.orange),
           if (_result!.humidity != null)
-            _buildMiniReading(Icons.water_drop, '${_result!.humidity!.toStringAsFixed(1)}%', Colors.blue),
+            _buildMiniReading(Icons.water_drop,
+                '${_result!.humidity!.toStringAsFixed(1)}%', Colors.blue),
           if (_result!.airQuality != null)
-            _buildMiniReading(Icons.air, 'AQI ${_result!.airQuality!.toStringAsFixed(0)}', _getAirQualityColor(_result!.airQuality!)),
+            _buildMiniReading(
+                Icons.air,
+                'AQI ${_result!.airQuality!.toStringAsFixed(0)}',
+                _getAirQualityColor(_result!.airQuality!)),
         ],
       ),
     );
@@ -1302,7 +1278,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
         const SizedBox(width: 4),
         Text(
           value,
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color),
+          style: TextStyle(
+              fontSize: 13, fontWeight: FontWeight.w600, color: color),
         ),
       ],
     );
@@ -1353,7 +1330,9 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                       sections: [
                         PieChartSectionData(
                           value: confidence * 100,
-                          color: isHealthy ? AppTheme.statusGood : AppTheme.statusCritical,
+                          color: isHealthy
+                              ? AppTheme.statusGood
+                              : AppTheme.statusCritical,
                           title: '${(confidence * 100).toStringAsFixed(0)}%',
                           titleStyle: const TextStyle(
                             fontSize: 14,
@@ -1382,7 +1361,9 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                     children: [
                       _buildChartLegendItem(
                         _result!.diseaseType,
-                        isHealthy ? AppTheme.statusGood : AppTheme.statusCritical,
+                        isHealthy
+                            ? AppTheme.statusGood
+                            : AppTheme.statusCritical,
                         '${(confidence * 100).toStringAsFixed(1)}%',
                       ),
                       const SizedBox(height: 12),
@@ -1483,56 +1464,59 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                 const SizedBox(width: 12),
                 Text(
                   isNotALeaf ? 'What to Do' : 'Recommendations',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            ..._result!.recommendations.asMap().entries.map((entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [cardColor.withOpacity(0.8), cardColor],
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: cardColor.withOpacity(0.4),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+            ..._result!.recommendations.asMap().entries.map(
+                  (entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [cardColor.withOpacity(0.8), cardColor],
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: cardColor.withOpacity(0.4),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${entry.key + 1}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              entry.value,
+                              style: const TextStyle(fontSize: 14, height: 1.4),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    child: Center(
-                      child: Text(
-                        '${entry.key + 1}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        entry.value,
-                        style: const TextStyle(fontSize: 14, height: 1.4),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),),
+                ),
           ],
         ),
       ),
@@ -1546,7 +1530,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           child: OutlinedButton.icon(
             onPressed: _resetScan,
             icon: const Icon(Icons.refresh),
-            label: const Text('New Scan'),
+            label: Text(AppLocalizations.of(context)!.disease_new_scan),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primaryGreen,
               side: const BorderSide(color: AppTheme.primaryGreen, width: 2),
@@ -1566,7 +1550,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.cloud_upload),
               label: Text(_isSavingToDb ? 'Saving...' : 'Save Result'),

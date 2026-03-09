@@ -33,6 +33,7 @@ import '../../features/dashboard/presentation/screens/analytics_dashboard_screen
 import '../../features/reports/presentation/screens/reports_list_screen.dart';
 import '../../features/reports/presentation/screens/report_preview_screen.dart';
 import '../../features/disease_detection/presentation/screens/scan_history_screen.dart';
+import '../../features/contact/presentation/screens/contact_us_screen.dart';
 import '../enums/app_enums.dart';
 import '../animations/tea_animations.dart';
 import '../design_system/design_system.dart';
@@ -108,7 +109,8 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
         '/splash',
         '/login',
         '/register',
-        '/forgot-password'
+        '/forgot-password',
+        '/contact-us'
       ];
       final isPublicRoute = publicRoutes.contains(currentPath);
 
@@ -163,6 +165,15 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
         path: '/register',
         pageBuilder: (context, state) => _buildPremiumTransition(
           child: const RegisterScreen(),
+          state: state,
+        ),
+      ),
+
+      // Contact Us Screen
+      GoRoute(
+        path: '/contact-us',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const ContactUsScreen(),
           state: state,
         ),
       ),

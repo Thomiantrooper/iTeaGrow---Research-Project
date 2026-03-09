@@ -6,11 +6,15 @@ import '../providers/tour_provider.dart';
 
 /// Floating onboarding tour overlay - positioned above main UI, never overlaps chatbot
 class TourOverlay extends ConsumerWidget {
-  const TourOverlay({super.key});
+  /// Override to use a different provider (e.g. managerTourProvider).
+  /// Defaults to [tourProvider].
+  final StateNotifierProvider<TourNotifier, TourState>? tourProviderOverride;
+  const TourOverlay({super.key, this.tourProviderOverride});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tourState = ref.watch(tourProvider);
+    final provider = tourProviderOverride ?? tourProvider;
+    final tourState = ref.watch(provider);
 
     if (!tourState.isActive || tourState.currentStep == null) {
       return const SizedBox.shrink();
@@ -69,9 +73,9 @@ class TourOverlay extends ConsumerWidget {
               totalSteps: tourState.totalSteps,
               isFirstStep: tourState.isFirstStep,
               isLastStep: tourState.isLastStep,
-              onNext: () => ref.read(tourProvider.notifier).nextStep(),
-              onBack: () => ref.read(tourProvider.notifier).previousStep(),
-              onSkip: () => ref.read(tourProvider.notifier).skipTour(),
+              onNext: () => ref.read(provider.notifier).nextStep(),
+              onBack: () => ref.read(provider.notifier).previousStep(),
+              onSkip: () => ref.read(provider.notifier).skipTour(),
             ),
           ),
 
@@ -80,7 +84,7 @@ class TourOverlay extends ConsumerWidget {
             top: MediaQuery.of(context).padding.top + 16,
             right: 16,
             child: GestureDetector(
-              onTap: () => ref.read(tourProvider.notifier).skipTour(),
+              onTap: () => ref.read(provider.notifier).skipTour(),
               child: Container(
                 width: 36,
                 height: 36,

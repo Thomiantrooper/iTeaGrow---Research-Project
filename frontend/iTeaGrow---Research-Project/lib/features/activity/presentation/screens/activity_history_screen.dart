@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 /// Activity History Screen
 class ActivityHistoryScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,14 @@ class _ActivityHistoryScreenState extends ConsumerState<ActivityHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final filterLabels = {
+      'All': l10n.activity_filter_all,
+      'Scans': l10n.activity_filter_scans,
+      'Harvests': l10n.activity_filter_harvests,
+      'IoT': l10n.activity_filter_iot,
+      'Alerts': l10n.activity_filter_alerts,
+    };
     final filteredActivities = _selectedFilter == 'All'
         ? _activities
         : _activities.where((a) => a.category == _selectedFilter).toList();
@@ -35,14 +44,14 @@ class _ActivityHistoryScreenState extends ConsumerState<ActivityHistoryScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Activity History',
+          l10n.activity_title,
           style: TeaTypography.titleLarge.copyWith(color: TeaColors.nearBlack),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today_outlined, color: TeaColors.freshLeaf),
             onPressed: () => _showDateFilter(),
-            tooltip: 'Filter by date',
+            tooltip: l10n.activity_filter_all,
           ),
         ],
       ),
@@ -61,7 +70,7 @@ class _ActivityHistoryScreenState extends ConsumerState<ActivityHistoryScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(right: TeaSpacing.sm),
                     child: FilterChip(
-                      label: Text(filter),
+                      label: Text(filterLabels[filter] ?? filter),
                       selected: isSelected,
                       onSelected: (selected) {
                         setState(() => _selectedFilter = filter);
@@ -130,13 +139,13 @@ class _ActivityHistoryScreenState extends ConsumerState<ActivityHistoryScreen> {
           ),
           const SizedBox(height: TeaSpacing.md),
           Text(
-            'No activities found',
+            AppLocalizations.of(context)!.activity_empty,
             style: TeaTypography.titleMedium.copyWith(
               color: TeaColors.darkGray,
             ),
           ),
           Text(
-            'Your activities will appear here',
+            AppLocalizations.of(context)!.activity_empty_subtitle,
             style: TeaTypography.bodySmall.copyWith(
               color: TeaColors.mediumGray,
             ),
@@ -238,8 +247,8 @@ class _ActivityHistoryScreenState extends ConsumerState<ActivityHistoryScreen> {
     final yesterday = today.subtract(const Duration(days: 1));
     final dateOnly = DateTime(date.year, date.month, date.day);
 
-    if (dateOnly == today) return 'Today';
-    if (dateOnly == yesterday) return 'Yesterday';
+    if (dateOnly == today) return AppLocalizations.of(context)!.activity_today;
+    if (dateOnly == yesterday) return AppLocalizations.of(context)!.activity_yesterday;
     if (dateOnly.isAfter(today.subtract(const Duration(days: 7)))) {
       return _getDayName(date.weekday);
     }

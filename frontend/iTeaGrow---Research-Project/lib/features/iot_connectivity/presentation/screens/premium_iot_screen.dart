@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/providers/iot_live_provider.dart';
@@ -31,6 +32,8 @@ class PremiumIoTScreen extends ConsumerWidget {
       isSoilOnline = soilTimeDiff.inMinutes < 5;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
@@ -49,7 +52,7 @@ class PremiumIoTScreen extends ConsumerWidget {
           ),
         ),
         title: Text(
-          'IoT Devices',
+          l10n.iot_title,
           style: TeaTypography.titleLarge.copyWith(
             color: TeaColors.nearBlack,
             fontWeight: FontWeight.bold,
@@ -103,7 +106,7 @@ class PremiumIoTScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Connected Devices',
+                      l10n.iot_devices_heading,
                       style: TeaTypography.titleLarge.copyWith(
                         color: TeaColors.nearBlack,
                         fontWeight: FontWeight.bold,
@@ -113,7 +116,7 @@ class PremiumIoTScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Monitor your tea plantation environmental conditions',
+                      l10n.iot_devices_subtitle,
                       style: TeaTypography.bodyMedium.copyWith(
                         color: TeaColors.darkGray,
                         height: 1.4,
@@ -126,8 +129,8 @@ class PremiumIoTScreen extends ConsumerWidget {
 
               // IoTENV Device Card
               _IoTDeviceCard(
-                deviceName: 'IoTENV',
-                deviceDescription: 'Environmental Monitoring',
+                deviceName: l10n.iot_env_device,
+                deviceDescription: l10n.iot_env_device_desc,
                 isOnline: isOnline,
                 icon: Icons.thermostat,
                 iconColor: Colors.orange,
@@ -135,22 +138,22 @@ class PremiumIoTScreen extends ConsumerWidget {
                     ? [
                         _MetricData(
                           icon: Icons.thermostat,
-                          label: 'Temperature',
+                          label: l10n.sensor_temperature,
                           value:
                               '${device.temperature?.toStringAsFixed(1) ?? '--'}°C',
                           color: Colors.deepOrange,
                         ),
                         _MetricData(
                           icon: Icons.water_drop,
-                          label: 'Humidity',
+                          label: l10n.sensor_humidity,
                           value: '${device.humidity?.toString() ?? '--'}%',
                           color: Colors.blue,
                         ),
                         _MetricData(
                           icon: Icons.air,
-                          label: 'Air Quality',
+                          label: l10n.iot_air_quality,
                           value: device.airQuality != null
-                              ? _getAirQualityLabel(device.airQuality!.toInt())
+                              ? _getAirQualityLabel(device.airQuality!.toInt(), l10n)
                               : '--',
                           color: _getAirQualityColor(device.airQuality ?? 0),
                         ),
@@ -163,8 +166,8 @@ class PremiumIoTScreen extends ConsumerWidget {
 
               // IoTSOIL Device Card
               _IoTDeviceCard(
-                deviceName: 'IoTSOIL',
-                deviceDescription: 'Soil Monitoring',
+                deviceName: l10n.iot_soil_device,
+                deviceDescription: l10n.iot_soil_device_desc,
                 isOnline: isSoilOnline,
                 icon: Icons.grass,
                 iconColor: Colors.brown,
@@ -172,44 +175,44 @@ class PremiumIoTScreen extends ConsumerWidget {
                     ? [
                         _MetricData(
                           icon: Icons.science_rounded,
-                          label: 'Nitrogen',
+                          label: l10n.sensor_nitrogen,
                           value: '${latestSoil.nitrogen.toStringAsFixed(0)}',
                           color: Colors.green,
                         ),
                         _MetricData(
                           icon: Icons.science_rounded,
-                          label: 'Phosphorus',
+                          label: l10n.sensor_phosphorus,
                           value: '${latestSoil.phosphorus.toStringAsFixed(0)}',
                           color: Colors.orange,
                         ),
                         _MetricData(
                           icon: Icons.science_rounded,
-                          label: 'Potassium',
+                          label: l10n.sensor_potassium,
                           value: '${latestSoil.potassium.toStringAsFixed(0)}',
                           color: Colors.blue,
                         ),
                         _MetricData(
                           icon: Icons.opacity_rounded,
-                          label: 'pH Level',
+                          label: l10n.sensor_ph_level,
                           value: '${latestSoil.ph.toStringAsFixed(1)}',
                           color: Colors.purple,
                         ),
                         _MetricData(
                           icon: Icons.bolt_rounded,
-                          label: 'EC (µS/cm)',
+                          label: l10n.sensor_ec,
                           value: '${latestSoil.ec.toStringAsFixed(0)}',
                           color: Colors.cyan,
                         ),
                         _MetricData(
                           icon: Icons.thermostat_rounded,
-                          label: 'Soil Temp',
+                          label: l10n.sensor_soil_temp,
                           value:
                               '${latestSoil.temperature.toStringAsFixed(1)}°C',
                           color: Colors.redAccent,
                         ),
                         _MetricData(
                           icon: Icons.water_drop_rounded,
-                          label: 'Soil Moisture',
+                          label: l10n.sensor_soil_moisture,
                           value: '${latestSoil.humidity.toStringAsFixed(1)}%',
                           color: Colors.indigo,
                         ),
@@ -262,7 +265,7 @@ class PremiumIoTScreen extends ConsumerWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        'Devices update automatically every 5 seconds when online',
+                        l10n.iot_auto_update,
                         style: TeaTypography.bodyMedium.copyWith(
                           color: TeaColors.nearBlack,
                           fontWeight: FontWeight.w500,
@@ -287,12 +290,12 @@ class PremiumIoTScreen extends ConsumerWidget {
     return Colors.red;
   }
 
-  String _getAirQualityLabel(int aqi) {
-    if (aqi <= 50) return 'Good';
-    if (aqi <= 100) return 'Moderate';
-    if (aqi <= 150) return 'Unhealthy';
-    if (aqi <= 200) return 'Bad';
-    return 'Hazardous';
+  String _getAirQualityLabel(int aqi, AppLocalizations l10n) {
+    if (aqi <= 50) return l10n.iot_aqi_good;
+    if (aqi <= 100) return l10n.iot_aqi_moderate;
+    if (aqi <= 150) return l10n.iot_aqi_unhealthy;
+    if (aqi <= 200) return l10n.iot_aqi_bad;
+    return l10n.iot_aqi_hazardous;
   }
 }
 
@@ -457,7 +460,7 @@ class _IoTDeviceCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          isOnline ? 'Online' : 'Offline',
+                          isOnline ? AppLocalizations.of(context)!.common_online : AppLocalizations.of(context)!.common_offline,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -572,7 +575,7 @@ class _IoTDeviceCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Last update: ${_getTimeAgo(lastUpdate!)}',
+                          '${AppLocalizations.of(context)!.iot_last_update}: ${_getTimeAgo(lastUpdate!)}',
                           style: TeaTypography.bodySmall.copyWith(
                             color: TeaColors.darkGray,
                             fontWeight: FontWeight.w500,
@@ -611,7 +614,7 @@ class _IoTDeviceCard extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          'No data available. Waiting for device connection...',
+                          AppLocalizations.of(context)!.iot_no_data,
                           style: TeaTypography.bodyMedium.copyWith(
                             color: TeaColors.darkGray,
                             height: 1.4,

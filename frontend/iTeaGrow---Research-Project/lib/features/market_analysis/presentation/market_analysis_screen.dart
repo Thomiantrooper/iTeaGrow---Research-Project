@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:iteagrow/core/design_system/design_system.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'dart:async';
 import '../../../../core/services/connectivity_service.dart';
 import '../data/models/market_models.dart';
 import '../providers/market_providers.dart';
 import 'widgets/market_charts.dart';
+import '../../powder_grading/data/datasources/powder_validation_service.dart';
 
 class MarketAnalysisScreen extends ConsumerStatefulWidget {
   const MarketAnalysisScreen({super.key});
@@ -58,12 +60,30 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
   String _selectedGrade = 'BOPF';
 
   final ImagePicker _picker = ImagePicker();
+  final PowderValidationService _powderValidator = PowderValidationService();
 
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
-      ref.read(classificationProvider.notifier).classify(File(pickedFile.path));
+    if (pickedFile == null) return;
+
+    // ── Pre-scan powder validation ───────────────────────────────────
+    // Checks: min resolution, sharpness, colour variance,
+    // green-dominance rejection, brownish powder pixel ratio.
+    final bytes = await pickedFile.readAsBytes();
+    final validation = await _powderValidator.validate(bytes);
+    if (!validation.isValid) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(validation.message),
+            backgroundColor: TeaColors.alertRust,
+          ),
+        );
+      }
+      return;
     }
+
+    ref.read(classificationProvider.notifier).classify(File(pickedFile.path));
   }
 
   void _calculatePrice(ClassificationResult? classification) {
@@ -92,13 +112,16 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
     final connectivityStatus = ref.watch(connectivityStatusProvider);
 
     final isOnline = connectivityStatus.value == true && isApiHealthy;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
-        title: const Text('Tea Price Predictor'),
+        title: Text(l10n.market_title,
+            style: const TextStyle(color: Colors.white)),
         backgroundColor: TeaColors.freshLeaf,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -112,7 +135,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  isOnline ? 'Online' : 'Offline',
+                  isOnline ? l10n.common_online : l10n.common_offline,
                   style: const TextStyle(fontSize: 12),
                 ),
               ],
@@ -134,16 +157,16 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
                     children: [
                       const Icon(Icons.wifi_off, color: TeaColors.warningAmber),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'No internet connection. Please connect internet.',
+                          l10n.market_no_internet,
                           style: TextStyle(color: TeaColors.nearBlack),
                         ),
                       ),
                       TextButton.icon(
                         onPressed: _checkConnectivityAndHealth,
                         icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text('Retry'),
+                        label: Text(l10n.common_retry),
                         style: TextButton.styleFrom(
                           foregroundColor: TeaColors.warmAmber,
                         ),
@@ -160,14 +183,14 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
             const SizedBox(height: 24),
 
             // Grade Selection Section (Manual Override)
-            Text('Or Select Tea Grade Manually',
+            Text(l10n.market_select_grade,
                 style: TeaTypography.titleLarge),
             const SizedBox(height: 12),
             _buildGradeDropdown(classState.value),
             const SizedBox(height: 24),
 
             // Inputs Section
-            Text('Your Tea Quality', style: TeaTypography.titleLarge),
+            Text(l10n.market_your_quality, style: TeaTypography.titleLarge),
             const SizedBox(height: 12),
             _buildQualitySelectors(),
             const SizedBox(height: 24),
@@ -175,6 +198,41 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
             // Quantity
             _buildQuantitySelector(),
             const SizedBox(height: 32),
+
+            // ── Low-confidence scan advisory ───────────────────────────
+            if (classState.value != null &&
+                !classState.value!.isValidationFailure &&
+                (classState.value!.confidenceLabel == 'Low' ||
+                    classState.value!.confidenceLabel == 'Uncertain' ||
+                    classState.value!.isAmbiguous))
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: TeaColors.warmAmber.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(10),
+                  border:
+                      Border.all(color: TeaColors.warmAmber.withOpacity(0.4)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: TeaColors.warmAmber, size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.market_scan_confidence_advisory(
+                          classState.value!.confidenceLabel.toLowerCase(),
+                          classState.value!.grade,
+                        ),
+                        style: const TextStyle(
+                            fontSize: 12, color: TeaColors.warmAmber),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             // Predict Button
             ElevatedButton(
@@ -189,8 +247,8 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
               ),
               child: priceState.isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Calculate Market Price',
-                      style: TextStyle(fontSize: 18, color: Colors.white)),
+                  : Text(l10n.market_calculate,
+                      style: const TextStyle(fontSize: 18, color: Colors.white)),
             ),
             const SizedBox(height: 24),
 
@@ -203,14 +261,14 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
             if (priceState.hasError)
               Padding(
                 padding: const EdgeInsets.only(top: 16),
-                child: Text('Error: ${priceState.error}',
+                child: Text('${l10n.common_error}: ${priceState.error}',
                     style: const TextStyle(color: Colors.red)),
               ),
 
             // Market Analysis Tools
             if (isOnline) ...[
               const SizedBox(height: 32),
-              Text('Market Insights', style: TeaTypography.titleLarge),
+              Text(l10n.market_insights, style: TeaTypography.titleLarge),
               const SizedBox(height: 12),
               Card(
                 elevation: 0,
@@ -231,8 +289,8 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
                       if (priceState.value != null &&
                           !priceState.isLoading) ...[
                         _buildExpansionSection(
-                          title: 'My Quality Analysis',
-                          subtitle: 'Impact of your tea attributes on price',
+                          title: l10n.market_quality_analysis,
+                          subtitle: l10n.market_quality_impact,
                           children: _buildQualityAnalysisChildren(),
                         ),
                         Divider(
@@ -240,8 +298,8 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
                             color: TeaColors.freshLeaf.withOpacity(0.1)),
                       ],
                       _buildExpansionSection(
-                        title: 'Grade Value Comparison',
-                        subtitle: 'Current Rs./kg benchmarks',
+                        title: l10n.market_grade_comparison,
+                        subtitle: l10n.market_grade_benchmarks,
                         children: [
                           const SizedBox(height: 16),
                           _buildGradeValueChart(marketGridAsync),
@@ -253,8 +311,8 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
                           height: 1,
                           color: TeaColors.freshLeaf.withOpacity(0.1)),
                       _buildExpansionSection(
-                        title: 'Historical Market Trends',
-                        subtitle: 'Past 3-6 months performance',
+                        title: l10n.market_historical,
+                        subtitle: l10n.market_historical_subtitle,
                         children: [
                           const SizedBox(height: 16),
                           _buildMarketTrendSection(marketGridAsync,
@@ -272,6 +330,19 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
     );
   }
 
+  Color _confidenceLabelColor(String label) {
+    switch (label) {
+      case 'High':
+        return TeaColors.healthyGreen;
+      case 'Moderate':
+        return TeaColors.warmAmber;
+      case 'Low':
+        return Colors.orange;
+      default:
+        return TeaColors.alertRust;
+    }
+  }
+
   Widget _buildImagePickerBox(AsyncValue<ClassificationResult?> state) {
     return GestureDetector(
       onTap: () => _showImageSourceDialog(),
@@ -285,99 +356,173 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
         child: state.when(
           data: (result) {
             if (result == null) {
-              return const Column(
+              return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt,
+                  const Icon(Icons.camera_alt,
                       size: 64, color: TeaColors.goldenSunlight),
-                  SizedBox(height: 12),
-                  Text('Tap to Capture / Upload Tea Powder',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  Text(AppLocalizations.of(context)!.market_tap_capture,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               );
             }
-            return Row(
-              children: [
-                if (result.imageFile != null)
-                  Expanded(
-                    flex: 2,
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(22),
-                        bottomLeft: Radius.circular(22),
-                      ),
-                      child: Image.file(
-                        result.imageFile!,
-                        fit: BoxFit.cover,
-                        height: double.infinity,
+            // ── Validation failure ─────────────────────────────────────────
+            if (result.isValidationFailure) {
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded,
+                        color: TeaColors.alertRust, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        result.validationMessage ??
+                            AppLocalizations.of(context)!.market_image_validation_failed,
+                        style: const TextStyle(fontSize: 13),
                       ),
                     ),
-                  ),
-                Expanded(
-                  flex: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                ),
+              );
+            }
+            return Column(
+              children: [
+                // ── Ambiguity banner ──────────────────────────────────
+                if (result.isAmbiguous)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    color: TeaColors.warmAmber.withOpacity(0.12),
+                    child: Row(
                       children: [
-                        const Text('Detected Grade',
-                            style: TextStyle(
-                                fontSize: 12, color: TeaColors.darkGray)),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                              color: TeaColors.goldenSunlight.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8)),
-                          child: Text(result.grade,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  color: TeaColors.nearBlack)),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text('Confidence',
-                            style: TextStyle(
-                                fontSize: 12, color: TeaColors.darkGray)),
-                        const SizedBox(height: 4),
-                        Text('${result.confidence.toStringAsFixed(1)}%',
+                        const Icon(Icons.info_outline,
+                            color: TeaColors.warmAmber, size: 16),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.powder_borderline,
                             style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 6),
-                        LinearProgressIndicator(
-                          value: result.confidence / 100,
-                          backgroundColor: TeaColors.lightGray,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                              TeaColors.healthyGreen),
-                        ),
-                        const Spacer(),
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                                color: TeaColors.lightGray,
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Text(
-                                result.source == 'offline'
-                                    ? 'Local AI'
-                                    : 'Cloud AI',
-                                style: const TextStyle(
-                                    color: TeaColors.darkGray, fontSize: 10)),
+                                fontSize: 11, color: TeaColors.warmAmber),
                           ),
                         ),
                       ],
                     ),
+                  ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      if (result.imageFile != null)
+                        Expanded(
+                          flex: 2,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(22),
+                              bottomLeft: Radius.circular(22),
+                            ),
+                            child: Image.file(
+                              result.imageFile!,
+                              fit: BoxFit.cover,
+                              height: double.infinity,
+                            ),
+                          ),
+                        ),
+                      Expanded(
+                        flex: 3,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(AppLocalizations.of(context)!.market_detected_grade,
+                                  style: const TextStyle(
+                                      fontSize: 12, color: TeaColors.darkGray)),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                    color: TeaColors.goldenSunlight
+                                        .withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8)),
+                                child: Text(result.grade,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                        color: TeaColors.nearBlack)),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${result.confidence.toStringAsFixed(1)}%',
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  // ── Confidence label badge ───────────
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: _confidenceLabelColor(
+                                              result.confidenceLabel)
+                                          .withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      result.confidenceLabel,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: _confidenceLabelColor(
+                                            result.confidenceLabel),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              LinearProgressIndicator(
+                                value: result.confidence / 100,
+                                backgroundColor: TeaColors.lightGray,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                    TeaColors.healthyGreen),
+                              ),
+                              const Spacer(),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                      color: TeaColors.lightGray,
+                                      borderRadius: BorderRadius.circular(10)),
+                                  child: Text(
+                                      result.source == 'offline'
+                                          ? AppLocalizations.of(context)!.market_local_ai
+                                          : AppLocalizations.of(context)!.market_cloud_ai,
+                                      style: const TextStyle(
+                                          color: TeaColors.darkGray,
+                                          fontSize: 10)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => Center(child: Text('${AppLocalizations.of(context)!.common_error}: $e')),
         ),
       ),
     );
@@ -391,7 +536,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('Take a Photo'),
+              title: Text(AppLocalizations.of(context)!.market_take_photo),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -399,7 +544,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
+              title: Text(AppLocalizations.of(context)!.common_gallery),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -418,7 +563,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
     return DropdownButtonFormField<String>(
       value: activeGrade,
       decoration: InputDecoration(
-        labelText: 'Tea Grade',
+        labelText: AppLocalizations.of(context)!.market_tea_grade,
         border: const OutlineInputBorder(),
         prefixIcon: const Icon(Icons.local_offer_outlined),
         enabled: classResult == null, // Disable if image is uploaded
@@ -441,43 +586,43 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildQualitySelectorRow(
-          'Color',
+          AppLocalizations.of(context)!.market_color,
           _colorVal,
           (v) => setState(() => _colorVal = v),
           [
-            {'label': 'Premium', 'val': 1.0, 'icon': Icons.star_border},
-            {'label': 'Normal', 'val': 0.5, 'icon': Icons.check_circle_outline},
-            {'label': 'Dull', 'val': 0.0, 'icon': Icons.remove_circle_outline},
+            {'label': AppLocalizations.of(context)!.market_premium, 'val': 1.0, 'icon': Icons.star_border},
+            {'label': AppLocalizations.of(context)!.market_normal, 'val': 0.5, 'icon': Icons.check_circle_outline},
+            {'label': AppLocalizations.of(context)!.market_dull, 'val': 0.0, 'icon': Icons.remove_circle_outline},
           ],
         ),
         const SizedBox(height: 16),
         _buildQualitySelectorRow(
-          'Aroma',
+          AppLocalizations.of(context)!.market_aroma,
           _aromaVal,
           (v) => setState(() => _aromaVal = v),
           [
-            {'label': 'Strong', 'val': 1.0, 'icon': Icons.air},
+            {'label': AppLocalizations.of(context)!.market_strong, 'val': 1.0, 'icon': Icons.air},
             {
-              'label': 'Moderate',
+              'label': AppLocalizations.of(context)!.market_moderate,
               'val': 0.5,
               'icon': Icons.water_drop_outlined
             },
-            {'label': 'Weak', 'val': 0.0, 'icon': Icons.eco_outlined},
+            {'label': AppLocalizations.of(context)!.market_weak, 'val': 0.0, 'icon': Icons.eco_outlined},
           ],
         ),
         const SizedBox(height: 16),
         _buildQualitySelectorRow(
-          'Age',
+          AppLocalizations.of(context)!.market_age,
           _ageVal,
           (v) => setState(() => _ageVal = v),
           [
-            {'label': 'Fresh (<7 days)', 'val': 1.0, 'icon': Icons.grass},
+            {'label': AppLocalizations.of(context)!.market_fresh, 'val': 1.0, 'icon': Icons.grass},
             {
-              'label': 'Medium (7-21 days)',
+              'label': AppLocalizations.of(context)!.market_medium_age,
               'val': 0.5,
               'icon': Icons.access_time
             },
-            {'label': 'Old (>21 days)', 'val': 0.0, 'icon': Icons.history},
+            {'label': AppLocalizations.of(context)!.market_old, 'val': 0.0, 'icon': Icons.history},
           ],
         ),
       ],
@@ -543,9 +688,9 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quantity (kg)',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        Text(
+          AppLocalizations.of(context)!.market_quantity,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Wrap(
@@ -613,6 +758,9 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
 
   Widget _buildResultsCard(PricingResponse response, String grade) {
     final total = response.pricePerKg * _quantity;
+    // Sanity check: realistic Sri Lankan tea price range Rs. 200–4,000/kg
+    final bool priceOutOfRange =
+        response.pricePerKg < 200 || response.pricePerKg > 4000;
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -621,8 +769,8 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Prediction Result',
-                style: TextStyle(color: Colors.grey, fontSize: 14)),
+            Text(AppLocalizations.of(context)!.market_prediction_result,
+                style: const TextStyle(color: Colors.grey, fontSize: 14)),
             const SizedBox(height: 8),
             Text(
               'Rs. ${total.toStringAsFixed(2)}',
@@ -635,6 +783,37 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
               'Rs. ${response.pricePerKg.toStringAsFixed(2)} per kg • $grade',
               style: const TextStyle(fontSize: 14),
             ),
+            // ── Price sanity advisory ─────────────────────────────────
+            if (priceOutOfRange)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: TeaColors.alertRust.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: TeaColors.alertRust.withOpacity(0.35)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded,
+                          color: TeaColors.alertRust, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Price per kg (Rs. ${response.pricePerKg.toStringAsFixed(0)}) '
+                          'is outside the expected range (Rs. 200–4,000/kg). '
+                          'Please verify your inputs.',
+                          style: const TextStyle(
+                              fontSize: 11, color: TeaColors.alertRust),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             const Divider(height: 32),
             _buildResRow('Base Price (Live)',
                 'Rs. ${(response.inputs['market_price'] ?? 0).toStringAsFixed(2)}'),
@@ -658,7 +837,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
     return asyncData.when(
       data: (res) {
         if (res.marketPrices.isEmpty)
-          return const Text('No market data available');
+          return Text(AppLocalizations.of(context)!.market_no_data);
         // Get the most recent week, correctly ignoring 'default'
         final latestPrices = res.latestPrices;
 
@@ -674,9 +853,9 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: 2,
-          childAspectRatio: 3,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
+          childAspectRatio: 2.5,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
           children: gradesList.map((g) {
             final price = latestPrices[g] != null
                 ? 'Rs. ${latestPrices[g].toStringAsFixed(2)}'
@@ -690,12 +869,23 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(g,
+                    Expanded(
+                      child: Text(
+                        g,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: TeaColors.freshLeaf)),
-                    Text(price,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                            color: TeaColors.freshLeaf),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        price,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -704,7 +894,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('Error loading markets: $e'),
+      error: (e, _) => Text('${AppLocalizations.of(context)!.market_error_loading}: $e'),
     );
   }
 
@@ -754,17 +944,16 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
   }
 
   String _getManagerInsight() {
+    final l10n = AppLocalizations.of(context)!;
     if (_colorVal >= 0.8 && _aromaVal >= 0.8 && _ageVal >= 0.8) {
-      return "Excellent quality! Your tea meets all premium benchmarks. This will likely fetch the highest market price.";
+      return l10n.market_insight_excellent;
     }
-
-    // Find lowest score
     if (_colorVal <= _aromaVal && _colorVal <= _ageVal) {
-      return "Your tea color is below premium levels. Consider checking your drying temperature and processing speed to avoid dullness.";
+      return l10n.market_insight_color_low;
     } else if (_aromaVal <= _colorVal && _aromaVal <= _ageVal) {
-      return "The aroma profile is weak. This often happens due to over-fermentation. Monitor your fermentation duration more closely.";
+      return l10n.market_insight_aroma_low;
     } else {
-      return "Freshness is the main issue. Old tea powder loses its 'bite' and market value. Process and pack your batches faster.";
+      return l10n.market_insight_freshness_low;
     }
   }
 
@@ -776,7 +965,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
       ),
       loading: () => const SizedBox(
           height: 100, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('Error: $e'),
+      error: (e, _) => Text('${AppLocalizations.of(context)!.common_error}: $e'),
     );
   }
 
@@ -789,7 +978,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
       ),
       loading: () => const SizedBox(
           height: 100, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('Error: $e'),
+      error: (e, _) => Text('${AppLocalizations.of(context)!.common_error}: $e'),
     );
   }
 

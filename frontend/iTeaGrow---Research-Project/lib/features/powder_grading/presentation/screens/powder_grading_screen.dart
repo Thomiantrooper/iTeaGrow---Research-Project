@@ -6,6 +6,8 @@ import 'dart:typed_data';
 import '../../../../core/design_system/tea_colors.dart';
 import '../../../market_analysis/providers/market_providers.dart';
 import '../../../market_analysis/data/models/market_models.dart';
+import '../../data/datasources/powder_validation_service.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 class PowderGradingScreen extends ConsumerStatefulWidget {
   final bool showMarketData;
@@ -19,10 +21,10 @@ class PowderGradingScreen extends ConsumerStatefulWidget {
 
 class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
   final ImagePicker _picker = ImagePicker();
+  final PowderValidationService _powderValidator = PowderValidationService();
 
   XFile? _selectedImage;
   Uint8List? _imageBytes;
-  bool _showExplainability = false;
 
   Future<void> _captureImage() async {
     try {
@@ -38,12 +40,11 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
         setState(() {
           _selectedImage = photo;
           _imageBytes = bytes;
-          _showExplainability = false;
           ref.read(classificationProvider.notifier).clear();
         });
       }
     } catch (e) {
-      _showError('Camera error: $e');
+      _showError(AppLocalizations.of(context)!.error_camera(e.toString()));
     }
   }
 
@@ -61,20 +62,29 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
         setState(() {
           _selectedImage = image;
           _imageBytes = bytes;
-          _showExplainability = false;
           ref.read(classificationProvider.notifier).clear();
         });
       }
     } catch (e) {
-      _showError('Gallery error: $e');
+      _showError(AppLocalizations.of(context)!.error_gallery(e.toString()));
     }
   }
 
   Future<void> _analyzeImage() async {
-    if (_selectedImage == null) return;
+    if (_selectedImage == null || _imageBytes == null) return;
+
+    // ── Pre-scan powder validation ───────────────────────────────────
+    // Checks: min resolution, sharpness (Laplacian), colour variance,
+    // green-dominance rejection, and brownish/dark powder pixel ratio.
+    final validation = await _powderValidator.validate(_imageBytes!);
+    if (!validation.isValid) {
+      _showError(validation.message);
+      return;
+    }
+
     ref
         .read(classificationProvider.notifier)
-        .classify(File(_selectedImage!.path), generateHeatmap: true);
+        .classify(File(_selectedImage!.path), generateHeatmap: false);
   }
 
   void _showError(String message) {
@@ -87,18 +97,19 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
   Widget build(BuildContext context) {
     final classState = ref.watch(classificationProvider);
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tea Powder Grading'),
+        title: Text(l10n.powder_title),
         actions: [
           if (_selectedImage != null) ...[
             IconButton(
               icon: const Icon(Icons.refresh),
-              tooltip: 'Reset and Retake',
+              tooltip: l10n.powder_reset,
               onPressed: () => setState(() {
                 _selectedImage = null;
                 _imageBytes = null;
-                _showExplainability = false;
                 ref.read(classificationProvider.notifier).clear();
               }),
             ),
@@ -119,7 +130,7 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
               ElevatedButton.icon(
                 onPressed: _captureImage,
                 icon: const Icon(Icons.camera_alt),
-                label: const Text('Capture Powder Image'),
+                label: Text(l10n.powder_capture_image),
                 style:
                     ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
               ),
@@ -127,7 +138,7 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
               OutlinedButton.icon(
                 onPressed: _pickFromGallery,
                 icon: const Icon(Icons.photo_library),
-                label: const Text('Choose from Gallery'),
+                label: Text(l10n.leaf_from_gallery),
                 style:
                     OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
               ),
@@ -135,7 +146,7 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
               ElevatedButton.icon(
                 onPressed: _analyzeImage,
                 icon: const Icon(Icons.grade),
-                label: const Text('Grade Powder'),
+                label: Text(l10n.powder_grade_action),
                 style:
                     ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
               ),
@@ -148,7 +159,7 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
                   child: CircularProgressIndicator(
                       strokeWidth: 2, color: Colors.white),
                 ),
-                label: const Text('Grading...'),
+                label: Text(l10n.powder_grading),
                 style:
                     ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
               ),
@@ -200,14 +211,14 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
                 size: 48, color: TeaColors.freshLeaf),
           ),
           const SizedBox(height: 16),
-          const Text('No Powder Image Selected',
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.powder_no_image,
+              style: const TextStyle(
                   color: TeaColors.nearBlack,
                   fontWeight: FontWeight.bold,
                   fontSize: 16)),
           const SizedBox(height: 8),
-          Text('Capture or upload an image to begin grading.',
-              style: TextStyle(color: TeaColors.darkGray, fontSize: 14)),
+          Text(AppLocalizations.of(context)!.powder_no_image_subtitle,
+              style: const TextStyle(color: TeaColors.darkGray, fontSize: 14)),
         ],
       ),
     );
@@ -233,39 +244,47 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
       child: Stack(
         alignment: Alignment.bottomRight,
         children: [
-          _showExplainability && result != null && result.heatmapPath != null
-              ? Image.file(
-                  File(result.heatmapPath!),
-                  height: 250,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                )
-              : Image.memory(
-                  _imageBytes!,
-                  height: 250,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-          if (result != null && result.heatmapPath != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Chip(
-                backgroundColor: _showExplainability
-                    ? TeaColors.alertRust.withOpacity(0.8)
-                    : Colors.black54,
-                label: Text(
-                  _showExplainability ? 'Heatmap View' : 'Original View',
-                  style: const TextStyle(color: Colors.white, fontSize: 10),
-                ),
-              ),
-            ),
+          Image.memory(
+            _imageBytes!,
+            height: 250,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildGradingResults(ClassificationResult result) {
-    final gradeColor = TeaColors.healthyGreen;
+    // ── Validation failure card ─────────────────────────────────────────
+    if (result.isValidationFailure) {
+      return Card(
+        color: TeaColors.alertRust.withOpacity(0.08),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: TeaColors.alertRust, width: 1.5),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded,
+                  color: TeaColors.alertRust, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  result.validationMessage ??
+                      AppLocalizations.of(context)!.powder_validation_failed,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final gradeColor = _getGradeColor(result.grade);
 
     return Card(
       child: Padding(
@@ -277,19 +296,46 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
               children: [
                 Icon(Icons.grade, color: gradeColor, size: 28),
                 const SizedBox(width: 12),
-                const Text(
-                  'Grading Results',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  AppLocalizations.of(context)!.powder_results,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const Divider(height: 24),
 
+            // ── Ambiguity warning banner ──────────────────────────────
+            if (result.isAmbiguous)
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: TeaColors.warmAmber.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: TeaColors.warmAmber, width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: TeaColors.warmAmber, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.powder_borderline,
+                        style: const
+                            TextStyle(fontSize: 12, color: TeaColors.warmAmber),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Grade
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Grade', style: TextStyle(fontSize: 16)),
+                Text(AppLocalizations.of(context)!.powder_grade, style: const TextStyle(fontSize: 16)),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -314,11 +360,36 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Confidence', style: TextStyle(fontSize: 16)),
+                Text(AppLocalizations.of(context)!.powder_confidence_level, style: const TextStyle(fontSize: 16)),
                 Text(
                   '${result.confidence.toStringAsFixed(1)}%',
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // ── Confidence level badge ────────────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(AppLocalizations.of(context)!.powder_confidence_level, style: const TextStyle(fontSize: 16)),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _getConfidenceLabelColor(result.confidenceLabel)
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    result.confidenceLabel,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: _getConfidenceLabelColor(result.confidenceLabel),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -331,24 +402,39 @@ class _PowderGradingScreenState extends ConsumerState<PowderGradingScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Processing Source: ${result.source == 'offline' ? 'Local ML Model' : 'Cloud Server'}',
+              result.source == 'offline'
+                  ? AppLocalizations.of(context)!.powder_local_source
+                  : AppLocalizations.of(context)!.powder_cloud_source,
               style: TextStyle(fontSize: 12, color: TeaColors.darkGray),
             ),
-            if (result.heatmapPath != null) ...[
-              const Divider(height: 32),
-              SwitchListTile(
-                title: const Text('Explain Grading',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                subtitle: const Text('Show Grad-CAM heatmap overlay'),
-                value: _showExplainability,
-                activeColor: TeaColors.freshLeaf,
-                onChanged: (val) => setState(() => _showExplainability = val),
-              ),
-            ],
           ],
         ),
       ),
     );
+  }
+
+  Color _getGradeColor(String grade) {
+    switch (grade) {
+      case 'BOPF':
+      case 'BOP':
+        return TeaColors.freshLeaf;
+      case 'Pekoe':
+        return TeaColors.warmAmber;
+      default:
+        return TeaColors.darkGray;
+    }
+  }
+
+  Color _getConfidenceLabelColor(String label) {
+    switch (label) {
+      case 'High':
+        return TeaColors.healthyGreen;
+      case 'Moderate':
+        return TeaColors.warmAmber;
+      case 'Low':
+        return Colors.orange;
+      default:
+        return TeaColors.alertRust;
+    }
   }
 }

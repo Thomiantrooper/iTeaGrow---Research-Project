@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 /// Forgot Password Screen
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -47,6 +48,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Widget _buildFormView() {
+    final l10n = AppLocalizations.of(context)!;
     return Form(
       key: _formKey,
       child: Column(
@@ -74,7 +76,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
           // Title
           Text(
-            'Forgot Password?',
+            l10n.forgot_title,
             style: TeaTypography.headlineMedium,
             textAlign: TextAlign.center,
           ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
@@ -83,7 +85,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
           // Description
           Text(
-            "Don't worry! It happens. Please enter the email address associated with your account.",
+            l10n.forgot_description,
             style: TeaTypography.bodyMedium.copyWith(
               color: TeaColors.darkGray,
             ),
@@ -97,8 +99,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
-              labelText: 'Email Address',
-              hintText: 'Enter your email',
+              labelText: l10n.forgot_email_label,
+              hintText: l10n.forgot_email_hint,
               prefixIcon: const Icon(Icons.email_outlined),
               filled: true,
               fillColor: TeaColors.white,
@@ -117,10 +119,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter your email';
+                return l10n.forgot_email_required;
               }
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
+                return l10n.forgot_email_invalid;
               }
               return null;
             },
@@ -150,7 +152,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Send Reset Link'),
+                  : Text(l10n.forgot_send_button),
             ),
           ).animate().fadeIn(duration: 400.ms, delay: 400.ms).slideY(begin: 0.1, end: 0),
 
@@ -161,7 +163,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             child: TextButton(
               onPressed: () => context.pop(),
               child: Text(
-                'Back to Login',
+                l10n.forgot_back_to_login,
                 style: TeaTypography.bodyMedium.copyWith(
                   color: TeaColors.freshLeaf,
                 ),
@@ -174,6 +176,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Widget _buildSuccessView() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         const SizedBox(height: TeaSpacing.xxl),
@@ -196,7 +199,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
         // Success Title
         Text(
-          'Check Your Email',
+          l10n.forgot_success_title,
           style: TeaTypography.headlineMedium,
           textAlign: TextAlign.center,
         ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
@@ -205,7 +208,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
         // Success Description
         Text(
-          'We have sent a password reset link to:',
+          l10n.forgot_success_desc,
           style: TeaTypography.bodyMedium.copyWith(
             color: TeaColors.darkGray,
           ),
@@ -231,17 +234,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             children: [
               _buildInstructionItem(
                 icon: Icons.email_outlined,
-                text: 'Open the email we sent you',
+                text: l10n.forgot_step_open_email,
               ),
               const Divider(height: TeaSpacing.lg),
               _buildInstructionItem(
                 icon: Icons.link,
-                text: 'Click on the reset password link',
+                text: l10n.forgot_step_click_link,
               ),
               const Divider(height: TeaSpacing.lg),
               _buildInstructionItem(
                 icon: Icons.lock_outline,
-                text: 'Create your new password',
+                text: l10n.forgot_step_new_password,
               ),
             ],
           ),
@@ -252,10 +255,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         // Resend Button
         TextButton.icon(
           onPressed: () {
-            TeaSnackbar.success(context, 'Reset link sent again!');
+            TeaSnackbar.success(context, l10n.forgot_resend_success);
           },
           icon: const Icon(Icons.refresh),
-          label: const Text("Didn't receive the email? Resend"),
+          label: Text(l10n.forgot_resend),
           style: TextButton.styleFrom(
             foregroundColor: TeaColors.freshLeaf,
           ),
@@ -276,7 +279,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 borderRadius: TeaRadius.radiusMd,
               ),
             ),
-            child: const Text('Back to Login'),
+            child: Text(l10n.forgot_back_to_login),
           ),
         ).animate().fadeIn(duration: 400.ms, delay: 700.ms),
       ],

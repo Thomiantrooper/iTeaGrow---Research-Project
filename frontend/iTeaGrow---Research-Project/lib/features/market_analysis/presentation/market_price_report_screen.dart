@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -249,7 +250,7 @@ class _MarketPriceReportScreenState
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
-        title: const Text('Price Report Setup'),
+        title: Text(AppLocalizations.of(context)!.market_report_title),
         backgroundColor: TeaColors.freshLeaf,
         foregroundColor: Colors.white,
       ),
@@ -261,8 +262,8 @@ class _MarketPriceReportScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Date Filtering',
-                    style:
+                Text(AppLocalizations.of(context)!.market_date_filtering,
+                    style: const
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 12),
                 Row(
@@ -275,7 +276,7 @@ class _MarketPriceReportScreenState
                         label: Text(
                             _startDate != null
                                 ? '${DateFormat('MMM dd').format(_startDate!)} - ${DateFormat('MMM dd').format(_endDate!)}'
-                                : 'Select Date Range',
+                                : AppLocalizations.of(context)!.market_select_date_range,
                             style: const TextStyle(color: TeaColors.darkGray)),
                       ),
                     ),
@@ -284,7 +285,7 @@ class _MarketPriceReportScreenState
                       IconButton(
                         icon: const Icon(Icons.clear, color: Colors.red),
                         onPressed: _clearFilters,
-                        tooltip: 'Clear Filter',
+                        tooltip: AppLocalizations.of(context)!.market_clear_filter,
                       )
                     ]
                   ],

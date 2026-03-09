@@ -45,6 +45,22 @@ class ApiService {
         .catchError((e) => debugPrint('[ApiService] Railway warm-up: $e'));
   }
 
+  /// Awaitable warm-up ping — use this when you need to ENSURE Railway is
+  /// awake before making a critical request (e.g. Google login).
+  static Future<void> warmUpAsync() async {
+    try {
+      await _client
+          .get(
+            Uri.parse('${ApiConfig.authMicroserviceBaseUrl}/health'),
+            headers: const {'Accept': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 20));
+      debugPrint('[ApiService] Railway warm-up (async) done');
+    } catch (e) {
+      debugPrint('[ApiService] Railway warm-up (async): $e');
+    }
+  }
+
   /// Get stored access token
   String? get accessToken => _prefs.getString(_tokenKey);
 
@@ -105,6 +121,7 @@ class ApiService {
     String endpoint, {
     Map<String, dynamic>? body,
     T Function(dynamic)? fromJson,
+    Duration timeout = const Duration(seconds: 10),
   }) async {
     try {
       final String url = endpoint.startsWith('http')
@@ -115,7 +132,7 @@ class ApiService {
         Uri.parse(url),
         headers: _headers,
         body: body != null ? jsonEncode(body) : null,
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(timeout);
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {

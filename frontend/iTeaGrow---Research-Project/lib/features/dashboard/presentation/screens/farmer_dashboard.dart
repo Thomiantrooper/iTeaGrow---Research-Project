@@ -23,12 +23,7 @@ class FarmerDashboard extends ConsumerWidget {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () {},
-          ),
-        ],
+        actions: [],
       ),
       drawer: Drawer(
         child: ListView(

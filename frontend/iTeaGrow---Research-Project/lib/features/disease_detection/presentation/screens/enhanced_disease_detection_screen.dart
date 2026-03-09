@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
@@ -41,7 +42,6 @@ class _EnhancedDiseaseDetectionScreenState
   DiseaseDetectionResult? _result;
   bool _isProcessing = false;
   bool _isValidating = false;
-  bool _showGradCam = false;
   bool _isBackendConnected = false;
   bool _isCheckingConnection = true;
   bool _savedToDb = false;
@@ -98,7 +98,7 @@ class _EnhancedDiseaseDetectionScreenState
       );
       if (photo != null) await _onImageSelected(photo);
     } catch (e) {
-      _showError('Camera error: $e');
+      _showError(AppLocalizations.of(context)!.error_camera(e.toString()));
     }
   }
 
@@ -112,7 +112,7 @@ class _EnhancedDiseaseDetectionScreenState
       );
       if (image != null) await _onImageSelected(image);
     } catch (e) {
-      _showError('Gallery error: $e');
+      _showError(AppLocalizations.of(context)!.error_gallery(e.toString()));
     }
   }
 
@@ -125,7 +125,6 @@ class _EnhancedDiseaseDetectionScreenState
       _imageBytes = bytes;
       _result = null;
       _savedToDb = false;
-      _showGradCam = false;
       _isValidating = true;
     });
 
@@ -153,7 +152,7 @@ class _EnhancedDiseaseDetectionScreenState
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: const Icon(Icons.image_not_supported_outlined,
             color: JarvisTheme.warning, size: 48),
-        title: const Text('Please Rescan'),
+        title: Text(AppLocalizations.of(context)!.disease_please_rescan),
         content: Text(
           message,
           textAlign: TextAlign.center,
@@ -167,7 +166,7 @@ class _EnhancedDiseaseDetectionScreenState
               _captureImage();
             },
             icon: const Icon(Icons.camera_alt),
-            label: const Text('Retake Photo'),
+            label: Text(AppLocalizations.of(context)!.disease_retake_photo),
             style: FilledButton.styleFrom(
               backgroundColor: JarvisTheme.teaGreen,
             ),
@@ -178,7 +177,7 @@ class _EnhancedDiseaseDetectionScreenState
               _pickFromGallery();
             },
             icon: const Icon(Icons.photo_library),
-            label: const Text('Gallery'),
+            label: Text(AppLocalizations.of(context)!.common_gallery),
             style: OutlinedButton.styleFrom(
               foregroundColor: JarvisTheme.teaGreen,
             ),
@@ -253,7 +252,7 @@ class _EnhancedDiseaseDetectionScreenState
     } catch (e) {
       setState(() => _isProcessing = false);
       _scanController.stop();
-      _showError('Analysis error: $e');
+      _showError(AppLocalizations.of(context)!.error_analysis(e.toString()));
     }
   }
 
@@ -274,11 +273,11 @@ class _EnhancedDiseaseDetectionScreenState
     });
     if (_isMultiLeafMode) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Row(children: [
-            Icon(Icons.eco, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Multi-leaf mode active. Scan leaves one by one.'),
+            const Icon(Icons.eco, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(AppLocalizations.of(context)!.disease_multi_leaf_active),
           ]),
           backgroundColor: JarvisTheme.teaGreen,
           behavior: SnackBarBehavior.floating,
@@ -292,7 +291,6 @@ class _EnhancedDiseaseDetectionScreenState
       _selectedImage = null;
       _imageBytes = null;
       _result = null;
-      _showGradCam = false;
       _savedToDb = false;
     });
   }
@@ -318,10 +316,10 @@ class _EnhancedDiseaseDetectionScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(children: [
-            Icon(Icons.picture_as_pdf, color: Colors.white),
-            SizedBox(width: 8),
-            Text('PDF report generated'),
+          content: Row(children: [
+            const Icon(Icons.picture_as_pdf, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(AppLocalizations.of(context)!.disease_pdf_generated),
           ]),
           backgroundColor: JarvisTheme.teaGreen,
           behavior: SnackBarBehavior.floating,
@@ -337,8 +335,7 @@ class _EnhancedDiseaseDetectionScreenState
     }
   }
 
-  Future<void> _autoGenerateMultiLeafPdfReport(
-      MultiLeafSummary summary) async {
+  Future<void> _autoGenerateMultiLeafPdfReport(MultiLeafSummary summary) async {
     try {
       final iotState = ref.read(iotLiveProvider);
       final temp = (iotState.devices.isNotEmpty &&
@@ -359,10 +356,10 @@ class _EnhancedDiseaseDetectionScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(children: [
-            Icon(Icons.picture_as_pdf, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Multi-leaf PDF report ready'),
+          content: Row(children: [
+            const Icon(Icons.picture_as_pdf, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(AppLocalizations.of(context)!.disease_multi_leaf_pdf_ready),
           ]),
           backgroundColor: JarvisTheme.teaGreen,
           behavior: SnackBarBehavior.floating,
@@ -426,7 +423,7 @@ class _EnhancedDiseaseDetectionScreenState
       final pdfBytes = await _buildSingleLeafPdf();
       _showPdf(pdfBytes);
     } catch (e) {
-      _showError('Failed to generate report: $e');
+      _showError(AppLocalizations.of(context)!.error_report_failed(e.toString()));
     }
   }
 
@@ -451,7 +448,7 @@ class _EnhancedDiseaseDetectionScreenState
       );
       _showPdf(pdfBytes);
     } catch (e) {
-      _showError('Failed to generate multi-leaf report: $e');
+      _showError(AppLocalizations.of(context)!.disease_multi_leaf_report_failed(e.toString()));
     }
   }
 
@@ -493,11 +490,11 @@ class _EnhancedDiseaseDetectionScreenState
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Row(children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text('Scan saved to database'),
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(AppLocalizations.of(context)!.disease_scan_saved),
               ]),
               backgroundColor: JarvisTheme.healthy,
               behavior: SnackBarBehavior.floating,
@@ -568,7 +565,7 @@ class _EnhancedDiseaseDetectionScreenState
                             child: OutlinedButton.icon(
                               onPressed: _generateMultiLeafPdfReport,
                               icon: const Icon(Icons.picture_as_pdf),
-                              label: const Text('View PDF Report'),
+                              label: Text(AppLocalizations.of(context)!.disease_view_pdf_report),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: JarvisTheme.healthy,
                                 side: const BorderSide(
@@ -596,7 +593,7 @@ class _EnhancedDiseaseDetectionScreenState
                                 });
                               },
                               icon: const Icon(Icons.refresh),
-                              label: const Text('New Session'),
+                              label: Text(AppLocalizations.of(context)!.disease_new_session),
                               style: FilledButton.styleFrom(
                                 backgroundColor: JarvisTheme.teaGreen,
                                 padding:
@@ -640,7 +637,7 @@ class _EnhancedDiseaseDetectionScreenState
                             OutlinedButton.icon(
                               onPressed: _generatePdfReport,
                               icon: const Icon(Icons.picture_as_pdf),
-                              label: const Text('View PDF Report'),
+                              label: Text(AppLocalizations.of(context)!.disease_view_pdf_report),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: JarvisTheme.healthy,
                                 side: const BorderSide(
@@ -755,8 +752,7 @@ class _EnhancedDiseaseDetectionScreenState
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child:
-                    const Icon(Icons.sensors, color: Colors.white, size: 20),
+                child: const Icon(Icons.sensors, color: Colors.white, size: 20),
               ),
               const SizedBox(width: JarvisTheme.spacingMd),
               Expanded(
@@ -830,9 +826,8 @@ class _EnhancedDiseaseDetectionScreenState
         children: [
           Icon(
             _isMultiLeafMode ? Icons.grid_view_rounded : Icons.crop_original,
-            color: _isMultiLeafMode
-                ? JarvisTheme.teaGreen
-                : JarvisTheme.textMuted,
+            color:
+                _isMultiLeafMode ? JarvisTheme.teaGreen : JarvisTheme.textMuted,
             size: 22,
           ),
           const SizedBox(width: 12),
@@ -862,7 +857,8 @@ class _EnhancedDiseaseDetectionScreenState
           ),
           Switch(
             value: _isMultiLeafMode,
-            onChanged: _showSessionSummary ? null : (_) => _toggleMultiLeafMode(),
+            onChanged:
+                _showSessionSummary ? null : (_) => _toggleMultiLeafMode(),
             activeColor: JarvisTheme.teaGreen,
           ),
         ],
@@ -1040,8 +1036,7 @@ class _EnhancedDiseaseDetectionScreenState
                 animation: _scanAnimation,
                 builder: (context, child) {
                   return ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(JarvisTheme.radiusLg),
+                    borderRadius: BorderRadius.circular(JarvisTheme.radiusLg),
                     child: CustomPaint(
                       painter: ScanLinePainter(
                         progress: _scanAnimation.value,
@@ -1052,53 +1047,16 @@ class _EnhancedDiseaseDetectionScreenState
                 },
               ),
             ),
-          if (_showGradCam && _result?.heatmapPath != null)
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(JarvisTheme.radiusLg),
-                child: Image.file(
-                  File(_result!.heatmapPath!),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
           Positioned(
             top: 10,
             right: 10,
             child: Row(
               children: [
-                if (_result?.heatmapPath != null)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'Grad-CAM',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                        const SizedBox(width: 4),
-                        Switch(
-                          value: _showGradCam,
-                          onChanged: (v) => setState(() => _showGradCam = v),
-                          thumbColor: WidgetStatePropertyAll(JarvisTheme.hologramGreen),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () => setState(() {
                     _selectedImage = null;
                     _imageBytes = null;
                     _result = null;
-                    _showGradCam = false;
                   }),
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -1106,8 +1064,8 @@ class _EnhancedDiseaseDetectionScreenState
                       color: Colors.black54,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.close,
-                        color: Colors.white, size: 20),
+                    child:
+                        const Icon(Icons.close, color: Colors.white, size: 20),
                   ),
                 ),
               ],
@@ -1239,7 +1197,7 @@ class _EnhancedDiseaseDetectionScreenState
               child: FilledButton.icon(
                 onPressed: _addAnotherLeaf,
                 icon: const Icon(Icons.add_a_photo),
-                label: const Text('Scan Next Leaf'),
+                label: Text(AppLocalizations.of(context)!.disease_scan_next_leaf),
                 style: FilledButton.styleFrom(
                   backgroundColor: JarvisTheme.teaGreen,
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1255,7 +1213,7 @@ class _EnhancedDiseaseDetectionScreenState
                 onPressed:
                     _multiLeafService.leafCount >= 1 ? _finishSession : null,
                 icon: const Icon(Icons.summarize),
-                label: const Text('Finish & Report'),
+                label: Text(AppLocalizations.of(context)!.disease_finish_report),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: JarvisTheme.softGold,
                   side: const BorderSide(color: JarvisTheme.softGold),
@@ -1420,8 +1378,7 @@ class _EnhancedDiseaseDetectionScreenState
               decoration: BoxDecoration(
                 color: JarvisTheme.warning.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(JarvisTheme.radiusMd),
-                border:
-                    Border.all(color: JarvisTheme.warning.withOpacity(0.3)),
+                border: Border.all(color: JarvisTheme.warning.withOpacity(0.3)),
               ),
               child: const Row(
                 children: [
@@ -1444,10 +1401,9 @@ class _EnhancedDiseaseDetectionScreenState
                   _selectedImage = null;
                   _imageBytes = null;
                   _result = null;
-                  _showGradCam = false;
                 }),
                 icon: const Icon(Icons.refresh),
-                label: const Text('Try Again'),
+                label: Text(AppLocalizations.of(context)!.common_try_again),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: JarvisTheme.teaGreen,
                   foregroundColor: Colors.white,
@@ -1555,7 +1511,7 @@ class _EnhancedDiseaseDetectionScreenState
             child: OutlinedButton.icon(
               onPressed: () {},
               icon: const Icon(Icons.medical_services_outlined),
-              label: const Text('View Full Treatment Guide'),
+              label: Text(AppLocalizations.of(context)!.disease_treatment_guide),
               style: OutlinedButton.styleFrom(
                 foregroundColor: JarvisTheme.teaGreen,
                 side: const BorderSide(color: JarvisTheme.teaGreen),
@@ -1586,14 +1542,14 @@ class _EnhancedDiseaseDetectionScreenState
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: (isHealthy ? JarvisTheme.healthy : JarvisTheme.critical)
-                      .withOpacity(0.15),
+                  color:
+                      (isHealthy ? JarvisTheme.healthy : JarvisTheme.critical)
+                          .withOpacity(0.15),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   isHealthy ? Icons.check_circle : Icons.warning_rounded,
-                  color:
-                      isHealthy ? JarvisTheme.healthy : JarvisTheme.critical,
+                  color: isHealthy ? JarvisTheme.healthy : JarvisTheme.critical,
                   size: 30,
                 ),
               ),
@@ -1637,8 +1593,8 @@ class _EnhancedDiseaseDetectionScreenState
                 _buildStatTile(
                     'Red Rust', '${s.redRustCount}', JarvisTheme.critical),
               if (s.blisterBlightCount > 0)
-                _buildStatTile('Blister', '${s.blisterBlightCount}',
-                    JarvisTheme.warning),
+                _buildStatTile(
+                    'Blister', '${s.blisterBlightCount}', JarvisTheme.warning),
             ],
           ),
           const SizedBox(height: JarvisTheme.spacingMd),
