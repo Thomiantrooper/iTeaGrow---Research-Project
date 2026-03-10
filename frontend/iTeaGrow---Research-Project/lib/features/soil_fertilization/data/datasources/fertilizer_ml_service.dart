@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../../core/api/api_config.dart';
 import '../../domain/entities/fertilizer_recommendation.dart';
 
 class FertilizerMLService {
@@ -36,7 +39,7 @@ class FertilizerMLService {
     if (currentPhosphorus < 30) phosphorusNeeded = 35 - currentPhosphorus;
     if (currentPotassium < 25) potassiumNeeded = 30 - currentPotassium;
 
-    return FertilizerRecommendation(
+    final result = FertilizerRecommendation(
       nitrogenAmount: nitrogenNeeded,
       phosphorusAmount: phosphorusNeeded,
       potassiumAmount: potassiumNeeded,
@@ -44,5 +47,39 @@ class FertilizerMLService {
           'Based on current soil levels and TRI guidelines for $cropStage stage',
       timestamp: DateTime.now(),
     );
+
+    // Save to DB Microservice (awaited)
+    await _saveToDb(result, currentNitrogen, currentPhosphorus,
+        currentPotassium, soilPH, cropStage);
+
+    return result;
+  }
+
+  Future<void> _saveToDb(FertilizerRecommendation result, double n, double p,
+      double k, double ph, String stage) async {
+    try {
+      final body = {
+        'nitrogen_level': n,
+        'phosphorus_level': p,
+        'potassium_level': k,
+        'soil_ph': ph,
+        'crop_stage': stage,
+        'recommended_n': result.nitrogenAmount,
+        'recommended_p': result.phosphorusAmount,
+        'recommended_k': result.potassiumAmount,
+        'reasoning': result.reasoning,
+      };
+
+      await http
+          .post(
+            Uri.parse(ApiConfig.dbSoil),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 10));
+      print('✅ Soil fertilization record saved to DB');
+    } catch (e) {
+      print('⚠️ Error saving soil record: $e');
+    }
   }
 }

@@ -97,10 +97,12 @@ class PriceCalculationNotifier
   PriceCalculationNotifier(this._apiService)
       : super(const AsyncValue.data(null));
 
-  Future<void> calculatePrice(PricingRequest request) async {
+  Future<void> calculatePrice(PricingRequest request,
+      {String? imagePath}) async {
     state = const AsyncValue.loading();
     try {
-      final response = await _apiService.calculatePrice(request);
+      final response =
+          await _apiService.calculatePrice(request, imagePath: imagePath);
       state = AsyncValue.data(response);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

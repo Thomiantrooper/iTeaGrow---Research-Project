@@ -17,6 +17,23 @@ class ApiConfig {
   static const String diseaseInferenceBaseUrl =
       'https://tea-leaf-disease-api-prod.up.railway.app';
 
+  // =========================================================================
+  // DB MICROSERVICE - Railway (saves all component records to MongoDB)
+  // Replace placeholder with real Railway URL after deploying db-service/
+  // =========================================================================
+  static const String dbMicroserviceBaseUrl =
+      'https://iteagrow-db-api.up.railway.app'; // ← update after deploy
+
+  // DB Microservice Endpoints
+  static String get dbDisease =>
+      '$dbMicroserviceBaseUrl/api/disease/detections';
+  static String get dbMaturity => '$dbMicroserviceBaseUrl/api/maturity/records';
+  static String get dbYield => '$dbMicroserviceBaseUrl/api/yield/records';
+  static String get dbSoil => '$dbMicroserviceBaseUrl/api/soil/records';
+  static String get dbPowder => '$dbMicroserviceBaseUrl/api/powder/grades';
+  static String get dbMarket => '$dbMicroserviceBaseUrl/api/market/values';
+  static String get dbHealth => '$dbMicroserviceBaseUrl/health';
+
   // Set to true to always use production backend (recommended for mobile app)
   // NOTE: Set to false since only Disease ML is hosted on Railway
   static const bool useProductionBackend = false;
@@ -181,12 +198,9 @@ class ApiConfig {
   static String get _authBaseUrl => authMicroserviceBaseUrl;
 
   static String get authLogin => '$_authBaseUrl/api/users/login';
-  static String get authGoogleLogin =>
-      '$_authBaseUrl/api/users/google-login';
-  static String get authRegister =>
-      '$_authBaseUrl/api/users/register';
-  static String get authVerifyToken =>
-      '$_authBaseUrl/api/users/verify-token';
+  static String get authGoogleLogin => '$_authBaseUrl/api/users/google-login';
+  static String get authRegister => '$_authBaseUrl/api/users/register';
+  static String get authVerifyToken => '$_authBaseUrl/api/users/verify-token';
   static String get authProfile => '$_authBaseUrl/api/users/me';
   static String get authChangePassword =>
       '$_authBaseUrl/api/users/change-password';

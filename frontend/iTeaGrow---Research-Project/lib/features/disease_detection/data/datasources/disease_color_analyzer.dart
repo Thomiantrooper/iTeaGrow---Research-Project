@@ -47,13 +47,13 @@ class DiseaseColorAnalyzer {
   // ── Thresholds ──────────────────────────────────────────────────────────
 
   /// Minimum fraction of disease-coloured pixels to consider a detection.
-  static const double _blisterThreshold = 0.10;  // 10 % (high — avoids false positives)
-  static const double _rustThreshold = 0.05;     // 5 %
+  static const double _blisterThreshold = 0.05; // 5 %
+  static const double _rustThreshold = 0.02; // 2 %
 
   /// If the disease pixel fraction is above this, treat the colour signal as
   /// very strong (high confidence override).
-  static const double _strongBlisterThreshold = 0.20;  // 20 %
-  static const double _strongRustThreshold = 0.12;     // 12 %
+  static const double _strongBlisterThreshold = 0.15; // 15 %
+  static const double _strongRustThreshold = 0.08; // 8 %
 
   // ── Public API ──────────────────────────────────────────────────────────
 
@@ -104,16 +104,52 @@ class DiseaseColorAnalyzer {
       );
     }
 
+    // ── Case 1.5: Model says Not A Leaf, but colour sees strong disease ───
+    // The backend sometimes falsely rejects heavily rusted leaves as "Not A Leaf"
+    // ── Case 1.5: Model says Not A Leaf, but colour sees strong disease ───
+    // The backend sometimes falsely rejects heavily rusted leaves as "Not A Leaf"
+    // due to lack of green. We ONLY override this specifically for Red Rust,
+    // because background tables/glare can falsely trigger Blister Blight on small leaves.
+    if (modelDisease.toLowerCase() == 'not a leaf' ||
+        modelDisease.toLowerCase() == 'not_a_leaf') {
+      if (colorDisease == 'Red Rust' && colorConf >= 0.35) {
+        debugPrint('COLOR OVERRIDE: Backend said Not A Leaf, but color found '
+            '$colorDisease($colorConf)');
+        return CorrectedPrediction(
+          diseaseType: colorDisease,
+          confidence: colorConf.clamp(0.45, 0.85),
+          source: 'color-override-notaleaf',
+        );
+      }
+
+      // Also allow overriding "Not A Leaf" to Healthy if the leaf is small but clearly green
+      if (colorDisease == 'Healthy' && colorConf >= 0.40) {
+        debugPrint(
+            'COLOR OVERRIDE: Backend said Not A Leaf, but color found Healthy($colorConf)');
+        return CorrectedPrediction(
+          diseaseType: 'Healthy',
+          // Boost confidence artificially so it doesn't look like a completely uncertain guess
+          confidence: (colorConf + 0.20).clamp(0.60, 0.85),
+          source: 'color-override-healthy',
+        );
+      }
+      // Otherwise, trust the Not A Leaf prediction
+      return CorrectedPrediction(
+        diseaseType: modelDisease,
+        confidence: modelConfidence,
+        source: 'model-trusted',
+      );
+    }
+
     // ── Case 2: Model says Healthy, but colour sees disease ─────────────
     // VERY conservative: only override with overwhelming colour evidence
     // AND only when the model's own confidence in "Healthy" is low.
     if (_isHealthy(modelDisease) && !_isHealthy(colorDisease)) {
       // Only override if colour confidence is very high AND model is uncertain
-      if (colorConf >= 0.80 && modelConfidence < 0.70) {
-        final overrideConf = (colorConf * 0.6 + modelConfidence * 0.1)
-            .clamp(0.50, 0.80);
-        debugPrint(
-            'COLOR OVERRIDE: model=$modelDisease($modelConfidence) → '
+      if (colorConf >= 0.80 && modelConfidence < 0.65) {
+        final overrideConf =
+            (colorConf * 0.7 + modelConfidence * 0.1).clamp(0.50, 0.75);
+        debugPrint('COLOR OVERRIDE: model=$modelDisease($modelConfidence) → '
             '$colorDisease($overrideConf) [color=$colorConf]');
         return CorrectedPrediction(
           diseaseType: colorDisease,
@@ -131,30 +167,33 @@ class DiseaseColorAnalyzer {
 
     // ── Case 3: Model says disease, colour says Healthy ─────────────────
     if (!_isHealthy(modelDisease) && _isHealthy(colorDisease)) {
-      // If colour analysis shows strong green with high confidence,
-      // the leaf is likely healthy and the model was fooled by background
-      if (colorConf >= 0.55 && colorResult.greenScore >= 0.40) {
+      // Very strict override: ONLY override if scanner finds virtually zero disease pixels.
+      final pureGreen =
+          colorResult.rustScore < 0.005 && colorResult.blisterScore < 0.005;
+
+      if (pureGreen &&
+          colorResult.greenScore >= 0.28 &&
+          modelConfidence < 0.97) {
         debugPrint(
-            'COLOR→HEALTHY OVERRIDE: model=$modelDisease($modelConfidence) '
-            'but green=${colorResult.greenScore.toStringAsFixed(2)}, '
-            'colorConf=$colorConf → Healthy');
+            'COLOR→HEALTHY OVERRIDE: model=$modelDisease($modelConfidence), '
+            'green=${colorResult.greenScore.toStringAsFixed(2)}');
         return CorrectedPrediction(
           diseaseType: 'Healthy',
-          confidence: colorConf.clamp(0.60, 0.92),
+          confidence: colorConf.clamp(0.60, 0.90),
           source: 'color-healthy-override',
         );
       }
-      // Moderate green — reduce model confidence significantly
+      // Moderate green — reduce model confidence slightly
       if (colorResult.greenScore >= 0.30) {
-        final adjusted = (modelConfidence * 0.60).clamp(0.30, 0.70);
+        final adjusted = (modelConfidence * 0.80).clamp(0.30, 0.85);
         return CorrectedPrediction(
           diseaseType: modelDisease,
           confidence: adjusted,
           source: 'model (color-reduced)',
         );
       }
-      // Low green — keep model output but slightly reduce confidence
-      final adjusted = (modelConfidence * 0.85).clamp(0.30, 0.95);
+      // Low green — keep model output but barely reduce confidence
+      final adjusted = (modelConfidence * 0.95).clamp(0.30, 0.95);
       return CorrectedPrediction(
         diseaseType: modelDisease,
         confidence: adjusted,
@@ -198,9 +237,9 @@ class DiseaseColorAnalyzer {
       );
     }
 
-    // Down-sample for speed
-    final src = (image.width > 400 || image.height > 400)
-        ? img.copyResize(image, width: 400)
+    // Down-sample for speed – 200 px wide is plenty for colour stats
+    final src = (image.width > 200 || image.height > 200)
+        ? img.copyResize(image, width: 200)
         : image;
 
     int blisterPixels = 0;
@@ -209,9 +248,7 @@ class DiseaseColorAnalyzer {
     int leafPixels = 0; // non-background pixels
     final total = src.width * src.height;
 
-    // ── First pass: identify leaf vs background pixels ──────────────────
-    // Build a simple mask: true = likely leaf, false = likely background
-    final isLeafPixel = List<bool>.filled(total, false);
+    // ── Single-pass: background filter + classify ──────────────────────
 
     for (int y = 0; y < src.height; y++) {
       for (int x = 0; x < src.width; x++) {
@@ -222,40 +259,14 @@ class DiseaseColorAnalyzer {
 
         final brightness = (r + g + b) / 3.0;
         final hsv = _rgbToHsv(r, g, b);
+        final h = hsv[0];
         final s = hsv[1];
         final v = hsv[2];
 
-        // Background: very bright + very low saturation (white/grey bg)
-        // or very dark (black bg) or overexposed
-        if (brightness > 230 && s < 35) {
-          continue;
-        }
-        if (brightness < 25 || brightness > 248) {
-          continue;
-        }
-        // Near-white / near-grey with no colour → background
-        if (s < 20 && v > 200) {
-          continue;
-        }
-
-        isLeafPixel[y * src.width + x] = true;
-      }
-    }
-
-    // ── Second pass: classify leaf pixels ──────────────────────────────
-    for (int y = 0; y < src.height; y++) {
-      for (int x = 0; x < src.width; x++) {
-        if (!isLeafPixel[y * src.width + x]) continue;
-
-        final pixel = src.getPixel(x, y);
-        final r = pixel.r.toInt();
-        final g = pixel.g.toInt();
-        final b = pixel.b.toInt();
-
-        final hsv = _rgbToHsv(r, g, b);
-        final h = hsv[0]; // 0-360
-        final s = hsv[1]; // 0-255
-        final v = hsv[2]; // 0-255
+        // Background filter
+        if (brightness > 230 && s < 35) continue;
+        if (brightness < 25 || brightness > 248) continue;
+        if (s < 18) continue;
 
         leafPixels++;
 
@@ -265,33 +276,57 @@ class DiseaseColorAnalyzer {
         //   - Moderate saturation (not grey, not neon)
         //   - Moderate value (not too dark, not too bright)
         if (((h >= 0 && h <= 35) || (h >= 340 && h <= 360)) &&
-            s > 50 && s < 230 &&
-            v > 40 && v < 210) {
+            s > 40 &&
+            s < 230 &&
+            v > 30 &&
+            v < 210) {
           // R channel should dominate for true rust
-          if (r > g && r > b && (r - g) > 15) {
+          if (r > g && r > (b * 0.9) && (r - g) > 10) {
             rustPixels++;
-            continue; // don't double-count
+            continue;
+          }
+        }
+
+        // ── Generic brown/grey necrotic spot detection ─────────────────
+        // Catch dead spots that aren't specific to Red Rust or Blister
+        if (h >= 10 && h <= 50 && s > 15 && v > 20 && v < 180) {
+          if (r >= g && (r - g) > 5) {
+            rustPixels++; // count as rust for the purposes of avoiding healthy override
+            continue;
           }
         }
 
         // ── Blister Blight detection ─────────────────────────────────
-        // White / pale / cream blister spots ON a leaf surface:
-        //   - Must have some saturation (not pure white background)
-        //   - Or pale yellow-green typical of blister lesions
-        //   - Require nearby green context (handled by leaf mask above)
-        if ((s >= 15 && s < 55 && v > 170 && v < 240) ||  // pale spots (not pure white)
-            (s >= 20 && s < 70 && v > 155 && h >= 25 && h <= 65)) { // pale yellowish lesion
-          // Additional spatial check: at least some green neighbours nearby
-          // means this pale spot is actually on a leaf, not floating in space
-          if (_hasGreenNeighbour(src, x, y, isLeafPixel)) {
+        // Blister blight spots are typically pale yellow or pale green ON the leaf surface.
+        // We strictly require a Hue between 20 (yellow/orange) and 75 (yellow/green)
+        // to completely ignore white light reflections (glare) and white table backgrounds.
+        if (s >= 15 && s < 70 && v > 140 && h >= 20 && h <= 75) {
+          // Quick inline green-neighbour check (no mask needed)
+          bool hasGreenNear = false;
+          for (int dy = -2; dy <= 2 && !hasGreenNear; dy++) {
+            for (int dx = -2; dx <= 2 && !hasGreenNear; dx++) {
+              if (dx == 0 && dy == 0) continue;
+              final nx = x + dx;
+              final ny = y + dy;
+              if (nx < 0 || nx >= src.width || ny < 0 || ny >= src.height)
+                continue;
+              final np = src.getPixel(nx, ny);
+              final nr = np.r.toInt();
+              final ng = np.g.toInt();
+              final nb = np.b.toInt();
+              if (ng > nr && ng > nb && ng > 50) hasGreenNear = true;
+            }
+          }
+          if (hasGreenNear) {
             blisterPixels++;
             continue;
           }
         }
 
         // ── Healthy green ────────────────────────────────────────────
-        // Green leaf tissue: hue 60-170, decent saturation
-        if (h >= 60 && h <= 170 && s > 40 && v > 40) {
+        // Green leaf tissue: hue 40-180 (yellow-green to cyan-green), decent saturation
+        // Allow darker values (v > 20) since tea leaves can be very dark green
+        if (h >= 40 && h <= 180 && s > 25 && v > 20) {
           greenPixels++;
         }
       }
@@ -332,7 +367,12 @@ class DiseaseColorAnalyzer {
 
     // If neither disease detected, confidence in "Healthy" based on green ratio
     if (suggestedDisease == 'Healthy') {
-      suggestedConfidence = (greenScore * 1.2).clamp(0.0, 0.90);
+      double baseConf = (greenScore * 1.1).clamp(0.0, 0.90);
+      // If we saw ANY disease pixels (even below threshold), penalize Healthy score
+      if (blisterScore > 0.01 || rustScore > 0.01) {
+        baseConf *= 0.6; // 40% reduction
+      }
+      suggestedConfidence = baseConf;
     }
 
     return ColorAnalysisResult(
@@ -342,33 +382,6 @@ class DiseaseColorAnalyzer {
       suggestedDisease: suggestedDisease,
       suggestedConfidence: suggestedConfidence,
     );
-  }
-
-  /// Check if a pixel has at least one green-ish leaf neighbour in a 5×5 area.
-  /// This prevents isolated bright pixels (background, text) from being counted
-  /// as blister spots.
-  static bool _hasGreenNeighbour(img.Image image, int cx, int cy, List<bool> leafMask) {
-    int greenCount = 0;
-    const radius = 3;
-    for (int dy = -radius; dy <= radius; dy++) {
-      for (int dx = -radius; dx <= radius; dx++) {
-        if (dx == 0 && dy == 0) continue;
-        final nx = cx + dx;
-        final ny = cy + dy;
-        if (nx < 0 || nx >= image.width || ny < 0 || ny >= image.height) continue;
-        if (!leafMask[ny * image.width + nx]) continue;
-        final p = image.getPixel(nx, ny);
-        final pr = p.r.toInt();
-        final pg = p.g.toInt();
-        final pb = p.b.toInt();
-        // Check if neighbour is greenish
-        if (pg > pr && pg > pb && pg > 50) {
-          greenCount++;
-          if (greenCount >= 5) return true; // need at least 5 green neighbours
-        }
-      }
-    }
-    return false;
   }
 
   /// Convert RGB (0–255) to HSV.  Returns [H (0–360), S (0–255), V (0–255)].

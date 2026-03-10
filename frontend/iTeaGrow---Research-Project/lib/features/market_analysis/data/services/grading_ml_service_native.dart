@@ -2,6 +2,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../../core/api/api_config.dart';
 import '../models/market_models.dart';
 
 class GradingMlService {
@@ -144,7 +147,7 @@ class GradingMlService {
       confidenceLabel = 'Uncertain';
     }
 
-    return ClassificationResult(
+    final result = ClassificationResult(
       grade: _labels[maxIndex],
       confidence: maxConfidence * 100,
       source: 'offline',
@@ -152,6 +155,48 @@ class GradingMlService {
       confidenceLabel: confidenceLabel,
       isAmbiguous: isAmbiguous,
     );
+
+    // Save to DB Microservice (awaited to ensure data integrity)
+    await _saveToDb(result, imageFile.path);
+
+    return result;
+  }
+
+  Future<void> _saveToDb(ClassificationResult result, String imagePath) async {
+    try {
+      String? imageBase64;
+      final file = File(imagePath);
+      if (await file.exists()) {
+        imageBase64 = base64Encode(await file.readAsBytes());
+      }
+
+      final body = {
+        'user_id': null,
+        'image_path': imagePath,
+        'image_data': imageBase64,
+        'grade': result.grade,
+        'confidence': result.confidence,
+        'confidence_label': result.confidenceLabel,
+        'source': 'offline',
+        'is_ambiguous': result.isAmbiguous,
+        'extra': null,
+      };
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.dbPowder),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint('✅ Offline powder grading saved to DB');
+      } else {
+        debugPrint('⚠️ DB error saving powder grade: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error saving offline powder grading: $e');
+    }
   }
 
   List<List<List<List<double>>>> _imageToFloat32Buffer(img.Image image) {

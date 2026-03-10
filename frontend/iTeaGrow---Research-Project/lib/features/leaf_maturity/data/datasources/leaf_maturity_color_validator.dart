@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint, compute;
 import 'package:image/image.dart' as img;
@@ -116,11 +117,13 @@ class MaturityColorValidator {
 
     // ── Case 2: Model and colour agree ──────────────────────────────────
     if (modelMaturity == colorMaturity) {
-      final boosted = (modelConfidence * 0.60 + colorConf * 0.35 + 0.05)
-          .clamp(modelConfidence, 0.97);
+      final boosted =
+          (modelConfidence * 0.60 + colorConf * 0.35 + 0.05).clamp(0.0, 0.97);
+      // Ensure we don't accidentally lower confidence below original if they agreed
+      final finalConf = max(boosted, modelConfidence);
       return CorrectedMaturityPrediction(
         maturity: modelMaturity,
-        confidence: boosted,
+        confidence: finalConf,
         source: 'model+color',
       );
     }

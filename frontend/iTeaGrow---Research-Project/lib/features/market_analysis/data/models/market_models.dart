@@ -76,11 +76,17 @@ class MarketPriceResponse {
   final Map<String, Map<String, dynamic>> marketPrices;
   final String status;
   final String? error;
+  final DateTime? updatedAt;
+  final String? lastNotes;
+  final String? lastSource;
 
   MarketPriceResponse({
     required this.marketPrices,
     required this.status,
     this.error,
+    this.updatedAt,
+    this.lastNotes,
+    this.lastSource,
   });
 
   Map<String, dynamic> get latestPrices {
@@ -92,15 +98,45 @@ class MarketPriceResponse {
     return marketPrices['default'] ?? {};
   }
 
+  /// Returns true if the most recent price update (for a specific week)
+  /// happened within the last 24 hours.
+  bool get canEditLatest {
+    if (updatedAt == null) return true; // Assume editable if no timestamp
+    final diff = DateTime.now().difference(updatedAt!);
+    return diff.inHours < 24;
+  }
+
   factory MarketPriceResponse.fromJson(Map<String, dynamic> json) {
-    // The API might return { "market_price": 1234 } for a specific grade
-    // OR { "market_prices": { "2023-10-10": { "BOPF": 1200 } } } for the full grid
+    DateTime? parsedDate;
+    String? lastNotes;
+    String? lastSource;
+
+    // 1. Try to find metadata at the root
+    if (json.containsKey('updated_at')) {
+      try {
+        parsedDate = DateTime.parse(json['updated_at']);
+      } catch (_) {}
+    }
+    lastNotes = json['last_notes']?.toString();
+    lastSource = json['last_source']?.toString();
+
     if (json.containsKey('market_prices')) {
       final pricesMap = json['market_prices'] as Map<String, dynamic>;
       final parsedPrices = <String, Map<String, dynamic>>{};
 
+      // 2. Fallback: Check inside market_prices for metadata (legacy)
+      if (parsedDate == null && pricesMap.containsKey('updated_at')) {
+        try {
+          parsedDate = DateTime.parse(pricesMap['updated_at']);
+        } catch (_) {}
+      }
+      lastNotes ??= pricesMap['last_notes']?.toString();
+      lastSource ??= pricesMap['last_source']?.toString();
+
       pricesMap.forEach((key, value) {
-        if (value is Map) {
+        // Only add if the key looks like a date (YYYY-MM-DD or similar)
+        // and value is a map of prices
+        if (value is Map && (key.startsWith('20') || key == 'default')) {
           parsedPrices[key] = Map<String, dynamic>.from(value);
         }
       });
@@ -108,6 +144,9 @@ class MarketPriceResponse {
       return MarketPriceResponse(
         marketPrices: parsedPrices,
         status: json['status']?.toString() ?? 'success',
+        updatedAt: parsedDate,
+        lastNotes: lastNotes,
+        lastSource: lastSource,
       );
     }
 
@@ -115,6 +154,7 @@ class MarketPriceResponse {
       marketPrices: {},
       status: json['status']?.toString() ?? 'error',
       error: json['error']?.toString(),
+      updatedAt: parsedDate,
     );
   }
 }

@@ -66,10 +66,10 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
   String? get _cropPerHaWarning {
     if (_fieldSize <= 0 || _cropHarvested <= 0) return null;
     final ratio = _cropHarvested / _fieldSize;
-    if (ratio < 100) {
+    if (ratio < 50) {
       return 'Crop/ha (${ratio.toStringAsFixed(0)} kg/ha) is unusually low — verify inputs.';
     }
-    if (ratio > 5000) {
+    if (ratio > 10000) {
       return 'Crop/ha (${ratio.toStringAsFixed(0)} kg/ha) is unusually high — verify inputs.';
     }
     return null;
@@ -78,10 +78,10 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
   String? get _workersPerHaWarning {
     if (_fieldSize <= 0 || _laborTotal <= 0) return null;
     final ratio = _laborTotal / _fieldSize;
-    if (ratio < 5) {
+    if (ratio < 2) {
       return 'Workers/ha (${ratio.toStringAsFixed(1)}) seems low for the field size.';
     }
-    if (ratio > 80) {
+    if (ratio > 150) {
       return 'Workers/ha (${ratio.toStringAsFixed(1)}) seems high for the field size.';
     }
     return null;
@@ -150,8 +150,8 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
-                  fontSize: 12, color: TeaColors.warningAmber),
+              style:
+                  const TextStyle(fontSize: 12, color: TeaColors.warningAmber),
             ),
           ),
         ],
@@ -198,7 +198,9 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  predictionState.isApiHealthy ? AppLocalizations.of(context)!.common_online : AppLocalizations.of(context)!.common_offline,
+                  predictionState.isApiHealthy
+                      ? AppLocalizations.of(context)!.common_online
+                      : AppLocalizations.of(context)!.common_offline,
                   style: const TextStyle(fontSize: 12),
                 ),
               ],
@@ -274,12 +276,14 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                   return AppLocalizations.of(context)!.yield_valid_number;
                 }
                 final v = int.parse(value);
-                if (v <= 0) return AppLocalizations.of(context)!.yield_greater_than_zero;
-                if (v > 500) return l10n.yield_max_workers;
+                if (v <= 0)
+                  return AppLocalizations.of(context)!.yield_greater_than_zero;
+                if (v > 5000) return 'Maximum 5000 workers';
                 return null;
               },
               onChanged: (value) {
-                setState(() => _laborTotal = int.tryParse(value) ?? _laborTotal);
+                setState(
+                    () => _laborTotal = int.tryParse(value) ?? _laborTotal);
               },
             ),
 
@@ -300,12 +304,14 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                   return AppLocalizations.of(context)!.yield_valid_number;
                 }
                 final v = double.parse(value);
-                if (v <= 0) return AppLocalizations.of(context)!.yield_greater_than_zero;
-                if (v > 500) return l10n.yield_max_ha;
+                if (v <= 0)
+                  return AppLocalizations.of(context)!.yield_greater_than_zero;
+                if (v > 5000) return 'Maximum 5,000 ha';
                 return null;
               },
               onChanged: (value) {
-                setState(() => _fieldSize = double.tryParse(value) ?? _fieldSize);
+                setState(
+                    () => _fieldSize = double.tryParse(value) ?? _fieldSize);
               },
             ),
 
@@ -326,12 +332,14 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                   return AppLocalizations.of(context)!.yield_valid_number;
                 }
                 final v = double.parse(value);
-                if (v <= 0) return AppLocalizations.of(context)!.yield_greater_than_zero;
+                if (v <= 0)
+                  return AppLocalizations.of(context)!.yield_greater_than_zero;
                 if (v > 500000) return l10n.yield_max_crop;
                 return null;
               },
               onChanged: (value) {
-                setState(() => _cropHarvested = double.tryParse(value) ?? _cropHarvested);
+                setState(() =>
+                    _cropHarvested = double.tryParse(value) ?? _cropHarvested);
               },
             ),
 

@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
+import '../../../../core/api/api_config.dart';
 import '../../domain/entities/leaf_maturity_result.dart';
 
 /// TFLite-based Tea Leaf Maturity Classification Service
@@ -37,7 +40,8 @@ class LeafMaturityMLService {
     if (_isInitialized) return;
 
     try {
-      debugPrint('LeafMaturityTFLite: Initializing model with Flex ops support...');
+      debugPrint(
+          'LeafMaturityTFLite: Initializing model with Flex ops support...');
 
       final options = InterpreterOptions();
 
@@ -47,14 +51,16 @@ class LeafMaturityMLService {
       );
 
       final inputTensor = _interpreter!.getInputTensor(0);
-      debugPrint('LeafMaturityTFLite: Input shape (pre-alloc): ${inputTensor.shape}');
+      debugPrint(
+          'LeafMaturityTFLite: Input shape (pre-alloc): ${inputTensor.shape}');
 
       _interpreter!.allocateTensors();
 
       _inputShape = List<int>.from(_interpreter!.getInputTensor(0).shape);
       _outputShape = List<int>.from(_interpreter!.getOutputTensor(0).shape);
 
-      debugPrint('LeafMaturityTFLite: Initialized — input: $_inputShape, output: $_outputShape');
+      debugPrint(
+          'LeafMaturityTFLite: Initialized — input: $_inputShape, output: $_outputShape');
 
       _isInitialized = true;
     } catch (e, stackTrace) {
@@ -98,7 +104,8 @@ class LeafMaturityMLService {
       final inferenceStopwatch = Stopwatch()..start();
       _interpreter!.run(input, output);
       inferenceStopwatch.stop();
-      debugPrint('LeafMaturityTFLite: Inference in ${inferenceStopwatch.elapsedMilliseconds}ms');
+      debugPrint(
+          'LeafMaturityTFLite: Inference in ${inferenceStopwatch.elapsedMilliseconds}ms');
 
       // Validate output
       if (output.any((v) => v.isNaN || v.isInfinite)) {
@@ -110,9 +117,15 @@ class LeafMaturityMLService {
       final probabilities = _softmax(logits);
 
       stopwatch.stop();
-      debugPrint('LeafMaturityTFLite: Done in ${stopwatch.elapsedMilliseconds}ms');
+      debugPrint(
+          'LeafMaturityTFLite: Done in ${stopwatch.elapsedMilliseconds}ms');
 
-      return _extractResult(probabilities);
+      final result = _extractResult(probabilities);
+
+      // Save to DB Microservice
+      _saveToDb(result, imagePath);
+
+      return result;
     } catch (e, stackTrace) {
       stopwatch.stop();
       debugPrint('LeafMaturityTFLite: Prediction failed: $e');
@@ -266,6 +279,27 @@ class LeafMaturityMLService {
       timestamp: DateTime.now(),
       rawConfidence: rawConfidence,
     );
+  }
+
+  Future<void> _saveToDb(LeafMaturityResult result, String imagePath) async {
+    try {
+      final body = {
+        'image_path': imagePath,
+        'species': result.species,
+        'maturity': result.maturity,
+        'species_confidence': result.speciesConfidence,
+        'maturity_confidence': result.maturityConfidence,
+        'raw_confidence': result.rawConfidence,
+      };
+      await http
+          .post(Uri.parse(ApiConfig.dbMaturity),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(body))
+          .timeout(const Duration(seconds: 10));
+      debugPrint('✅ Leaf maturity saved to DB');
+    } catch (e) {
+      debugPrint('⚠️ Error saving leaf maturity: $e');
+    }
   }
 
   /// Dispose resources

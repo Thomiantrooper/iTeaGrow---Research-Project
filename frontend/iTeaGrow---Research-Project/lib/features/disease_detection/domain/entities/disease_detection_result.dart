@@ -25,12 +25,12 @@ class BoundingBox {
   }
 
   Map<String, dynamic> toJson() => {
-    'x_min': xMin,
-    'y_min': yMin,
-    'x_max': xMax,
-    'y_max': yMax,
-    'confidence': confidence,
-  };
+        'x_min': xMin,
+        'y_min': yMin,
+        'x_max': xMax,
+        'y_max': yMax,
+        'confidence': confidence,
+      };
 }
 
 /// Individual detection from the model
@@ -63,13 +63,13 @@ class Detection {
   }
 
   Map<String, dynamic> toJson() => {
-    'detection_id': detectionId,
-    'class_name': className,
-    'class_id': classId,
-    'confidence': confidence,
-    'bounding_box': boundingBox.toJson(),
-    'area_percentage': areaPercentage,
-  };
+        'detection_id': detectionId,
+        'class_name': className,
+        'class_id': classId,
+        'confidence': confidence,
+        'bounding_box': boundingBox.toJson(),
+        'area_percentage': areaPercentage,
+      };
 
   /// Get display-friendly disease name
   String get displayName {
@@ -81,9 +81,14 @@ class Detection {
       case 'blister_blight':
         return 'Blister Blight';
       default:
-        return className.replaceAll('_', ' ').split(' ').map((w) =>
-          w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
-        ).join(' ');
+        return className
+            .replaceAll('_', ' ')
+            .split(' ')
+            .map(
+              (w) =>
+                  w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
+            )
+            .join(' ');
     }
   }
 }
@@ -120,31 +125,34 @@ class DetectionSummary {
       healthyCount: json['healthy_count'] ?? 0,
       redRustCount: json['red_rust_count'] ?? 0,
       blisterBlightCount: json['blister_blight_count'] ?? 0,
-      overallHealthScore: (json['overall_health_score'] as num?)?.toDouble() ?? 0.0,
+      overallHealthScore:
+          (json['overall_health_score'] as num?)?.toDouble() ?? 0.0,
       dominantDisease: json['dominant_disease'],
       severityLevel: json['severity_level'] ?? 'none',
       requiresImmediateAction: json['requires_immediate_action'] ?? false,
-      averageConfidence: (json['average_confidence'] as num?)?.toDouble() ?? 0.0,
+      averageConfidence:
+          (json['average_confidence'] as num?)?.toDouble() ?? 0.0,
       detectionReliability: json['detection_reliability'] ?? 'none',
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'total_leaves_detected': totalLeavesDetected,
-    'healthy_count': healthyCount,
-    'red_rust_count': redRustCount,
-    'blister_blight_count': blisterBlightCount,
-    'overall_health_score': overallHealthScore,
-    'dominant_disease': dominantDisease,
-    'severity_level': severityLevel,
-    'requires_immediate_action': requiresImmediateAction,
-    'average_confidence': averageConfidence,
-    'detection_reliability': detectionReliability,
-  };
+        'total_leaves_detected': totalLeavesDetected,
+        'healthy_count': healthyCount,
+        'red_rust_count': redRustCount,
+        'blister_blight_count': blisterBlightCount,
+        'overall_health_score': overallHealthScore,
+        'dominant_disease': dominantDisease,
+        'severity_level': severityLevel,
+        'requires_immediate_action': requiresImmediateAction,
+        'average_confidence': averageConfidence,
+        'detection_reliability': detectionReliability,
+      };
 }
 
 class DiseaseDetectionResult {
-  final String diseaseType; // 'Healthy', 'Leaf Blight', 'Red Rust', 'Not A Leaf', etc.
+  final String
+      diseaseType; // 'Healthy', 'Leaf Blight', 'Red Rust', 'Not A Leaf', etc.
   final double confidence;
   final String severity; // 'Low', 'Medium', 'High', 'Critical', 'Uncertain'
   final List<String> recommendations;
@@ -172,8 +180,7 @@ class DiseaseDetectionResult {
   final String? heatmapPath;
 
   /// Check if the result indicates the image is not a valid leaf
-  bool get isNotALeaf => diseaseType == 'Not A Leaf' || 
-    (summary?.dominantDisease == 'not_a_leaf');
+  bool get isNotALeaf => diseaseType == 'Not A Leaf';
 
   /// Check if the leaf is healthy
   bool get isHealthy => diseaseType == 'Healthy';
@@ -218,15 +225,17 @@ class DiseaseDetectionResult {
         : null;
 
     final detections = (json['detections'] as List?)
-        ?.map((d) => Detection.fromJson(d))
-        .toList() ?? [];
+            ?.map((d) => Detection.fromJson(d))
+            .toList() ??
+        [];
 
     // Determine main disease type - prefer direct API field, then summary, then detections
     String diseaseType = 'Healthy';
     double confidence = 0.0;
 
     // First check if API directly provides disease_type and confidence
-    if (json['disease_type'] != null && json['disease_type'] != 'No Detection') {
+    if (json['disease_type'] != null &&
+        json['disease_type'] != 'No Detection') {
       diseaseType = json['disease_type'];
       confidence = (json['confidence'] as num?)?.toDouble() ?? 0.0;
     } else if (summary != null && summary.dominantDisease != null) {
@@ -237,12 +246,13 @@ class DiseaseDetectionResult {
       );
       if (relevantDetections.isNotEmpty) {
         confidence = relevantDetections.map((d) => d.confidence).reduce(
-          (a, b) => a > b ? a : b,
-        );
+              (a, b) => a > b ? a : b,
+            );
       }
     } else if (detections.isNotEmpty) {
       // Use first non-healthy detection or healthy if all are healthy
-      final nonHealthy = detections.where((d) => d.className != 'healthy').toList();
+      final nonHealthy =
+          detections.where((d) => d.className != 'healthy').toList();
       if (nonHealthy.isNotEmpty) {
         final topDetection = nonHealthy.reduce(
           (a, b) => a.confidence > b.confidence ? a : b,
@@ -274,7 +284,8 @@ class DiseaseDetectionResult {
 
     // Use recommendations from API response if available, otherwise generate based on detection
     List<String> recommendations = [];
-    if (json['recommendations'] != null && (json['recommendations'] as List).isNotEmpty) {
+    if (json['recommendations'] != null &&
+        (json['recommendations'] as List).isNotEmpty) {
       recommendations = List<String>.from(json['recommendations']);
     } else if (diseaseType == 'Not A Leaf') {
       recommendations = [
@@ -302,12 +313,14 @@ class DiseaseDetectionResult {
 
     // Parse image quality score from API
     final imageQuality = json['image_quality'] as Map<String, dynamic>?;
-    final imageQualityScore = (imageQuality?['overall_score'] as num?)?.toDouble();
+    final imageQualityScore =
+        (imageQuality?['overall_score'] as num?)?.toDouble();
 
     // Parse validation info
     final validation = json['validation'] as Map<String, dynamic>?;
     final validationMessage = validation?['message'] as String?;
-    final isPotentialFalsePositive = validation?['is_potential_false_positive'] == true;
+    final isPotentialFalsePositive =
+        validation?['is_potential_false_positive'] == true;
 
     return DiseaseDetectionResult(
       diseaseType: diseaseType,
@@ -338,32 +351,37 @@ class DiseaseDetectionResult {
       case 'not_a_leaf':
         return 'Not A Leaf';
       default:
-        return name.replaceAll('_', ' ').split(' ').map((w) =>
-          w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
-        ).join(' ');
+        return name
+            .replaceAll('_', ' ')
+            .split(' ')
+            .map(
+              (w) =>
+                  w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w,
+            )
+            .join(' ');
     }
   }
 
   /// Convert to JSON for storage
   Map<String, dynamic> toJson() => {
-    'disease_name': diseaseType,
-    'confidence': confidence,
-    'severity': severity,
-    'recommendations': recommendations,
-    'timestamp': timestamp.toIso8601String(),
-    'temperature': temperature,
-    'humidity': humidity,
-    'air_quality': airQuality,
-    'request_id': requestId,
-    'image_id': imageId,
-    'db_id': dbId,
-    'processing_time_ms': processingTimeMs,
-    'detections': detections?.map((d) => d.toJson()).toList(),
-    'summary': summary?.toJson(),
-    'image_quality_score': imageQualityScore,
-    'validation_message': validationMessage,
-    // heatmapPath is temp-file only; not persisted to storage
-  };
+        'disease_name': diseaseType,
+        'confidence': confidence,
+        'severity': severity,
+        'recommendations': recommendations,
+        'timestamp': timestamp.toIso8601String(),
+        'temperature': temperature,
+        'humidity': humidity,
+        'air_quality': airQuality,
+        'request_id': requestId,
+        'image_id': imageId,
+        'db_id': dbId,
+        'processing_time_ms': processingTimeMs,
+        'detections': detections?.map((d) => d.toJson()).toList(),
+        'summary': summary?.toJson(),
+        'image_quality_score': imageQualityScore,
+        'validation_message': validationMessage,
+        // heatmapPath is temp-file only; not persisted to storage
+      };
 
   /// Create from stored JSON
   factory DiseaseDetectionResult.fromStoredJson(Map<String, dynamic> json) {
@@ -380,8 +398,12 @@ class DiseaseDetectionResult {
       imageId: json['image_id'],
       dbId: json['_id'] ?? json['id'] ?? json['db_id'],
       processingTimeMs: (json['processing_time_ms'] as num?)?.toDouble(),
-      detections: (json['detections'] as List?)?.map((d) => Detection.fromJson(d)).toList(),
-      summary: json['summary'] != null ? DetectionSummary.fromJson(json['summary']) : null,
+      detections: (json['detections'] as List?)
+          ?.map((d) => Detection.fromJson(d))
+          .toList(),
+      summary: json['summary'] != null
+          ? DetectionSummary.fromJson(json['summary'])
+          : null,
       imageQualityScore: (json['image_quality_score'] as num?)?.toDouble(),
       validationMessage: json['validation_message'],
       // heatmapPath is not persisted; always null from stored JSON
