@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class ContactUsPageSimple extends StatefulWidget {
@@ -20,9 +21,10 @@ class _ContactUsPageSimpleState extends State<ContactUsPageSimple> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Contact Us'),
+        title: Text(l10n.contact_title),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -33,32 +35,32 @@ class _ContactUsPageSimpleState extends State<ContactUsPageSimple> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _ContactInfoCard(
+            _ContactInfoCard(
               icon: Icons.email_outlined,
-              title: 'Email',
-              value: 'info@iteagrow.lk',
+              title: l10n.contact_email,
+              value: l10n.contact_email_value,
             ),
 
             const SizedBox(height: 16),
 
-            const _ContactInfoCard(
+            _ContactInfoCard(
               icon: Icons.phone_outlined,
-              title: 'Phone',
-              value: '+94 XX XXX XXXX',
+              title: l10n.contact_phone,
+              value: l10n.contact_phone_value,
             ),
 
             const SizedBox(height: 16),
 
-            const _ContactInfoCard(
+            _ContactInfoCard(
               icon: Icons.location_on_outlined,
-              title: 'Address',
-              value: 'Tea Research Institute\nTalawakelle, Sri Lanka',
+              title: l10n.contact_address,
+              value: l10n.contact_address_value,
             ),
 
             const SizedBox(height: 32),
 
             Text(
-              'Send Feedback',
+              l10n.contact_feedback,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -68,9 +70,9 @@ class _ContactUsPageSimpleState extends State<ContactUsPageSimple> {
 
             TextField(
               controller: _messageController,
-              decoration: const InputDecoration(
-                labelText: 'Message',
-                hintText: 'Enter your message or feedback...',
+              decoration: InputDecoration(
+                labelText: l10n.contact_message,
+                hintText: l10n.contact_message_hint,
               ),
               maxLines: 5,
             ),
@@ -82,14 +84,14 @@ class _ContactUsPageSimpleState extends State<ContactUsPageSimple> {
               child: ElevatedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Message sent successfully!'),
+                    SnackBar(
+                      content: Text(l10n.contact_message_sent),
                       backgroundColor: AppTheme.statusGood,
                     ),
                   );
                   _messageController.clear();
                 },
-                child: const Text('Send'),
+                child: Text(l10n.contact_send),
               ),
             ),
           ],

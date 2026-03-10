@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:iteagrow/features/map/domain/models/iot_zone_models.dart';
 import 'package:iteagrow/features/map/presentation/providers/iot_map_provider.dart';
 import 'package:iteagrow/core/design_system/tea_colors.dart';
@@ -76,8 +77,8 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     }
   }
 
-  String _formatLastRefreshed() {
-    if (_lastRefreshed == null) return 'Never';
+  String _formatLastRefreshed(AppLocalizations l10n) {
+    if (_lastRefreshed == null) return l10n.map_never;
     final diff = DateTime.now().difference(_lastRefreshed!);
     if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
     return '${diff.inMinutes}m ago';
@@ -158,8 +159,8 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     // only if they are for hectare_ids NOT present in the fresh API response.
     final freshIds = soilDataList.map((d) => d.hectareId).toSet();
     // Drop everything that the API now covers (could be empty after a DB drop)
-    _allSoilData.removeWhere((d) =>
-        freshIds.isEmpty || freshIds.contains(d.hectareId));
+    _allSoilData
+        .removeWhere((d) => freshIds.isEmpty || freshIds.contains(d.hectareId));
     // If the API returned nothing at all, wipe everything
     if (soilDataList.isEmpty) {
       _allSoilData = [];
@@ -255,7 +256,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             return _buildMapView(filtered, soilDataList);
           },
           loading: () => _buildLoadingView(),
-          error: (error, stack) => _buildErrorView(error.toString()),
+          error: (error, stack) => _buildErrorView('${AppLocalizations.of(context)!.common_error}: ${error.toString()}'),
         ),
       ),
     );
@@ -266,42 +267,18 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
 
     return Stack(
       children: [
-        // Plantation Map Background Image
+        // Subtle Animated Abstract Grid Background
         Positioned.fill(
-          child: Image.asset(
-            'assets/images/Plantation Map.png',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              // Fallback to dark green if image not found
-              return Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0xFF2D5A3D),
-                      Color(0xFF1A3D2B),
-                    ],
-                  ),
+          child: AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, child) {
+              return CustomPaint(
+                painter: _AnimatedGridPainter(
+                  animationValue: _pulseController.value,
+                  color: _kPrimaryDeep.withOpacity(0.03),
                 ),
               );
             },
-          ),
-        ),
-
-        // Semi-transparent overlay for better contrast
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.1),
-                  Colors.black.withOpacity(0.3),
-                ],
-              ),
-            ),
           ),
         ),
 
@@ -352,66 +329,115 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     return Column(
       children: [
         // ── Top "Floating Island" Header ──────────────────────────────────
-        Center(
-          child: Container(
-            margin: const EdgeInsets.only(top: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(50),
-              boxShadow: const [
-                BoxShadow(
-                  color: _kShadowSoft,
-                  blurRadius: 15,
-                  offset: Offset(0, 5),
-                ),
-              ],
-              border: Border.all(
-                color: Colors.white,
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.spa_rounded,
-                    color: Color(0xFF2E7D32), size: 22),
-                const SizedBox(width: 12),
-                Text(
-                  'Plantation Map',
-                  style: TeaTypography.headlineSmall.copyWith(
-                    color: _kPrimaryDeep,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 20,
-                    letterSpacing: -0.5,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Back button — fixed width so pill never overlaps it
+              GestureDetector(
+                onTap: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: _kShadowSoft,
+                        blurRadius: 15,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.only(right: 2),
+                    child: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: _kPrimaryDeep,
+                      size: 20,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 1,
-                  height: 20,
-                  color: Colors.black.withOpacity(0.1),
-                ),
-                const SizedBox(width: 12),
-                _isRefreshing
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Color(0xFF43A047),
+              ),
+              // Title pill — centered in the remaining space
+              Expanded(
+                child: Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(50),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: _kShadowSoft,
+                          blurRadius: 15,
+                          offset: Offset(0, 5),
                         ),
-                      )
-                    : GestureDetector(
-                        onTap: _triggerRefresh,
-                        child: Icon(
-                          Icons.refresh_rounded,
-                          color: _kPrimaryDeep.withOpacity(0.8),
-                          size: 22,
-                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 1.5,
                       ),
-              ],
-            ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.spa_rounded,
+                            color: Color(0xFF2E7D32), size: 22),
+                        const SizedBox(width: 12),
+                        Flexible(
+                          child: Text(
+                            AppLocalizations.of(context)!.map_title,
+                            style: TeaTypography.headlineSmall.copyWith(
+                              color: _kPrimaryDeep,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 20,
+                              letterSpacing: -0.5,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: Colors.black.withOpacity(0.1),
+                        ),
+                        const SizedBox(width: 12),
+                        _isRefreshing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFF43A047),
+                                ),
+                              )
+                            : GestureDetector(
+                                onTap: _triggerRefresh,
+                                child: Icon(
+                                  Icons.refresh_rounded,
+                                  color: _kPrimaryDeep.withOpacity(0.8),
+                                  size: 22,
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Balance spacer = back-button width (46 px) so pill stays centred
+              const SizedBox(width: 46),
+            ],
           ),
         ),
         const SizedBox(height: 16),
@@ -424,21 +450,21 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             children: [
               _buildCreativeStatBubble(
                 icon: Icons.eco_rounded,
-                label: 'Healthy',
+                label: AppLocalizations.of(context)!.map_stat_healthy,
                 count: stats['healthy'],
                 color: const Color(0xFF43A047),
               ),
               const SizedBox(width: 12),
               _buildCreativeStatBubble(
                 icon: Icons.sensors_rounded,
-                label: 'Active',
+                label: AppLocalizations.of(context)!.map_stat_active,
                 count: stats['active'],
                 color: const Color(0xFF1976D2),
               ),
               const SizedBox(width: 12),
               _buildCreativeStatBubble(
                 icon: Icons.crisis_alert_rounded,
-                label: 'Critical',
+                label: AppLocalizations.of(context)!.map_stat_critical,
                 count: stats['alerts'],
                 color: const Color(0xFFE53935),
               ),
@@ -548,31 +574,35 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             ),
             const SizedBox(width: 14),
             // Zone Title & Info
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _selectedHectareId != null
-                      ? '${zone.name} > Block ${_getDisplayBlockNumber(_selectedHectareId!)}'
-                      : zone.name,
-                  style: TeaTypography.headlineSmall.copyWith(
-                    color: _kPrimaryDeep,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _selectedHectareId != null
+                        ? '${_getLocalizedZoneName(zone.id, AppLocalizations.of(context)!)} > ${AppLocalizations.of(context)!.map_block} ${_getDisplayBlockNumber(_selectedHectareId!)}'
+                        : _getLocalizedZoneName(zone.id, AppLocalizations.of(context)!),
+                    style: TeaTypography.headlineSmall.copyWith(
+                      color: _kPrimaryDeep,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
-                ),
-                Text(
-                  _selectedHectareId != null
-                      ? 'Sub-division mapping • 25 sectors'
-                      : '25 divisions • live monitoring',
-                  style: TextStyle(
-                    color: Colors.black.withOpacity(0.4),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                  Text(
+                    _selectedHectareId != null
+                        ? AppLocalizations.of(context)!.map_sectors_subtitle
+                        : AppLocalizations.of(context)!.map_divisions_subtitle,
+                    style: TextStyle(
+                      color: Colors.black.withOpacity(0.4),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(width: 20),
             // Refresh Icon
@@ -629,8 +659,8 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Legend',
-            style: TextStyle(
+            AppLocalizations.of(context)!.map_legend,
+            style: const TextStyle(
               fontWeight: FontWeight.w900,
               fontSize: 15,
               color: _kPrimaryDeep,
@@ -638,14 +668,14 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             ),
           ),
           const SizedBox(height: 14),
-          _buildLegendRow(TeaColors.healthyGreen, 'Good — Healthy Soil'),
+          _buildLegendRow(TeaColors.healthyGreen, AppLocalizations.of(context)!.map_legend_good),
           const SizedBox(height: 10),
-          _buildLegendRow(TeaColors.warningAmber, 'Fair — Needs Attention'),
+          _buildLegendRow(TeaColors.warningAmber, AppLocalizations.of(context)!.map_legend_fair),
           const SizedBox(height: 10),
-          _buildLegendRow(const Color(0xFFE53935), 'Poor — Critical Status'),
+          _buildLegendRow(const Color(0xFFE53935), AppLocalizations.of(context)!.map_legend_poor),
           const SizedBox(height: 10),
           _buildLegendRow(
-              TeaColors.mediumGray.withOpacity(0.5), 'No Data / Offline'),
+              TeaColors.mediumGray.withOpacity(0.5), AppLocalizations.of(context)!.map_legend_no_data),
         ],
       ),
     );
@@ -726,6 +756,13 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             painter: RadialZonePainter(
               zones: _zones,
               selectedZoneId: _selectedZoneId,
+              zoneLabels: {
+                1: AppLocalizations.of(context)!.map_zone_north,
+                2: AppLocalizations.of(context)!.map_zone_east,
+                3: AppLocalizations.of(context)!.map_zone_south,
+                4: AppLocalizations.of(context)!.map_zone_west,
+                5: AppLocalizations.of(context)!.map_zone_central,
+              },
             ),
           ),
         ),
@@ -769,9 +806,8 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? healthColor
-                      : healthColor.withOpacity( 0.85),
+                  color:
+                      isSelected ? healthColor : healthColor.withOpacity(0.85),
                   border: Border.all(
                     color: Colors.white,
                     width: isSelected ? 2.5 : 1.5,
@@ -779,8 +815,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black
-                          .withOpacity( isSelected ? 0.3 : 0.15),
+                      color: Colors.black.withOpacity(isSelected ? 0.3 : 0.15),
                       blurRadius: isSelected ? 8 : 3,
                       offset: Offset(0, isSelected ? 4 : 2),
                     ),
@@ -796,7 +831,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                           isSelected ? FontWeight.bold : FontWeight.w600,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withOpacity( 0.6),
+                          color: Colors.black.withOpacity(0.6),
                           blurRadius: 3,
                           offset: const Offset(0, 1),
                         ),
@@ -834,21 +869,21 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
           itemCount: 25,
           itemBuilder: (context, index) {
             final sectorNum = index + 1; // S1-S25
-            final sectorHectareId = blockBase + index; // direct h_id for this sector
+            final sectorHectareId =
+                blockBase + index; // direct h_id for this sector
             // Most-recent record stored at this exact hectare_id
             final sectorData = _allSoilData
                 .where((d) => d.hectareId == sectorHectareId)
                 .fold<SoilData?>(
                     null,
-                    (best, d) => best == null ||
-                            d.timestamp.isAfter(best.timestamp)
-                        ? d
-                        : best);
-            final isSelected =
-                _selectedHectare?.hectareId == sectorHectareId;
+                    (best, d) =>
+                        best == null || d.timestamp.isAfter(best.timestamp)
+                            ? d
+                            : best);
+            final isSelected = _selectedHectare?.hectareId == sectorHectareId;
             final healthColor = sectorData != null
                 ? _soilHealthToColor(sectorData.soilHealth)
-                : TeaColors.mediumGray.withOpacity( 0.3);
+                : TeaColors.mediumGray.withOpacity(0.3);
 
             return GestureDetector(
               onTap: () {
@@ -859,9 +894,8 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? healthColor
-                      : healthColor.withOpacity( 0.8),
+                  color:
+                      isSelected ? healthColor : healthColor.withOpacity(0.8),
                   border: Border.all(
                     color: Colors.white,
                     width: isSelected ? 2.0 : 1.0,
@@ -933,9 +967,8 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
         .where((d) => d.hectareId == sectorHectareId)
         .fold<SoilData?>(
             null,
-            (best, d) => best == null || d.timestamp.isAfter(best.timestamp)
-                ? d
-                : best);
+            (best, d) =>
+                best == null || d.timestamp.isAfter(best.timestamp) ? d : best);
   }
 
   Widget _buildDetailsSheet(SoilData data) {
@@ -980,8 +1013,8 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                                     d.hectareId >= blockBase &&
                                     d.hectareId <= blockBase + 24)
                                 .toList()
-                              ..sort((a, b) =>
-                                  a.hectareId.compareTo(b.hectareId));
+                              ..sort(
+                                  (a, b) => a.hectareId.compareTo(b.hectareId));
                             if (sectorsWithData.isEmpty) return;
                             final curIdx = sectorsWithData.indexWhere(
                                 (d) => d.hectareId == data.hectareId);
@@ -1001,7 +1034,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                         child: Text(
                           _selectedHectareId != null
                               ? 'B${_getDisplayBlockNumber(_selectedHectareId!)} · S${_getSectorDisplayNumber(data)}'
-                              : 'Division ${data.hectareId}',
+                              : '${AppLocalizations.of(context)!.map_division} ${data.hectareId}',
                           style: TeaTypography.titleMedium
                               .copyWith(fontWeight: FontWeight.bold),
                           overflow: TextOverflow.ellipsis,
@@ -1021,15 +1054,14 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                                     d.hectareId >= blockBase &&
                                     d.hectareId <= blockBase + 24)
                                 .toList()
-                              ..sort((a, b) =>
-                                  a.hectareId.compareTo(b.hectareId));
+                              ..sort(
+                                  (a, b) => a.hectareId.compareTo(b.hectareId));
                             if (sectorsWithData.isEmpty) return;
                             final curIdx = sectorsWithData.indexWhere(
                                 (d) => d.hectareId == data.hectareId);
-                            final nextIdx =
-                                curIdx >= sectorsWithData.length - 1
-                                    ? 0
-                                    : curIdx + 1;
+                            final nextIdx = curIdx >= sectorsWithData.length - 1
+                                ? 0
+                                : curIdx + 1;
                             _selectedHectare = sectorsWithData[nextIdx];
                           });
                         },
@@ -1083,7 +1115,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        data.soilHealth.toUpperCase(),
+                        _localizeSoilHealth(data.soilHealth, AppLocalizations.of(context)!).toUpperCase(),
                         style: TextStyle(
                           color: _getHealthColor(data.soilHealth),
                           fontSize: 24,
@@ -1104,7 +1136,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildVerificationBadge('ML ENGINE', Icons.auto_graph),
+                        _buildVerificationBadge(AppLocalizations.of(context)!.map_ml_engine, Icons.auto_graph),
                         Container(
                           margin: const EdgeInsets.symmetric(horizontal: 12),
                           width: 1,
@@ -1112,7 +1144,7 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
                           color: Colors.black12,
                         ),
                         _buildVerificationBadge(
-                            'TRI STANDARDS', Icons.verified_user),
+                            AppLocalizations.of(context)!.map_tri_standards, Icons.verified_user),
                       ],
                     ),
                   ),
@@ -1120,9 +1152,9 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Soil Data Details',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.map_soil_details_title,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
                 color: Color(0xFF1A3A2A),
@@ -1131,49 +1163,53 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
             const SizedBox(height: 8),
             _buildDetailItem(
               Icons.water_drop,
-              'Soil Moisture: ${data.humidity.toStringAsFixed(1)}%',
+              '${AppLocalizations.of(context)!.sensor_soil_moisture}: ${data.humidity.toStringAsFixed(1)}%',
             ),
             _buildDetailItem(
               Icons.science,
-              'pH Level: ${data.pH.toStringAsFixed(2)} (Optimal: 4.5-5.5)',
+              '${AppLocalizations.of(context)!.sensor_ph_level}: ${data.pH.toStringAsFixed(2)} (Optimal: 4.5-5.5)',
             ),
             _buildDetailItem(
               Icons.grass,
-              _getNPKDescription('Nitrogen (N)', data.nitrogen,
-                  _getNitrogenStatus(data.nitrogen)),
+              '${AppLocalizations.of(context)!.sensor_nitrogen}: ${data.nitrogen.toStringAsFixed(0)} mg/kg — ${_localizeNPKStatus(_getNitrogenStatus(data.nitrogen), AppLocalizations.of(context)!)}',
+              _getNitrogenStatus(data.nitrogen),
             ),
             _buildDetailItem(
               Icons.energy_savings_leaf,
-              _getNPKDescription('Phosphorus (P)', data.phosphorus,
-                  _getPhosphorusStatus(data.phosphorus)),
+              '${AppLocalizations.of(context)!.sensor_phosphorus}: ${data.phosphorus.toStringAsFixed(0)} mg/kg — ${_localizeNPKStatus(_getPhosphorusStatus(data.phosphorus), AppLocalizations.of(context)!)}',
+              _getPhosphorusStatus(data.phosphorus),
             ),
             _buildDetailItem(
               Icons.nature,
-              _getNPKDescription('Potassium (K)', data.potassium,
-                  _getPotassiumStatus(data.potassium)),
+              '${AppLocalizations.of(context)!.sensor_potassium}: ${data.potassium.toStringAsFixed(0)} mg/kg — ${_localizeNPKStatus(_getPotassiumStatus(data.potassium), AppLocalizations.of(context)!)}',
+              _getPotassiumStatus(data.potassium),
             ),
             _buildDetailItem(
               Icons.flash_on,
-              'Electrical Conductivity: ${(data.ec * 1000).toStringAsFixed(0)} μS/cm ${_getECStatus(data.ec * 1000)}',
+              '${AppLocalizations.of(context)!.map_ec_label}: ${(data.ec * 1000).toStringAsFixed(0)} μS/cm ${_localizedECStatus(data.ec * 1000, AppLocalizations.of(context)!)}',
+              _getECStatus(data.ec * 1000),
             ),
-            _buildDetailItem(Icons.thermostat,
-                'Temperature: ${data.temperature.toStringAsFixed(1)}°C ${_getTempStatus(data.temperature)}'),
+            _buildDetailItem(
+              Icons.thermostat,
+              '${AppLocalizations.of(context)!.sensor_temperature}: ${data.temperature.toStringAsFixed(1)}°C ${_localizedTempStatus(data.temperature, AppLocalizations.of(context)!)}',
+              _getTempStatus(data.temperature),
+            ),
             const SizedBox(height: 16),
-            const Text(
-              'Recommendations',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            Text(
+              AppLocalizations.of(context)!.map_recommendations,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(height: 4),
             if (data.fertilizer.isEmpty)
-              const Text(
-                '• No recommendations available.',
-                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              Text(
+                '• ${AppLocalizations.of(context)!.map_no_recommendations}',
+                style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
               )
             else
-              ...data.fertilizer.map((rec) => _buildRecommendationItem(rec)),
+              ...data.fertilizer.map((rec) => _buildRecommendationItem(_localizeFertilizerRecommendation(rec, AppLocalizations.of(context)!))),
             const SizedBox(height: 16),
             Text(
-              'Last Updated: ${intl.DateFormat('yyyy-MM-dd HH:mm:ss').format(data.timestamp.toLocal())}',
+              '${AppLocalizations.of(context)!.sensor_last_updated}: ${intl.DateFormat('yyyy-MM-dd HH:mm:ss').format(data.timestamp.toLocal())}',
               style: TextStyle(
                 color: Colors.grey.shade600,
                 fontSize: 12,
@@ -1205,25 +1241,26 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     );
   }
 
-  Widget _buildDetailItem(IconData icon, String text) {
-    // Determine color based on status keywords
+  Widget _buildDetailItem(IconData icon, String text, [String? colorHint]) {
+    // Determine color based on status keywords (use English colorHint for detection)
+    final colorText = colorHint ?? text;
     Color backgroundColor = const Color(0xFFF5F9F6);
     Color borderColor = const Color(0xFFDDEEE4);
     Color iconColor = Colors.green.shade700;
 
-    if (text.contains('Excessive') ||
-        text.contains('Too High') ||
-        text.contains('Too Hot')) {
+    if (colorText.contains('Excessive') ||
+        colorText.contains('Too High') ||
+        colorText.contains('Too Hot')) {
       backgroundColor = const Color(0xFFFFF3E0);
       borderColor = const Color(0xFFFFB74D);
       iconColor = const Color(0xFFF57C00);
-    } else if (text.contains('Slightly High') ||
-        text.contains('High') ||
-        text.contains('Warm')) {
+    } else if (colorText.contains('Slightly High') ||
+        colorText.contains('High') ||
+        colorText.contains('Warm')) {
       backgroundColor = const Color(0xFFFFF9E6);
       borderColor = const Color(0xFFFFE082);
       iconColor = const Color(0xFFFFA726);
-    } else if (text.contains('Low') || text.contains('Cool')) {
+    } else if (colorText.contains('Low') || colorText.contains('Cool')) {
       backgroundColor = const Color(0xFFE3F2FD);
       borderColor = const Color(0xFF90CAF9);
       iconColor = const Color(0xFF1976D2);
@@ -1376,6 +1413,94 @@ class _PremiumMapScreenState extends ConsumerState<PremiumMapScreen>
     return '(Too Hot)';
   }
 
+  // Localize NPK status string (English → user's language)
+  String _localizeNPKStatus(String english, AppLocalizations l10n) {
+    switch (english) {
+      case 'Low':
+        return l10n.map_soil_status_low;
+      case 'Optimal':
+        return l10n.sensor_status_optimal;
+      case 'Slightly High':
+        return l10n.map_soil_status_slightly_high;
+      case 'Excessive':
+        return l10n.map_soil_status_excessive;
+      default:
+        return english;
+    }
+  }
+
+  // Localize EC status
+  String _localizedECStatus(double ec, AppLocalizations l10n) {
+    if (ec < 100) return '(${l10n.map_ec_very_low})';
+    if (ec <= 500) return '(${l10n.sensor_status_optimal})';
+    if (ec <= 800) return '(${l10n.map_ec_high})';
+    return '(${l10n.map_ec_too_high})';
+  }
+
+  // Localize soil health string returned from ML backend ("Good"/"Fair"/"Poor")
+  String _localizeSoilHealth(String health, AppLocalizations l10n) {
+    switch (health) {
+      case 'Good':
+        return l10n.soil_health_good;
+      case 'Fair':
+        return l10n.soil_health_fair;
+      case 'Poor':
+        return l10n.soil_health_poor;
+      default:
+        return health;
+    }
+  }
+
+  // Localize fertilizer recommendation string returned from backend
+  String _localizeFertilizerRecommendation(String rec, AppLocalizations l10n) {
+    final c = rec.replaceAll(RegExp(r'[^\x20-\x7E\u00A0-\u00FF]'), '').trim();
+    if (c.contains('nitrogen fertilizer')) return l10n.soil_rec_n_low;
+    if (c.contains('phosphorus fertilizer')) return l10n.soil_rec_p_low;
+    if (c.contains('potassium fertilizer')) return l10n.soil_rec_k_low;
+    if (c.contains('lime to increase pH')) return l10n.soil_rec_ph_low;
+    if (c.contains('organic matter addition') && !c.contains('amendment')) return l10n.soil_rec_ec_low;
+    if (c.contains('Soil temperature low') || c.contains('soil temperature low')) return l10n.soil_rec_temp_low;
+    if (c.contains('Irrigation needed')) return l10n.soil_rec_humidity_low;
+    if (c.toUpperCase().contains('REDUCE nitrogen') || (c.toUpperCase().contains('REDUCE') && c.toLowerCase().contains('nitrogen'))) return l10n.soil_rec_n_high;
+    if (c.toUpperCase().contains('REDUCE') && c.toLowerCase().contains('phosphorus')) return l10n.soil_rec_p_high;
+    if (c.toUpperCase().contains('REDUCE') && c.toLowerCase().contains('potassium')) return l10n.soil_rec_k_high;
+    if (c.contains('sulfur to lower pH')) return l10n.soil_rec_ph_high;
+    if (c.contains('salinity')) return l10n.soil_rec_ec_high;
+    if (c.contains('Temperature too high') || c.contains('temperature too high')) return l10n.soil_rec_temp_high;
+    if (c.contains('Humidity too high') || c.contains('humidity too high')) return l10n.soil_rec_humidity_high;
+    if (c.contains('Maintain current') || c.contains('maintain current')) return l10n.soil_rec_maintain;
+    if (c.contains('health is optimal')) return l10n.soil_rec_soil_good;
+    if (c.contains('health is poor') || c.contains('detailed soil analysis')) return l10n.soil_rec_poor_general;
+    if (c.contains('soil amendment')) return l10n.soil_rec_amendment;
+    return c;
+  }
+
+  // Localize temperature status
+  String _localizedTempStatus(double temp, AppLocalizations l10n) {
+    if (temp < 18) return '(${l10n.map_temp_cool})';
+    if (temp <= 25) return '(${l10n.sensor_status_optimal})';
+    if (temp <= 28) return '(${l10n.map_temp_warm})';
+    return '(${l10n.map_temp_too_hot})';
+  }
+
+  // Return the localized zone name for a given zone id
+  String _getLocalizedZoneName(int zoneId, AppLocalizations l10n) {
+    switch (zoneId) {
+      case 1:
+        return l10n.map_zone_north_full;
+      case 2:
+        return l10n.map_zone_east_full;
+      case 3:
+        return l10n.map_zone_south_full;
+      case 4:
+        return l10n.map_zone_west_full;
+      case 5:
+        return l10n.map_zone_central_full;
+      default:
+        return '';
+    }
+  }
+
   Map<String, dynamic> _calculateStatistics(List<SoilData> soilDataList) {
     int healthy = 0;
     int alerts = 0;
@@ -1412,14 +1537,25 @@ Widget _buildLoadingView() {
 }
 
 Widget _buildErrorView(String err) {
-  return Center(child: Text('Error: $err'));
+  return Center(child: Text(err));
 }
 
 class RadialZonePainter extends CustomPainter {
   final List<PlantationZone> zones;
   final int? selectedZoneId;
+  final Map<int, String> zoneLabels;
 
-  RadialZonePainter({required this.zones, this.selectedZoneId});
+  RadialZonePainter({
+    required this.zones,
+    this.selectedZoneId,
+    this.zoneLabels = const {
+      1: 'North',
+      2: 'East',
+      3: 'South',
+      4: 'West',
+      5: 'Central',
+    },
+  });
 
   // Each outer segment: [startAngle, sweepAngle] in radians
   // (0 = right/3-o'clock, clockwise)
@@ -1525,31 +1661,31 @@ class RadialZonePainter extends CustomPainter {
     final midRadius = (innerRadius + outerRadius) / 2;
     _drawLabel(
       canvas,
-      'North',
+      zoneLabels[1] ?? 'North',
       center + Offset(0, -midRadius),
       isSelected: selectedZoneId == 1,
     );
     _drawLabel(
       canvas,
-      'East',
+      zoneLabels[2] ?? 'East',
       center + Offset(midRadius, 0),
       isSelected: selectedZoneId == 2,
     );
     _drawLabel(
       canvas,
-      'South',
+      zoneLabels[3] ?? 'South',
       center + Offset(0, midRadius),
       isSelected: selectedZoneId == 3,
     );
     _drawLabel(
       canvas,
-      'West',
+      zoneLabels[4] ?? 'West',
       center + Offset(-midRadius, 0),
       isSelected: selectedZoneId == 4,
     );
     _drawLabel(
       canvas,
-      'Central',
+      zoneLabels[5] ?? 'Central',
       center,
       isSelected: selectedZoneId == 5,
       fontSize: 13,
@@ -1619,5 +1755,42 @@ class RadialZonePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant RadialZonePainter oldDelegate) =>
       oldDelegate.selectedZoneId != selectedZoneId ||
-      oldDelegate.zones != zones;
+      oldDelegate.zones != zones ||
+      oldDelegate.zoneLabels != zoneLabels;
+}
+
+// ── Background Animation ────────────────────────────────────────────────
+class _AnimatedGridPainter extends CustomPainter {
+  final double animationValue;
+  final Color color;
+
+  _AnimatedGridPainter({
+    required this.animationValue,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    final double step = 40.0;
+    final double maxOffset = step;
+    // Animation value goes 0.0 -> 1.0 -> 0.0 (because reverse: true)
+    final double offset = (animationValue * maxOffset) - (maxOffset / 2);
+
+    for (double i = offset; i < size.width + maxOffset; i += step) {
+      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
+    }
+    for (double i = offset; i < size.height + maxOffset; i += step) {
+      canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _AnimatedGridPainter oldDelegate) =>
+      oldDelegate.animationValue != animationValue ||
+      oldDelegate.color != color;
 }

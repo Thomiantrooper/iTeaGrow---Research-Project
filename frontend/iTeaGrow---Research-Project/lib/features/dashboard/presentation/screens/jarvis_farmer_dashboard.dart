@@ -205,29 +205,6 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
         ),
       ),
       actions: [
-        IconButton(
-          icon: Stack(
-            children: [
-              const Icon(Icons.notifications_outlined, color: Colors.white),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: JarvisTheme.warning,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          onPressed: () {
-            // Show notifications
-          },
-        ),
         const SizedBox(width: 8),
       ],
     );
@@ -850,7 +827,7 @@ class _JarvisFarmerDashboardState extends ConsumerState<JarvisFarmerDashboard>
             ListTile(
               leading: const Icon(Icons.history_outlined,
                   color: JarvisTheme.teaGreen),
-              title: const Text('Scan History'),
+              title: const Text('IoT Dashboards'),
               onTap: () {},
             ),
             ListTile(

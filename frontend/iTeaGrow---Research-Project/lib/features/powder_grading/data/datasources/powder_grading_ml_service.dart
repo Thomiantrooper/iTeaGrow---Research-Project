@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart' show debugPrint;
 import '../../domain/entities/powder_grading_result.dart';
 
 class PowderGradingMLService {
@@ -13,7 +14,7 @@ class PowderGradingMLService {
     if (_isInitialized) return;
 
     // 🔴 REPLACE: Load TFLite Model
-    print('✅ Powder Grading Model initialized (DUMMY)');
+    debugPrint('PowderGradingML: initialized (DUMMY)');
     _isInitialized = true;
   }
 

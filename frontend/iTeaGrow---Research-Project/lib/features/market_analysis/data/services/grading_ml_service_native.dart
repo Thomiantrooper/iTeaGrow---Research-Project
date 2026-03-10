@@ -1,22 +1,35 @@
 import 'dart:io';
-import 'dart:convert';
-import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import '../models/market_models.dart';
 
 class GradingMlService {
   Interpreter? _interpreter;
-  Map<String, dynamic>? _weightsData;
   final List<String> _labels = [
-    "BOP",
-    "BOPF",
-    "Dust",
-    "Dust1",
-    "Fanning1",
-    "Pekoe"
+    'BOP',
+    'BOPF',
+    'Dust',
+    'Dust1',
+    'Fanning1',
+    'Pekoe',
   ];
+
+  // ── Validation constants ────────────────────────────────────────────────
+  static const int _maxImageSizeBytes = 20 * 1024 * 1024; // 20 MB
+  static const int _minImageSizeBytes = 5 * 1024; // 5 KB
+  static const Set<String> _allowedExtensions = {
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
+    '.bmp',
+    '.tiff',
+  };
+
+  /// Ambiguity threshold: if top-1 − top-2 probability gap is less than
+  /// this, flag the result as ambiguous (6-class problem — use tighter gap).
+  static const double _ambiguityThreshold = 0.12;
 
   Future<void> initModel() async {
     try {
@@ -24,19 +37,43 @@ class GradingMlService {
       _interpreter = await Interpreter.fromAsset(
           'assets/models/grading_model_explain.tflite');
       _interpreter!.allocateTensors();
-
-      // Load weights for CAM
-      final weightsString =
-          await rootBundle.loadString('assets/models/powder_weights.json');
-      _weightsData = json.decode(weightsString);
     } catch (e) {
-      print('Failed to load tflite model or weights: $e');
+      debugPrint('GradingML: failed to load model/weights: $e');
       throw Exception('Model initialization failed');
     }
   }
 
+  /// Returns a validation-failure result (non-null so the screen shows an
+  /// error card rather than falling through to the online API).
+  ClassificationResult _validationError(String message) => ClassificationResult(
+        grade: 'Unknown',
+        confidence: 0,
+        source: 'offline',
+        isValidationFailure: true,
+        validationMessage: message,
+        confidenceLabel: 'Uncertain',
+      );
+
   Future<ClassificationResult?> classifyImage(File imageFile,
       {bool generateHeatmap = true}) async {
+    // ── Layer 1: file extension ──────────────────────────────────────────
+    final ext = '.${imageFile.path.split('.').last.toLowerCase()}';
+    if (!_allowedExtensions.contains(ext)) {
+      return _validationError(
+          'Unsupported file format. Please use JPG, PNG, or WebP.');
+    }
+
+    // ── Layer 2: file size ───────────────────────────────────────────────
+    final fileSize = await imageFile.length();
+    if (fileSize < _minImageSizeBytes) {
+      return _validationError(
+          'Image file is too small. Please capture a clear powder photo.');
+    }
+    if (fileSize > _maxImageSizeBytes) {
+      return _validationError(
+          'Image file is too large (max 20 MB). Please use a compressed photo.');
+    }
+
     if (_interpreter == null) {
       await initModel();
     }
@@ -63,111 +100,58 @@ class GradingMlService {
 
     _interpreter!.runForMultipleInputs([inputBuffer], outputs);
 
-    List<double> probabilities = (outputs[1] as List)[0];
+    // ── Layer 3: NaN / Inf guard ─────────────────────────────────────────
+    final List<double> probabilities =
+        List<double>.from((outputs[1] as List)[0]);
+    if (probabilities.any((p) => p.isNaN || p.isInfinite)) {
+      debugPrint('GradingML: NaN/Inf in probabilities — skipping result');
+      return null;
+    }
+
+    // ── Layer 4: find top-1 and top-2 ────────────────────────────────────
     int maxIndex = -1;
+    int secondIndex = -1;
     double maxConfidence = 0.0;
+    double secondConfidence = 0.0;
 
     for (int i = 0; i < probabilities.length; i++) {
       if (probabilities[i] > maxConfidence) {
+        secondIndex = maxIndex;
+        secondConfidence = maxConfidence;
         maxConfidence = probabilities[i];
         maxIndex = i;
+      } else if (probabilities[i] > secondConfidence) {
+        secondIndex = i;
+        secondConfidence = probabilities[i];
       }
     }
 
-    if (maxIndex != -1) {
-      String? heatmapPath;
-      if (generateHeatmap && _weightsData != null) {
-        final featureMap = (outputs[0] as List)[0];
-        heatmapPath =
-            await _generateCamHeatmap(originalImage, maxIndex, featureMap);
-      }
+    if (maxIndex == -1) return null;
 
-      return ClassificationResult(
-        grade: _labels[maxIndex],
-        confidence: maxConfidence * 100,
-        source: 'offline',
-        imageFile: imageFile,
-        heatmapPath: heatmapPath,
-      );
+    // ── Layer 5: ambiguity detection ─────────────────────────────────────
+    final isAmbiguous = secondIndex != -1 &&
+        (maxConfidence - secondConfidence) < _ambiguityThreshold;
+
+    // ── Layer 6: confidence banding ──────────────────────────────────────
+    final String confidenceLabel;
+    if (maxConfidence >= 0.85) {
+      confidenceLabel = 'High';
+    } else if (maxConfidence >= 0.70) {
+      confidenceLabel = 'Moderate';
+    } else if (maxConfidence >= 0.55) {
+      confidenceLabel = 'Low';
+    } else {
+      confidenceLabel = 'Uncertain';
     }
-    return null;
-  }
 
-  Future<String?> _generateCamHeatmap(img.Image baseImage, int targetClassIndex,
-      List<dynamic> featureMap) async {
-    try {
-      final List<dynamic> allWeights = _weightsData!['weights'];
-      final List<double> classWeights =
-          List<double>.from(allWeights[targetClassIndex]);
-
-      // 1. Compute Weighted Sum [7x7]
-      final cam = List.filled(49, 0.0);
-      for (int y = 0; y < 7; y++) {
-        for (int x = 0; x < 7; x++) {
-          double sum = 0.0;
-          final List<dynamic> channels = featureMap[y][x];
-          for (int c = 0; c < 1280; c++) {
-            sum += (channels[c] as double) * classWeights[c];
-          }
-          cam[y * 7 + x] = sum;
-        }
-      }
-
-      // 2. ReLU and Normalization
-      double maxVal = -double.infinity;
-      double minVal = double.infinity;
-      for (int i = 0; i < 49; i++) {
-        if (cam[i] < 0) cam[i] = 0;
-        if (cam[i] > maxVal) maxVal = cam[i];
-        if (cam[i] < minVal) minVal = cam[i];
-      }
-
-      if (maxVal > minVal) {
-        for (int i = 0; i < 49; i++) {
-          cam[i] = (cam[i] - minVal) / (maxVal - minVal);
-        }
-      }
-
-      // 3. Create Heatmap Image
-      img.Image heatmap = img.Image(width: 7, height: 7);
-      for (int i = 0; i < 49; i++) {
-        final val = (cam[i] * 255).toInt();
-        // Heatmap colors (Blue -> Red)
-        int r = val;
-        int g = (val > 128) ? 255 - val : val;
-        int b = 255 - val;
-        heatmap.setPixelRgb(i % 7, i ~/ 7, r, g, b);
-      }
-
-      img.Image resizedHeatmap = img.copyResize(heatmap,
-          width: baseImage.width,
-          height: baseImage.height,
-          interpolation: img.Interpolation.linear);
-
-      // 4. Blend
-      final outImage = baseImage.clone();
-      for (int y = 0; y < outImage.height; y++) {
-        for (int x = 0; x < outImage.width; x++) {
-          final pBase = outImage.getPixel(x, y);
-          final pHeat = resizedHeatmap.getPixel(x, y);
-
-          final r = (pBase.r * 0.7 + pHeat.r * 0.3).toInt();
-          final g = (pBase.g * 0.7 + pHeat.g * 0.3).toInt();
-          final b = (pBase.b * 0.7 + pHeat.b * 0.3).toInt();
-
-          outImage.setPixelRgb(x, y, r, g, b);
-        }
-      }
-
-      final tempDir = await getTemporaryDirectory();
-      final String fullPath =
-          '${tempDir.path}/cam_powder_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      await File(fullPath).writeAsBytes(img.encodeJpg(outImage));
-      return fullPath;
-    } catch (e) {
-      print('Error generating Grad-CAM: $e');
-      return null;
-    }
+    return ClassificationResult(
+      grade: _labels[maxIndex],
+      confidence: maxConfidence * 100,
+      source: 'offline',
+      imageFile: imageFile,
+      confidenceLabel: confidenceLabel,
+      isAmbiguous: isAmbiguous,
+    );
   }
 
   List<List<List<List<double>>>> _imageToFloat32Buffer(img.Image image) {

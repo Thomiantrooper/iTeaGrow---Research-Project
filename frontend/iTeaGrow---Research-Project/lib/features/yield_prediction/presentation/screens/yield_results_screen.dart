@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -19,12 +20,13 @@ class YieldResultsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Get colors from theme
+    final l10n = AppLocalizations.of(context)!;
     final primaryColor = Theme.of(context).primaryColor;
     final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Prediction Results'),
+        title: Text(AppLocalizations.of(context)!.yield_results_title),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
@@ -39,13 +41,42 @@ class YieldResultsScreen extends StatelessWidget {
           children: [
             // Summary Card
             _buildSummaryCard(context),
+            // ── Outlier advisory ────────────────────────────────────────────
+            if (_getOutlierMessage(l10n) != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 4),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: Colors.orange.withOpacity(0.35)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded,
+                          color: Colors.orange, size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _getOutlierMessage(l10n)!,
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.orange),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             const SizedBox(height: 24),
 
             // Yield Chart
             if (result.dailyPredictions.isNotEmpty) ...[
-              const Text(
-                'Yield Forecast',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                AppLocalizations.of(context)!.yield_results_section_forecast,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               SizedBox(
@@ -56,9 +87,9 @@ class YieldResultsScreen extends StatelessWidget {
             ],
 
             // Daily Breakdown
-            const Text(
-              'Daily Breakdown',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              AppLocalizations.of(context)!.yield_results_daily_breakdown,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             ListView.builder(
@@ -90,16 +121,16 @@ class YieldResultsScreen extends StatelessWidget {
 
             // Advanced Analytics Section
             ExpansionTile(
-              title: const Text(
-                'Advanced Analysis',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              title: Text(
+                AppLocalizations.of(context)!.yield_results_advanced_analysis,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: const Text('Tap to show detailed charts'),
+              subtitle: Text(AppLocalizations.of(context)!.yield_results_charts_hint),
               children: [
                 const SizedBox(height: 16),
 
                 // Chart 1: Yield Forecast (Bar + Temp Line)
-                _buildSectionTitle('Yield Forecast vs Temperature'),
+                _buildSectionTitle(AppLocalizations.of(context)!.yield_results_section_temp),
                 SizedBox(
                   height: 300,
                   child: _buildYieldTempChart(primaryColor),
@@ -107,7 +138,7 @@ class YieldResultsScreen extends StatelessWidget {
                 const SizedBox(height: 32),
 
                 // Chart 2: Weather (Yield Line + Rain Bar)
-                _buildSectionTitle('Rainfall Impact on Yield'),
+                _buildSectionTitle(AppLocalizations.of(context)!.yield_results_section_rain),
                 SizedBox(
                   height: 300,
                   child: _buildYieldRainChart(primaryColor),
@@ -115,7 +146,7 @@ class YieldResultsScreen extends StatelessWidget {
                 const SizedBox(height: 32),
 
                 // Chart 3: Efficiency
-                _buildSectionTitle('Efficiency Analysis'),
+                _buildSectionTitle(AppLocalizations.of(context)!.yield_results_section_efficiency),
                 SizedBox(
                   height: 250,
                   child: _buildEfficiencyChart(primaryColor),
@@ -137,6 +168,27 @@ class YieldResultsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Returns an advisory message when a predicted value looks implausible.
+  String? _getOutlierMessage(AppLocalizations l10n) {
+    final avg = result.summary.averageDailyYield;
+    if (avg < 10 && avg > 0) {
+      return l10n.yield_results_outlier_low(avg.toStringAsFixed(1));
+    }
+    if (avg > 5000) {
+      return l10n.yield_results_outlier_high(avg.toStringAsFixed(1));
+    }
+    if (predictionRequest != null) {
+      final fieldSize = predictionRequest!.fieldSizeHa;
+      if (fieldSize > 0) {
+        final yieldPerHa = avg / fieldSize;
+        if (yieldPerHa > 3000) {
+          return l10n.yield_results_outlier_ha(yieldPerHa.toStringAsFixed(0));
+        }
+      }
+    }
+    return null;
   }
 
   Widget _buildSectionTitle(String title) {
@@ -586,7 +638,7 @@ class YieldResultsScreen extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Total Predicted Yield'),
+                    Text(AppLocalizations.of(context)!.yield_total_predicted),
                     const SizedBox(height: 8),
                     Text(
                       '${result.summary.totalPredictedYield.toStringAsFixed(2)} kg',
@@ -618,16 +670,16 @@ class YieldResultsScreen extends StatelessWidget {
               children: [
                 _buildSummaryItem(
                   context,
-                  'Avg. Daily',
+                  AppLocalizations.of(context)!.yield_results_avg_daily,
                   '${result.summary.averageDailyYield.toStringAsFixed(2)} kg',
                   icon: Icons.trending_up,
                 ),
                 if (bestDay != null)
                   _buildSummaryItem(
                     context,
-                    'Best Harvest Day',
+                    AppLocalizations.of(context)!.yield_results_best_harvest,
                     '${bestDay.date.day}/${bestDay.date.month} (${bestDay.predictedYieldKg.toStringAsFixed(2)} kg)',
-                    icon: null, // Remove star icon
+                    icon: null,
                     valueColor: Colors.amber.shade800,
                   ),
               ],
@@ -861,7 +913,7 @@ class YieldResultsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _formatDate(prediction.date),
+                      _formatDate(prediction.date, AppLocalizations.of(context)!),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -870,7 +922,7 @@ class YieldResultsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Prediction',
+                      AppLocalizations.of(context)!.yield_results_prediction,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade500,
@@ -913,7 +965,7 @@ class YieldResultsScreen extends StatelessWidget {
                 children: [
                   _buildWeatherItem(
                     Icons.thermostat,
-                    'Temp',
+                    AppLocalizations.of(context)!.yield_results_weather_temp,
                     (prediction.weather.tempMin - prediction.weather.tempMax)
                                 .abs() <
                             0.1
@@ -924,14 +976,14 @@ class YieldResultsScreen extends StatelessWidget {
                   _buildVerticalDivider(),
                   _buildWeatherItem(
                     Icons.water_drop,
-                    'Humidity',
+                    AppLocalizations.of(context)!.yield_results_weather_humidity,
                     '${prediction.weather.humidity.toStringAsFixed(2)}%',
                     Colors.blue,
                   ),
                   _buildVerticalDivider(),
                   _buildWeatherItem(
                     Icons.cloud,
-                    'Rain',
+                    AppLocalizations.of(context)!.yield_results_weather_rain,
                     '${prediction.weather.rainfall.toStringAsFixed(2)} mm',
                     Colors.indigo,
                   ),
@@ -976,17 +1028,17 @@ class YieldResultsScreen extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime date, AppLocalizations l10n) {
     final now = DateTime.now();
     if (date.year == now.year &&
         date.month == now.month &&
         date.day == now.day) {
-      return 'Today';
+      return l10n.yield_results_today;
     }
     if (date.year == now.year &&
         date.month == now.month &&
         date.day == now.day + 1) {
-      return 'Tomorrow';
+      return l10n.yield_results_tomorrow;
     }
     return '${date.day}/${date.month}/${date.year}';
   }

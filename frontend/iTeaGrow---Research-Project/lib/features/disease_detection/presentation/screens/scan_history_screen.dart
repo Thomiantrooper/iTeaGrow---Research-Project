@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/tea_colors.dart';
 import '../../../../core/design_system/tea_typography.dart';
 import '../../../../core/design_system/tea_spacing.dart';
 import '../../../../core/widgets/cards/tea_card.dart';
+import '../../../auth/data/providers/auth_provider.dart';
 import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
 
-class ScanHistoryScreen extends StatefulWidget {
+class ScanHistoryScreen extends ConsumerStatefulWidget {
   const ScanHistoryScreen({super.key});
 
   @override
-  State<ScanHistoryScreen> createState() => _ScanHistoryScreenState();
+  ConsumerState<ScanHistoryScreen> createState() => _ScanHistoryScreenState();
 }
 
-class _ScanHistoryScreenState extends State<ScanHistoryScreen>
+class _ScanHistoryScreenState extends ConsumerState<ScanHistoryScreen>
     with SingleTickerProviderStateMixin {
   final DiseaseStorageService _storageService = DiseaseStorageService();
   late TabController _tabController;
@@ -45,10 +48,20 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
       _error = null;
     });
 
+    final authToken = ref.read(authStateProvider).accessToken;
+
+    if (authToken == null || authToken.isEmpty) {
+      setState(() {
+        _error = AppLocalizations.of(context)!.scan_history_login_required;
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
       final futures = await Future.wait([
-        _storageService.getDetections(limit: 50),
-        _storageService.getDetailedStatistics(days: 30),
+        _storageService.getDetections(limit: 50, authToken: authToken),
+        _storageService.getDetailedStatistics(days: 30, authToken: authToken),
       ]);
 
       setState(() {
@@ -58,7 +71,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
       });
     } catch (e) {
       setState(() {
-        _error = 'Failed to load data: $e';
+        _error = AppLocalizations.of(context)!.scan_history_load_failed(e.toString());
         _isLoading = false;
       });
     }
@@ -70,7 +83,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
       backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
         title: Text(
-          'Scan History',
+          AppLocalizations.of(context)!.disease_scan_history,
           style: TeaTypography.titleLarge.copyWith(color: TeaColors.white),
         ),
         centerTitle: true,
@@ -83,9 +96,9 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
           indicatorWeight: 3,
           labelColor: TeaColors.white,
           unselectedLabelColor: TeaColors.white.withOpacity(0.7),
-          tabs: const [
-            Tab(icon: Icon(Icons.history), text: 'History'),
-            Tab(icon: Icon(Icons.bar_chart), text: 'Analytics'),
+          tabs: [
+            Tab(icon: Icon(Icons.history), text: AppLocalizations.of(context)!.scan_history_tab),
+            Tab(icon: Icon(Icons.bar_chart), text: AppLocalizations.of(context)!.analytics_title),
           ],
         ),
         actions: [
@@ -125,7 +138,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
           ElevatedButton.icon(
             onPressed: _loadData,
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(AppLocalizations.of(context)!.common_retry),
             style: ElevatedButton.styleFrom(
               backgroundColor: TeaColors.freshLeaf,
               foregroundColor: TeaColors.white,
@@ -145,7 +158,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
             Icon(Icons.history, size: 80, color: TeaColors.lightGray),
             const SizedBox(height: 16),
             Text(
-              'No scan history yet',
+              AppLocalizations.of(context)!.scan_history_empty,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
@@ -154,7 +167,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Start scanning tea leaves to see your history here',
+              AppLocalizations.of(context)!.scan_history_empty_subtitle,
               style: TextStyle(color: TeaColors.darkGray),
             ),
           ],
@@ -232,7 +245,9 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                       Row(
                         children: [
                           Text(
-                            'Confidence: ${(detection.confidence * 100).toStringAsFixed(1)}%',
+                            AppLocalizations.of(context)!.scan_history_confidence_pct(
+                              (detection.confidence * 100).toStringAsFixed(1),
+                            ),
                             style: TextStyle(
                               fontSize: 13,
                               color: TeaColors.darkGray,
@@ -305,8 +320,8 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
 
   Widget _buildAnalyticsTab() {
     if (_statistics == null) {
-      return const Center(
-        child: Text('No analytics data available'),
+      return Center(
+        child: Text(AppLocalizations.of(context)!.disease_no_analytics),
       );
     }
 
@@ -410,8 +425,8 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Overall Health Rate',
+              Text(
+                AppLocalizations.of(context)!.scan_history_overall_health,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               Text(
@@ -560,8 +575,8 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Severity Levels',
+          Text(
+            AppLocalizations.of(context)!.scan_history_severity_levels,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
@@ -645,15 +660,15 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                     children: [
                       _buildDetailHeader(detection),
                       const SizedBox(height: 20),
-                      _buildDetailSection('Detection Details', [
-                        _buildDetailRow('Disease Type', detection.diseaseType),
-                        _buildDetailRow('Confidence', '${(detection.confidence * 100).toStringAsFixed(1)}%'),
-                        _buildDetailRow('Severity', detection.severity),
-                        _buildDetailRow('Detected At', _formatDateTime(detection.timestamp)),
+                      _buildDetailSection(AppLocalizations.of(context)!.scan_history_detection_details, [
+                        _buildDetailRow(AppLocalizations.of(context)!.disease_type, detection.diseaseType),
+                        _buildDetailRow(AppLocalizations.of(context)!.common_confidence, '${(detection.confidence * 100).toStringAsFixed(1)}%'),
+                        _buildDetailRow(AppLocalizations.of(context)!.disease_severity, detection.severity),
+                        _buildDetailRow(AppLocalizations.of(context)!.scan_history_detected_at, _formatDateTime(detection.timestamp)),
                       ]),
                       if (detection.temperature != null) ...[
                         const SizedBox(height: 16),
-                        _buildDetailSection('Environmental Conditions', [
+                        _buildDetailSection(AppLocalizations.of(context)!.scan_history_env_conditions, [
                           if (detection.temperature != null)
                             _buildDetailRow('Temperature', '${detection.temperature!.toStringAsFixed(1)}°C'),
                           if (detection.humidity != null)
@@ -721,7 +736,7 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen>
                 ),
               ),
               Text(
-                isHealthy ? 'Healthy Tea Leaf' : 'Disease Detected',
+                isHealthy ? AppLocalizations.of(context)!.scan_history_healthy_leaf : AppLocalizations.of(context)!.disease_detected,
                 style: TextStyle(color: TeaColors.darkGray),
               ),
             ],

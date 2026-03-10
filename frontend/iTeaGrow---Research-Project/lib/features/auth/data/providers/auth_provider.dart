@@ -492,6 +492,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
     try {
+      // Kick off Railway warm-up immediately so the service is awake by the
+      // time the user finishes the Google OAuth account-picker flow (~5-15 s).
+      final warmUpFuture = ApiService.warmUpAsync();
+
       // Sign in with Google
       final googleAccount = await _googleAuthService.signIn();
 
@@ -515,6 +519,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
 
       debugPrint('Google Sign-In successful: ${googleAccount.email}');
+
+      // Ensure Railway is fully awake before the backend call.
+      await warmUpFuture;
 
       // Send Google ID token to our backend for verification and role check
       final authResponse = await _authRepository.loginWithGoogleToken(idToken);

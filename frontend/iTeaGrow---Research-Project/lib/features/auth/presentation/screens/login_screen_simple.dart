@@ -228,7 +228,7 @@ class _LoginScreenSimpleState extends ConsumerState<LoginScreenSimple> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Admin: admin / admin123\nManager: manager / manager123\nFarmer: farmer / farmer123',
+                        'Manager: manager / manager123\nFarmer: farmer / farmer123',
                         style: TextStyle(fontSize: 12),
                       ),
                     ],

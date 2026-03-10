@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -22,14 +23,10 @@ class PremiumSettingsScreen extends ConsumerStatefulWidget {
 
 class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
   bool _notificationsEnabled = true;
-  bool _darkMode = false;
-  bool _autoSync = true;
-  bool _hapticFeedback = true;
   bool _biometricAvailable = false;
   bool _biometricEnabled = false;
   bool _pinEnabled = false;
   String _selectedLanguage = 'English';
-  String _selectedUnit = 'Metric';
 
   @override
   void initState() {
@@ -54,6 +51,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final currentLocale = ref.watch(persistentLocaleProvider);
     _selectedLanguage = _getLanguageName(currentLocale.languageCode);
 
@@ -67,7 +65,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Settings',
+          l10n.settings_title,
           style: TeaTypography.titleLarge.copyWith(color: TeaColors.nearBlack),
         ),
       ),
@@ -77,39 +75,32 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Account Section
-            _buildSectionHeader('Account'),
+            _buildSectionHeader(l10n.settings_section_account),
             TeaCard.elevated(
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   _buildSettingsTile(
                     icon: Icons.person_outline,
-                    title: 'Profile',
-                    subtitle: 'Edit your profile information',
+                    title: l10n.settings_profile,
+                    subtitle: l10n.settings_profile_sub,
                     onTap: () => context.push('/profile'),
                   ),
                   const Divider(height: 1),
                   _buildSettingsTile(
                     icon: Icons.lock_outline,
-                    title: 'Change Password',
-                    subtitle: 'Update your password',
+                    title: l10n.settings_change_password,
+                    subtitle: l10n.settings_change_password_sub,
                     onTap: () => _showChangePasswordDialog(),
-                  ),
-                  const Divider(height: 1),
-                  _buildSettingsTile(
-                    icon: Icons.security,
-                    title: 'Security',
-                    subtitle: 'Two-factor authentication, login history',
-                    onTap: () => context.push('/activity-history'),
                   ),
                   if (widget.allowBiometricAndPin && _biometricAvailable) ...[
                     const Divider(height: 1),
                     _buildSwitchTile(
                       icon: Icons.fingerprint,
-                      title: 'Biometric Login',
+                      title: l10n.settings_biometric,
                       subtitle: _biometricEnabled
-                          ? 'Sign in with fingerprint or face'
-                          : 'Enable fingerprint or face login',
+                          ? l10n.settings_biometric_enabled_sub
+                          : l10n.settings_biometric_disabled_sub,
                       value: _biometricEnabled,
                       onChanged: (value) {
                         if (value) {
@@ -124,10 +115,10 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                     const Divider(height: 1),
                     _buildSwitchTile(
                       icon: Icons.pin_outlined,
-                      title: 'PIN Login',
+                      title: l10n.settings_pin,
                       subtitle: _pinEnabled
-                          ? 'Sign in with a 4-8 digit PIN'
-                          : 'Enable PIN login',
+                          ? l10n.settings_pin_enabled_sub
+                          : l10n.settings_pin_disabled_sub,
                       value: _pinEnabled,
                       onChanged: (value) {
                         if (value) {
@@ -141,8 +132,8 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                       const Divider(height: 1),
                       _buildSettingsTile(
                         icon: Icons.lock_reset,
-                        title: 'Change PIN',
-                        subtitle: 'Update your current PIN code',
+                        title: l10n.settings_change_pin,
+                        subtitle: l10n.settings_change_pin_sub,
                         onTap: _showChangePinDialog,
                       ),
                     ],
@@ -154,35 +145,24 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
             const SizedBox(height: TeaSpacing.lg),
 
             // Preferences Section
-            _buildSectionHeader('Preferences'),
+            _buildSectionHeader(l10n.settings_section_preferences),
             TeaCard.elevated(
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   _buildSwitchTile(
                     icon: Icons.notifications_outlined,
-                    title: 'Push Notifications',
-                    subtitle: 'Receive alerts and updates',
+                    title: l10n.settings_notifications,
+                    subtitle: l10n.settings_notifications_sub,
                     value: _notificationsEnabled,
                     onChanged: (value) {
                       setState(() => _notificationsEnabled = value);
                     },
                   ),
                   const Divider(height: 1),
-                  _buildSwitchTile(
-                    icon: Icons.dark_mode_outlined,
-                    title: 'Dark Mode',
-                    subtitle: 'Switch to dark theme',
-                    value: _darkMode,
-                    onChanged: (value) {
-                      setState(() => _darkMode = value);
-                      TeaSnackbar.info(context, 'Dark mode coming soon!');
-                    },
-                  ),
-                  const Divider(height: 1),
                   _buildDropdownTile(
                     icon: Icons.language,
-                    title: 'Language',
+                    title: l10n.settings_language,
                     value: _selectedLanguage,
                     options: ['English', 'සිංහල', 'தமிழ்'],
                     onChanged: (value) {
@@ -193,16 +173,6 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                           .setLocale(locale);
                     },
                   ),
-                  const Divider(height: 1),
-                  _buildDropdownTile(
-                    icon: Icons.straighten,
-                    title: 'Units',
-                    value: _selectedUnit,
-                    options: ['Metric', 'Imperial'],
-                    onChanged: (value) {
-                      setState(() => _selectedUnit = value!);
-                    },
-                  ),
                 ],
               ),
             ),
@@ -210,92 +180,16 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
             const SizedBox(height: TeaSpacing.lg),
 
             // Connectivity Section
-            _buildSectionHeader('Connectivity'),
+            _buildSectionHeader(l10n.settings_section_connectivity),
             TeaCard.elevated(
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   _buildSettingsTile(
                     icon: Icons.bluetooth,
-                    title: 'IoT Devices',
-                    subtitle: 'Manage connected sensors',
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: TeaSpacing.sm,
-                        vertical: TeaSpacing.xs,
-                      ),
-                      decoration: BoxDecoration(
-                        color: TeaColors.healthyGreen.withOpacity(0.1),
-                        borderRadius: TeaRadius.radiusSm,
-                      ),
-                      child: Text(
-                        '3 connected',
-                        style: TeaTypography.labelSmall.copyWith(
-                          color: TeaColors.healthyGreen,
-                        ),
-                      ),
-                    ),
+                    title: l10n.settings_iot_devices,
+                    subtitle: l10n.settings_iot_devices_sub,
                     onTap: () => context.push('/iot-devices'),
-                  ),
-                  const Divider(height: 1),
-                  _buildSwitchTile(
-                    icon: Icons.sync,
-                    title: 'Auto Sync',
-                    subtitle: 'Automatically sync data with cloud',
-                    value: _autoSync,
-                    onChanged: (value) {
-                      setState(() => _autoSync = value);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  _buildSettingsTile(
-                    icon: Icons.wifi,
-                    title: 'Network Settings',
-                    subtitle: 'Configure WiFi and data usage',
-                    onTap: () => TeaSnackbar.info(
-                        context, 'Network settings coming soon!'),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: TeaSpacing.lg),
-
-            // App Settings Section
-            _buildSectionHeader('App Settings'),
-            TeaCard.elevated(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  _buildSwitchTile(
-                    icon: Icons.vibration,
-                    title: 'Haptic Feedback',
-                    subtitle: 'Vibration on interactions',
-                    value: _hapticFeedback,
-                    onChanged: (value) {
-                      setState(() => _hapticFeedback = value);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  _buildSettingsTile(
-                    icon: Icons.storage,
-                    title: 'Storage',
-                    subtitle: 'Manage cached data and downloads',
-                    trailing: Text(
-                      '245 MB',
-                      style: TeaTypography.bodySmall.copyWith(
-                        color: TeaColors.darkGray,
-                      ),
-                    ),
-                    onTap: () => _showClearCacheDialog(),
-                  ),
-                  const Divider(height: 1),
-                  _buildSettingsTile(
-                    icon: Icons.download,
-                    title: 'Export Data',
-                    subtitle: 'Download your plantation data',
-                    onTap: () => TeaSnackbar.info(
-                        context, 'Export feature coming soon!'),
                   ),
                 ],
               ),
@@ -304,29 +198,22 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
             const SizedBox(height: TeaSpacing.lg),
 
             // Support Section
-            _buildSectionHeader('Support'),
+            _buildSectionHeader(l10n.settings_section_support),
             TeaCard.elevated(
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   _buildSettingsTile(
                     icon: Icons.help_outline,
-                    title: 'Help Center',
-                    subtitle: 'FAQs and guides',
+                    title: l10n.settings_help,
+                    subtitle: l10n.settings_help_sub,
                     onTap: () => context.push('/help-center'),
                   ),
                   const Divider(height: 1),
                   _buildSettingsTile(
-                    icon: Icons.feedback_outlined,
-                    title: 'Send Feedback',
-                    subtitle: 'Help us improve the app',
-                    onTap: () => _showFeedbackDialog(),
-                  ),
-                  const Divider(height: 1),
-                  _buildSettingsTile(
                     icon: Icons.info_outline,
-                    title: 'About',
-                    subtitle: 'Version 1.0.0',
+                    title: l10n.settings_about,
+                    subtitle: l10n.settings_about_sub,
                     onTap: () => _showAboutDialog(),
                   ),
                 ],
@@ -336,29 +223,16 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
             const SizedBox(height: TeaSpacing.lg),
 
             // Danger Zone
-            _buildSectionHeader('Danger Zone'),
+            _buildSectionHeader(l10n.settings_section_danger),
             TeaCard.outlined(
               padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  _buildSettingsTile(
-                    icon: Icons.logout,
-                    title: 'Log Out',
-                    subtitle: 'Sign out from your account',
-                    iconColor: TeaColors.alertRust,
-                    titleColor: TeaColors.alertRust,
-                    onTap: () => _showLogoutDialog(),
-                  ),
-                  const Divider(height: 1),
-                  _buildSettingsTile(
-                    icon: Icons.delete_forever,
-                    title: 'Delete Account',
-                    subtitle: 'Permanently delete your account',
-                    iconColor: TeaColors.criticalRed,
-                    titleColor: TeaColors.criticalRed,
-                    onTap: () => _showDeleteAccountDialog(),
-                  ),
-                ],
+              child: _buildSettingsTile(
+                icon: Icons.logout,
+                title: l10n.settings_logout,
+                subtitle: l10n.settings_logout_sub,
+                iconColor: TeaColors.alertRust,
+                titleColor: TeaColors.alertRust,
+                onTap: () => _showLogoutDialog(),
               ),
             ),
 
@@ -491,108 +365,51 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
   }
 
   void _showChangePasswordDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Change Password'),
-        content: const Column(
+        title: Text(l10n.settings_dialog_change_password),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               obscureText: true,
-              decoration: InputDecoration(labelText: 'Current Password'),
+              decoration: InputDecoration(labelText: l10n.settings_dialog_current_password),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               obscureText: true,
-              decoration: InputDecoration(labelText: 'New Password'),
+              decoration: InputDecoration(labelText: l10n.settings_dialog_new_password),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               obscureText: true,
-              decoration: InputDecoration(labelText: 'Confirm New Password'),
+              decoration: InputDecoration(labelText: l10n.settings_dialog_confirm_password),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              TeaSnackbar.success(context, 'Password changed successfully!');
+              TeaSnackbar.success(context, l10n.settings_dialog_password_changed);
             },
-            child: const Text('Change'),
+            child: Text(l10n.settings_dialog_change),
           ),
         ],
       ),
     );
   }
 
-  void _showClearCacheDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear Cache'),
-        content: const Text(
-            'This will clear all cached data and downloaded files. This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              TeaSnackbar.success(context, 'Cache cleared successfully!');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: TeaColors.alertRust,
-            ),
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
-    );
-  }
 
-  void _showFeedbackDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Send Feedback'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: 'Tell us what you think...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              TeaSnackbar.success(context, 'Thank you for your feedback!');
-            },
-            child: const Text('Send'),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showAboutDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -603,16 +420,20 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
             Text('iTeaGrow'),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Version 1.0.0'),
-            SizedBox(height: 8),
-            Text('AI-Powered Tea Plantation Management System'),
-            SizedBox(height: 16),
-            Text(
-              '© 2024 iTeaGrow Research Project',
+            Text('Version 2.0.0'),
+            const SizedBox(height: 8),
+            const Text('AI-Powered Tea Plantation Management System'),
+            const SizedBox(height: 8),
+            const Text(
+              'Helping Sri Lankan tea farmers and estate managers make smarter, data-driven decisions — from leaf to market.',
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '© 2026 iTeaGrow Research Project',
               style: TextStyle(color: TeaColors.darkGray),
             ),
           ],
@@ -620,7 +441,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(l10n.settings_dialog_close),
           ),
         ],
       ),
@@ -628,22 +449,23 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
   }
 
   void _showEnableBiometricDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final passwordController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Enable Biometric Login'),
+        title: Text(l10n.settings_dialog_biometric),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Enter your password to enable biometric login.'),
+            Text(l10n.settings_dialog_biometric_desc),
             const SizedBox(height: 16),
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                prefixIcon: Icon(Icons.lock_outline),
+              decoration: InputDecoration(
+                labelText: l10n.settings_dialog_password,
+                prefixIcon: const Icon(Icons.lock_outline),
               ),
             ),
           ],
@@ -651,7 +473,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -662,16 +484,16 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
               if (mounted) {
                 if (success) {
                   setState(() => _biometricEnabled = true);
-                  TeaSnackbar.success(context, 'Biometric login enabled!');
+                  TeaSnackbar.success(context, l10n.settings_biometric_enabled_msg);
                 } else {
                   final error = ref.read(authStateProvider).errorMessage;
                   TeaSnackbar.error(
-                      context, error ?? 'Failed to enable biometric login');
+                      context, error ?? l10n.settings_biometric_login_failed);
                 }
               }
               passwordController.dispose();
             },
-            child: const Text('Enable'),
+            child: Text(l10n.settings_dialog_enable),
           ),
         ],
       ),
@@ -679,23 +501,25 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
   }
 
   Future<void> _disableBiometric() async {
+    final l10n = AppLocalizations.of(context)!;
     await ref.read(authStateProvider.notifier).disableBiometricLogin();
     if (mounted) {
       setState(() => _biometricEnabled = false);
-      TeaSnackbar.info(context, 'Biometric login disabled');
+      TeaSnackbar.info(context, l10n.settings_biometric_disabled_msg);
     }
   }
 
   void _showLogoutDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Log Out'),
-        content: const Text('Are you sure you want to log out?'),
+        title: Text(l10n.settings_logout),
+        content: Text(l10n.settings_dialog_logout_desc),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -708,36 +532,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: TeaColors.alertRust,
             ),
-            child: const Text('Log Out'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAccountDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text(
-          'This will permanently delete your account and all associated data. This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              TeaSnackbar.info(
-                  context, 'Account deletion is disabled in demo mode.');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: TeaColors.criticalRed,
-            ),
-            child: const Text('Delete'),
+            child: Text(l10n.settings_logout_btn),
           ),
         ],
       ),
@@ -745,6 +540,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
   }
 
   void _showChangePinDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final passwordController = TextEditingController();
     final newPinController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -753,23 +549,23 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Change PIN'),
+        title: Text(l10n.settings_dialog_change_pin),
         content: Form(
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Enter your current account password and a new PIN.'),
+              Text(l10n.settings_dialog_change_pin_desc),
               const SizedBox(height: 16),
               TextFormField(
                 controller: passwordController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Current Account Password',
-                  prefixIcon: Icon(Icons.lock_outline),
+                decoration: InputDecoration(
+                  labelText: l10n.settings_dialog_account_password,
+                  prefixIcon: const Icon(Icons.lock_outline),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Required';
+                  if (value == null || value.isEmpty) return l10n.settings_required;
                   return null;
                 },
               ),
@@ -779,18 +575,18 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
                 keyboardType: TextInputType.number,
                 obscureText: true,
                 maxLength: 8,
-                decoration: const InputDecoration(
-                  labelText: 'New PIN Code',
-                  prefixIcon: Icon(Icons.pin),
+                decoration: InputDecoration(
+                  labelText: l10n.settings_dialog_new_pin,
+                  prefixIcon: const Icon(Icons.pin),
                   counterText: '',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty)
-                    return 'Please enter a PIN';
-                  if (value.length < 4) return 'PIN must be at least 4 digits';
-                  if (value.length > 8) return 'PIN must be max 8 digits';
+                    return l10n.settings_pin_required;
+                  if (value.length < 4) return l10n.settings_pin_too_short;
+                  if (value.length > 8) return l10n.settings_pin_too_long;
                   if (!RegExp(r'^[0-9]+$').hasMatch(value))
-                    return 'PIN must be numbers only';
+                    return l10n.settings_pin_numbers_only;
                   return null;
                 },
               ),
@@ -800,7 +596,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -813,17 +609,17 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
 
                 if (mounted) {
                   if (success) {
-                    TeaSnackbar.success(context, 'PIN changed successfully!');
+                    TeaSnackbar.success(context, l10n.settings_pin_changed_msg);
                   } else {
                     final error = ref.read(authStateProvider).errorMessage;
-                    TeaSnackbar.error(context, error ?? 'Failed to change PIN');
+                    TeaSnackbar.error(context, error ?? l10n.settings_pin_change_failed);
                   }
                 }
                 passwordController.dispose();
                 newPinController.dispose();
               }
             },
-            child: const Text('Change PIN'),
+            child: Text(l10n.settings_changing_pin_btn),
           ),
         ],
       ),
@@ -831,6 +627,7 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
   }
 
   void _showEnablePinDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final passwordController = TextEditingController();
     final pinController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -839,31 +636,31 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Enable PIN Login'),
+        title: Text(l10n.settings_dialog_enable_pin),
         content: Form(
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Set a 4 to 8 digit PIN Code for quick login.'),
+              Text(l10n.settings_dialog_enable_pin_desc),
               const SizedBox(height: 16),
               TextFormField(
                 controller: pinController,
                 keyboardType: TextInputType.number,
                 obscureText: true,
                 maxLength: 8,
-                decoration: const InputDecoration(
-                  labelText: 'New PIN Code',
-                  prefixIcon: Icon(Icons.pin),
+                decoration: InputDecoration(
+                  labelText: l10n.settings_dialog_new_pin,
+                  prefixIcon: const Icon(Icons.pin),
                   counterText: '',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty)
-                    return 'Please enter a PIN';
-                  if (value.length < 4) return 'PIN must be at least 4 digits';
-                  if (value.length > 8) return 'PIN must be max 8 digits';
+                    return l10n.settings_pin_required;
+                  if (value.length < 4) return l10n.settings_pin_too_short;
+                  if (value.length > 8) return l10n.settings_pin_too_long;
                   if (!RegExp(r'^[0-9]+$').hasMatch(value))
-                    return 'PIN must be numbers only';
+                    return l10n.settings_pin_numbers_only;
                   return null;
                 },
               ),
@@ -871,13 +668,13 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
               TextFormField(
                 controller: passwordController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Current Account Password',
-                  prefixIcon: Icon(Icons.lock_outline),
-                  helperText: 'Required to securely save your PIN',
+                decoration: InputDecoration(
+                  labelText: l10n.settings_dialog_account_password,
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  helperText: l10n.settings_pin_helper_text,
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Required';
+                  if (value == null || value.isEmpty) return l10n.settings_required;
                   return null;
                 },
               ),
@@ -890,32 +687,34 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
               Navigator.pop(context);
               setState(() => _pinEnabled = false);
             },
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           ElevatedButton(
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 Navigator.pop(context);
+                // Optimistic update so the switch flips immediately after
+                // the dialog closes, without waiting for the async call.
+                setState(() => _pinEnabled = true);
                 final success = await ref
                     .read(authStateProvider.notifier)
                     .enablePinLogin(
                         passwordController.text, pinController.text);
                 if (mounted) {
                   if (success) {
-                    setState(() => _pinEnabled = true);
-                    TeaSnackbar.success(context, 'PIN login enabled!');
+                    TeaSnackbar.success(context, l10n.settings_pin_login_enabled_msg);
                   } else {
                     final error = ref.read(authStateProvider).errorMessage;
                     setState(() => _pinEnabled = false);
                     TeaSnackbar.error(
-                        context, error ?? 'Failed to enable PIN login');
+                        context, error ?? l10n.settings_pin_login_failed);
                   }
                 }
                 passwordController.dispose();
                 pinController.dispose();
               }
             },
-            child: const Text('Enable'),
+            child: Text(l10n.settings_dialog_enable),
           ),
         ],
       ),
@@ -923,10 +722,11 @@ class _PremiumSettingsScreenState extends ConsumerState<PremiumSettingsScreen> {
   }
 
   Future<void> _disablePin() async {
+    final l10n = AppLocalizations.of(context)!;
     await ref.read(authStateProvider.notifier).disablePinLogin();
     if (mounted) {
       setState(() => _pinEnabled = false);
-      TeaSnackbar.info(context, 'PIN login disabled');
+      TeaSnackbar.info(context, l10n.settings_pin_login_disabled_msg);
     }
   }
 }

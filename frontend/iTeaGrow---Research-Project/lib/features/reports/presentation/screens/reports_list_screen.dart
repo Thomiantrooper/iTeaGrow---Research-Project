@@ -9,6 +9,7 @@ import '../../../../core/design_system/tea_spacing.dart';
 import '../../../../core/widgets/cards/tea_card.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../auth/data/providers/auth_provider.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 class ReportsListScreen extends ConsumerStatefulWidget {
   const ReportsListScreen({super.key});
@@ -74,7 +75,7 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
       backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
         title: Text(
-          _showAllReports ? 'All Reports' : 'My Reports',
+          _showAllReports ? AppLocalizations.of(context)!.reports_all : AppLocalizations.of(context)!.reports_mine,
           style: TeaTypography.titleLarge.copyWith(color: TeaColors.white),
         ),
         backgroundColor: TeaColors.freshLeaf,
@@ -84,7 +85,7 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
           if (_isAdminOrManager)
             IconButton(
               icon: Icon(_showAllReports ? Icons.person : Icons.people),
-              tooltip: _showAllReports ? 'My Reports' : 'All Reports',
+              tooltip: _showAllReports ? AppLocalizations.of(context)!.reports_mine : AppLocalizations.of(context)!.reports_all,
               onPressed: () {
                 setState(() => _showAllReports = !_showAllReports);
                 _loadDetections();
@@ -122,7 +123,7 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
                 backgroundColor: TeaColors.freshLeaf,
                 foregroundColor: TeaColors.white,
               ),
-              child: const Text('Retry'),
+              child: Text(AppLocalizations.of(context)!.common_retry),
             ),
           ],
         ),
@@ -137,12 +138,12 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
             Icon(Icons.description_outlined, size: 64, color: TeaColors.mediumGray),
             const SizedBox(height: TeaSpacing.md),
             Text(
-              'No scan records found',
+              AppLocalizations.of(context)!.reports_empty,
               style: TeaTypography.titleMedium.copyWith(color: TeaColors.darkGray),
             ),
             const SizedBox(height: TeaSpacing.sm),
             Text(
-              'Scan tea leaves to generate reports',
+              AppLocalizations.of(context)!.reports_empty_subtitle,
               style: TeaTypography.bodySmall,
             ),
           ],
@@ -265,7 +266,7 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Report',
+                  AppLocalizations.of(context)!.reports_label,
                   style: TeaTypography.labelSmall.copyWith(
                     color: TeaColors.freshLeaf,
                   ),

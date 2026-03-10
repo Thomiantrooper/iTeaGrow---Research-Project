@@ -8,12 +8,18 @@ import '../../../../core/api/api_config.dart';
 import '../../../../core/api/api_exceptions.dart';
 import '../../domain/entities/disease_detection_result.dart';
 import 'disease_color_analyzer.dart';
-import 'disease_gradcam_service.dart';
 
 /// Image validation constants
 const int _maxImageSizeBytes = 20 * 1024 * 1024; // 20 MB
 const int _minImageSizeBytes = 5 * 1024; // 5 KB
-const Set<String> _allowedExtensions = {'.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff'};
+const Set<String> _allowedExtensions = {
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.webp',
+  '.bmp',
+  '.tiff'
+};
 
 class DiseaseDetectionMLService {
   static final DiseaseDetectionMLService _instance =
@@ -22,11 +28,11 @@ class DiseaseDetectionMLService {
   DiseaseDetectionMLService._internal();
 
   final ApiClient _apiClient = ApiClient();
-  final DiseaseGradCAMService _gradCamService = DiseaseGradCAMService();
+
   final DiseaseColorAnalyzer _colorAnalyzer = DiseaseColorAnalyzer();
   bool _isInitialized = false;
   bool _isBackendAvailable = false;
-  
+
   // Offline Model properties
   ClassificationModel? _offlineModel;
   bool _isOfflineModelLoaded = false;
@@ -43,18 +49,16 @@ class DiseaseDetectionMLService {
     _isBackendAvailable = await checkBackendConnection();
 
     if (_isBackendAvailable) {
-      debugPrint('Disease inference API connected at ${ApiConfig.diseaseInferenceBaseUrl}');
+      debugPrint(
+          'Disease inference API connected at ${ApiConfig.diseaseInferenceBaseUrl}');
     } else {
-      debugPrint('Disease inference API not available at ${ApiConfig.diseaseInferenceBaseUrl} - using offline mode');
+      debugPrint(
+          'Disease inference API not available at ${ApiConfig.diseaseInferenceBaseUrl} - using offline mode');
     }
 
     // Always try to load offline model as fallback
     if (!kIsWeb) {
       await _loadOfflineModel();
-      // Pre-warm GradCAM service in background (non-blocking)
-      _gradCamService.initialize().catchError((e) {
-        debugPrint('GradCAM pre-warm failed (will retry on first use): $e');
-      });
     }
 
     _isInitialized = true;
@@ -62,9 +66,13 @@ class DiseaseDetectionMLService {
 
   Future<void> _loadOfflineModel() async {
     try {
-      debugPrint('Loading offline classification PTL model from $_modelPath...');
+      debugPrint(
+          'Loading offline classification PTL model from $_modelPath...');
       _offlineModel = await PytorchLite.loadClassificationModel(
-        _modelPath, _inputSize, _inputSize, _classNames.length,
+        _modelPath,
+        _inputSize,
+        _inputSize,
+        _classNames.length,
       );
       _isOfflineModelLoaded = true;
       debugPrint('Offline classification model loaded successfully!');
@@ -88,10 +96,13 @@ class DiseaseDetectionMLService {
         try {
           final data = json.decode(response.body);
           // Check for root health or model-specific health
-          final isHealthy = data['status'] == 'healthy' || data['message'] != null;
-          final isInferenceHealthy = data['services']?['inference'] == 'healthy';
-          
-          _isBackendAvailable = isHealthy || isInferenceHealthy || data['status'] == 'degraded';
+          final isHealthy =
+              data['status'] == 'healthy' || data['message'] != null;
+          final isInferenceHealthy =
+              data['services']?['inference'] == 'healthy';
+
+          _isBackendAvailable =
+              isHealthy || isInferenceHealthy || data['status'] == 'degraded';
         } catch (e) {
           // Fallback to basic status code check if JSON parsing fails
           _isBackendAvailable = true;
@@ -99,8 +110,9 @@ class DiseaseDetectionMLService {
       } else {
         _isBackendAvailable = false;
       }
-      
-      debugPrint('Disease inference health check: ${response.statusCode} - Available: $_isBackendAvailable');
+
+      debugPrint(
+          'Disease inference health check: ${response.statusCode} - Available: $_isBackendAvailable');
       return _isBackendAvailable;
     } catch (e) {
       debugPrint('Backend connection check failed: $e');
@@ -129,7 +141,9 @@ class DiseaseDetectionMLService {
           'Maximum size is ${_maxImageSizeBytes ~/ 1024 ~/ 1024} MB.';
     }
 
-    final extension = imagePath.contains('.') ? '.${imagePath.split('.').last.toLowerCase()}' : '';
+    final extension = imagePath.contains('.')
+        ? '.${imagePath.split('.').last.toLowerCase()}'
+        : '';
     if (extension.isNotEmpty && !_allowedExtensions.contains(extension)) {
       return 'Unsupported image format: $extension. '
           'Please use JPEG, PNG, or WebP.';
@@ -197,7 +211,8 @@ class DiseaseDetectionMLService {
           locationLng: locationLng,
           requestExplainability: requestExplainability,
         );
-        debugPrint('>>> BACKEND SUCCESS: ${mlResult.diseaseType} (${mlResult.confidence}) <<<');
+        debugPrint(
+            '>>> BACKEND SUCCESS: ${mlResult.diseaseType} (${mlResult.confidence}) <<<');
       } on ApiException catch (e) {
         debugPrint('!!! Backend API error: $e - falling back to offline mode');
       } catch (e, stackTrace) {
@@ -227,7 +242,8 @@ class DiseaseDetectionMLService {
       try {
         final imageBytes = await File(imagePath).readAsBytes();
         final colorResult = await _colorAnalyzer.analyze(imageBytes);
-        debugPrint('>>> COLOR ANALYSIS: blister=${colorResult.blisterScore.toStringAsFixed(3)}, '
+        debugPrint(
+            '>>> COLOR ANALYSIS: blister=${colorResult.blisterScore.toStringAsFixed(3)}, '
             'rust=${colorResult.rustScore.toStringAsFixed(3)}, '
             'green=${colorResult.greenScore.toStringAsFixed(3)}, '
             'suggested=${colorResult.suggestedDisease}(${colorResult.suggestedConfidence.toStringAsFixed(2)})');
@@ -238,17 +254,20 @@ class DiseaseDetectionMLService {
           colorResult: colorResult,
         );
 
-        debugPrint('>>> CORRECTED: ${corrected.diseaseType} (${corrected.confidence.toStringAsFixed(2)}) [${corrected.source}]');
+        debugPrint(
+            '>>> CORRECTED: ${corrected.diseaseType} (${corrected.confidence.toStringAsFixed(2)}) [${corrected.source}]');
 
         // Apply correction if it changed something
         if (corrected.diseaseType != mlResult.diseaseType ||
             corrected.confidence != mlResult.confidence) {
-          final newSeverity = _getSeverity(corrected.confidence, corrected.diseaseType);
+          final newSeverity =
+              _getSeverity(corrected.confidence, corrected.diseaseType);
           mlResult = DiseaseDetectionResult(
             diseaseType: corrected.diseaseType,
             confidence: corrected.confidence,
             severity: newSeverity,
-            recommendations: _getRecommendations(corrected.diseaseType, newSeverity),
+            recommendations:
+                _getRecommendations(corrected.diseaseType, newSeverity),
             timestamp: mlResult.timestamp,
             temperature: mlResult.temperature,
             humidity: mlResult.humidity,
@@ -415,11 +434,14 @@ class DiseaseDetectionMLService {
     if (plantationId != null) fields['plantation_id'] = plantationId;
     if (locationLat != null) fields['location_lat'] = locationLat.toString();
     if (locationLng != null) fields['location_lng'] = locationLng.toString();
-    if (liveTemperature != null) fields['temperature'] = liveTemperature.toString();
+    if (liveTemperature != null)
+      fields['temperature'] = liveTemperature.toString();
     if (liveHumidity != null) fields['humidity'] = liveHumidity.toString();
-    if (liveAirQuality != null) fields['air_quality'] = liveAirQuality.toString();
+    if (liveAirQuality != null)
+      fields['air_quality'] = liveAirQuality.toString();
     fields['request_explainability'] = requestExplainability.toString();
-    fields['skip_quality_check'] = 'true'; // always attempt inference; quality gate is mobile-unfriendly
+    fields['skip_quality_check'] =
+        'true'; // always attempt inference; quality gate is mobile-unfriendly
 
     Map<String, dynamic> response;
 
@@ -432,30 +454,19 @@ class DiseaseDetectionMLService {
       );
     } else {
       // For mobile, use file path - 30 second timeout for image upload
-      response = await _apiClient.postMultipartFromPath(
+      response = await _apiClient
+          .postMultipartFromPath(
         ApiConfig.inferenceDetect,
         imagePath: imagePath,
         fields: fields,
-      ).timeout(const Duration(seconds: 30), onTimeout: () {
+      )
+          .timeout(const Duration(seconds: 30), onTimeout: () {
         throw ApiException('Request timed out. Please try again.');
       });
     }
 
     // Parse response and add IoT data
     final result = DiseaseDetectionResult.fromApiResponse(response);
-
-    // Run GradCAM locally so the heatmap toggle is always available
-    String? heatmapPath;
-    if (!kIsWeb) {
-      try {
-        final bytes = await File(imagePath).readAsBytes();
-        final camResult = await _gradCamService.predict(bytes);
-        heatmapPath = camResult.heatmapPath;
-        debugPrint('>>> Backend+GradCAM heatmap: $heatmapPath');
-      } catch (e) {
-        debugPrint('GradCAM (backend path) failed: $e');
-      }
-    }
 
     // Return result with IoT context + quality/validation data
     return DiseaseDetectionResult(
@@ -474,7 +485,7 @@ class DiseaseDetectionMLService {
       summary: result.summary,
       imageQualityScore: result.imageQualityScore,
       validationMessage: result.validationMessage,
-      heatmapPath: heatmapPath,
+      heatmapPath: null,
     );
   }
 
@@ -491,7 +502,8 @@ class DiseaseDetectionMLService {
     final fields = <String, String>{};
     if (blockId != null) fields['block_id'] = blockId;
     if (fieldId != null) fields['field_id'] = fieldId;
-    if (liveTemperature != null) fields['temperature'] = liveTemperature.toString();
+    if (liveTemperature != null)
+      fields['temperature'] = liveTemperature.toString();
     if (liveHumidity != null) fields['humidity'] = liveHumidity.toString();
 
     final response = await _apiClient.postMultipleFilesFromPaths(
@@ -513,7 +525,8 @@ class DiseaseDetectionMLService {
   }) async {
     final fields = <String, String>{};
     if (blockId != null) fields['block_id'] = blockId;
-    if (liveTemperature != null) fields['temperature'] = liveTemperature.toString();
+    if (liveTemperature != null)
+      fields['temperature'] = liveTemperature.toString();
     if (liveHumidity != null) fields['humidity'] = liveHumidity.toString();
     fields['detect_multiple'] = 'true';
 
@@ -563,54 +576,41 @@ class DiseaseDetectionMLService {
       final imageFile = File(imagePath);
       final bytes = await imageFile.readAsBytes();
 
-      // ── Try GradCAM explain model first (classification + heatmap) ──
-      String? heatmapPath;
       String displayType;
       double bestScore;
       String severity;
 
-      try {
-        final camResult = await _gradCamService.predict(bytes);
-        displayType  = camResult.displayName;
-        bestScore    = camResult.confidence.clamp(0.0, 1.0);
-        heatmapPath  = camResult.heatmapPath;
-        severity     = _getSeverity(bestScore, displayType);
-        debugPrint('>>> GradCAM inference: $displayType (${(bestScore * 100).toStringAsFixed(1)}%)');
-      } catch (camError) {
-        // GradCAM model not available — fall back to standard classifier
-        debugPrint('GradCAM unavailable ($camError), using standard classifer');
+      // Classification model — getImagePredictionListProbabilities returns
+      // softmax probabilities (0‑1) for each class
+      final List<double> scores =
+          await _offlineModel!.getImagePredictionListProbabilities(bytes);
 
-        // Classification model — getImagePredictionListProbabilities returns
-        // softmax probabilities (0‑1) for each class
-        final List<double> scores =
-            await _offlineModel!.getImagePredictionListProbabilities(bytes);
-
-        if (scores.isEmpty) {
-          return DiseaseDetectionResult(
-            diseaseType: 'Healthy',
-            confidence: 0.5,
-            severity: 'None',
-            recommendations: [
-              'No diseases detected. Continue regular monitoring.',
-              '(Offline analysis mode)',
-            ],
-            timestamp: DateTime.now(),
-          );
-        }
-
-        int bestIdx = 0;
-        for (int i = 1; i < scores.length; i++) {
-          if (scores[i] > scores[bestIdx]) bestIdx = i;
-        }
-        bestScore = scores[bestIdx].clamp(0.0, 1.0);
-        final String className = bestIdx < _classNames.length ? _classNames[bestIdx] : 'healthy';
-        displayType = className
-            .replaceAll('_', ' ')
-            .split(' ')
-            .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
-            .join(' ');
-        severity = _getSeverity(bestScore, displayType);
+      if (scores.isEmpty) {
+        return DiseaseDetectionResult(
+          diseaseType: 'Healthy',
+          confidence: 0.5,
+          severity: 'None',
+          recommendations: [
+            'No diseases detected. Continue regular monitoring.',
+            '(Offline analysis mode)',
+          ],
+          timestamp: DateTime.now(),
+        );
       }
+
+      int bestIdx = 0;
+      for (int i = 1; i < scores.length; i++) {
+        if (scores[i] > scores[bestIdx]) bestIdx = i;
+      }
+      bestScore = scores[bestIdx].clamp(0.0, 1.0);
+      final String className =
+          bestIdx < _classNames.length ? _classNames[bestIdx] : 'healthy';
+      displayType = className
+          .replaceAll('_', ' ')
+          .split(' ')
+          .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
+          .join(' ');
+      severity = _getSeverity(bestScore, displayType);
 
       return DiseaseDetectionResult(
         diseaseType: displayType,
@@ -628,9 +628,8 @@ class DiseaseDetectionMLService {
         temperature: liveTemperature,
         humidity: liveHumidity,
         airQuality: liveAirQuality,
-        heatmapPath: heatmapPath,
+        heatmapPath: null,
       );
-
     } catch (e) {
       debugPrint('Offline inference error: $e');
       return DiseaseDetectionResult(
@@ -758,13 +757,16 @@ class DiseaseDetectionMLService {
         debugPrint('Image bytes loaded: ${bytes.length} bytes');
         final filename = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-        request.files.add(http.MultipartFile.fromBytes(
-          'image',
-          bytes,
-          filename: filename,
-        ),);
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'image',
+            bytes,
+            filename: filename,
+          ),
+        );
       } else {
-        throw ApiException('Failed to load image from path: ${imageResponse.statusCode}');
+        throw ApiException(
+            'Failed to load image from path: ${imageResponse.statusCode}');
       }
 
       // Add additional fields
@@ -774,18 +776,20 @@ class DiseaseDetectionMLService {
 
       debugPrint('Sending request to backend...');
       final streamedResponse = await request.send().timeout(
-        const Duration(seconds: ApiConfig.receiveTimeout),
-      );
+            const Duration(seconds: ApiConfig.receiveTimeout),
+          );
       final response = await http.Response.fromStream(streamedResponse);
 
       debugPrint('Backend response status: ${response.statusCode}');
-      debugPrint('Backend response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
+      debugPrint(
+          'Backend response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (response.body.isEmpty) return {};
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
-        throw ApiException('HTTP error: ${response.statusCode} - ${response.body}');
+        throw ApiException(
+            'HTTP error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       debugPrint('!!! _postMultipartWeb ERROR: $e');
@@ -920,7 +924,9 @@ class FieldAnalysisResult {
       airQuality: json['air_quality']?.toDouble(),
       recommendations: List<String>.from(json['recommendations'] ?? []),
       boundingBoxes: boxes,
-      summary: json['summary'] != null ? DetectionSummary.fromJson(json['summary']) : null,
+      summary: json['summary'] != null
+          ? DetectionSummary.fromJson(json['summary'])
+          : null,
     );
   }
 }

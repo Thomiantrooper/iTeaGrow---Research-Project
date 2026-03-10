@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -41,7 +42,6 @@ class _PremiumDiseaseDetectionScreenState
   bool _savedToDb = false;
   bool _isSavingToDb = false;
   String? _savedDetectionId;
-  bool _showGradCam = false;
 
   @override
   void initState() {
@@ -69,9 +69,9 @@ class _PremiumDiseaseDetectionScreenState
         _isCheckingConnection = false;
       });
       if (isConnected) {
-        TeaSnackbar.success(context, 'Connected to ML backend');
+        TeaSnackbar.success(context, AppLocalizations.of(context)!.disease_connected_ml);
       } else {
-        TeaSnackbar.warning(context, 'Backend offline — using local mode');
+        TeaSnackbar.warning(context, AppLocalizations.of(context)!.disease_backend_offline_local);
       }
     }
   }
@@ -80,7 +80,8 @@ class _PremiumDiseaseDetectionScreenState
 
   double get _liveTemp {
     final mqttState = ref.read(iotLiveProvider);
-    final d = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    final d =
+        mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
     return (d != null && d.hasData && d.temperature != null)
         ? d.temperature!
         : 26.5;
@@ -88,15 +89,15 @@ class _PremiumDiseaseDetectionScreenState
 
   double get _liveHumidity {
     final mqttState = ref.read(iotLiveProvider);
-    final d = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
-    return (d != null && d.hasData && d.humidity != null)
-        ? d.humidity!
-        : 72.0;
+    final d =
+        mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    return (d != null && d.hasData && d.humidity != null) ? d.humidity! : 72.0;
   }
 
   double get _liveAirQuality {
     final mqttState = ref.read(iotLiveProvider);
-    final d = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    final d =
+        mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
     return (d != null && d.hasData && d.airQuality != null)
         ? d.airQuality!.toDouble()
         : 45.0;
@@ -120,11 +121,10 @@ class _PremiumDiseaseDetectionScreenState
           _result = null;
           _savedToDb = false;
           _savedDetectionId = null;
-          _showGradCam = false;
         });
       }
     } catch (e) {
-      if (mounted) TeaSnackbar.error(context, 'Camera error: $e');
+      if (mounted) TeaSnackbar.error(context, AppLocalizations.of(context)!.error_camera(e.toString()));
     }
   }
 
@@ -144,11 +144,10 @@ class _PremiumDiseaseDetectionScreenState
           _result = null;
           _savedToDb = false;
           _savedDetectionId = null;
-          _showGradCam = false;
         });
       }
     } catch (e) {
-      if (mounted) TeaSnackbar.error(context, 'Gallery error: $e');
+      if (mounted) TeaSnackbar.error(context, AppLocalizations.of(context)!.error_gallery(e.toString()));
     }
   }
 
@@ -164,7 +163,7 @@ class _PremiumDiseaseDetectionScreenState
         !{'.jpg', '.jpeg', '.png', '.webp', '.bmp'}.contains(ext)) {
       if (mounted) {
         TeaSnackbar.error(
-            context, 'Unsupported file type: $ext. Use JPG, PNG, or WebP.');
+            context, AppLocalizations.of(context)!.disease_unsupported_file(ext));
       }
       return;
     }
@@ -174,13 +173,14 @@ class _PremiumDiseaseDetectionScreenState
       if (_imageBytes!.length < 5 * 1024) {
         if (mounted) {
           TeaSnackbar.error(context,
-              'Image too small (${(_imageBytes!.length / 1024).toStringAsFixed(1)} KB). May be corrupt.');
+              AppLocalizations.of(context)!.disease_image_too_small(
+                (_imageBytes!.length / 1024).toStringAsFixed(1)));
         }
         return;
       }
       if (_imageBytes!.length > 20 * 1024 * 1024) {
         if (mounted) {
-          TeaSnackbar.error(context, 'Image too large. Maximum 20 MB.');
+          TeaSnackbar.error(context, AppLocalizations.of(context)!.disease_image_too_large);
         }
         return;
       }
@@ -215,7 +215,7 @@ class _PremiumDiseaseDetectionScreenState
     } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        TeaSnackbar.error(context, 'Analysis failed: $e');
+        TeaSnackbar.error(context, AppLocalizations.of(context)!.error_analysis_failed(e.toString()));
       }
     }
   }
@@ -302,13 +302,12 @@ class _PremiumDiseaseDetectionScreenState
       final pdfBytes = await DiseaseReportService().generateReport(reportData);
       await Printing.layoutPdf(
         onLayout: (format) async => pdfBytes,
-        name:
-            'tea_disease_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        name: 'tea_disease_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
       );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to generate report: $e'),
+          content: Text('${AppLocalizations.of(context)!.disease_generate_report_failed}: $e'),
           backgroundColor: Colors.red,
         ));
       }
@@ -322,7 +321,6 @@ class _PremiumDiseaseDetectionScreenState
       _result = null;
       _savedToDb = false;
       _savedDetectionId = null;
-      _showGradCam = false;
     });
   }
 
@@ -349,10 +347,6 @@ class _PremiumDiseaseDetectionScreenState
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 8),
-
-                    // Connection status
-                    _buildConnectionBanner(),
-                    const SizedBox(height: 16),
 
                     // Live environment
                     _buildEnvironmentRow(),
@@ -381,13 +375,11 @@ class _PremiumDiseaseDetectionScreenState
                       OutlinedButton.icon(
                         onPressed: _generatePdfReport,
                         icon: const Icon(Icons.picture_as_pdf),
-                        label: const Text('Generate PDF Report'),
+                        label: Text(AppLocalizations.of(context)!.common_generate_report),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: TeaColors.freshLeaf,
-                          side: const BorderSide(
-                              color: TeaColors.freshLeaf),
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: TeaColors.freshLeaf),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -472,7 +464,7 @@ class _PremiumDiseaseDetectionScreenState
         ),
       ),
       title: Text(
-        'Disease Detection',
+        AppLocalizations.of(context)!.disease_title,
         style: TeaTypography.titleLarge.copyWith(fontWeight: FontWeight.w700),
       ),
       actions: [
@@ -480,16 +472,48 @@ class _PremiumDiseaseDetectionScreenState
           GestureDetector(
             onTap: _resetScan,
             child: Container(
+              width: 40,
+              height: 40,
               margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: TeaColors.mediumGray.withOpacity(0.15),
+                color: const Color(0xFFF6F9F7),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.close_rounded,
-                  color: TeaColors.mediumGray, size: 18),
+              child: const Icon(Icons.delete_outline_rounded,
+                  color: TeaColors.nearBlack, size: 20),
             ),
           ),
+        const SizedBox(width: 8),
+        // Connection Status
+        GestureDetector(
+          onTap: _refreshConnection,
+          child: Container(
+            width: 40,
+            height: 40,
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF6F9F7),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: _isCheckingConnection
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: TeaColors.nearBlack,
+                    ),
+                  )
+                : Icon(
+                    _isBackendConnected
+                        ? Icons.cloud_done_rounded
+                        : Icons.cloud_off_rounded,
+                    color: _isBackendConnected
+                        ? TeaColors.healthyGreen
+                        : TeaColors.warningAmber,
+                    size: 20,
+                  ),
+          ),
+        ),
         const SizedBox(width: 8),
         // History
         GestureDetector(
@@ -502,93 +526,36 @@ class _PremiumDiseaseDetectionScreenState
               color: const Color(0xFFF6F9F7),
               borderRadius: BorderRadius.circular(12),
             ),
-            child:
-                const Icon(Icons.history_rounded, color: TeaColors.nearBlack, size: 20),
+            child: const Icon(Icons.history_rounded,
+                color: TeaColors.nearBlack, size: 20),
           ),
         ),
       ],
     );
   }
 
-  // ─── Connection Banner ─────────────────────────────────────────────────
-
-  Widget _buildConnectionBanner() {
-    final Color color;
-    final String label;
-    final IconData icon;
-
-    if (_isCheckingConnection) {
-      color = TeaColors.mediumGray;
-      label = 'Checking ML backend...';
-      icon = Icons.sync_rounded;
-    } else if (_isBackendConnected) {
-      color = TeaColors.healthyGreen;
-      label = 'ML Backend Online';
-      icon = Icons.cloud_done_rounded;
-    } else {
-      color = TeaColors.warningAmber;
-      label = 'Offline — Local mode';
-      icon = Icons.cloud_off_rounded;
-    }
-
-    return GestureDetector(
-      onTap: _refreshConnection,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Row(
-          children: [
-            if (_isCheckingConnection)
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: color),
-              )
-            else
-              Icon(icon, size: 18, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TeaTypography.labelMedium.copyWith(
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Spacer(),
-            Icon(Icons.refresh_rounded, size: 16, color: color),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 300.ms);
-  }
-
   // ─── Environment Row ───────────────────────────────────────────────────
 
   Widget _buildEnvironmentRow() {
     final mqttState = ref.watch(iotLiveProvider);
-    final d = mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
+    final d =
+        mqttState.deviceList.isNotEmpty ? mqttState.deviceList.first : null;
     final hasData = d != null && d.hasData;
 
     final temp = hasData && d.temperature != null
         ? '${d.temperature!.toStringAsFixed(1)}°C'
         : '--';
-    final humidity =
-        hasData && d.humidity != null ? '${d.humidity}%' : '--';
+    final humidity = hasData && d.humidity != null ? '${d.humidity}%' : '--';
 
     return Row(
       children: [
         Expanded(
-          child: _buildEnvChip(Icons.thermostat_outlined, temp, 'Temp',
+          child: _buildEnvChip(Icons.thermostat_outlined, temp, AppLocalizations.of(context)!.disease_temp_label,
               const Color(0xFFFF8A65), const Color(0xFFFFF3E0)),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: _buildEnvChip(Icons.water_drop_outlined, humidity, 'Humidity',
+          child: _buildEnvChip(Icons.water_drop_outlined, humidity, AppLocalizations.of(context)!.sensor_humidity,
               const Color(0xFF42A5F5), const Color(0xFFE3F2FD)),
         ),
         const SizedBox(width: 10),
@@ -608,14 +575,16 @@ class _PremiumDiseaseDetectionScreenState
                   height: 6,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: hasData ? TeaColors.healthyGreen : TeaColors.mediumGray,
+                    color:
+                        hasData ? TeaColors.healthyGreen : TeaColors.mediumGray,
                   ),
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  hasData ? 'Live' : 'Default',
+                  hasData ? AppLocalizations.of(context)!.disease_live_label : AppLocalizations.of(context)!.disease_default_label,
                   style: TeaTypography.labelSmall.copyWith(
-                    color: hasData ? TeaColors.healthyGreen : TeaColors.mediumGray,
+                    color:
+                        hasData ? TeaColors.healthyGreen : TeaColors.mediumGray,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -647,8 +616,8 @@ class _PremiumDiseaseDetectionScreenState
                     style: TeaTypography.titleSmall
                         .copyWith(fontWeight: FontWeight.w700, fontSize: 13)),
                 Text(label,
-                    style:
-                        TeaTypography.labelSmall.copyWith(color: TeaColors.darkGray, fontSize: 9)),
+                    style: TeaTypography.labelSmall
+                        .copyWith(color: TeaColors.darkGray, fontSize: 9)),
               ],
             ),
           ),
@@ -698,7 +667,7 @@ class _PremiumDiseaseDetectionScreenState
           ),
           const SizedBox(height: 20),
           Text(
-            'Scan a Tea Leaf',
+            AppLocalizations.of(context)!.disease_placeholder_title,
             style: TeaTypography.titleMedium.copyWith(
               fontWeight: FontWeight.w700,
               color: TeaColors.matureLeaf,
@@ -708,7 +677,7 @@ class _PremiumDiseaseDetectionScreenState
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Take a clear photo or select from gallery.\nSupported: JPG, PNG, WebP (max 20 MB)',
+              AppLocalizations.of(context)!.disease_scan_instructions,
               textAlign: TextAlign.center,
               style: TeaTypography.bodySmall.copyWith(
                 color: TeaColors.darkGray,
@@ -755,19 +724,12 @@ class _PremiumDiseaseDetectionScreenState
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
-            child: _showGradCam && _result?.heatmapPath != null
-                ? Image.file(
-                    File(_result!.heatmapPath!),
-                    height: 300,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  )
-                : Image.memory(
-                    _imageBytes!,
-                    height: 300,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+            child: Image.memory(
+              _imageBytes!,
+              height: 300,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
           ),
           // Processing overlay
           if (_isProcessing)
@@ -791,47 +753,18 @@ class _PremiumDiseaseDetectionScreenState
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Analyzing leaf...',
+                      AppLocalizations.of(context)!.disease_analyzing,
                       style: TeaTypography.titleSmall
                           .copyWith(color: Colors.white),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _isBackendConnected
-                          ? 'Sending to AI model'
-                          : 'Running local analysis',
+                          ? AppLocalizations.of(context)!.disease_sending_to_ai
+                          : AppLocalizations.of(context)!.disease_running_local,
                       style: TeaTypography.labelSmall.copyWith(
                         color: Colors.white.withOpacity(0.6),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          // Grad-CAM Controls
-          if (_result?.heatmapPath != null)
-            Positioned(
-              top: 10,
-              right: 10,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Grad-CAM',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                    const SizedBox(width: 4),
-                    Switch(
-                      value: _showGradCam,
-                      onChanged: (v) => setState(() => _showGradCam = v),
-                      thumbColor: const WidgetStatePropertyAll(TeaColors.freshLeaf),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ],
                 ),
@@ -848,12 +781,17 @@ class _PremiumDiseaseDetectionScreenState
     if (_selectedImage == null) {
       return Row(
         children: [
-          Expanded(child: _buildActionBtn('Camera', Icons.camera_alt_rounded,
-              const [TeaColors.freshLeaf, TeaColors.matureLeaf], _captureImage)),
+          Expanded(
+              child: _buildActionBtn(
+                  AppLocalizations.of(context)!.common_camera,
+                  Icons.camera_alt_rounded,
+                  const [TeaColors.freshLeaf, TeaColors.matureLeaf],
+                  _captureImage)),
           const SizedBox(width: 12),
-          Expanded(child: _buildActionBtn('Gallery', Icons.photo_library_rounded,
-              [Colors.white, Colors.white], _pickFromGallery,
-              outlined: true)),
+          Expanded(
+              child: _buildActionBtn(AppLocalizations.of(context)!.common_gallery, Icons.photo_library_rounded,
+                  [Colors.white, Colors.white], _pickFromGallery,
+                  outlined: true)),
         ],
       ).animate().fadeIn(delay: 200.ms);
     }
@@ -897,7 +835,7 @@ class _PremiumDiseaseDetectionScreenState
                 const Icon(Icons.search_rounded, color: Colors.white, size: 22),
               const SizedBox(width: 10),
               Text(
-                _isProcessing ? 'Analyzing...' : 'Analyze Leaf',
+                _isProcessing ? AppLocalizations.of(context)!.disease_scanning : AppLocalizations.of(context)!.disease_analyze_leaf,
                 style: TeaTypography.buttonMedium
                     .copyWith(color: Colors.white, fontWeight: FontWeight.w700),
               ),
@@ -925,7 +863,7 @@ class _PremiumDiseaseDetectionScreenState
                 color: TeaColors.freshLeaf, size: 20),
             const SizedBox(width: 8),
             Text(
-              'New Scan',
+              AppLocalizations.of(context)!.disease_new_scan,
               style: TeaTypography.buttonMedium.copyWith(
                 color: TeaColors.freshLeaf,
                 fontWeight: FontWeight.w700,
@@ -937,16 +875,15 @@ class _PremiumDiseaseDetectionScreenState
     ).animate().fadeIn(delay: 100.ms);
   }
 
-  Widget _buildActionBtn(String label, IconData icon, List<Color> colors,
-      VoidCallback onTap,
+  Widget _buildActionBtn(
+      String label, IconData icon, List<Color> colors, VoidCallback onTap,
       {bool outlined = false}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          gradient:
-              outlined ? null : LinearGradient(colors: colors),
+          gradient: outlined ? null : LinearGradient(colors: colors),
           color: outlined ? Colors.white : null,
           borderRadius: BorderRadius.circular(18),
           border: outlined
@@ -966,8 +903,7 @@ class _PremiumDiseaseDetectionScreenState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon,
-                color: outlined ? TeaColors.freshLeaf : Colors.white,
-                size: 20),
+                color: outlined ? TeaColors.freshLeaf : Colors.white, size: 20),
             const SizedBox(width: 8),
             Text(
               label,
@@ -984,9 +920,29 @@ class _PremiumDiseaseDetectionScreenState
 
   // ─── Result Card ───────────────────────────────────────────────────────
 
+  String _getLocalizedReliabilityLabel(AppLocalizations l10n) {
+    if (_result == null) return l10n.disease_reliability_moderate;
+    final c = _result!.confidence;
+    if (c >= 0.85) return l10n.disease_reliability_very_high;
+    if (c >= 0.70) return l10n.disease_reliability_high;
+    if (c >= 0.50) return l10n.disease_reliability_moderate;
+    if (c >= 0.30) return l10n.disease_reliability_low_level;
+    return l10n.disease_reliability_very_low;
+  }
+
+  String _getLocalizedSeverity(String severity, AppLocalizations l10n) {
+    switch (severity) {
+      case 'Low': return l10n.disease_low;
+      case 'Medium': return l10n.disease_medium;
+      case 'High': return l10n.disease_high;
+      default: return severity;
+    }
+  }
+
   Widget _buildResultCard() {
     if (_result == null) return const SizedBox.shrink();
 
+    final l10n = AppLocalizations.of(context)!;
     final isHealthy = _result!.isHealthy;
     final isNotALeaf = _result!.isNotALeaf;
 
@@ -1000,25 +956,23 @@ class _PremiumDiseaseDetectionScreenState
     if (isUnavailable) {
       statusColor = TeaColors.mediumGray;
       statusIcon = Icons.cloud_off_rounded;
-      statusLabel = 'Backend Offline';
-      statusDesc =
-          'The ML server is unavailable. Analysis requires a live connection.';
+      statusLabel = l10n.disease_backend_offline;
+      statusDesc = l10n.disease_backend_offline_desc;
     } else if (isNotALeaf) {
       statusColor = TeaColors.warningAmber;
       statusIcon = Icons.image_not_supported_rounded;
-      statusLabel = 'Not a Tea Leaf';
-      statusDesc = _result!.validationMessage ??
-          'The uploaded image is not a recognizable tea leaf.';
+      statusLabel = l10n.disease_not_tea_leaf;
+      statusDesc = _result!.validationMessage ?? l10n.disease_not_leaf_desc;
     } else if (isHealthy) {
       statusColor = TeaColors.healthyGreen;
       statusIcon = Icons.check_circle_rounded;
-      statusLabel = 'Healthy';
-      statusDesc = 'No diseases detected. Leaf appears healthy.';
+      statusLabel = l10n.disease_healthy_label;
+      statusDesc = l10n.disease_no_diseases;
     } else {
       statusColor = TeaColors.alertRust;
       statusIcon = Icons.warning_rounded;
       statusLabel = _result!.diseaseType;
-      statusDesc = 'Disease detected with ${_result!.reliabilityLabel.toLowerCase()} confidence.';
+      statusDesc = l10n.disease_detected_with_confidence(_getLocalizedReliabilityLabel(l10n));
     }
 
     return Container(
@@ -1104,7 +1058,7 @@ class _PremiumDiseaseDetectionScreenState
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Possible false positive — glare or bright light detected.',
+                      l10n.disease_false_positive_warning,
                       style: TeaTypography.labelSmall.copyWith(
                         color: TeaColors.darkGray,
                         fontWeight: FontWeight.w500,
@@ -1133,7 +1087,7 @@ class _PremiumDiseaseDetectionScreenState
                         size: 16, color: TeaColors.healthyGreen),
                   const SizedBox(width: 8),
                   Text(
-                    _isSavingToDb ? 'Saving to database...' : 'Saved',
+                    _isSavingToDb ? l10n.disease_saving : l10n.disease_saved,
                     style: TeaTypography.labelSmall.copyWith(
                       color: _isSavingToDb
                           ? TeaColors.freshLeaf
@@ -1173,7 +1127,7 @@ class _PremiumDiseaseDetectionScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Detection Metrics',
+          Text(AppLocalizations.of(context)!.disease_detection_metrics,
               style: TeaTypography.titleSmall
                   .copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
@@ -1181,7 +1135,7 @@ class _PremiumDiseaseDetectionScreenState
           // Confidence bar
           Row(
             children: [
-              Text('Confidence', style: TeaTypography.bodySmall),
+              Text(AppLocalizations.of(context)!.common_confidence, style: TeaTypography.bodySmall),
               const Spacer(),
               Text('$pct%',
                   style: TeaTypography.titleSmall
@@ -1208,7 +1162,7 @@ class _PremiumDiseaseDetectionScreenState
           ),
           const SizedBox(height: 6),
           Text(
-            'Reliability: ${_result!.reliabilityLabel}',
+            AppLocalizations.of(context)!.disease_reliability_display(_getLocalizedReliabilityLabel(AppLocalizations.of(context)!)),
             style: TeaTypography.labelSmall.copyWith(color: TeaColors.darkGray),
           ),
 
@@ -1219,7 +1173,9 @@ class _PremiumDiseaseDetectionScreenState
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildDetailChip('Severity', _result!.severity,
+              _buildDetailChip(
+                  AppLocalizations.of(context)!.disease_severity,
+                  _getLocalizedSeverity(_result!.severity, AppLocalizations.of(context)!),
                   _result!.severity == 'High'
                       ? TeaColors.alertRust
                       : _result!.severity == 'Medium'
@@ -1227,12 +1183,12 @@ class _PremiumDiseaseDetectionScreenState
                           : TeaColors.healthyGreen),
               if (_result!.processingTimeMs != null)
                 _buildDetailChip(
-                    'Processing',
+                    AppLocalizations.of(context)!.disease_processing_label,
                     '${_result!.processingTimeMs!.toStringAsFixed(0)} ms',
                     TeaColors.infoSky),
               if (_result!.imageQualityScore != null)
                 _buildDetailChip(
-                    'Image Quality',
+                    AppLocalizations.of(context)!.disease_image_quality_label,
                     '${(_result!.imageQualityScore! * 100).toStringAsFixed(0)}%',
                     TeaColors.freshLeaf),
             ],
@@ -1253,8 +1209,8 @@ class _PremiumDiseaseDetectionScreenState
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(label,
-              style: TeaTypography.labelSmall
-                  .copyWith(color: TeaColors.darkGray)),
+              style:
+                  TeaTypography.labelSmall.copyWith(color: TeaColors.darkGray)),
           const SizedBox(width: 6),
           Text(value,
               style: TeaTypography.labelMedium
@@ -1300,7 +1256,7 @@ class _PremiumDiseaseDetectionScreenState
                     color: TeaColors.freshLeaf, size: 16),
               ),
               const SizedBox(width: 10),
-              Text('Recommendations',
+              Text(AppLocalizations.of(context)!.disease_recommendations,
                   style: TeaTypography.titleSmall
                       .copyWith(fontWeight: FontWeight.w700)),
             ],
@@ -1371,7 +1327,7 @@ class _PremiumDiseaseDetectionScreenState
                   const Icon(Icons.description_outlined,
                       color: TeaColors.freshLeaf, size: 18),
                   const SizedBox(width: 8),
-                  Text('View Report',
+                  Text(AppLocalizations.of(context)!.disease_view_report,
                       style: TeaTypography.labelMedium.copyWith(
                           color: TeaColors.freshLeaf,
                           fontWeight: FontWeight.w600)),
@@ -1397,7 +1353,7 @@ class _PremiumDiseaseDetectionScreenState
                   const Icon(Icons.history_rounded,
                       color: TeaColors.infoSky, size: 18),
                   const SizedBox(width: 8),
-                  Text('History',
+                  Text(AppLocalizations.of(context)!.common_history,
                       style: TeaTypography.labelMedium.copyWith(
                           color: TeaColors.infoSky,
                           fontWeight: FontWeight.w600)),
@@ -1409,5 +1365,4 @@ class _PremiumDiseaseDetectionScreenState
       ],
     ).animate().fadeIn(duration: 300.ms, delay: 300.ms);
   }
-
 }

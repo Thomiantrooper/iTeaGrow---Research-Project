@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:printing/printing.dart';
 import '../../../../core/design_system/tea_colors.dart';
-import '../../../../core/design_system/tea_typography.dart';
-import '../../../../core/design_system/tea_spacing.dart';
 import '../../data/datasources/leaf_maturity_pytorch_service.dart';
 import '../../domain/entities/leaf_maturity_result.dart';
 import '../services/leaf_maturity_report_service.dart';
+import '../../../disease_detection/data/datasources/leaf_validation_service.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 class LeafMaturityScreen extends StatefulWidget {
   final bool isManagerOrAdmin;
@@ -26,6 +26,7 @@ class LeafMaturityScreen extends StatefulWidget {
 class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
   final ImagePicker _picker = ImagePicker();
   final LeafMaturityPyTorchService _mlService = LeafMaturityPyTorchService();
+  final LeafValidationService _leafValidator = LeafValidationService();
 
   XFile? _selectedImage;
   Uint8List? _imageBytes;
@@ -50,7 +51,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
         });
       }
     } catch (e) {
-      _showError('Camera error: $e');
+      _showError(AppLocalizations.of(context)!.error_camera(e.toString()));
     }
   }
 
@@ -72,16 +73,26 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
         });
       }
     } catch (e) {
-      _showError('Gallery error: $e');
+      _showError(AppLocalizations.of(context)!.error_gallery(e.toString()));
     }
   }
 
   Future<void> _analyzeImage() async {
-    if (_selectedImage == null) return;
+    if (_selectedImage == null || _imageBytes == null) return;
 
     setState(() => _isProcessing = true);
 
     try {
+      // ── Pre-scan leaf validation ───────────────────────────────────
+      // Checks: min dimensions, sharpness (Laplacian), colour variance,
+      // and green/natural-leaf ratio — mirrors disease detection gate.
+      final validation = await _leafValidator.validate(_imageBytes!);
+      if (!validation.isValid) {
+        setState(() => _isProcessing = false);
+        _showError(validation.message);
+        return;
+      }
+
       final result = await _mlService.predict(_selectedImage!);
       setState(() {
         _result = result;
@@ -89,7 +100,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
       });
     } catch (e) {
       setState(() => _isProcessing = false);
-      _showError('Analysis error: $e');
+      _showError(AppLocalizations.of(context)!.error_analysis(e.toString()));
     }
   }
 
@@ -140,15 +151,16 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
             'tea_maturity_report_\${DateTime.now().millisecondsSinceEpoch}.pdf',
       );
     } catch (e) {
-      _showError('Failed to generate report: \$e');
+      _showError(AppLocalizations.of(context)!.error_report_failed(e.toString()));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Leaf Maturity Detection'),
+        title: Text(l10n.leaf_title),
         actions: [
           if (_selectedImage != null)
             IconButton(
@@ -178,7 +190,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
               ElevatedButton.icon(
                 onPressed: _captureImage,
                 icon: const Icon(Icons.camera_alt),
-                label: const Text('Capture Image'),
+                label: Text(l10n.leaf_capture),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                 ),
@@ -187,7 +199,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
               OutlinedButton.icon(
                 onPressed: _pickFromGallery,
                 icon: const Icon(Icons.photo_library),
-                label: const Text('Choose from Gallery'),
+                label: Text(l10n.leaf_from_gallery),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                 ),
@@ -205,7 +217,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
                         ),
                       )
                     : const Icon(Icons.analytics),
-                label: Text(_isProcessing ? 'Analyzing...' : 'Analyze Leaf'),
+                label: Text(_isProcessing ? l10n.leaf_analyzing : l10n.leaf_analyze),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                 ),
@@ -229,7 +241,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
               OutlinedButton.icon(
                 onPressed: _generatePdfReport,
                 icon: const Icon(Icons.picture_as_pdf),
-                label: const Text('Generate PDF Report'),
+                label: Text(l10n.common_generate_report),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: TeaColors.freshLeaf,
                   side: const BorderSide(color: TeaColors.freshLeaf),
@@ -264,15 +276,13 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No image selected',
+            AppLocalizations.of(context)!.leaf_no_image,
             style: TextStyle(color: TeaColors.darkGray, fontSize: 16),
           ),
         ],
       ),
     );
   }
-
-  bool _showGradCam = false;
 
   Widget _buildImagePreview() {
     if (_imageBytes == null) {
@@ -288,82 +298,95 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
       );
     }
 
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.memory(
-            _imageBytes!,
-            height: 300,
-            width: double.infinity,
-            fit: BoxFit.cover,
-          ),
-        ),
-        if (_showGradCam && _result != null && _result!.heatmapPath != null)
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.file(
-                File(_result!.heatmapPath!),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        if (_result != null)
-          Positioned(
-            bottom: 10,
-            right: 10,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: TeaColors.nearBlack.withOpacity(0.54),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Grad-CAM',
-                    style: TextStyle(color: TeaColors.white, fontSize: 12),
-                  ),
-                  const SizedBox(width: 8),
-                  Switch(
-                    value: _showGradCam,
-                    onChanged: (value) => setState(() => _showGradCam = value),
-                    thumbColor: WidgetStatePropertyAll(TeaColors.warmAmber),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ],
-              ),
-            ),
-          ),
-      ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.memory(
+        _imageBytes!,
+        height: 300,
+        width: double.infinity,
+        fit: BoxFit.cover,
+      ),
     );
   }
 
   Widget _buildResults() {
+    // ── Validation failure card ─────────────────────────────────────────
+    if (_result!.isNotALeaf) {
+      return Card(
+        color: TeaColors.alertRust.withOpacity(0.08),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: TeaColors.alertRust, width: 1.5),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded,
+                  color: TeaColors.alertRust, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _result!.validationMessage ??
+                      AppLocalizations.of(context)!.leaf_validation_failed,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.check_circle,
+                const Icon(Icons.check_circle,
                     color: TeaColors.healthyGreen, size: 28),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Text(
-                  'Analysis Complete',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  AppLocalizations.of(context)!.leaf_analysis_complete,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const Divider(height: 24),
 
+            // ── Ambiguity warning banner ─────────────────────────────
+            if (_result!.isAmbiguous)
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: TeaColors.warmAmber.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: TeaColors.warmAmber, width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: TeaColors.warmAmber, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.leaf_borderline_warning,
+                        style:
+                            const TextStyle(fontSize: 12, color: TeaColors.warmAmber),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Step 1: Species Classification
             Text(
-              'Species Classification',
+              AppLocalizations.of(context)!.leaf_species_section,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -372,13 +395,13 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
             ),
             const SizedBox(height: 12),
             _buildResultRow(
-              'Species',
+              AppLocalizations.of(context)!.leaf_species,
               _result!.species,
               _getSpeciesColor(_result!.species),
             ),
             const SizedBox(height: 8),
             _buildResultRow(
-              'Confidence',
+              AppLocalizations.of(context)!.leaf_confidence,
               '${(_result!.speciesConfidence * 100).toStringAsFixed(1)}%',
               TeaColors.freshLeaf,
             ),
@@ -422,7 +445,7 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
 
             // Step 2: Maturity Classification
             Text(
-              'Maturity Classification',
+              AppLocalizations.of(context)!.leaf_maturity_section,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -431,15 +454,21 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
             ),
             const SizedBox(height: 12),
             _buildResultRow(
-              'Maturity',
+              AppLocalizations.of(context)!.leaf_maturity_label,
               _result!.maturity,
               _getMaturityColor(_result!.maturity),
             ),
             const SizedBox(height: 8),
             _buildResultRow(
-              'Confidence',
+              AppLocalizations.of(context)!.leaf_confidence,
               '${(_result!.maturityConfidence * 100).toStringAsFixed(1)}%',
               TeaColors.freshLeaf,
+            ),
+            const SizedBox(height: 8),
+            _buildResultRow(
+              AppLocalizations.of(context)!.leaf_confidence_level,
+              _result!.confidenceLabel,
+              _getConfidenceLabelColor(_result!.confidenceLabel),
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
@@ -516,14 +545,14 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
               onPressed: () {
                 // Navigate to yield prediction screen
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content:
-                        Text('Yield prediction module - Ready for integration'),
+                        Text(AppLocalizations.of(context)!.leaf_yield_ready),
                   ),
                 );
               },
               icon: const Icon(Icons.calculate),
-              label: const Text('Predict Yield'),
+              label: Text(AppLocalizations.of(context)!.leaf_predict_yield),
             ),
           ],
         ),
@@ -577,6 +606,19 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
         return TeaColors.warmAmber;
       default:
         return TeaColors.mediumGray;
+    }
+  }
+
+  Color _getConfidenceLabelColor(String label) {
+    switch (label) {
+      case 'High':
+        return TeaColors.healthyGreen;
+      case 'Moderate':
+        return TeaColors.warmAmber;
+      case 'Low':
+        return Colors.orange;
+      default:
+        return TeaColors.alertRust;
     }
   }
 

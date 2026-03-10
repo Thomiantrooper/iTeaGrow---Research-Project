@@ -54,8 +54,7 @@ class DiseaseReportService {
           pw.Center(
             child: pw.Text(
               'Report ID: $reportId  |  Leaves Scanned: ${entries.length}',
-              style:
-                  const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
             ),
           ),
           pw.SizedBox(height: 20),
@@ -68,21 +67,18 @@ class DiseaseReportService {
           pw.Row(
             children: [
               Expanded(
-                child: _buildSummaryCard(
-                    'Status', summary.overallStatus,
+                child: _buildSummaryCard('Status', summary.overallStatus,
                     color: summary.healthyCount == summary.totalLeaves
                         ? PdfColors.green
                         : PdfColors.red),
               ),
               pw.SizedBox(width: 10),
               Expanded(
-                child: _buildSummaryCard(
-                    'Severity', summary.overallSeverity),
+                child: _buildSummaryCard('Severity', summary.overallSeverity),
               ),
               pw.SizedBox(width: 10),
               Expanded(
-                child: _buildSummaryCard(
-                    'Avg Confidence',
+                child: _buildSummaryCard('Avg Confidence',
                     '${(summary.averageConfidence * 100).toStringAsFixed(1)}%'),
               ),
             ],
@@ -107,8 +103,8 @@ class DiseaseReportService {
               children: [
                 if (temperature != null)
                   Expanded(
-                    child: _buildEnvCard(
-                        'Temperature', '${temperature.toStringAsFixed(1)} \u00b0C'),
+                    child: _buildEnvCard('Temperature',
+                        '${temperature.toStringAsFixed(1)} \u00b0C'),
                   ),
                 if (temperature != null && humidity != null)
                   pw.SizedBox(width: 12),
@@ -134,8 +130,7 @@ class DiseaseReportService {
     return pdf.save();
   }
 
-  pw.Widget _buildSummaryCard(String label, String value,
-      {PdfColor? color}) {
+  pw.Widget _buildSummaryCard(String label, String value, {PdfColor? color}) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(10),
       decoration: pw.BoxDecoration(
@@ -146,14 +141,11 @@ class DiseaseReportService {
       child: pw.Column(
         children: [
           pw.Text(label,
-              style:
-                  const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
           pw.SizedBox(height: 4),
           pw.Text(value,
               style: pw.TextStyle(
-                  fontSize: 12,
-                  fontWeight: pw.FontWeight.bold,
-                  color: color)),
+                  fontSize: 12, fontWeight: pw.FontWeight.bold, color: color)),
         ],
       ),
     );
@@ -178,8 +170,8 @@ class DiseaseReportService {
         _statsRow('Healthy', '${summary.healthyCount}'),
         _statsRow('Red Rust', '${summary.redRustCount}'),
         _statsRow('Blister Blight', '${summary.blisterBlightCount}'),
-        _statsRow('Health %',
-            '${summary.healthPercentage.toStringAsFixed(1)}%'),
+        _statsRow(
+            'Health %', '${summary.healthPercentage.toStringAsFixed(1)}%'),
         _statsRow('Requires Action', summary.requiresAction ? 'Yes' : 'No'),
       ],
     );
@@ -214,8 +206,7 @@ class DiseaseReportService {
         ...entries.map((e) => pw.TableRow(children: [
               _cell('${e.leafIndex}'),
               _cell(e.result.diseaseType),
-              _cell(
-                  '${(e.result.confidence * 100).toStringAsFixed(1)}%'),
+              _cell('${(e.result.confidence * 100).toStringAsFixed(1)}%'),
               _cell(e.result.severity),
               _cell(dateFormat.format(e.scannedAt)),
             ])),
@@ -242,14 +233,6 @@ class DiseaseReportService {
       } catch (_) {}
     }
 
-    pw.MemoryImage? heatmapImage;
-    if (detection['heatmap_data'] != null) {
-      try {
-        heatmapImage =
-            pw.MemoryImage(base64Decode(detection['heatmap_data']));
-      } catch (_) {}
-    }
-
     final dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
     final detectionDate = detection['timestamp'] != null
         ? dateFormat
@@ -262,10 +245,8 @@ class DiseaseReportService {
     final recommendations =
         List<String>.from(detection['recommendations'] ?? []);
 
-    final detections =
-        (detection['detections'] as List<dynamic>?) ?? [];
-    final summary =
-        detection['summary'] as Map<String, dynamic>?;
+    final detections = (detection['detections'] as List<dynamic>?) ?? [];
+    final summary = detection['summary'] as Map<String, dynamic>?;
     final temperature = (detection['temperature'] as num?)?.toDouble();
     final humidity = (detection['humidity'] as num?)?.toDouble();
     final airQuality = (detection['air_quality'] as num?)?.toDouble();
@@ -292,8 +273,7 @@ class DiseaseReportService {
           pw.Center(
             child: pw.Text(
               'Report ID: $reportId',
-              style:
-                  const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
             ),
           ),
           pw.SizedBox(height: 20),
@@ -341,36 +321,6 @@ class DiseaseReportService {
           ),
           pw.SizedBox(height: 20),
 
-          // ── GradCAM Heatmap ─────────────────────────────────────────────
-          if (heatmapImage != null) ...[
-            _buildSectionTitle('GradCAM Explainability Heatmap'),
-            pw.SizedBox(height: 10),
-            pw.Center(
-              child: pw.Container(
-                width: 200,
-                height: 200,
-                decoration: pw.BoxDecoration(
-                  border: pw.Border.all(color: PdfColors.grey400),
-                  borderRadius: pw.BorderRadius.circular(8),
-                ),
-                child: pw.ClipRRect(
-                  horizontalRadius: 8,
-                  verticalRadius: 8,
-                  child: pw.Image(heatmapImage, fit: pw.BoxFit.cover),
-                ),
-              ),
-            ),
-            pw.SizedBox(height: 8),
-            pw.Center(
-              child: pw.Text(
-                'Red regions indicate areas most indicative of the detected condition.',
-                style: const pw.TextStyle(
-                    fontSize: 9, color: PdfColors.grey600),
-              ),
-            ),
-            pw.SizedBox(height: 20),
-          ],
-
           // ── Detection Breakdown ─────────────────────────────────────────
           if (detections.isNotEmpty || summary != null) ...[
             _buildSectionTitle('Detection Breakdown'),
@@ -380,7 +330,9 @@ class DiseaseReportService {
           ],
 
           // ── Environmental Conditions ────────────────────────────────────
-          if (temperature != null || humidity != null || airQuality != null) ...[
+          if (temperature != null ||
+              humidity != null ||
+              airQuality != null) ...[
             _buildSectionTitle('Environmental Conditions (IoT Snapshot)'),
             pw.SizedBox(height: 10),
             pw.Row(
@@ -390,7 +342,8 @@ class DiseaseReportService {
                     child: _buildEnvCard(
                         'Temperature', '${temperature.toStringAsFixed(1)} °C'),
                   ),
-                if (temperature != null && (humidity != null || airQuality != null))
+                if (temperature != null &&
+                    (humidity != null || airQuality != null))
                   pw.SizedBox(width: 12),
                 if (humidity != null)
                   Expanded(
@@ -401,8 +354,7 @@ class DiseaseReportService {
                   pw.SizedBox(width: 12),
                 if (airQuality != null)
                   Expanded(
-                    child: _buildEnvCard(
-                        'Air Quality', _aqiLabel(airQuality)),
+                    child: _buildEnvCard('Air Quality', _aqiLabel(airQuality)),
                   ),
               ],
             ),
@@ -507,8 +459,8 @@ class DiseaseReportService {
               pw.Text(
                 organization['description'] ??
                     'Tea Plantation Management System',
-                style: const pw.TextStyle(
-                    fontSize: 7, color: PdfColors.grey600),
+                style:
+                    const pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
               ),
             ],
           ),
@@ -564,8 +516,8 @@ class DiseaseReportService {
           ),
           pw.Expanded(
             child: pw.Text(value,
-                style: pw.TextStyle(
-                    fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                style:
+                    pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
           ),
         ],
       ),
@@ -581,12 +533,10 @@ class DiseaseReportService {
       for (final d in detections) {
         rows.add({
           'class': _formatName(d['class_name'] ?? d['className'] ?? 'unknown'),
-          'confidence':
-              (((d['confidence'] as num?)?.toDouble() ?? 0.0) * 100)
-                  .toStringAsFixed(1),
-          'area':
-              (((d['area_percentage'] as num?)?.toDouble() ?? 0.0))
-                  .toStringAsFixed(1),
+          'confidence': (((d['confidence'] as num?)?.toDouble() ?? 0.0) * 100)
+              .toStringAsFixed(1),
+          'area': (((d['area_percentage'] as num?)?.toDouble() ?? 0.0))
+              .toStringAsFixed(1),
         });
       }
     } else if (summary != null) {
@@ -609,8 +559,7 @@ class DiseaseReportService {
       },
       children: [
         pw.TableRow(
-          decoration:
-              pw.BoxDecoration(color: PdfColor.fromHex('#FFCDD2')),
+          decoration: pw.BoxDecoration(color: PdfColor.fromHex('#FFCDD2')),
           children: [
             _cell('Disease Class', isHeader: true),
             _cell('Confidence', isHeader: true),
@@ -650,12 +599,11 @@ class DiseaseReportService {
       child: pw.Column(
         children: [
           pw.Text(label,
-              style: const pw.TextStyle(
-                  fontSize: 9, color: PdfColors.grey600)),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
           pw.SizedBox(height: 4),
           pw.Text(value,
-              style: pw.TextStyle(
-                  fontSize: 12, fontWeight: pw.FontWeight.bold)),
+              style:
+                  pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
         ],
       ),
     );
@@ -681,8 +629,8 @@ class DiseaseReportService {
                       style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold, fontSize: 10)),
                   pw.Expanded(
-                      child: pw.Text(g,
-                          style: const pw.TextStyle(fontSize: 10))),
+                      child:
+                          pw.Text(g, style: const pw.TextStyle(fontSize: 10))),
                 ],
               ),
             )),

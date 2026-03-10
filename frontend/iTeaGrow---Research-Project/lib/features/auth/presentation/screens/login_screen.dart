@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:iteagrow/core/theme/app_theme.dart';
 import 'package:iteagrow/core/enums/app_enums.dart';
 import 'package:iteagrow/features/auth/data/providers/auth_provider.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -35,9 +36,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final user = ref.read(authStateProvider).user;
 
       // Show welcome message
+      final l10nSnack = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Welcome ${user?.fullName}!'),
+          content: Text(l10nSnack.login_welcome_back(user?.fullName ?? '')),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 1),
         ),
@@ -63,8 +65,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.go(route);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid credentials'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.login_invalid_creds),
           backgroundColor: Colors.red,
         ),
       );
@@ -73,9 +75,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: Text(l10n.login_title),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -94,8 +97,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 32),
               TextField(
                 controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
+                decoration: InputDecoration(
+                  labelText: l10n.login_username,
                   prefixIcon: Icon(Icons.person),
                   border: OutlineInputBorder(),
                 ),
@@ -105,7 +108,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  labelText: 'Password',
+                  labelText: l10n.login_password,
                   prefixIcon: const Icon(Icons.lock),
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
@@ -124,7 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _login,
-                  child: const Text('Sign In'),
+                  child: Text(l10n.login_button),
                 ),
               ),
               const SizedBox(height: 24),
@@ -141,7 +144,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 8),
-                    Text('admin / admin123'),
                     Text('manager / manager123'),
                     Text('farmer / farmer123'),
                   ],

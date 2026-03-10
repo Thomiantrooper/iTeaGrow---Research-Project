@@ -4,6 +4,7 @@ import 'dart:async';
 import '../../../../core/design_system/tea_colors.dart';
 import '../../../../core/design_system/tea_typography.dart';
 import '../../../../core/design_system/tea_spacing.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../data/models/prediction_request_model.dart';
 import '../providers/yield_prediction_provider.dart';
@@ -58,6 +59,34 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
   double get _totalPercentage => _gPct + _cPct + _dPct;
 
+  // ── Cross-field consistency checks ────────────────────────────────────────
+  // Realistic Sri Lankan estate ranges:
+  //   crop-per-ha : 100 – 5 000 kg/ha
+  //   workers-per-ha: 5 – 80  workers/ha
+  String? get _cropPerHaWarning {
+    if (_fieldSize <= 0 || _cropHarvested <= 0) return null;
+    final ratio = _cropHarvested / _fieldSize;
+    if (ratio < 100) {
+      return 'Crop/ha (${ratio.toStringAsFixed(0)} kg/ha) is unusually low — verify inputs.';
+    }
+    if (ratio > 5000) {
+      return 'Crop/ha (${ratio.toStringAsFixed(0)} kg/ha) is unusually high — verify inputs.';
+    }
+    return null;
+  }
+
+  String? get _workersPerHaWarning {
+    if (_fieldSize <= 0 || _laborTotal <= 0) return null;
+    final ratio = _laborTotal / _fieldSize;
+    if (ratio < 5) {
+      return 'Workers/ha (${ratio.toStringAsFixed(1)}) seems low for the field size.';
+    }
+    if (ratio > 80) {
+      return 'Workers/ha (${ratio.toStringAsFixed(1)}) seems high for the field size.';
+    }
+    return null;
+  }
+
   void _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -67,7 +96,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
     // Allow submission if connected OR if API is healthy (even if google ping failed)
     if (connectivity.value == false && !predictionState.isApiHealthy) {
-      _showError('Internet connection required for yield prediction');
+      _showError(AppLocalizations.of(context)!.yield_internet_required);
       return;
     }
 
@@ -104,13 +133,39 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
     }
   }
 
+  Widget _buildConsistencyWarning(String message) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: TeaColors.warningAmber.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: TeaColors.warningAmber.withOpacity(0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline,
+              color: TeaColors.warningAmber, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                  fontSize: 12, color: TeaColors.warningAmber),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: TeaColors.alertRust,
         action: SnackBarAction(
-          label: 'Dismiss',
+          label: AppLocalizations.of(context)!.alert_dismiss,
           textColor: TeaColors.white,
           onPressed: () {},
         ),
@@ -120,12 +175,13 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final predictionState = ref.watch(yieldPredictionProvider);
     final connectivityStatus = ref.watch(connectivityStatusProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tea Yield Prediction'),
+        title: Text(AppLocalizations.of(context)!.yield_title),
         actions: [
           // API Health Indicator
           Padding(
@@ -142,7 +198,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  predictionState.isApiHealthy ? 'Online' : 'Offline',
+                  predictionState.isApiHealthy ? AppLocalizations.of(context)!.common_online : AppLocalizations.of(context)!.common_offline,
                   style: const TextStyle(fontSize: 12),
                 ),
               ],
@@ -167,16 +223,16 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                     children: [
                       const Icon(Icons.wifi_off, color: TeaColors.warningAmber),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'No internet connection. Please connect to use yield prediction.',
-                          style: TextStyle(color: TeaColors.nearBlack),
+                          AppLocalizations.of(context)!.yield_no_internet,
+                          style: const TextStyle(color: TeaColors.nearBlack),
                         ),
                       ),
                       TextButton.icon(
                         onPressed: _checkConnectivityAndHealth,
                         icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text('Retry'),
+                        label: Text(AppLocalizations.of(context)!.common_retry),
                         style: TextButton.styleFrom(
                           foregroundColor: TeaColors.warmAmber,
                         ),
@@ -191,10 +247,10 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
             // Division Selection
             DropdownButtonFormField<String>(
               value: _divisionId,
-              decoration: const InputDecoration(
-                labelText: 'Division',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.location_on),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.yield_division,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.location_on),
               ),
               items: ['LN', 'NC', 'LYN', 'ELT']
                   .map((d) => DropdownMenuItem(value: d, child: Text(d)))
@@ -206,101 +262,118 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Labor Total
             TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Number of Workers',
-                hintText: 'e.g. 56',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.people),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.yield_workers,
+                hintText: AppLocalizations.of(context)!.yield_workers_hint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.people),
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || int.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                  return AppLocalizations.of(context)!.yield_valid_number;
                 }
-                if (int.parse(value) <= 0) {
-                  return 'Must be greater than 0';
-                }
+                final v = int.parse(value);
+                if (v <= 0) return AppLocalizations.of(context)!.yield_greater_than_zero;
+                if (v > 500) return l10n.yield_max_workers;
                 return null;
               },
-              onChanged: (value) =>
-                  _laborTotal = int.tryParse(value) ?? _laborTotal,
+              onChanged: (value) {
+                setState(() => _laborTotal = int.tryParse(value) ?? _laborTotal);
+              },
             ),
 
             const SizedBox(height: 16),
 
             // Field Size
             TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Field Size (hectares)',
-                hintText: 'e.g. 6.59',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.landscape),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.yield_field_size,
+                hintText: AppLocalizations.of(context)!.yield_field_hint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.landscape),
               ),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null || double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                  return AppLocalizations.of(context)!.yield_valid_number;
                 }
-                if (double.parse(value) <= 0) {
-                  return 'Must be greater than 0';
-                }
+                final v = double.parse(value);
+                if (v <= 0) return AppLocalizations.of(context)!.yield_greater_than_zero;
+                if (v > 500) return l10n.yield_max_ha;
                 return null;
               },
-              onChanged: (value) =>
-                  _fieldSize = double.tryParse(value) ?? _fieldSize,
+              onChanged: (value) {
+                setState(() => _fieldSize = double.tryParse(value) ?? _fieldSize);
+              },
             ),
 
             const SizedBox(height: 16),
 
             // Crop Harvested
             TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Crop Harvested (kg)',
-                hintText: 'e.g. 1036',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.grass),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.yield_crop,
+                hintText: AppLocalizations.of(context)!.yield_crop_hint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.grass),
               ),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null || double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                  return AppLocalizations.of(context)!.yield_valid_number;
                 }
-                if (double.parse(value) <= 0) {
-                  return 'Must be greater than 0';
-                }
+                final v = double.parse(value);
+                if (v <= 0) return AppLocalizations.of(context)!.yield_greater_than_zero;
+                if (v > 500000) return l10n.yield_max_crop;
                 return null;
               },
-              onChanged: (value) =>
-                  _cropHarvested = double.tryParse(value) ?? _cropHarvested,
+              onChanged: (value) {
+                setState(() => _cropHarvested = double.tryParse(value) ?? _cropHarvested);
+              },
             ),
+
+            // ── Cross-field consistency warnings ──────────────────────────────
+            if (_cropPerHaWarning != null || _workersPerHaWarning != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Column(
+                  children: [
+                    if (_cropPerHaWarning != null)
+                      _buildConsistencyWarning(_cropPerHaWarning!),
+                    if (_workersPerHaWarning != null)
+                      _buildConsistencyWarning(_workersPerHaWarning!),
+                  ],
+                ),
+              ),
 
             const SizedBox(height: 24),
 
             // Grade Percentages Section
-            const Text(
-              'Tea Grade Percentages',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              AppLocalizations.of(context)!.yield_grade_percentages,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
             // Grade G%
             TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Grade G (%)',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.yield_grade_g,
                 hintText: 'e.g. 39',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null || double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                  return l10n.yield_valid_number;
                 }
                 final val = double.parse(value);
                 if (val < 0 || val > 100) {
-                  return 'Must be between 0 and 100';
+                  return l10n.yield_pct_range;
                 }
                 return null;
               },
@@ -313,20 +386,20 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Grade C%
             TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Grade C (%)',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.yield_grade_c,
                 hintText: 'e.g. 47',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null || double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                  return l10n.yield_valid_number;
                 }
                 final val = double.parse(value);
                 if (val < 0 || val > 100) {
-                  return 'Must be between 0 and 100';
+                  return l10n.yield_pct_range;
                 }
                 return null;
               },
@@ -339,20 +412,20 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
 
             // Grade D%
             TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Grade D (%)',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.yield_grade_d,
                 hintText: 'e.g. 14',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               validator: (value) {
                 if (value == null || double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                  return l10n.yield_valid_number;
                 }
                 final val = double.parse(value);
                 if (val < 0 || val > 100) {
-                  return 'Must be between 0 and 100';
+                  return l10n.yield_pct_range;
                 }
                 return null;
               },
@@ -380,7 +453,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total:'),
+                  Text(AppLocalizations.of(context)!.yield_total),
                   Text(
                     '${_totalPercentage.toStringAsFixed(1)}%',
                     style: TextStyle(
@@ -398,7 +471,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  'Percentages must sum to 100%',
+                  AppLocalizations.of(context)!.yield_pct_warning,
                   style: TextStyle(color: TeaColors.warningAmber, fontSize: 12),
                 ),
               ),
@@ -406,9 +479,9 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
             const SizedBox(height: 24),
 
             // Prediction Days Slider
-            const Text(
-              'Prediction Days',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              AppLocalizations.of(context)!.yield_prediction_days,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             Slider(
               value: _predictionDays.toDouble(),
@@ -448,9 +521,9 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
                         color: TeaColors.white,
                       ),
                     )
-                  : const Text(
-                      'Get Prediction',
-                      style: TextStyle(fontSize: 16),
+                  : Text(
+                      AppLocalizations.of(context)!.yield_get_prediction,
+                      style: const TextStyle(fontSize: 16),
                     ),
             ),
           ],

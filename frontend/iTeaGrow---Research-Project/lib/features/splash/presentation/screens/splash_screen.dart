@@ -6,6 +6,7 @@ import '../../../../core/design_system/design_system.dart';
 import '../../../../features/auth/data/providers/auth_provider.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../../../core/services/local_auth_service.dart' show sharedPreferencesProvider;
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 /// Premium Get Started / Onboarding Screen
 /// First-time users see the full onboarding with "Get Started" button.
@@ -175,7 +176,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
             // Subtitle
             Text(
-              'AI-powered Tea Monitoring System',
+              AppLocalizations.of(context)!.splash_subtitle,
               textAlign: TextAlign.center,
               style: TeaTypography.titleMedium.copyWith(
                 color: Colors.white.withOpacity(0.75),
@@ -206,7 +207,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
             // Version text
             Text(
-              'Version 1.0.0',
+              AppLocalizations.of(context)!.splash_version,
               style: TeaTypography.labelSmall.copyWith(
                 color: Colors.white.withOpacity(0.38),
               ),
@@ -272,7 +273,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             splashColor: Colors.white.withOpacity(0.2),
             child: Center(
               child: Text(
-                'Get Started',
+                AppLocalizations.of(context)!.landing_get_started,
                 style: TeaTypography.buttonLarge.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,

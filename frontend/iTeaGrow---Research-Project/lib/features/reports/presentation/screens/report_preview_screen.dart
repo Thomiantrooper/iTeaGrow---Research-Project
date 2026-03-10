@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 import '../../../../core/services/api_service.dart';
@@ -63,7 +64,7 @@ class _ReportPreviewScreenState extends ConsumerState<ReportPreviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Report Preview'),
+        title: Text(AppLocalizations.of(context)!.reports_preview_title),
         actions: [
           if (_pdfBytes != null) ...[
             IconButton(
@@ -85,13 +86,13 @@ class _ReportPreviewScreenState extends ConsumerState<ReportPreviewScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Generating report...'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(AppLocalizations.of(context)!.reports_generating),
           ],
         ),
       );
@@ -110,7 +111,7 @@ class _ReportPreviewScreenState extends ConsumerState<ReportPreviewScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadReport,
-                child: const Text('Retry'),
+                child: Text(AppLocalizations.of(context)!.common_retry),
               ),
             ],
           ),
@@ -119,7 +120,7 @@ class _ReportPreviewScreenState extends ConsumerState<ReportPreviewScreen> {
     }
 
     if (_pdfBytes == null) {
-      return const Center(child: Text('No PDF generated'));
+      return Center(child: Text(AppLocalizations.of(context)!.reports_no_pdf));
     }
 
     return Column(
@@ -151,7 +152,7 @@ class _ReportPreviewScreenState extends ConsumerState<ReportPreviewScreen> {
               ),
               TextButton.icon(
                 icon: const Icon(Icons.download),
-                label: const Text('Save'),
+                label: Text(AppLocalizations.of(context)!.common_save),
                 onPressed: _sharePdf,
               ),
             ],

@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../providers/analytics_provider.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 class AnalyticsDashboardScreen extends ConsumerStatefulWidget {
   const AnalyticsDashboardScreen({super.key});
@@ -27,6 +28,7 @@ class _AnalyticsDashboardScreenState
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(analyticsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
@@ -45,14 +47,14 @@ class _AnalyticsDashboardScreenState
                 pinned: true,
                 backgroundColor: TeaColors.white,
                 title: Text(
-                  'Analytics',
+                  l10n.analytics_title,
                   style: TeaTypography.headlineSmall.copyWith(color: TeaColors.matureLeaf),
                 ),
                 actions: [
                   TeaIconButton(
                     icon: Icons.refresh,
                     onPressed: () => ref.read(analyticsProvider.notifier).loadAll(),
-                    tooltip: 'Refresh',
+                    tooltip: l10n.common_retry,
                   ),
                   const SizedBox(width: TeaSpacing.sm),
                 ],
@@ -65,7 +67,7 @@ class _AnalyticsDashboardScreenState
                       children: [
                         const CircularProgressIndicator(color: TeaColors.freshLeaf),
                         const SizedBox(height: TeaSpacing.md),
-                        Text('Loading analytics...', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+                        Text(l10n.analytics_loading, style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
                       ],
                     ),
                   ),
@@ -90,7 +92,7 @@ class _AnalyticsDashboardScreenState
                         TextButton.icon(
                           onPressed: () => ref.read(analyticsProvider.notifier).loadAll(),
                           icon: const Icon(Icons.refresh, size: 18),
-                          label: const Text('Retry'),
+                          label: Text(l10n.common_retry),
                           style: TextButton.styleFrom(foregroundColor: TeaColors.freshLeaf),
                         ),
                       ],
@@ -133,7 +135,7 @@ class _AnalyticsDashboardScreenState
           children: [
             Expanded(
               child: TeaMetricCard(
-                label: 'Total Scans',
+                label: AppLocalizations.of(context)!.analytics_total_scans,
                 value: '${overview?['total_scans'] ?? 0}',
                 icon: Icons.document_scanner_outlined,
                 iconColor: TeaColors.infoSky,
@@ -142,7 +144,7 @@ class _AnalyticsDashboardScreenState
             const SizedBox(width: TeaSpacing.smd),
             Expanded(
               child: TeaMetricCard(
-                label: 'Total Users',
+                label: AppLocalizations.of(context)!.analytics_total_users,
                 value: '${overview?['total_users'] ?? 0}',
                 icon: Icons.people_outlined,
                 iconColor: TeaColors.matureLeaf,
@@ -155,7 +157,7 @@ class _AnalyticsDashboardScreenState
           children: [
             Expanded(
               child: TeaMetricCard(
-                label: 'Health Rate',
+                label: AppLocalizations.of(context)!.analytics_health_rate,
                 value: '${((overview?['health_rate'] ?? 0) as num).toStringAsFixed(1)}%',
                 icon: Icons.health_and_safety_outlined,
                 iconColor: TeaColors.healthyGreen,
@@ -164,7 +166,7 @@ class _AnalyticsDashboardScreenState
             const SizedBox(width: TeaSpacing.smd),
             Expanded(
               child: TeaMetricCard(
-                label: 'Active Devices',
+                label: AppLocalizations.of(context)!.analytics_active_devices,
                 value: '${overview?['total_devices'] ?? 0}',
                 icon: Icons.sensors_outlined,
                 iconColor: TeaColors.warmAmber,
@@ -182,13 +184,13 @@ class _AnalyticsDashboardScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const TeaSectionHeader(title: 'Disease Distribution', icon: Icons.pie_chart_outline),
+        TeaSectionHeader(title: AppLocalizations.of(context)!.analytics_disease_distribution, icon: Icons.pie_chart_outline),
         const SizedBox(height: TeaSpacing.smd),
         if (distribution == null || distribution.isEmpty)
           TeaCard.elevated(
             padding: const EdgeInsets.all(TeaSpacing.xl),
             child: Center(
-              child: Text('No distribution data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+              child: Text(AppLocalizations.of(context)!.analytics_no_distribution, style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
             ),
           )
         else
@@ -260,13 +262,13 @@ class _AnalyticsDashboardScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const TeaSectionHeader(title: 'Disease Trends', icon: Icons.trending_up),
+        TeaSectionHeader(title: AppLocalizations.of(context)!.analytics_disease_trends, icon: Icons.trending_up),
         const SizedBox(height: TeaSpacing.smd),
         if (trends == null || trends.isEmpty)
           TeaCard.elevated(
             padding: const EdgeInsets.all(TeaSpacing.xl),
             child: Center(
-              child: Text('No trend data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+              child: Text(AppLocalizations.of(context)!.analytics_no_trend, style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
             ),
           )
         else
@@ -360,13 +362,13 @@ class _AnalyticsDashboardScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const TeaSectionHeader(title: 'Monthly Scans', icon: Icons.bar_chart_outlined),
+        TeaSectionHeader(title: AppLocalizations.of(context)!.analytics_monthly_scans, icon: Icons.bar_chart_outlined),
         const SizedBox(height: TeaSpacing.smd),
         if (yearly == null || monthlyData == null || monthlyData.isEmpty)
           TeaCard.elevated(
             padding: const EdgeInsets.all(TeaSpacing.xl),
             child: Center(
-              child: Text('No yearly data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+              child: Text(AppLocalizations.of(context)!.analytics_no_yearly, style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
             ),
           )
         else
@@ -453,13 +455,13 @@ class _AnalyticsDashboardScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const TeaSectionHeader(title: 'Recovery Tracking', icon: Icons.healing_outlined),
+        TeaSectionHeader(title: AppLocalizations.of(context)!.analytics_recovery, icon: Icons.healing_outlined),
         const SizedBox(height: TeaSpacing.smd),
         if (recovery == null)
           TeaCard.elevated(
             padding: const EdgeInsets.all(TeaSpacing.xl),
             child: Center(
-              child: Text('No recovery data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+              child: Text(AppLocalizations.of(context)!.analytics_no_recovery, style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
             ),
           )
         else
@@ -468,15 +470,15 @@ class _AnalyticsDashboardScreenState
             child: Column(
               children: [
                 Text(
-                  '${recovery['total_tracked_users'] ?? 0} Plants Tracked',
+                  '${recovery['total_tracked_users'] ?? 0} ${AppLocalizations.of(context)!.analytics_plants_tracked}',
                   style: TeaTypography.titleSmall.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: TeaSpacing.md),
                 Row(
                   children: [
-                    Expanded(child: _buildRecoveryIndicator('Recovered', recovery['recovered'] ?? 0, TeaColors.healthyGreen)),
-                    Expanded(child: _buildRecoveryIndicator('Improving', recovery['improving'] ?? 0, TeaColors.warmAmber)),
-                    Expanded(child: _buildRecoveryIndicator('Infected', recovery['still_infected'] ?? 0, TeaColors.alertRust)),
+                    Expanded(child: _buildRecoveryIndicator(AppLocalizations.of(context)!.analytics_recovered, recovery['recovered'] ?? 0, TeaColors.healthyGreen)),
+                    Expanded(child: _buildRecoveryIndicator(AppLocalizations.of(context)!.analytics_improving, recovery['improving'] ?? 0, TeaColors.warmAmber)),
+                    Expanded(child: _buildRecoveryIndicator(AppLocalizations.of(context)!.analytics_infected, recovery['still_infected'] ?? 0, TeaColors.alertRust)),
                   ],
                 ),
               ],
@@ -506,13 +508,13 @@ class _AnalyticsDashboardScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const TeaSectionHeader(title: 'Top Scanners', icon: Icons.leaderboard_outlined),
+        TeaSectionHeader(title: AppLocalizations.of(context)!.analytics_top_scanners, icon: Icons.leaderboard_outlined),
         const SizedBox(height: TeaSpacing.smd),
         if (topScanners.isEmpty)
           TeaCard.elevated(
             padding: const EdgeInsets.all(TeaSpacing.xl),
             child: Center(
-              child: Text('No scanner data', style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
+              child: Text(AppLocalizations.of(context)!.analytics_no_scanners, style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray)),
             ),
           )
         else

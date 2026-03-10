@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 import '../../domain/entities/leaf_maturity_result.dart';
@@ -36,108 +37,86 @@ class LeafMaturityMLService {
     if (_isInitialized) return;
 
     try {
-      print('🧠 Initializing Tea Maturity Model with Flex ops support...');
+      debugPrint('LeafMaturityTFLite: Initializing model with Flex ops support...');
 
-      // Create interpreter options to enable Flex ops
-      // deeply critical for models with FlexConv2D
       final options = InterpreterOptions();
 
-      // Load model from assets with options
       _interpreter = await Interpreter.fromAsset(
         _modelPath,
         options: options,
       );
 
-      // Verify input info before allocation
       final inputTensor = _interpreter!.getInputTensor(0);
-      print('📊 Model Input Shape (Pre-allocation): ${inputTensor.shape}');
-      print('📊 Model Input Type: ${inputTensor.type}');
+      debugPrint('LeafMaturityTFLite: Input shape (pre-alloc): ${inputTensor.shape}');
 
-      // CRITICAL: Allocate tensors
       _interpreter!.allocateTensors();
 
-      // Store final shapes for faster access in predict
       _inputShape = List<int>.from(_interpreter!.getInputTensor(0).shape);
       _outputShape = List<int>.from(_interpreter!.getOutputTensor(0).shape);
 
-      print('✅ Model initialized with Flex ops support');
-      print('   - Input shape: $_inputShape');
-      print('   - Output shape: $_outputShape');
+      debugPrint('LeafMaturityTFLite: Initialized — input: $_inputShape, output: $_outputShape');
 
       _isInitialized = true;
     } catch (e, stackTrace) {
-      print('❌ Initialization failed: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('LeafMaturityTFLite: Initialization failed: $e');
+      debugPrint('Stack trace: $stackTrace');
 
-      // Specific error message for Flex ops
       if (e.toString().contains('Flex') ||
           e.toString().contains('Select TF') ||
           e.toString().contains('failed to prepare')) {
-        print('\n🔥 CRITICAL ERROR: Flex Ops missing or incompatible');
-        print(
-            '   Ensure build.gradle contains: implementation "org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0"');
-        print('   Ensure aaptOptions noCompress "tflite" is set');
+        debugPrint('CRITICAL: Flex Ops missing — '
+            'add tensorflow-lite-select-tf-ops to build.gradle');
       }
       rethrow;
     }
   }
 
-  /// Predict tea leaf maturity from image path
   Future<LeafMaturityResult> predict(String imagePath) async {
     final stopwatch = Stopwatch()..start();
-    print('🧠 === STARTING PREDICTION ===');
 
     if (!_isInitialized) {
-      print('   Model not initialized, initializing now...');
       await initialize();
     }
 
     try {
       // 1. Load and preprocess image
-      print('🖼️ Step 1: Preprocessing image: $imagePath');
+      debugPrint('LeafMaturityTFLite: Preprocessing $imagePath');
       final input = await _preprocessImage(imagePath);
 
       // Validate input size against expected shape
       final expectedInputSize = _inputShape.reduce((a, b) => a * b);
       if (input.length != expectedInputSize) {
         throw Exception(
-            'Input size mismatch: expected $expectedInputSize, got ${input.length}. '
-            'Check model implementation.');
+            'Input size mismatch: expected $expectedInputSize, got ${input.length}.');
       }
 
-      // 2. Prepare output buffer as Float32List
+      // 2. Prepare output buffer
       final expectedOutputSize = _outputShape.reduce((a, b) => a * b);
       final output = Float32List(expectedOutputSize);
-      print('📊 Output buffer prepared: length $expectedOutputSize');
 
       // 3. Run inference
-      print('🚀 Step 2: Running inference...');
       final inferenceStopwatch = Stopwatch()..start();
       _interpreter!.run(input, output);
       inferenceStopwatch.stop();
-      print(
-          '✅ Inference complete in ${inferenceStopwatch.elapsedMilliseconds}ms');
+      debugPrint('LeafMaturityTFLite: Inference in ${inferenceStopwatch.elapsedMilliseconds}ms');
 
-      // Validate output (check for NaN or all zeros)
+      // Validate output
       if (output.any((v) => v.isNaN || v.isInfinite)) {
         throw Exception('Model produced invalid values (NaN/Inf)');
       }
 
-      // 4. Post-process results
+      // 4. Post-process
       final logits = output.toList();
-      print('📈 Raw logits: $logits');
-
       final probabilities = _softmax(logits);
-      print('📈 Probabilities: $probabilities');
 
       stopwatch.stop();
-      print('🎉 Prediction successful in ${stopwatch.elapsedMilliseconds}ms');
+      debugPrint('LeafMaturityTFLite: Done in ${stopwatch.elapsedMilliseconds}ms');
 
       return _extractResult(probabilities);
     } catch (e, stackTrace) {
       stopwatch.stop();
-      print('❌ Prediction failed after ${stopwatch.elapsedMilliseconds}ms: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('LeafMaturityTFLite: Prediction failed: $e');
+      debugPrint('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -209,8 +188,8 @@ class LeafMaturityMLService {
       }
     }
 
-    print(
-        'DEBUG: Input layout: ${isNCHW ? "NCHW" : "NHWC"}, shape: $_inputShape');
+    debugPrint(
+        'LeafMaturityTFLite: Input layout: ${isNCHW ? "NCHW" : "NHWC"}, shape: $_inputShape');
     return input;
   }
 

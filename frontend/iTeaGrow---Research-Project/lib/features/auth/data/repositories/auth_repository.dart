@@ -91,6 +91,7 @@ class AuthRepository {
           ApiConfig.authGoogleLogin,
           body: {'id_token': idToken},
           fromJson: (data) => data as Map<String, dynamic>,
+          timeout: const Duration(seconds: 30),
         );
 
         debugPrint(

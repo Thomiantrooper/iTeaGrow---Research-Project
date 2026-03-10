@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/jarvis_theme.dart';
 import '../../../../core/providers/iot_live_provider.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 
 class IoTDevicesScreen extends ConsumerWidget {
   const IoTDevicesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final iotData = ref.watch(iotLiveProvider);
     final device = iotData.deviceList.isNotEmpty ? iotData.deviceList.first : null;
     
@@ -21,7 +23,7 @@ class IoTDevicesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('IoT Devices'),
+        title: Text(l10n.iot_title),
         backgroundColor: JarvisTheme.teaGreen,
         foregroundColor: Colors.white,
         actions: [
@@ -46,18 +48,18 @@ class IoTDevicesScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              const Text(
-                'Connected Devices',
-                style: TextStyle(
+              Text(
+                l10n.iot_devices_heading,
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: JarvisTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Monitor your tea plantation environmental conditions',
-                style: TextStyle(
+              Text(
+                l10n.iot_devices_subtitle,
+                style: const TextStyle(
                   fontSize: 14,
                   color: JarvisTheme.textMuted,
                 ),
@@ -66,8 +68,8 @@ class IoTDevicesScreen extends ConsumerWidget {
 
               // IoTENV Device Card
               _IoTDeviceCard(
-                deviceName: 'IoTENV',
-                deviceDescription: 'Environmental Monitoring',
+                deviceName: l10n.iot_env_device,
+                deviceDescription: l10n.iot_env_device_desc,
                 isOnline: isOnline,
                 icon: Icons.thermostat,
                 iconColor: Colors.orange,
@@ -75,19 +77,19 @@ class IoTDevicesScreen extends ConsumerWidget {
                     ? [
                         _MetricData(
                           icon: Icons.thermostat,
-                          label: 'Temperature',
+                          label: l10n.sensor_temperature,
                           value: '${device.temperature?.toStringAsFixed(1) ?? '--'}°C',
                           color: Colors.deepOrange,
                         ),
                         _MetricData(
                           icon: Icons.water_drop,
-                          label: 'Humidity',
+                          label: l10n.sensor_humidity,
                           value: '${device.humidity?.toString() ?? '--'}%',
                           color: Colors.blue,
                         ),
                         _MetricData(
                           icon: Icons.air,
-                          label: 'Air Quality',
+                          label: l10n.iot_air_quality,
                           value: device.airQuality?.toStringAsFixed(0) ?? '--',
                           color: _getAirQualityColor(device.airQuality ?? 0),
                         ),
@@ -100,8 +102,8 @@ class IoTDevicesScreen extends ConsumerWidget {
 
               // IoTSOIL Device Card (Coming Soon)
               _IoTDeviceCard(
-                deviceName: 'IoTSOIL',
-                deviceDescription: 'Soil Monitoring',
+                deviceName: l10n.iot_soil_device,
+                deviceDescription: l10n.iot_soil_device_desc,
                 isOnline: false,
                 icon: Icons.grass,
                 iconColor: Colors.brown,
@@ -130,10 +132,10 @@ class IoTDevicesScreen extends ConsumerWidget {
                       size: 24,
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Devices update automatically every 5 seconds when online',
-                        style: TextStyle(
+                        l10n.iot_auto_update,
+                        style: const TextStyle(
                           fontSize: 13,
                           color: JarvisTheme.textSecondary,
                         ),
@@ -287,16 +289,16 @@ class _IoTDeviceCard extends StatelessWidget {
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(
+                        children: [
+                          const Icon(
                             Icons.schedule,
                             size: 14,
                             color: Colors.amber,
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text(
-                            'Coming Soon',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.common_coming_soon,
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: Colors.amber,
@@ -338,7 +340,7 @@ class _IoTDeviceCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            isOnline ? 'Online' : 'Offline',
+                            isOnline ? AppLocalizations.of(context)!.common_online : AppLocalizations.of(context)!.common_offline,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -371,7 +373,7 @@ class _IoTDeviceCard extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Soil monitoring device will be available soon with NPK, moisture, and pH sensors',
+                          AppLocalizations.of(context)!.iot_soil_soon,
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey.shade700,
@@ -445,7 +447,7 @@ class _IoTDeviceCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Last update: ${_getTimeAgo(lastUpdate!)}',
+                        '${AppLocalizations.of(context)!.iot_last_update}: ${_getTimeAgo(lastUpdate!)}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
@@ -469,11 +471,11 @@ class _IoTDeviceCard extends StatelessWidget {
                         color: Colors.grey.shade600,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
-                      const Expanded(
+                      SizedBox(width: 12),
+                      Expanded(
                         child: Text(
-                          'No data available. Waiting for device connection...',
-                          style: TextStyle(
+                          AppLocalizations.of(context)!.iot_no_data,
+                          style: const TextStyle(
                             fontSize: 13,
                             color: JarvisTheme.textMuted,
                           ),

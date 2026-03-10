@@ -41,9 +41,11 @@ class TourState {
 
 class TourNotifier extends StateNotifier<TourState> {
   final SharedPreferences _prefs;
-  static const _completedKey = 'tour_completed';
+  final String _completedKey;
 
-  TourNotifier(this._prefs) : super(const TourState()) {
+  TourNotifier(this._prefs, {String completedKey = 'tour_completed'})
+      : _completedKey = completedKey,
+        super(const TourState()) {
     _loadCompletionState();
   }
 
@@ -55,15 +57,17 @@ class TourNotifier extends StateNotifier<TourState> {
   /// Start the tour with the given steps
   void startTour({
     GlobalKey? heroCardKey,
-    GlobalKey? metricsKey,
+    GlobalKey? searchBarKey,
     GlobalKey? quickActionsKey,
-    GlobalKey? alertsKey,
+    GlobalKey? bottomNavKey,
+    GlobalKey? chatFabKey,
   }) {
     final steps = TourSteps.buildSteps(
       heroCardKey: heroCardKey,
-      metricsKey: metricsKey,
+      searchBarKey: searchBarKey,
       quickActionsKey: quickActionsKey,
-      alertsKey: alertsKey,
+      bottomNavKey: bottomNavKey,
+      chatFabKey: chatFabKey,
     );
 
     state = TourState(
@@ -118,6 +122,31 @@ class TourNotifier extends StateNotifier<TourState> {
     state = const TourState(isCompleted: false);
   }
 
+  /// Start the tour with the given steps for the manager dashboard
+  void startManagerTour({
+    GlobalKey? welcomeCardKey,
+    GlobalKey? fieldToolsKey,
+    GlobalKey? analyticsToolsKey,
+    GlobalKey? marketToolsKey,
+    GlobalKey? bottomNavKey,
+  }) {
+    final steps = TourSteps.buildManagerSteps(
+      welcomeCardKey: welcomeCardKey,
+      fieldToolsKey: fieldToolsKey,
+      analyticsToolsKey: analyticsToolsKey,
+      marketToolsKey: marketToolsKey,
+      bottomNavKey: bottomNavKey,
+    );
+
+    state = TourState(
+      isActive: true,
+      isCompleted: false,
+      currentStepIndex: 0,
+      steps: steps,
+      isDimmed: true,
+    );
+  }
+
   /// Check if tour should auto-start (first time user)
   bool get shouldAutoStart => !state.isCompleted && !state.isActive;
 }
@@ -129,4 +158,10 @@ class TourNotifier extends StateNotifier<TourState> {
 final tourProvider = StateNotifierProvider<TourNotifier, TourState>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
   return TourNotifier(prefs);
+});
+
+final managerTourProvider =
+    StateNotifierProvider<TourNotifier, TourState>((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return TourNotifier(prefs, completedKey: 'manager_tour_completed');
 });

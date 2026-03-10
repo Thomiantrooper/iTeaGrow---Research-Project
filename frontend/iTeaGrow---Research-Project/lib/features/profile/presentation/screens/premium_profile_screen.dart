@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iteagrow/l10n/app_localizations.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/data/providers/auth_provider.dart';
@@ -11,7 +11,8 @@ class PremiumProfileScreen extends ConsumerStatefulWidget {
   const PremiumProfileScreen({super.key});
 
   @override
-  ConsumerState<PremiumProfileScreen> createState() => _PremiumProfileScreenState();
+  ConsumerState<PremiumProfileScreen> createState() =>
+      _PremiumProfileScreenState();
 }
 
 class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
@@ -31,7 +32,7 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
     _nameController = TextEditingController(text: user?.fullName ?? 'User');
     _emailController = TextEditingController(text: user?.email ?? '');
     _phoneController = TextEditingController(text: user?.phone ?? '');
-    _addressController = TextEditingController(text: 'Uva Province, Sri Lanka');
+    _addressController = TextEditingController();
   }
 
   @override
@@ -168,65 +169,8 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
               delegate: SliverChildListDelegate([
                 const SizedBox(height: TeaSpacing.md),
 
-                // Stats Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        icon: Icons.eco,
-                        value: '12,450',
-                        label: 'Plants Managed',
-                        color: TeaColors.freshLeaf,
-                      ),
-                    ),
-                    const SizedBox(width: TeaSpacing.smd),
-                    Expanded(
-                      child: _buildStatCard(
-                        icon: Icons.camera_alt,
-                        value: '234',
-                        label: 'Scans Done',
-                        color: TeaColors.infoSky,
-                      ),
-                    ),
-                    const SizedBox(width: TeaSpacing.smd),
-                    Expanded(
-                      child: _buildStatCard(
-                        icon: Icons.inventory_2,
-                        value: '1,245',
-                        label: 'kg Harvested',
-                        color: TeaColors.goldenSunlight,
-                      ),
-                    ),
-                  ],
-                ).animate().fadeIn(duration: 300.ms),
-
-                const SizedBox(height: TeaSpacing.lg),
-
                 // Profile Form
-                if (_isEditing)
-                  _buildEditForm()
-                else
-                  _buildProfileInfo(),
-
-                const SizedBox(height: TeaSpacing.lg),
-
-                // Achievements Section
-                const TeaSectionHeader(
-                  title: 'Achievements',
-                  icon: Icons.emoji_events_outlined,
-                ),
-                const SizedBox(height: TeaSpacing.sm),
-                _buildAchievements(),
-
-                const SizedBox(height: TeaSpacing.lg),
-
-                // Activity Summary
-                const TeaSectionHeader(
-                  title: 'Activity Summary',
-                  icon: Icons.insights,
-                ),
-                const SizedBox(height: TeaSpacing.sm),
-                _buildActivitySummary(),
+                if (_isEditing) _buildEditForm() else _buildProfileInfo(),
 
                 const SizedBox(height: TeaSpacing.xxl),
               ]),
@@ -237,46 +181,19 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
     );
   }
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    return TeaCard.elevated(
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: TeaSpacing.xs),
-          Text(
-            value,
-            style: TeaTypography.titleMedium.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            label,
-            style: TeaTypography.labelSmall.copyWith(
-              color: TeaColors.darkGray,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildProfileInfo() {
+    final l10n = AppLocalizations.of(context)!;
     return TeaCard.elevated(
       child: Column(
         children: [
-          _buildInfoRow(Icons.person_outline, 'Name', _nameController.text),
+          _buildInfoRow(Icons.person_outline, l10n.profile_name_label, _nameController.text),
           const Divider(),
-          _buildInfoRow(Icons.email_outlined, 'Email', _emailController.text),
+          _buildInfoRow(Icons.email_outlined, l10n.contact_email, _emailController.text),
           const Divider(),
-          _buildInfoRow(Icons.phone_outlined, 'Phone', _phoneController.text),
+          _buildInfoRow(Icons.phone_outlined, l10n.contact_phone, _phoneController.text),
           const Divider(),
-          _buildInfoRow(Icons.location_on_outlined, 'Address', _addressController.text),
+          _buildInfoRow(
+              Icons.location_on_outlined, l10n.contact_address, _addressController.text),
         ],
       ),
     );
@@ -309,33 +226,34 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
   }
 
   Widget _buildEditForm() {
+    final l10n = AppLocalizations.of(context)!;
     return Form(
       key: _formKey,
       child: TeaCard.elevated(
         child: Column(
           children: [
             TeaTextField(
-              label: 'Full Name',
+              label: l10n.profile_full_name,
               controller: _nameController,
               prefixIcon: const Icon(Icons.person_outline),
             ),
             const SizedBox(height: TeaSpacing.md),
             TeaTextField(
-              label: 'Email',
+              label: l10n.contact_email,
               controller: _emailController,
               prefixIcon: const Icon(Icons.email_outlined),
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: TeaSpacing.md),
             TeaTextField(
-              label: 'Phone',
+              label: l10n.contact_phone,
               controller: _phoneController,
               prefixIcon: const Icon(Icons.phone_outlined),
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: TeaSpacing.md),
             TeaTextField(
-              label: 'Address',
+              label: l10n.contact_address,
               controller: _addressController,
               prefixIcon: const Icon(Icons.location_on_outlined),
               maxLines: 2,
@@ -344,172 +262,13 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
             SizedBox(
               width: double.infinity,
               child: TeaButton.primary(
-                label: 'Save Changes',
+                label: l10n.profile_save_changes,
                 icon: Icons.save,
                 onPressed: _saveProfile,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildAchievements() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildAchievementBadge(
-            icon: Icons.eco,
-            title: 'Green Thumb',
-            subtitle: '1000+ plants',
-            color: TeaColors.healthyGreen,
-            isEarned: true,
-          ),
-          _buildAchievementBadge(
-            icon: Icons.camera_alt,
-            title: 'Scanner Pro',
-            subtitle: '100+ scans',
-            color: TeaColors.infoSky,
-            isEarned: true,
-          ),
-          _buildAchievementBadge(
-            icon: Icons.local_florist,
-            title: 'Disease Fighter',
-            subtitle: '50+ detections',
-            color: TeaColors.alertRust,
-            isEarned: true,
-          ),
-          _buildAchievementBadge(
-            icon: Icons.analytics,
-            title: 'Data Analyst',
-            subtitle: 'View 500 reports',
-            color: TeaColors.mediumGray,
-            isEarned: false,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAchievementBadge({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required bool isEarned,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(right: TeaSpacing.smd),
-      child: Opacity(
-        opacity: isEarned ? 1.0 : 0.4,
-        child: TeaCard.elevated(
-          padding: TeaSpacing.cardPaddingMd,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(TeaSpacing.md),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 32),
-              ),
-              const SizedBox(height: TeaSpacing.sm),
-              Text(
-                title,
-                style: TeaTypography.titleSmall,
-              ),
-              Text(
-                subtitle,
-                style: TeaTypography.labelSmall.copyWith(
-                  color: TeaColors.darkGray,
-                ),
-              ),
-              if (isEarned)
-                const Padding(
-                  padding: EdgeInsets.only(top: TeaSpacing.xs),
-                  child: Icon(
-                    Icons.verified,
-                    color: TeaColors.healthyGreen,
-                    size: 16,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActivitySummary() {
-    return TeaCard.elevated(
-      child: Column(
-        children: [
-          _buildActivityRow('This Week', '23 scans', '156 kg harvested'),
-          const Divider(),
-          _buildActivityRow('This Month', '87 scans', '623 kg harvested'),
-          const Divider(),
-          _buildActivityRow('This Year', '892 scans', '5,420 kg harvested'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActivityRow(String period, String scans, String harvest) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: TeaSpacing.sm),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              period,
-              style: TeaTypography.titleSmall,
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  scans,
-                  style: TeaTypography.bodyMedium.copyWith(
-                    color: TeaColors.infoSky,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'Scans',
-                  style: TeaTypography.labelSmall.copyWith(
-                    color: TeaColors.darkGray,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  harvest,
-                  style: TeaTypography.bodyMedium.copyWith(
-                    color: TeaColors.goldenSunlight,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'Harvest',
-                  style: TeaTypography.labelSmall.copyWith(
-                    color: TeaColors.darkGray,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -523,14 +282,16 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
   }
 
   String _getRoleDisplayName(String role) {
+    final l10n = AppLocalizations.of(context)!;
     switch (role.toLowerCase()) {
       case 'admin':
-        return 'Administrator';
+        return l10n.profile_role_admin;
       case 'manager':
-        return 'Plantation Manager';
+        return l10n.profile_role_manager;
       case 'farmer':
+        return l10n.profile_role_farmer;
       default:
-        return 'Field Officer';
+        return l10n.profile_role_default;
     }
   }
 
@@ -540,15 +301,19 @@ class _PremiumProfileScreenState extends ConsumerState<PremiumProfileScreen> {
 
       final success = await authNotifier.updateProfile(
         fullName: _nameController.text.trim(),
-        email: _emailController.text.trim().isNotEmpty ? _emailController.text.trim() : null,
-        phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+        email: _emailController.text.trim().isNotEmpty
+            ? _emailController.text.trim()
+            : null,
+        phone: _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : null,
       );
 
       if (success && mounted) {
         setState(() => _isEditing = false);
-        TeaSnackbar.success(context, 'Profile updated successfully!');
+        TeaSnackbar.success(context, AppLocalizations.of(context)!.profile_updated);
       } else if (mounted) {
-        TeaSnackbar.error(context, 'Failed to update profile');
+        TeaSnackbar.error(context, AppLocalizations.of(context)!.profile_update_failed);
       }
     }
   }

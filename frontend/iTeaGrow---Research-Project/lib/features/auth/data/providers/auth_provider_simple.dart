@@ -16,17 +16,7 @@ class AuthNotifierSimple extends StateNotifier<UserSimple?> {
     debugPrint('AuthNotifier.login called: username="$username"');
 
     // Simple hardcoded authentication for demo
-    if (username == 'admin' && password == 'admin123') {
-      debugPrint('AuthNotifier: Admin credentials matched!');
-      state = UserSimple(
-        id: 1,
-        username: 'admin',
-        fullName: 'System Administrator',
-        role: UserRole.admin,
-      );
-      debugPrint('AuthNotifier: State set to admin user');
-      return true;
-    } else if (username == 'manager' && password == 'manager123') {
+    if (username == 'manager' && password == 'manager123') {
       debugPrint('AuthNotifier: Manager credentials matched!');
       state = UserSimple(
         id: 2,
