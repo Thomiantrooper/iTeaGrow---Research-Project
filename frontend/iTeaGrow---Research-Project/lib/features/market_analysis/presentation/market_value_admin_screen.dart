@@ -62,13 +62,17 @@ class _MarketValueAdminScreenState
     super.dispose();
   }
 
-  void _populateFromLatest(Map<String, dynamic>? latestPrices) {
-    if (latestPrices == null) return;
+  void _populateFromLatest(MarketPriceResponse res) {
+    final latestPrices = res.latestPrices;
+    if (latestPrices.isEmpty) return;
+
     for (var g in _gradesList) {
       if (latestPrices[g] != null) {
         _placeholders[g] = (latestPrices[g] as num).toStringAsFixed(2);
       }
     }
+    if (res.lastNotes != null) _placeholders['notes'] = res.lastNotes!;
+    if (res.lastSource != null) _placeholders['source'] = res.lastSource!;
   }
 
   String _getCurrentAuctionWeek() {
@@ -102,16 +106,35 @@ class _MarketValueAdminScreenState
     try {
       await api.publishMarketValues(update);
       if (mounted) {
+        // ── IMPORTANT: Immediate Refresh ────────────────────────────────────────
+        // We await the refresh to ensure the next build gets the latest data
+        await ref.refresh(marketPricesProvider.future);
+
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(AppLocalizations.of(context)!.market_published),
-            backgroundColor: Colors.green));
-        // Refresh grid
-        ref.invalidate(marketPricesProvider);
+              backgroundColor: Colors.green));
+
+          // Clear local UI state/text to show fresh database values/placeholders
+          setState(() {
+            for (var c in _controllers.values) {
+              c.clear();
+            }
+            _notesController.clear();
+            _sourceController.clear();
+            // Reset placeholders to trigger a fresh population in build()
+            _placeholders.clear();
+            for (var g in _gradesList) {
+              _placeholders[g] = "1000.0";
+            }
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${AppLocalizations.of(context)!.common_error}: $e'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('${AppLocalizations.of(context)!.common_error}: $e'),
+            backgroundColor: Colors.red));
       }
     }
   }
@@ -133,7 +156,8 @@ class _MarketValueAdminScreenState
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context)!.market_admin_title,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         backgroundColor: TeaColors.freshLeaf,
         foregroundColor: Colors.white,
@@ -158,7 +182,9 @@ class _MarketValueAdminScreenState
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  isOnline ? AppLocalizations.of(context)!.common_online : AppLocalizations.of(context)!.common_offline,
+                  isOnline
+                      ? AppLocalizations.of(context)!.common_online
+                      : AppLocalizations.of(context)!.common_offline,
                   style: const TextStyle(fontSize: 12, color: Colors.white),
                 ),
               ],
@@ -168,61 +194,70 @@ class _MarketValueAdminScreenState
       ),
       body: marketGridAsync.when(
         data: (res) {
-          final latestDbPrices = res.latestPrices;
-          if (latestDbPrices.isNotEmpty) {
+          if (res.marketPrices.isNotEmpty) {
             // Schedule populated state to avoid build interference
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (_placeholders['BOPF'] == "1000.0") {
-                setState(() => _populateFromLatest(latestDbPrices));
+              if (_placeholders['BOPF'] == "1000.0" ||
+                  _placeholders['notes'] == null) {
+                setState(() => _populateFromLatest(res));
               }
             });
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(AppLocalizations.of(context)!.market_weekly_prices,
-                    style: TeaTypography.headlineMedium),
-                const SizedBox(height: 16),
-                _buildPriceGrid(),
-                const SizedBox(height: 24),
-                _buildNotesSection(),
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: isOnline ? _savePrices : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: TeaColors.freshLeaf,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
+          return RefreshIndicator(
+            onRefresh: () => ref.refresh(marketPricesProvider.future),
+            child: SingleChildScrollView(
+              physics:
+                  const AlwaysScrollableScrollPhysics(), // Ensure it's always scrollable for refresh
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(AppLocalizations.of(context)!.market_weekly_prices,
+                      style: TeaTypography.headlineMedium),
+                  const SizedBox(height: 16),
+                  _buildPriceGrid(),
+                  const SizedBox(height: 24),
+                  _buildNotesSection(),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: isOnline ? _savePrices : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: TeaColors.freshLeaf,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: Text(
+                        AppLocalizations.of(context)!.market_save_publish,
+                        style:
+                            const TextStyle(fontSize: 18, color: Colors.white)),
                   ),
-                  child: Text(AppLocalizations.of(context)!.market_save_publish,
-                      style: const TextStyle(fontSize: 18, color: Colors.white)),
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Text(
-                    isOnline
-                        ? AppLocalizations.of(context)!.market_connected
-                        : AppLocalizations.of(context)!.market_disconnected,
-                    style: TextStyle(
-                      color: isOnline
-                          ? TeaColors.healthyGreen
-                          : TeaColors.warningAmber,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(
+                      isOnline
+                          ? AppLocalizations.of(context)!.market_connected
+                          : AppLocalizations.of(context)!.market_disconnected,
+                      style: TextStyle(
+                        color: isOnline
+                            ? TeaColors.healthyGreen
+                            : TeaColors.warningAmber,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                _buildHistorySection(res),
-              ],
+                  const SizedBox(height: 24),
+                  _buildHistorySection(res),
+                ],
+              ),
             ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('${AppLocalizations.of(context)!.market_load_failed}: $e')),
+        error: (e, _) => Center(
+            child: Text(
+                '${AppLocalizations.of(context)!.market_load_failed}: $e')),
       ),
     );
   }
@@ -285,7 +320,7 @@ class _MarketValueAdminScreenState
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
               isDense: true,
-              hintText: _defaultSource,
+              hintText: _placeholders['source'] ?? _defaultSource,
             ),
           ),
           const SizedBox(height: 16),
@@ -297,7 +332,7 @@ class _MarketValueAdminScreenState
             maxLines: 3,
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
-              hintText: _defaultNotes,
+              hintText: _placeholders['notes'] ?? _defaultNotes,
             ),
           ),
         ],
@@ -306,19 +341,20 @@ class _MarketValueAdminScreenState
   }
 
   Widget _buildHistorySection(MarketPriceResponse res) {
-    // Filter out 'default' and sort chronologically
+    // Sort chronologically (most recent first)
     final keys = res.marketPrices.keys.where((k) => k != 'default').toList()
       ..sort((a, b) => b.compareTo(a));
 
-    if (keys.length <= 1) return const SizedBox.shrink(); // No history yet
+    if (keys.isEmpty) return const SizedBox.shrink(); // No history yet
 
-    // Skip the first one because it represents the "current" week
-    final historyKeys = keys.skip(1).toList();
+    // We no longer skip(1) - show all records including the latest one
+    final historyKeys = keys;
 
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        title: Text(AppLocalizations.of(context)!.market_prev_auctions, style: TeaTypography.titleLarge),
+        title: Text(AppLocalizations.of(context)!.market_prev_auctions,
+            style: TeaTypography.titleLarge),
         tilePadding: EdgeInsets.zero,
         children: historyKeys.map((week) {
           final prices = res.marketPrices[week] ?? {};
@@ -332,16 +368,48 @@ class _MarketValueAdminScreenState
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Icon(Icons.date_range,
-                          color: TeaColors.freshLeaf, size: 18),
-                      const SizedBox(width: 8),
-                      Text('${AppLocalizations.of(context)!.market_week_of}: $week',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      Row(
+                        children: [
+                          const Icon(Icons.date_range,
+                              color: TeaColors.freshLeaf, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                              '${AppLocalizations.of(context)!.market_week_of}: $week',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                        ],
+                      ),
+                      // ── Edit Button (Restriction: 24h & Latest Only) ───────────
+                      if (week == keys.first && res.canEditLatest)
+                        IconButton(
+                          icon: const Icon(Icons.edit_note,
+                              color: TeaColors.freshLeaf),
+                          tooltip: 'Edit this week\'s prices',
+                          onPressed: () {
+                            setState(() {
+                              _dateController.text = week;
+                              for (var g in _gradesList) {
+                                if (prices[g] != null) {
+                                  _controllers[g]!.text =
+                                      (prices[g] as num).toStringAsFixed(2);
+                                }
+                              }
+                              if (res.lastNotes != null)
+                                _notesController.text = res.lastNotes!;
+                              if (res.lastSource != null)
+                                _sourceController.text = res.lastSource!;
+                            });
+                            // Scroll to top
+                            PrimaryScrollController.of(context).animateTo(0,
+                                duration: const Duration(milliseconds: 500),
+                                curve: Curves.easeInOut);
+                          },
+                        ),
                     ],
                   ),
-                  const Divider(height: 24),
+                  const Divider(height: 12),
                   LayoutBuilder(builder: (context, constraints) {
                     final itemWidth = (constraints.maxWidth - 16) / 2;
                     return Wrap(

@@ -1,10 +1,14 @@
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../../core/api/api_config.dart';
 import '../../domain/entities/leaf_maturity_result.dart';
 import 'leaf_maturity_color_validator.dart';
 
@@ -161,7 +165,7 @@ class LeafMaturityPyTorchService {
         };
       }
 
-      return LeafMaturityResult(
+      final finalResult = LeafMaturityResult(
         species: baseResult.species,
         maturity: corrected.maturity,
         speciesConfidence: baseResult.speciesConfidence,
@@ -174,6 +178,11 @@ class LeafMaturityPyTorchService {
         confidenceLabel: confidenceLabel,
         colorValidated: true,
       );
+
+      // Save to DB Microservice
+      _saveToDb(finalResult, imageFile.path);
+
+      return finalResult;
     } catch (e) {
       debugPrint('LeafMaturity: Inference/CAM error: $e');
       rethrow;
@@ -211,5 +220,43 @@ class LeafMaturityPyTorchService {
       timestamp: DateTime.now(),
       rawConfidence: probabilities.reduce(max),
     );
+  }
+
+  Future<void> _saveToDb(LeafMaturityResult result, String imagePath) async {
+    try {
+      String? imageBase64;
+      final file = File(imagePath);
+      if (await file.exists()) {
+        imageBase64 = base64Encode(await file.readAsBytes());
+      }
+
+      final body = {
+        'user_id': null,
+        'image_path': imagePath,
+        'image_data': imageBase64,
+        'species': result.species,
+        'maturity': result.maturity,
+        'species_confidence': result.speciesConfidence,
+        'maturity_confidence': result.maturityConfidence,
+        'raw_confidence': result.rawConfidence,
+        'extra': null,
+      };
+
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.dbMaturity),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint('✅ Leaf maturity saved to DB');
+      } else {
+        debugPrint('⚠️ DB error saving maturity: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error saving leaf maturity to DB: $e');
+    }
   }
 }

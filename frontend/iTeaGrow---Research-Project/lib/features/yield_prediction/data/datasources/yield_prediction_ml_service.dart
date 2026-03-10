@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/api/api_config.dart';
 import '../models/prediction_request_model.dart';
 import '../models/prediction_response_model.dart';
@@ -54,7 +53,8 @@ class YieldPredictionApiService {
 
   /// Get yield prediction from API
   Future<PredictionResponseModel> getPrediction(
-      PredictionRequestModel request,) async {
+    PredictionRequestModel request,
+  ) async {
     try {
       // Validate request
       if (!request.isValid()) {
@@ -113,42 +113,50 @@ class YieldPredictionApiService {
     }
   }
 
-  /// Save prediction to local backend (MongoDB)
+  /// Save prediction to MongoDB via DB Microservice (Railway)
   Future<void> savePrediction(
-      PredictionRequestModel request, PredictionResponseModel response,) async {
+    PredictionRequestModel request,
+    PredictionResponseModel response,
+  ) async {
     try {
-      // Get token from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('api_access_token');
-
-      if (token == null) {
-        print('⚠️ Cannot save prediction: No auth token found');
-        return;
-      }
-
       final payload = {
-        'request': request.toJson(),
-        'response': response.toJson(),
-        'timestamp': DateTime.now().toIso8601String(),
+        'user_id': null,
+        'division_id': request.divisionId,
+        'labor_total': request.laborTotal,
+        'field_size_ha': request.fieldSizeHa,
+        'crop_harvested_kg': request.cropHarvestedKg,
+        'g_pct': request.gPct,
+        'c_pct': request.cPct,
+        'd_pct': request.dPct,
+        'prediction_days': request.predictionDays,
+        'total_predicted_yield_kg': response.summary.totalPredictedYield,
+        'average_daily_yield_kg': response.summary.averageDailyYield,
+        'days_predicted': response.summary.daysPredicted,
+        'daily_predictions':
+            response.predictions.map((p) => p.toJson()).toList(),
+        'is_classification': false,
+        'extra': null,
       };
 
-      final apiResponse = await _client.post(
-        Uri.parse(ApiConfig.yieldPredictionStore),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(payload),
-      );
+      final apiResponse = await _client
+          .post(
+            Uri.parse(ApiConfig.dbYield),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 30));
 
-      if (apiResponse.statusCode == 200) {
-        print('✅ Prediction saved to MongoDB successfully');
+      if (apiResponse.statusCode >= 200 && apiResponse.statusCode < 300) {
+        print('✅ Yield prediction saved to DB microservice');
       } else {
         print(
-            '⚠️ Failed to save prediction: ${apiResponse.statusCode} - ${apiResponse.body}',);
+            '⚠️ Failed to save yield prediction: ${apiResponse.statusCode} - ${apiResponse.body}');
       }
     } catch (e) {
-      print('⚠️ Error saving prediction to DB: $e');
+      print('⚠️ Error saving yield prediction to DB microservice: $e');
     }
   }
 

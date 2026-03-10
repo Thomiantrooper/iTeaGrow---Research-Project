@@ -234,11 +234,43 @@ class DiseaseDetectionMLService {
       );
     }
 
+    // ── Backend "Not A Leaf" second-opinion check ────────────────────────
+    // The backend's leaf-validator sometimes rejects heavily diseased leaves
+    // (e.g. leaves with brown rust patches) because they lack pure green.
+    // If the backend said "Not A Leaf" but we have an offline model available,
+    // run offline inference as a second opinion. If offline returns an actual
+    // disease/healthy result with reasonable confidence, trust it instead.
+    if (mlResult.isNotALeaf && !kIsWeb && _isOfflineModelLoaded) {
+      debugPrint(
+          '>>> BACKEND SAID NOT A LEAF — running offline second opinion <<<');
+      try {
+        final offlineResult = await _predictOffline(
+          imagePath,
+          liveTemperature: liveTemperature,
+          liveHumidity: liveHumidity,
+          liveAirQuality: liveAirQuality,
+        );
+        if (!offlineResult.isNotALeaf &&
+            offlineResult.diseaseType != 'Unavailable' &&
+            offlineResult.diseaseType != 'Error' &&
+            offlineResult.confidence >= 0.40) {
+          debugPrint('>>> OFFLINE OVERRIDE: ${offlineResult.diseaseType} '
+              '(${offlineResult.confidence.toStringAsFixed(2)}) replaces NOT A LEAF');
+          mlResult = offlineResult;
+        }
+      } catch (e) {
+        debugPrint('Offline second-opinion failed (non-fatal): $e');
+      }
+    }
+
+    // mlResult is guaranteed non-null here (offline fallback always assigns it).
+    final result = mlResult!;
+
     // ── Colour cross-validation layer ───────────────────────────────────
     // Run pixel-level colour analysis and cross-validate with model output
     // to catch misclassifications (e.g. model says "Healthy" on a clearly
     // diseased leaf).
-    if (!mlResult.isNotALeaf && !kIsWeb) {
+    if (!kIsWeb) {
       try {
         final imageBytes = await File(imagePath).readAsBytes();
         final colorResult = await _colorAnalyzer.analyze(imageBytes);
@@ -249,8 +281,8 @@ class DiseaseDetectionMLService {
             'suggested=${colorResult.suggestedDisease}(${colorResult.suggestedConfidence.toStringAsFixed(2)})');
 
         final corrected = DiseaseColorAnalyzer.crossValidate(
-          modelDisease: mlResult.diseaseType,
-          modelConfidence: mlResult.confidence,
+          modelDisease: result.diseaseType,
+          modelConfidence: result.confidence,
           colorResult: colorResult,
         );
 
@@ -258,28 +290,28 @@ class DiseaseDetectionMLService {
             '>>> CORRECTED: ${corrected.diseaseType} (${corrected.confidence.toStringAsFixed(2)}) [${corrected.source}]');
 
         // Apply correction if it changed something
-        if (corrected.diseaseType != mlResult.diseaseType ||
-            corrected.confidence != mlResult.confidence) {
+        if (corrected.diseaseType != result.diseaseType ||
+            corrected.confidence != result.confidence) {
           final newSeverity =
               _getSeverity(corrected.confidence, corrected.diseaseType);
-          mlResult = DiseaseDetectionResult(
+          return DiseaseDetectionResult(
             diseaseType: corrected.diseaseType,
             confidence: corrected.confidence,
             severity: newSeverity,
             recommendations:
                 _getRecommendations(corrected.diseaseType, newSeverity),
-            timestamp: mlResult.timestamp,
-            temperature: mlResult.temperature,
-            humidity: mlResult.humidity,
-            airQuality: mlResult.airQuality,
-            requestId: mlResult.requestId,
-            imageId: mlResult.imageId,
-            processingTimeMs: mlResult.processingTimeMs,
-            detections: mlResult.detections,
-            summary: mlResult.summary,
-            imageQualityScore: mlResult.imageQualityScore,
-            validationMessage: mlResult.validationMessage,
-            heatmapPath: mlResult.heatmapPath,
+            timestamp: result.timestamp,
+            temperature: result.temperature,
+            humidity: result.humidity,
+            airQuality: result.airQuality,
+            requestId: result.requestId,
+            imageId: result.imageId,
+            processingTimeMs: result.processingTimeMs,
+            detections: result.detections,
+            summary: result.summary,
+            imageQualityScore: result.imageQualityScore,
+            validationMessage: result.validationMessage,
+            heatmapPath: result.heatmapPath,
           );
         }
       } catch (e) {
@@ -287,7 +319,7 @@ class DiseaseDetectionMLService {
       }
     }
 
-    return mlResult!;
+    return result;
   }
 
   /// Generate appropriate recommendations for a disease + severity.

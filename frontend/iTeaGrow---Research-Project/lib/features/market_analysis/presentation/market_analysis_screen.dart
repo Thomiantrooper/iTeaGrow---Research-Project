@@ -100,7 +100,10 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
       quantity: _quantity,
     );
 
-    ref.read(priceCalculationProvider.notifier).calculatePrice(request);
+    ref.read(priceCalculationProvider.notifier).calculatePrice(
+          request,
+          imagePath: classification?.imageFile?.path,
+        );
   }
 
   @override
@@ -183,8 +186,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
             const SizedBox(height: 24),
 
             // Grade Selection Section (Manual Override)
-            Text(l10n.market_select_grade,
-                style: TeaTypography.titleLarge),
+            Text(l10n.market_select_grade, style: TeaTypography.titleLarge),
             const SizedBox(height: 12),
             _buildGradeDropdown(classState.value),
             const SizedBox(height: 24),
@@ -248,7 +250,8 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
               child: priceState.isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
                   : Text(l10n.market_calculate,
-                      style: const TextStyle(fontSize: 18, color: Colors.white)),
+                      style:
+                          const TextStyle(fontSize: 18, color: Colors.white)),
             ),
             const SizedBox(height: 24),
 
@@ -347,182 +350,249 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
     return GestureDetector(
       onTap: () => _showImageSourceDialog(),
       child: Container(
-        height: 200,
+        height: 240,
         decoration: BoxDecoration(
           color: TeaColors.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: TeaColors.goldenSunlight, width: 2),
         ),
-        child: state.when(
-          data: (result) {
-            if (result == null) {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.camera_alt,
-                      size: 64, color: TeaColors.goldenSunlight),
-                  const SizedBox(height: 12),
-                  Text(AppLocalizations.of(context)!.market_tap_capture,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              );
-            }
-            // ── Validation failure ─────────────────────────────────────────
-            if (result.isValidationFailure) {
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning_amber_rounded,
-                        color: TeaColors.alertRust, size: 28),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        result.validationMessage ??
-                            AppLocalizations.of(context)!.market_image_validation_failed,
-                        style: const TextStyle(fontSize: 13),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: state.when(
+                data: (result) {
+                  if (result == null) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.camera_alt,
+                              size: 64, color: TeaColors.goldenSunlight),
+                          const SizedBox(height: 12),
+                          Text(
+                            AppLocalizations.of(context)!.market_tap_capture,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }
-            return Column(
-              children: [
-                // ── Ambiguity banner ──────────────────────────────────
-                if (result.isAmbiguous)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    color: TeaColors.warmAmber.withOpacity(0.12),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline,
-                            color: TeaColors.warmAmber, size: 16),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            AppLocalizations.of(context)!.powder_borderline,
-                            style: const TextStyle(
-                                fontSize: 11, color: TeaColors.warmAmber),
-                          ),
+                    );
+                  }
+                  // ── Validation failure ─────────────────────────────────────────
+                  if (result.isValidationFailure) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.warning_amber_rounded,
+                                color: TeaColors.alertRust, size: 28),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                result.validationMessage ??
+                                    AppLocalizations.of(context)!
+                                        .market_image_validation_failed,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                Expanded(
-                  child: Row(
+                      ),
+                    );
+                  }
+                  return Column(
                     children: [
-                      if (result.imageFile != null)
-                        Expanded(
-                          flex: 2,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(22),
-                              bottomLeft: Radius.circular(22),
-                            ),
-                            child: Image.file(
-                              result.imageFile!,
-                              fit: BoxFit.cover,
-                              height: double.infinity,
-                            ),
-                          ),
-                        ),
-                      Expanded(
-                        flex: 3,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      // ── Ambiguity banner ──────────────────────────────────
+                      if (result.isAmbiguous)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          color: TeaColors.warmAmber.withOpacity(0.12),
+                          child: Row(
                             children: [
-                              Text(AppLocalizations.of(context)!.market_detected_grade,
+                              const Icon(Icons.info_outline,
+                                  color: TeaColors.warmAmber, size: 16),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  AppLocalizations.of(context)!
+                                      .powder_borderline,
                                   style: const TextStyle(
-                                      fontSize: 12, color: TeaColors.darkGray)),
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                    color: TeaColors.goldenSunlight
-                                        .withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8)),
-                                child: Text(result.grade,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                        color: TeaColors.nearBlack)),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '${result.confidence.toStringAsFixed(1)}%',
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  // ── Confidence label badge ───────────
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: _confidenceLabelColor(
-                                              result.confidenceLabel)
-                                          .withOpacity(0.12),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      result.confidenceLabel,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: _confidenceLabelColor(
-                                            result.confidenceLabel),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              LinearProgressIndicator(
-                                value: result.confidence / 100,
-                                backgroundColor: TeaColors.lightGray,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                    TeaColors.healthyGreen),
-                              ),
-                              const Spacer(),
-                              Align(
-                                alignment: Alignment.bottomRight,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                      color: TeaColors.lightGray,
-                                      borderRadius: BorderRadius.circular(10)),
-                                  child: Text(
-                                      result.source == 'offline'
-                                          ? AppLocalizations.of(context)!.market_local_ai
-                                          : AppLocalizations.of(context)!.market_cloud_ai,
-                                      style: const TextStyle(
-                                          color: TeaColors.darkGray,
-                                          fontSize: 10)),
+                                      fontSize: 11, color: TeaColors.warmAmber),
                                 ),
                               ),
                             ],
                           ),
                         ),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            if (result.imageFile != null)
+                              Expanded(
+                                flex: 2,
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(22),
+                                    bottomLeft: Radius.circular(22),
+                                  ),
+                                  child: Image.file(
+                                    result.imageFile!,
+                                    fit: BoxFit.cover,
+                                    height: double.infinity,
+                                  ),
+                                ),
+                              ),
+                            Expanded(
+                              flex: 3,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(12, 16, 16, 16),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                        AppLocalizations.of(context)!
+                                            .market_detected_grade,
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            color: TeaColors.darkGray)),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                          color: TeaColors.goldenSunlight
+                                              .withOpacity(0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(8)),
+                                      child: Text(result.grade,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20,
+                                              color: TeaColors.nearBlack)),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '${result.confidence.toStringAsFixed(1)}%',
+                                          style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        // ── Confidence label badge ───────────
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: _confidenceLabelColor(
+                                                    result.confidenceLabel)
+                                                .withOpacity(0.12),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            result.confidenceLabel,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _confidenceLabelColor(
+                                                  result.confidenceLabel),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    LinearProgressIndicator(
+                                      value: result.confidence / 100,
+                                      backgroundColor: TeaColors.lightGray,
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                              TeaColors.healthyGreen),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Align(
+                                      alignment: Alignment.bottomRight,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                            color: TeaColors.lightGray,
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
+                                        child: Text(
+                                            result.source == 'offline'
+                                                ? AppLocalizations.of(context)!
+                                                    .market_local_ai
+                                                : AppLocalizations.of(context)!
+                                                    .market_cloud_ai,
+                                            style: const TextStyle(
+                                                color: TeaColors.darkGray,
+                                                fontSize: 10)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(
+                    child: Text(
+                        '${AppLocalizations.of(context)!.common_error}: $e')),
+              ),
+            ),
+            // ── Reset Button (Bin) ───────────────────────────────────
+            if (state.value != null)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Hero(
+                  tag: 'reset_button',
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        ref.read(classificationProvider.notifier).clear();
+                        ref.read(priceCalculationProvider.notifier).clear();
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          color: TeaColors.alertRust,
+                          size: 20,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('${AppLocalizations.of(context)!.common_error}: $e')),
+              ),
+          ],
         ),
       ),
     );
@@ -590,9 +660,21 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
           _colorVal,
           (v) => setState(() => _colorVal = v),
           [
-            {'label': AppLocalizations.of(context)!.market_premium, 'val': 1.0, 'icon': Icons.star_border},
-            {'label': AppLocalizations.of(context)!.market_normal, 'val': 0.5, 'icon': Icons.check_circle_outline},
-            {'label': AppLocalizations.of(context)!.market_dull, 'val': 0.0, 'icon': Icons.remove_circle_outline},
+            {
+              'label': AppLocalizations.of(context)!.market_premium,
+              'val': 1.0,
+              'icon': Icons.star_border
+            },
+            {
+              'label': AppLocalizations.of(context)!.market_normal,
+              'val': 0.5,
+              'icon': Icons.check_circle_outline
+            },
+            {
+              'label': AppLocalizations.of(context)!.market_dull,
+              'val': 0.0,
+              'icon': Icons.remove_circle_outline
+            },
           ],
         ),
         const SizedBox(height: 16),
@@ -601,13 +683,21 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
           _aromaVal,
           (v) => setState(() => _aromaVal = v),
           [
-            {'label': AppLocalizations.of(context)!.market_strong, 'val': 1.0, 'icon': Icons.air},
+            {
+              'label': AppLocalizations.of(context)!.market_strong,
+              'val': 1.0,
+              'icon': Icons.air
+            },
             {
               'label': AppLocalizations.of(context)!.market_moderate,
               'val': 0.5,
               'icon': Icons.water_drop_outlined
             },
-            {'label': AppLocalizations.of(context)!.market_weak, 'val': 0.0, 'icon': Icons.eco_outlined},
+            {
+              'label': AppLocalizations.of(context)!.market_weak,
+              'val': 0.0,
+              'icon': Icons.eco_outlined
+            },
           ],
         ),
         const SizedBox(height: 16),
@@ -616,13 +706,21 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
           _ageVal,
           (v) => setState(() => _ageVal = v),
           [
-            {'label': AppLocalizations.of(context)!.market_fresh, 'val': 1.0, 'icon': Icons.grass},
+            {
+              'label': AppLocalizations.of(context)!.market_fresh,
+              'val': 1.0,
+              'icon': Icons.grass
+            },
             {
               'label': AppLocalizations.of(context)!.market_medium_age,
               'val': 0.5,
               'icon': Icons.access_time
             },
-            {'label': AppLocalizations.of(context)!.market_old, 'val': 0.0, 'icon': Icons.history},
+            {
+              'label': AppLocalizations.of(context)!.market_old,
+              'val': 0.0,
+              'icon': Icons.history
+            },
           ],
         ),
       ],
@@ -894,7 +992,8 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('${AppLocalizations.of(context)!.market_error_loading}: $e'),
+      error: (e, _) =>
+          Text('${AppLocalizations.of(context)!.market_error_loading}: $e'),
     );
   }
 
@@ -965,7 +1064,8 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
       ),
       loading: () => const SizedBox(
           height: 100, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('${AppLocalizations.of(context)!.common_error}: $e'),
+      error: (e, _) =>
+          Text('${AppLocalizations.of(context)!.common_error}: $e'),
     );
   }
 
@@ -978,7 +1078,8 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
       ),
       loading: () => const SizedBox(
           height: 100, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('${AppLocalizations.of(context)!.common_error}: $e'),
+      error: (e, _) =>
+          Text('${AppLocalizations.of(context)!.common_error}: $e'),
     );
   }
 

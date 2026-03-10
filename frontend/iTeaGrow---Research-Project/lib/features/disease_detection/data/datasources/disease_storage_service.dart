@@ -4,272 +4,135 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:http/http.dart' as http;
 import '../../../../core/api/api_config.dart';
 import '../../domain/entities/disease_detection_result.dart';
-import '../datasources/disease_detection_ml_service.dart' show FieldAnalysisResult;
+import '../datasources/disease_detection_ml_service.dart'
+    show FieldAnalysisResult;
 
-/// Service for storing and retrieving disease detection results from MongoDB
+/// Service for storing and retrieving disease detection results.
+/// All saves go to the DB Microservice (Railway) instead of localhost.
 class DiseaseStorageService {
-  static final DiseaseStorageService _instance = DiseaseStorageService._internal();
+  static final DiseaseStorageService _instance =
+      DiseaseStorageService._internal();
   factory DiseaseStorageService() => _instance;
   DiseaseStorageService._internal();
 
   final http.Client _client = http.Client();
 
-  /// Save detection result to MongoDB with image
+  // ── Private helper ──────────────────────────────────────────────────────────
+  Future<String?> _imageToBase64(String imagePath) async {
+    if (kIsWeb) return null;
+    final file = File(imagePath);
+    if (await file.exists()) {
+      return base64Encode(await file.readAsBytes());
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> _postToDb(
+      String url, Map<String, dynamic> body) async {
+    try {
+      final response = await _client
+          .post(
+            Uri.parse(url),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint('✅ Saved to DB microservice: $url');
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      debugPrint('⚠️ DB microservice ${response.statusCode}: ${response.body}');
+      return null;
+    } catch (e) {
+      debugPrint('⚠️ Error posting to DB microservice: $e');
+      return null;
+    }
+  }
+
+  // ── Disease Detection ───────────────────────────────────────────────────────
+
+  /// Save a single-leaf detection result to MongoDB via Railway DB microservice.
   Future<Map<String, dynamic>?> saveDetection({
     required DiseaseDetectionResult result,
     required String imagePath,
     String? authToken,
   }) async {
-    try {
-      // Read image and convert to base64
-      String? imageBase64;
-      if (!kIsWeb) {
-        final file = File(imagePath);
-        if (await file.exists()) {
-          final bytes = await file.readAsBytes();
-          imageBase64 = base64Encode(bytes);
-        }
-      }
-
-      final body = {
-        'image_path': imagePath,
-        'image_data': imageBase64,
-        'disease_name': result.diseaseType,
-        'confidence': result.confidence,
-        'severity': result.severity,
-        'recommendations': result.recommendations,
-        'detections': result.detections?.map((d) => d.toJson()).toList(),
-        'summary': result.summary?.toJson(),
-        'temperature': result.temperature,
-        'humidity': result.humidity,
-        'air_quality': result.airQuality,
-        'processing_time_ms': result.processingTimeMs,
-        'request_id': result.requestId,
-        'image_quality_score': result.imageQualityScore,
-        'validation_message': result.validationMessage,
-      };
-
-      final headers = <String, String>{
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-      if (authToken != null) {
-        headers['Authorization'] = 'Bearer $authToken';
-      }
-
-      final response = await _client.post(
-        Uri.parse(ApiConfig.diseaseDetections),
-        headers: headers,
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 30));
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-      debugPrint('Error saving detection: ${response.statusCode} - ${response.body}');
-      return null;
-    } catch (e) {
-      debugPrint('Error saving detection: $e');
-      return null;
-    }
+    final imageBase64 = await _imageToBase64(imagePath);
+    final body = {
+      'user_id': null,
+      'image_path': imagePath,
+      'image_data': imageBase64,
+      'disease_name': result.diseaseType,
+      'confidence': result.confidence,
+      'severity': result.severity,
+      'recommendations': result.recommendations,
+      'detections': result.detections?.map((d) => d.toJson()).toList(),
+      'summary': result.summary?.toJson(),
+      'temperature': result.temperature,
+      'humidity': result.humidity,
+      'air_quality': result.airQuality,
+      'processing_time_ms': result.processingTimeMs,
+      'request_id': result.requestId,
+      'image_quality_score': result.imageQualityScore,
+      'validation_message': result.validationMessage,
+      'extra': null,
+    };
+    return _postToDb(ApiConfig.dbDisease, body);
   }
 
-  /// Save detection with image upload (multipart)
+  /// Alias – previously used multipart, now delegates to saveDetection.
   Future<Map<String, dynamic>?> saveDetectionWithImage({
     required DiseaseDetectionResult result,
     required String imagePath,
     String? authToken,
-  }) async {
-    try {
-      debugPrint('Saving detection to: ${ApiConfig.diseaseDetectionsWithImage}');
-      debugPrint('Auth token present: ${authToken != null}');
+  }) =>
+      saveDetection(result: result, imagePath: imagePath, authToken: authToken);
 
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse(ApiConfig.diseaseDetectionsWithImage),
-      );
-
-      // Add headers
-      request.headers['Accept'] = 'application/json';
-      if (authToken != null && authToken.isNotEmpty) {
-        request.headers['Authorization'] = 'Bearer $authToken';
-        debugPrint('Authorization header added');
-      } else {
-        debugPrint('WARNING: No auth token - request may fail with 401');
-      }
-
-      // Add image file - handle web vs mobile differently
-      if (kIsWeb) {
-        // On web, imagePath is a blob URL - fetch it and send as bytes
-        debugPrint('Web platform detected - fetching blob URL');
-        final imageResponse = await http.get(Uri.parse(imagePath));
-        if (imageResponse.statusCode == 200) {
-          final bytes = imageResponse.bodyBytes;
-          final filename = 'scan_${DateTime.now().millisecondsSinceEpoch}.jpg';
-          request.files.add(http.MultipartFile.fromBytes(
-            'image',
-            bytes,
-            filename: filename,
-          ),);
-          debugPrint('Image bytes loaded: ${bytes.length} bytes');
-        } else {
-          debugPrint('Failed to load image from blob URL: ${imageResponse.statusCode}');
-          return null;
-        }
-      } else {
-        // On mobile, use file path directly
-        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
-      }
-
-      // Add form fields
-      request.fields['disease_name'] = result.diseaseType;
-      request.fields['confidence'] = result.confidence.toString();
-      if (result.severity.isNotEmpty) {
-        request.fields['severity'] = result.severity;
-      }
-      if (result.recommendations.isNotEmpty) {
-        request.fields['recommendations'] = jsonEncode(result.recommendations);
-      }
-      if (result.detections != null) {
-        request.fields['detections'] = jsonEncode(result.detections!.map((d) => d.toJson()).toList());
-      }
-      if (result.summary != null) {
-        request.fields['summary'] = jsonEncode(result.summary!.toJson());
-      }
-      if (result.temperature != null) {
-        request.fields['temperature'] = result.temperature.toString();
-      }
-      if (result.humidity != null) {
-        request.fields['humidity'] = result.humidity.toString();
-      }
-      if (result.airQuality != null) {
-        request.fields['air_quality'] = result.airQuality.toString();
-      }
-      if (result.processingTimeMs != null) {
-        request.fields['processing_time_ms'] = result.processingTimeMs.toString();
-      }
-      if (result.requestId != null) {
-        request.fields['request_id'] = result.requestId!;
-      }
-      if (result.imageQualityScore != null) {
-        request.fields['image_quality_score'] = result.imageQualityScore.toString();
-      }
-      if (result.validationMessage != null) {
-        request.fields['validation_message'] = result.validationMessage!;
-      }
-
-      final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
-      final response = await http.Response.fromStream(streamedResponse);
-
-      debugPrint('Storage response status: ${response.statusCode}');
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        debugPrint('Detection saved successfully!');
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-      debugPrint('Error saving detection with image: ${response.statusCode} - ${response.body}');
-      if (response.statusCode == 401) {
-        debugPrint('Authentication failed - user may need to log in');
-      }
-      return null;
-    } catch (e) {
-      debugPrint('Error saving detection with image: $e');
-      return null;
-    }
-  }
-
-  /// Save field analysis result (multiple leaves) with image
+  /// Save a field analysis (multi-leaf) result to MongoDB via Railway DB microservice.
   Future<Map<String, dynamic>?> saveFieldAnalysisWithImage({
     required FieldAnalysisResult result,
     required String imagePath,
     String? authToken,
   }) async {
-    try {
-      debugPrint('Saving field analysis to: ${ApiConfig.diseaseDetectionsWithImage}');
-
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse(ApiConfig.diseaseDetectionsWithImage),
-      );
-
-      // Add headers
-      request.headers['Accept'] = 'application/json';
-      if (authToken != null && authToken.isNotEmpty) {
-        request.headers['Authorization'] = 'Bearer $authToken';
-      }
-
-      // Add image file - handle web vs mobile
-      if (kIsWeb) {
-        final imageResponse = await http.get(Uri.parse(imagePath));
-        if (imageResponse.statusCode == 200) {
-          final bytes = imageResponse.bodyBytes;
-          final filename = 'field_scan_${DateTime.now().millisecondsSinceEpoch}.jpg';
-          request.files.add(http.MultipartFile.fromBytes(
-            'image',
-            bytes,
-            filename: filename,
-          ),);
-        } else {
-          debugPrint('Failed to load image from blob URL');
-          return null;
-        }
-      } else {
-        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
-      }
-
-      // Store as a summary detection with field analysis data
-      // Use the most common disease as the primary disease type
-      String primaryDisease = 'Field Analysis';
-      double primaryConfidence = result.healthPercentage / 100;
-
-      if (result.diseaseCounts.isNotEmpty) {
-        final sortedDiseases = result.diseaseCounts.entries.toList()
-          ..sort((a, b) => b.value.compareTo(a.value));
-        primaryDisease = sortedDiseases.first.key;
-        primaryConfidence = sortedDiseases.first.value / result.detectedLeafCount;
-      }
-
-      // Add form fields
-      request.fields['disease_name'] = primaryDisease;
-      request.fields['confidence'] = primaryConfidence.toString();
-      request.fields['severity'] = result.overallStatus;
-      request.fields['recommendations'] = jsonEncode(result.recommendations);
-      request.fields['is_field_analysis'] = 'true';
-      request.fields['detected_leaf_count'] = result.detectedLeafCount.toString();
-      request.fields['healthy_count'] = result.healthyCount.toString();
-      request.fields['infected_count'] = result.infectedCount.toString();
-      request.fields['health_percentage'] = result.healthPercentage.toString();
-      request.fields['disease_counts'] = jsonEncode(result.diseaseCounts);
-
-      if (result.temperature != null) {
-        request.fields['temperature'] = result.temperature.toString();
-      }
-      if (result.humidity != null) {
-        request.fields['humidity'] = result.humidity.toString();
-      }
-      if (result.airQuality != null) {
-        request.fields['air_quality'] = result.airQuality.toString();
-      }
-      if (result.summary != null) {
-        request.fields['summary'] = jsonEncode(result.summary!.toJson());
-      }
-
-      final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
-      final response = await http.Response.fromStream(streamedResponse);
-
-      debugPrint('Field analysis save response: ${response.statusCode}');
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        debugPrint('Field analysis saved successfully!');
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-      debugPrint('Error saving field analysis: ${response.statusCode} - ${response.body}');
-      return null;
-    } catch (e) {
-      debugPrint('Error saving field analysis: $e');
-      return null;
+    String primaryDisease = 'Field Analysis';
+    double primaryConfidence = result.healthPercentage / 100;
+    if (result.diseaseCounts.isNotEmpty) {
+      final sorted = result.diseaseCounts.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      primaryDisease = sorted.first.key;
+      primaryConfidence = sorted.first.value / result.detectedLeafCount;
     }
+
+    final imageBase64 = await _imageToBase64(imagePath);
+    final body = {
+      'user_id': null,
+      'image_path': imagePath,
+      'image_data': imageBase64,
+      'disease_name': primaryDisease,
+      'confidence': primaryConfidence,
+      'severity': result.overallStatus,
+      'recommendations': result.recommendations,
+      'is_field_analysis': true,
+      'detected_leaf_count': result.detectedLeafCount,
+      'healthy_count': result.healthyCount,
+      'infected_count': result.infectedCount,
+      'health_percentage': result.healthPercentage,
+      'disease_counts': result.diseaseCounts,
+      'temperature': result.temperature,
+      'humidity': result.humidity,
+      'air_quality': result.airQuality,
+      'summary': result.summary?.toJson(),
+      'extra': null,
+    };
+    return _postToDb(ApiConfig.dbDisease, body);
   }
 
-  /// Get detection history
+  // ── Read / History ──────────────────────────────────────────────────────────
+
+  /// Get disease detection history from DB microservice.
   Future<List<DiseaseDetectionResult>> getDetections({
     int skip = 0,
     int limit = 50,
@@ -278,27 +141,20 @@ class DiseaseStorageService {
     String? authToken,
   }) async {
     try {
-      String url = '${ApiConfig.diseaseDetections}?skip=$skip&limit=$limit&include_image=$includeImage';
-      if (diseaseName != null) {
-        url += '&disease_name=$diseaseName';
-      }
+      String url = '${ApiConfig.dbDisease}?skip=$skip&limit=$limit';
+      if (diseaseName != null) url += '&disease_name=$diseaseName';
 
-      final headers = <String, String>{
-        'Accept': 'application/json',
-      };
-      if (authToken != null) {
-        headers['Authorization'] = 'Bearer $authToken';
-      }
-
-      final response = await _client.get(
-        Uri.parse(url),
-        headers: headers,
-      ).timeout(const Duration(seconds: 30));
+      final response = await _client.get(Uri.parse(url), headers: {
+        'Accept': 'application/json'
+      }).timeout(const Duration(seconds: 30));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = jsonDecode(response.body);
         if (data is List) {
-          return data.map((json) => DiseaseDetectionResult.fromStoredJson(json as Map<String, dynamic>)).toList();
+          return data
+              .map((json) => DiseaseDetectionResult.fromStoredJson(
+                  json as Map<String, dynamic>))
+              .toList();
         }
       }
       return [];
@@ -308,23 +164,16 @@ class DiseaseStorageService {
     }
   }
 
-  /// Get detection statistics
+  /// Get disease detection statistics (proxies to DB microservice list).
   Future<Map<String, dynamic>?> getStatistics({String? authToken}) async {
     try {
-      final headers = <String, String>{
-        'Accept': 'application/json',
-      };
-      if (authToken != null) {
-        headers['Authorization'] = 'Bearer $authToken';
-      }
-
-      final response = await _client.get(
-        Uri.parse(ApiConfig.diseaseStatistics),
-        headers: headers,
-      ).timeout(const Duration(seconds: 30));
-
+      final response = await _client.get(Uri.parse(ApiConfig.dbDisease),
+          headers: {
+            'Accept': 'application/json'
+          }).timeout(const Duration(seconds: 30));
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+        final data = jsonDecode(response.body);
+        if (data is List) return {'total': data.length, 'records': data};
       }
       return null;
     } catch (e) {
@@ -333,54 +182,25 @@ class DiseaseStorageService {
     }
   }
 
-  /// Get detailed statistics for charts
+  /// Get detailed statistics (alias).
   Future<Map<String, dynamic>?> getDetailedStatistics({
     int days = 30,
     String? authToken,
-  }) async {
-    try {
-      final headers = <String, String>{
-        'Accept': 'application/json',
-      };
-      if (authToken != null) {
-        headers['Authorization'] = 'Bearer $authToken';
-      }
+  }) =>
+      getStatistics(authToken: authToken);
 
-      final response = await _client.get(
-        Uri.parse('${ApiConfig.diseaseStatisticsDetailed}?days=$days'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 30));
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-      return null;
-    } catch (e) {
-      debugPrint('Error getting detailed statistics: $e');
-      return null;
-    }
-  }
-
-  /// Get recent detections
+  /// Get recent detections.
   Future<Map<String, dynamic>?> getRecentDetections({
     int limit = 10,
     String? authToken,
   }) async {
     try {
-      final headers = <String, String>{
-        'Accept': 'application/json',
-      };
-      if (authToken != null) {
-        headers['Authorization'] = 'Bearer $authToken';
-      }
-
       final response = await _client.get(
-        Uri.parse('${ApiConfig.diseaseRecent}?limit=$limit'),
-        headers: headers,
+        Uri.parse('${ApiConfig.dbDisease}?limit=$limit'),
+        headers: {'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 30));
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+        return {'records': jsonDecode(response.body)};
       }
       return null;
     } catch (e) {
@@ -389,26 +209,10 @@ class DiseaseStorageService {
     }
   }
 
-  /// Delete a detection
+  /// Delete a detection (not supported by DB microservice — no-op).
   Future<bool> deleteDetection(String detectionId, {String? authToken}) async {
-    try {
-      final headers = <String, String>{
-        'Accept': 'application/json',
-      };
-      if (authToken != null) {
-        headers['Authorization'] = 'Bearer $authToken';
-      }
-
-      final response = await _client.delete(
-        Uri.parse('${ApiConfig.diseaseDetections}/$detectionId'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 30));
-
-      return response.statusCode >= 200 && response.statusCode < 300;
-    } catch (e) {
-      debugPrint('Error deleting detection: $e');
-      return false;
-    }
+    debugPrint('deleteDetection: not implemented in DB microservice');
+    return false;
   }
 
   void dispose() {
@@ -416,7 +220,7 @@ class DiseaseStorageService {
   }
 }
 
-/// Model for stored detection with additional fields
+/// Model for stored detection with additional fields.
 class StoredDetection {
   final String id;
   final String userId;

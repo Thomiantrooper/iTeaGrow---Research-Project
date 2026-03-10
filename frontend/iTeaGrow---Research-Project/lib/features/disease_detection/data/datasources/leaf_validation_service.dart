@@ -34,17 +34,18 @@ class LeafValidationService {
   LeafValidationService._internal();
 
   // Thresholds (tuned for tea-leaf photos taken on mobile)
-  // Raised from 0.06 → 0.12: 6 % was too lenient and allowed non-leaf images
-  // (e.g. photos with minor green tint) to pass the gate.
-  static const double _minGreenRatio = 0.12;
-  static const double _minSharpness = 12.0;
+  // Lowered back towards 0.06: 0.12 was too strict for dark green leaves
+  // (mature/older tea leaves) photographed on white/light backgrounds.
+  static const double _minGreenRatio = 0.06;
+  static const double _minSharpness = 5.0;
   static const double _minColourVariance = 180.0;
   static const int _minDimension = 64;
   // Max fraction of inorganic pixels (very dark + metallic grey).
   // Catches electronic devices, cables, metal objects that have enough
   // green background to pass the green-ratio check.
-  // Lowered 45 % → 35 %: dark-mode app screenshots are ~40–50 % near-black.
-  static const double _maxInorganicRatio = 0.35;
+  // Raised 35 % → 50 %: leaves photographed on white/cream paper surfaces
+  // produce large low-saturation backgrounds that were previously over-counted.
+  static const double _maxInorganicRatio = 0.50;
 
   /// Validate image bytes. Runs heavy pixel work on an isolate.
   Future<LeafValidationResult> validate(Uint8List imageBytes) async {
@@ -111,21 +112,22 @@ class LeafValidationService {
       );
     }
 
-    // Reject images dominated by inorganic surfaces (cables, electronic
-    // devices, metallic objects). These pass the green check when the
-    // background has colourful fabric/objects but the subject is not a leaf.
-    if (inorganicRatio > _maxInorganicRatio) {
-      return LeafValidationResult(
-        isValid: false,
-        message:
-            'No leaf detected. Please point the camera directly at a tea leaf in good lighting.',
-        greenScore: greenScore,
-        sharpnessScore: sharpness,
-        leafLikelihood: 0.0,
-      );
-    }
-
+    // If there is sufficient green content the image contains a leaf —
+    // skip the inorganic check so leaves on white / light-gray backgrounds
+    // (paper, foam board, lab surfaces) are not incorrectly rejected.
     if (greenScore < _minGreenRatio) {
+      // Low green: now also check inorganic ratio to catch electronic devices
+      // that happen to pass due to colourful fabric in the background.
+      if (inorganicRatio > _maxInorganicRatio) {
+        return LeafValidationResult(
+          isValid: false,
+          message:
+              'No leaf detected. Please point the camera directly at a tea leaf in good lighting.',
+          greenScore: greenScore,
+          sharpnessScore: sharpness,
+          leafLikelihood: 0.0,
+        );
+      }
       return LeafValidationResult(
         isValid: false,
         message:
@@ -191,11 +193,24 @@ class LeafValidationService {
 
         // Leaf-like green: hue 60–155°, not too desaturated, not too dark.
         // Excludes teal/cyan (H > 155°) and blue (H > 200°) used in UI.
-        if (hue >= 60 && hue <= 155 && s > 0.15 && v > 0.12) {
+        if (hue >= 60 && hue <= 155 && s > 0.10 && v > 0.05) {
           greenPixels++;
         }
-        // Diseased / brownish-green leaf tones (warm hues with visible green)
-        if (hue >= 20 && hue <= 80 && s > 0.20 && v > 0.15 && g > 40) {
+        // Diseased / yellowish-green leaf tones.
+        // Range deliberately starts at 45° (yellow-green) NOT 20°, so that
+        // brown soil / powder / rust-coloured objects (H 15–40°) are NOT counted
+        // as leaf tissue and fail the greenScore gate.
+        if (hue >= 45 && hue <= 80 && s > 0.15 && v > 0.08 && g > 40) {
+          naturalPixels++;
+        }
+        // Red-rust / heavily infected leaf tissue (H 5–45°, reddish-brown).
+        // A tea leaf covered in red rust is still a leaf — it just has almost
+        // no green left.  Count these pixels so badly infected leaves pass the
+        // greenScore gate and reach the model for proper classification.
+        // Guard: require moderate saturation AND red channel dominant so that
+        // random brown backgrounds (low S) aren't counted.
+        if (hue >= 5 && hue <= 45 && s > 0.25 && v > 0.10 &&
+            r > g && r > b && (r - g) > 20) {
           naturalPixels++;
         }
       }
@@ -287,8 +302,10 @@ class LeafValidationService {
         if (v < 0.10) {
           inorganicPixels++;
         }
-        // Metallic / grey: circuit boards, metal casings, plastic housings
-        else if (s < 0.16 && v >= 0.12 && v <= 0.72) {
+        // Metallic / grey: circuit boards, metal casings, plastic housings.
+        // Upper bound lowered 0.72 → 0.60 so near-white paper backgrounds
+        // (V > 0.60, S ≈ 0) are not mis-counted as inorganic.
+        else if (s < 0.16 && v >= 0.12 && v <= 0.60) {
           inorganicPixels++;
         }
       }
