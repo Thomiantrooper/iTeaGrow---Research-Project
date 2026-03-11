@@ -635,9 +635,10 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
   Widget _buildGradeDropdown(ClassificationResult? classResult) {
     // Determine which string to show based on if the user scanned something
     final activeGrade = classResult?.grade ?? _selectedGrade;
+    final String? valueInList = _gradesList.contains(activeGrade) ? activeGrade : null;
 
     return DropdownButtonFormField<String>(
-      value: activeGrade,
+      value: valueInList,
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context)!.market_tea_grade,
         border: const OutlineInputBorder(),
