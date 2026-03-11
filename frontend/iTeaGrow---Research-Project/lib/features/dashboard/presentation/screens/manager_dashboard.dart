@@ -40,6 +40,88 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
     });
   }
 
+  Widget _buildActionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> gradient,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradient,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: gradient.first.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TeaTypography.titleSmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    softWrap: true,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TeaTypography.labelSmall.copyWith(
+                      color: TeaColors.darkGray,
+                    ),
+                    softWrap: true,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: TeaColors.mediumGray,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _onScroll() {
     if (_scrollController.offset > 50 && !_isScrolled) {
       setState(() => _isScrolled = true);
@@ -308,44 +390,44 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
                 icon: Icons.energy_savings_leaf_outlined,
               ),
               const SizedBox(height: TeaSpacing.smd),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: TeaSpacing.smd,
-                crossAxisSpacing: TeaSpacing.smd,
-                childAspectRatio: 1.2,
+              // Two-column rows (matches premium dashboard spacing)
+              Row(
                 children: [
-                  TeaImageCard(
-                    title: AppLocalizations.of(context)!.dashboard_leaf_maturity,
-                    subtitle: AppLocalizations.of(context)!.dashboard_leaf_maturity_sub,
-                    tag: AppLocalizations.of(context)!.dashboard_tag_maturity,
-                    fallbackIcon: Icons.center_focus_strong,
-                    gradientColors: [
-                      TeaColors.freshLeaf,
-                      TeaColors.matureLeaf.withOpacity(0.8),
-                    ],
-                    borderRadius: TeaRadius.radiusLg,
-                    onTap: () => context.push('/leaf-maturity'),
+                  Expanded(
+                    child: _buildActionCard(
+                      title: AppLocalizations.of(context)!.dashboard_leaf_maturity,
+                      subtitle: AppLocalizations.of(context)!.dashboard_leaf_maturity_sub,
+                      icon: Icons.center_focus_strong,
+                      gradient: [TeaColors.freshLeaf, TeaColors.matureLeaf.withOpacity(0.8)],
+                      onTap: () => context.push('/leaf-maturity'),
+                    ),
                   ),
-                  TeaImageCard(
-                    title: AppLocalizations.of(context)!.dashboard_soil_test,
-                    subtitle: AppLocalizations.of(context)!.dashboard_soil_test_sub,
-                    tag: AppLocalizations.of(context)!.dashboard_tag_soil,
-                    fallbackIcon: Icons.science_outlined,
-                    gradientColors: [TeaColors.richSoil, const Color(0xFF8D6E63)],
-                    borderRadius: TeaRadius.radiusLg,
-                    onTap: () => context.push('/soil-fertilization'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildActionCard(
+                      title: AppLocalizations.of(context)!.dashboard_soil_test,
+                      subtitle: AppLocalizations.of(context)!.dashboard_soil_test_sub,
+                      icon: Icons.science_outlined,
+                      gradient: [TeaColors.richSoil, const Color(0xFF8D6E63)],
+                      onTap: () => context.push('/soil-fertilization'),
+                    ),
                   ),
-                  TeaImageCard(
-                    title: AppLocalizations.of(context)!.dashboard_iot_sensors,
-                    subtitle: AppLocalizations.of(context)!.dashboard_iot_sensors_sub,
-                    tag: AppLocalizations.of(context)!.dashboard_tag_live,
-                    fallbackIcon: Icons.sensors,
-                    gradientColors: [TeaColors.infoSky, const Color(0xFF42A5F5)],
-                    borderRadius: TeaRadius.radiusLg,
-                    onTap: () => context.push('/iot-devices'),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildActionCard(
+                      title: AppLocalizations.of(context)!.dashboard_iot_sensors,
+                      subtitle: AppLocalizations.of(context)!.dashboard_iot_sensors_sub,
+                      icon: Icons.sensors,
+                      gradient: [TeaColors.infoSky, const Color(0xFF42A5F5)],
+                      onTap: () => context.push('/iot-devices'),
+                    ),
                   ),
+                  const SizedBox(width: 12),
+                  const Expanded(child: SizedBox.shrink()),
                 ],
               ),
             ],
@@ -362,41 +444,43 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
                 icon: Icons.health_and_safety_outlined,
               ),
               const SizedBox(height: TeaSpacing.smd),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: TeaSpacing.smd,
-                crossAxisSpacing: TeaSpacing.smd,
-                childAspectRatio: 1.2,
+              Row(
                 children: [
-                  TeaImageCard(
-                    title: AppLocalizations.of(context)!.dashboard_disease_scan,
-                    subtitle: AppLocalizations.of(context)!.dashboard_disease_plant_sub,
-                    tag: AppLocalizations.of(context)!.dashboard_tag_diagnosis,
-                    fallbackIcon: Icons.bug_report_outlined,
-                    gradientColors: [TeaColors.alertRust, const Color(0xFFEF5350)],
-                    borderRadius: TeaRadius.radiusLg,
-                    onTap: () => context.push('/disease-detection'),
+                  Expanded(
+                    child: _buildActionCard(
+                      title: AppLocalizations.of(context)!.dashboard_disease_scan,
+                      subtitle: AppLocalizations.of(context)!.dashboard_disease_plant_sub,
+                      icon: Icons.bug_report_outlined,
+                      gradient: [TeaColors.alertRust, const Color(0xFFEF5350)],
+                      onTap: () => context.push('/disease-detection'),
+                    ),
                   ),
-                  TeaImageCard(
-                    title: AppLocalizations.of(context)!.dashboard_quality,
-                    subtitle: AppLocalizations.of(context)!.dashboard_quality_sub,
-                    tag: AppLocalizations.of(context)!.dashboard_tag_grading,
-                    fallbackIcon: Icons.grade_outlined,
-                    gradientColors: [TeaColors.warmAmber, TeaColors.goldenSunlight],
-                    borderRadius: TeaRadius.radiusLg,
-                    onTap: () => context.push('/powder-grading'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildActionCard(
+                      title: AppLocalizations.of(context)!.dashboard_quality,
+                      subtitle: AppLocalizations.of(context)!.dashboard_quality_sub,
+                      icon: Icons.grade_outlined,
+                      gradient: [TeaColors.warmAmber, TeaColors.goldenSunlight],
+                      onTap: () => context.push('/powder-grading'),
+                    ),
                   ),
-                  TeaImageCard(
-                    title: AppLocalizations.of(context)!.dashboard_yield_predict,
-                    subtitle: AppLocalizations.of(context)!.dashboard_yield_predict_sub,
-                    tag: AppLocalizations.of(context)!.dashboard_tag_analysis,
-                    fallbackIcon: Icons.grass_outlined,
-                    gradientColors: [TeaColors.leafLight, TeaColors.freshLeaf],
-                    borderRadius: TeaRadius.radiusLg,
-                    onTap: () => context.push('/yield-prediction'),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildActionCard(
+                      title: AppLocalizations.of(context)!.dashboard_yield_predict,
+                      subtitle: AppLocalizations.of(context)!.dashboard_yield_predict_sub,
+                      icon: Icons.grass_outlined,
+                      gradient: [TeaColors.leafLight, TeaColors.freshLeaf],
+                      onTap: () => context.push('/yield-prediction'),
+                    ),
                   ),
+                  const SizedBox(width: 12),
+                  const Expanded(child: SizedBox.shrink()),
                 ],
               ),
             ],
@@ -413,34 +497,26 @@ class _ManagerDashboardState extends ConsumerState<ManagerDashboard> {
                 icon: Icons.admin_panel_settings_outlined,
               ),
               const SizedBox(height: TeaSpacing.smd),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: TeaSpacing.smd,
-                crossAxisSpacing: TeaSpacing.smd,
-                childAspectRatio: 1.2,
+              Row(
                 children: [
-                  TeaImageCard(
-                    title: AppLocalizations.of(context)!.dashboard_market_prices,
-                    subtitle: AppLocalizations.of(context)!.dashboard_market_prices_sub,
-                    tag: AppLocalizations.of(context)!.dashboard_tag_live,
-                    fallbackIcon: Icons.currency_exchange,
-                    gradientColors: [TeaColors.matureLeaf, TeaColors.freshLeaf],
-                    borderRadius: TeaRadius.radiusLg,
-                    onTap: () => context.push('/market-analysis'),
+                  Expanded(
+                    child: _buildActionCard(
+                      title: AppLocalizations.of(context)!.dashboard_market_prices,
+                      subtitle: AppLocalizations.of(context)!.dashboard_market_prices_sub,
+                      icon: Icons.currency_exchange,
+                      gradient: [TeaColors.matureLeaf, TeaColors.freshLeaf],
+                      onTap: () => context.push('/market-analysis'),
+                    ),
                   ),
-                  TeaImageCard(
-                    title: AppLocalizations.of(context)!.dashboard_market_admin,
-                    subtitle: AppLocalizations.of(context)!.dashboard_market_admin_sub,
-                    tag: AppLocalizations.of(context)!.dashboard_tag_admin,
-                    fallbackIcon: Icons.admin_panel_settings,
-                    gradientColors: [
-                      TeaColors.warningAmber,
-                      TeaColors.goldenSunlight
-                    ],
-                    borderRadius: TeaRadius.radiusLg,
-                    onTap: () => context.push('/market-admin'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildActionCard(
+                      title: AppLocalizations.of(context)!.dashboard_market_admin,
+                      subtitle: AppLocalizations.of(context)!.dashboard_market_admin_sub,
+                      icon: Icons.admin_panel_settings,
+                      gradient: [TeaColors.warningAmber, TeaColors.goldenSunlight],
+                      onTap: () => context.push('/market-admin'),
+                    ),
                   ),
                 ],
               ),
