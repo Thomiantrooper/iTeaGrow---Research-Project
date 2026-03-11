@@ -235,7 +235,7 @@ class _PremiumDiseaseDetectionScreenState
       }
 
       final saved = await _storageService.saveDetectionWithImage(
-        result: _result!,
+        result: _result!.copyWith(userId: authState.user?.id),
         imagePath: _selectedImage!.path,
         authToken: authToken,
       );

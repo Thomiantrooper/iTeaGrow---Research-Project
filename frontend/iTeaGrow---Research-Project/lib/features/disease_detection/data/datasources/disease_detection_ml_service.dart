@@ -121,6 +121,26 @@ class DiseaseDetectionMLService {
     }
   }
 
+  // Green-content thresholds and offline confidence tuning
+  static const double _greenThreshold = 0.12; // minimal green to consider leaf
+  static const double _greenBorderline = 0.20; // borderline green, need higher confidence
+  static const double _offlineHighConfidence = 0.70; // higher bar for borderline green
+  static const double _rustSignalThreshold = 0.10; // strong rust colour signal
+  static const double _colorDiseaseConfidenceThreshold = 0.50; // min color analyzer confidence to consider disease
+
+  /// Returns greenScore in [0,1]. On error returns 0.0.
+  Future<double> _getGreenScore(String imagePath) async {
+    try {
+      final bytes = await File(imagePath).readAsBytes();
+      final color = await _colorAnalyzer.analyze(bytes);
+      debugPrint('>>> _getGreenScore: ${color.greenScore.toStringAsFixed(3)}');
+      return color.greenScore;
+    } catch (e) {
+      debugPrint('_getGreenScore failed: $e');
+      return 0.0;
+    }
+  }
+
   /// Validate image file before sending to backend.
   /// Returns null if valid, or an error message if invalid.
   String? _validateImageFile(String imagePath) {
@@ -226,12 +246,72 @@ class DiseaseDetectionMLService {
     // Offline fallback
     if (mlResult == null) {
       debugPrint('>>> USING OFFLINE MODE <<<');
-      mlResult = await _predictOffline(
-        imagePath,
-        liveTemperature: liveTemperature,
-        liveHumidity: liveHumidity,
-        liveAirQuality: liveAirQuality,
-      );
+      try {
+        // Run offline model
+        final offlineResult = await _predictOffline(
+          imagePath,
+          liveTemperature: liveTemperature,
+          liveHumidity: liveHumidity,
+          liveAirQuality: liveAirQuality,
+        );
+
+        // If backend was unavailable (we're in offline-only mode), ensure the
+        // image actually looks like a leaf before trusting the offline model.
+        // Use the colour analyser greenScore as a lightweight leaf proxy.
+        try {
+          final imageBytes = await File(imagePath).readAsBytes();
+          final quickColor = await _colorAnalyzer.analyze(imageBytes);
+          debugPrint('>>> OFFLINE GREEN CHECK: greenScore=${quickColor.greenScore.toStringAsFixed(3)} leafFraction=${quickColor.leafFraction.toStringAsFixed(3)}');
+
+          final g = quickColor.greenScore;
+          if (g < _greenThreshold) {
+            // No meaningful green — treat as Not A Leaf instead of trusting
+            // the 3-class offline classifier which cannot output Not A Leaf.
+            debugPrint('>>> OFFLINE MODE: Low green content (g=${g.toStringAsFixed(3)}) — returning Not A Leaf');
+            mlResult = DiseaseDetectionResult(
+              diseaseType: 'Not A Leaf',
+              confidence: 0.0,
+              severity: 'None',
+              recommendations: _getRecommendations('not_a_leaf', 'None'),
+              timestamp: DateTime.now(),
+            );
+          } else if (g < _greenBorderline) {
+            // Borderline green — require higher offline confidence to trust override
+            debugPrint('>>> OFFLINE MODE: Borderline green (g=${g.toStringAsFixed(3)}) — requiring high confidence (${_offlineHighConfidence})');
+            if (offlineResult.confidence >= _offlineHighConfidence) {
+              mlResult = offlineResult;
+            } else {
+              debugPrint('>>> OFFLINE MODE: Borderline green but low confidence (${offlineResult.confidence.toStringAsFixed(2)}) — returning Not A Leaf');
+              mlResult = DiseaseDetectionResult(
+                diseaseType: 'Not A Leaf',
+                confidence: 0.0,
+                severity: 'None',
+                recommendations: _getRecommendations('not_a_leaf', 'None'),
+                timestamp: DateTime.now(),
+              );
+            }
+          } else {
+            // Enough green — trust offline classifier
+            mlResult = offlineResult;
+          }
+        } catch (e) {
+          // If color analysis fails for any reason, fall back to offline result
+          debugPrint('Offline green-check failed (non-fatal): $e');
+          mlResult = offlineResult;
+        }
+      } catch (e) {
+        debugPrint('Offline inference failed: $e');
+        mlResult = DiseaseDetectionResult(
+          diseaseType: 'Unavailable',
+          confidence: 0.0,
+          severity: 'None',
+          recommendations: [
+            'The ML backend is currently offline and offline models could not be loaded.',
+            'Please check your internet connection and try again.',
+          ],
+          timestamp: DateTime.now(),
+        );
+      }
     }
 
     // ── Backend "Not A Leaf" second-opinion check ────────────────────────
@@ -241,22 +321,53 @@ class DiseaseDetectionMLService {
     // run offline inference as a second opinion. If offline returns an actual
     // disease/healthy result with reasonable confidence, trust it instead.
     if (mlResult.isNotALeaf && !kIsWeb && _isOfflineModelLoaded) {
-      debugPrint(
-          '>>> BACKEND SAID NOT A LEAF — running offline second opinion <<<');
+      debugPrint('>>> BACKEND SAID NOT A LEAF — checking green content before second opinion <<<');
       try {
-        final offlineResult = await _predictOffline(
-          imagePath,
-          liveTemperature: liveTemperature,
-          liveHumidity: liveHumidity,
-          liveAirQuality: liveAirQuality,
-        );
-        if (!offlineResult.isNotALeaf &&
-            offlineResult.diseaseType != 'Unavailable' &&
-            offlineResult.diseaseType != 'Error' &&
-            offlineResult.confidence >= 0.40) {
-          debugPrint('>>> OFFLINE OVERRIDE: ${offlineResult.diseaseType} '
-              '(${offlineResult.confidence.toStringAsFixed(2)}) replaces NOT A LEAF');
-          mlResult = offlineResult;
+        final leafBytes = await File(imagePath).readAsBytes();
+        final leafColorCheck = await _colorAnalyzer.analyze(leafBytes);
+        debugPrint('>>> GREEN CHECK: greenScore=${leafColorCheck.greenScore.toStringAsFixed(3)} leafFraction=${leafColorCheck.leafFraction.toStringAsFixed(3)}');
+        final g = leafColorCheck.greenScore;
+        if (g >= _greenBorderline) {
+          debugPrint('>>> STRONG GREEN (g=${g.toStringAsFixed(3)}) — running offline second opinion <<<');
+          final offlineResult = await _predictOffline(
+            imagePath,
+            liveTemperature: liveTemperature,
+            liveHumidity: liveHumidity,
+            liveAirQuality: liveAirQuality,
+          );
+          if (!offlineResult.isNotALeaf &&
+              offlineResult.diseaseType != 'Unavailable' &&
+              offlineResult.diseaseType != 'Error' &&
+              offlineResult.confidence >= 0.40) {
+            debugPrint('>>> OFFLINE OVERRIDE: ${offlineResult.diseaseType} '
+                '(${offlineResult.confidence.toStringAsFixed(2)}) replaces NOT A LEAF');
+            mlResult = offlineResult;
+          }
+        } else if (g >= _greenThreshold) {
+          debugPrint('>>> BORDERLINE GREEN (g=${g.toStringAsFixed(3)}) — requires high-confidence offline result (${_offlineHighConfidence})');
+          final offlineResult = await _predictOffline(
+            imagePath,
+            liveTemperature: liveTemperature,
+            liveHumidity: liveHumidity,
+            liveAirQuality: liveAirQuality,
+          );
+          // Only accept offline override for borderline green if colour analysis
+          // also suggests a disease with reasonable confidence. This prevents
+          // background grass or other green surfaces from triggering overrides.
+          if (leafColorCheck.suggestedDisease != 'Healthy' &&
+              leafColorCheck.suggestedConfidence >= _colorDiseaseConfidenceThreshold &&
+              !offlineResult.isNotALeaf &&
+              offlineResult.diseaseType != 'Unavailable' &&
+              offlineResult.diseaseType != 'Error' &&
+              offlineResult.confidence >= _offlineHighConfidence) {
+            debugPrint('>>> OFFLINE OVERRIDE (HIGH CONF + COLOR): ${offlineResult.diseaseType} '
+                '(${offlineResult.confidence.toStringAsFixed(2)}) replaces NOT A LEAF');
+            mlResult = offlineResult;
+          } else {
+            debugPrint('>>> OFFLINE DID NOT MEET COLOR/CONF THRESHOLDS — trusting NOT A LEAF');
+          }
+        } else {
+          debugPrint('>>> NO GREEN CONTENT (g=${g.toStringAsFixed(3)}) — trusting NOT A LEAF');
         }
       } catch (e) {
         debugPrint('Offline second-opinion failed (non-fatal): $e');
@@ -275,10 +386,22 @@ class DiseaseDetectionMLService {
         final imageBytes = await File(imagePath).readAsBytes();
         final colorResult = await _colorAnalyzer.analyze(imageBytes);
         debugPrint(
-            '>>> COLOR ANALYSIS: blister=${colorResult.blisterScore.toStringAsFixed(3)}, '
-            'rust=${colorResult.rustScore.toStringAsFixed(3)}, '
-            'green=${colorResult.greenScore.toStringAsFixed(3)}, '
-            'suggested=${colorResult.suggestedDisease}(${colorResult.suggestedConfidence.toStringAsFixed(2)})');
+          '>>> COLOR ANALYSIS: blister=${colorResult.blisterScore.toStringAsFixed(3)}, '
+          'rust=${colorResult.rustScore.toStringAsFixed(3)}, '
+          'green=${colorResult.greenScore.toStringAsFixed(3)}, '
+          'leafFraction=${colorResult.leafFraction.toStringAsFixed(3)}, '
+          'suggested=${colorResult.suggestedDisease}(${colorResult.suggestedConfidence.toStringAsFixed(2)})');
+
+        // If the model currently says Not A Leaf and colour analysis shows
+        // negligible green, skip cross-validation to avoid turning non-leaf
+        // objects into diseases (e.g. wood, soil, skin). This does not
+        // modify the Red Rust override logic inside the colour analyzer.
+        if (result.isNotALeaf &&
+            colorResult.greenScore < _greenThreshold &&
+            colorResult.rustScore < _rustSignalThreshold) {
+          debugPrint('>>> SKIP CROSS-VALIDATE: Not A Leaf with low green (g=${colorResult.greenScore.toStringAsFixed(3)}) and weak rust (r=${colorResult.rustScore.toStringAsFixed(3)}) — returning Not A Leaf');
+          return result;
+        }
 
         final corrected = DiseaseColorAnalyzer.crossValidate(
           modelDisease: result.diseaseType,
@@ -905,7 +1028,6 @@ class SingleLeafResult {
   }
 }
 
-/// Result for field/area analysis (multiple leaves in one image)
 class FieldAnalysisResult {
   final int detectedLeafCount;
   final int healthyCount;
@@ -914,6 +1036,7 @@ class FieldAnalysisResult {
   final String overallStatus;
   final Map<String, int> diseaseCounts;
   final DateTime timestamp;
+  final String? userId; // Ownership
   final double? temperature;
   final double? humidity;
   final double? airQuality;
@@ -929,6 +1052,7 @@ class FieldAnalysisResult {
     required this.overallStatus,
     required this.diseaseCounts,
     required this.timestamp,
+    this.userId,
     this.temperature,
     this.humidity,
     this.airQuality,
@@ -936,6 +1060,40 @@ class FieldAnalysisResult {
     required this.boundingBoxes,
     this.summary,
   });
+
+  FieldAnalysisResult copyWith({
+    int? detectedLeafCount,
+    int? healthyCount,
+    int? infectedCount,
+    double? healthPercentage,
+    String? overallStatus,
+    Map<String, int>? diseaseCounts,
+    DateTime? timestamp,
+    String? userId,
+    double? temperature,
+    double? humidity,
+    double? airQuality,
+    List<String>? recommendations,
+    List<BoundingBox>? boundingBoxes,
+    DetectionSummary? summary,
+  }) {
+    return FieldAnalysisResult(
+      detectedLeafCount: detectedLeafCount ?? this.detectedLeafCount,
+      healthyCount: healthyCount ?? this.healthyCount,
+      infectedCount: infectedCount ?? this.infectedCount,
+      healthPercentage: healthPercentage ?? this.healthPercentage,
+      overallStatus: overallStatus ?? this.overallStatus,
+      diseaseCounts: diseaseCounts ?? this.diseaseCounts,
+      timestamp: timestamp ?? this.timestamp,
+      userId: userId ?? this.userId,
+      temperature: temperature ?? this.temperature,
+      humidity: humidity ?? this.humidity,
+      airQuality: airQuality ?? this.airQuality,
+      recommendations: recommendations ?? this.recommendations,
+      boundingBoxes: boundingBoxes ?? this.boundingBoxes,
+      summary: summary ?? this.summary,
+    );
+  }
 
   factory FieldAnalysisResult.fromApiResponse(Map<String, dynamic> json) {
     final boxes = (json['bounding_boxes'] as List?)
@@ -951,6 +1109,7 @@ class FieldAnalysisResult {
       overallStatus: json['overall_status'] ?? 'Unknown',
       diseaseCounts: Map<String, int>.from(json['disease_counts'] ?? {}),
       timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+      userId: json['user_id'],
       temperature: json['temperature']?.toDouble(),
       humidity: json['humidity']?.toDouble(),
       airQuality: json['air_quality']?.toDouble(),

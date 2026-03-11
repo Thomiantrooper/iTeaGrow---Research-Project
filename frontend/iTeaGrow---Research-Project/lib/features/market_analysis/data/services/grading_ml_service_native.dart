@@ -83,8 +83,16 @@ class GradingMlService {
     if (_interpreter == null) return null;
 
     final imageBytes = await imageFile.readAsBytes();
-    img.Image? originalImage = img.decodeImage(imageBytes);
-    if (originalImage == null) return null;
+    img.Image? originalImage;
+    try {
+      originalImage = img.decodeImage(imageBytes);
+    } catch (e) {
+      debugPrint('GradingML: image decode error: $e');
+      return _validationError('Unable to decode image. The file may be corrupt.');
+    }
+    if (originalImage == null) {
+      return _validationError('Unable to decode image. The file may be corrupt or unsupported.');
+    }
 
     img.Image resizedImage =
         img.copyResize(originalImage, width: 224, height: 224);

@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
+import '../../../../core/api/api_config.dart';
+import '../../../../core/design_system/tea_colors.dart';
+import '../../../../core/design_system/tea_typography.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/pdf_report_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -38,8 +41,9 @@ class _ReportPreviewScreenState extends ConsumerState<ReportPreviewScreen> {
     try {
       final apiService = ref.read(apiServiceProvider);
       final response = await apiService.get<Map<String, dynamic>>(
-        '/api/reports/${widget.detectionId}',
+        ApiConfig.reportData(widget.detectionId),
         fromJson: (data) => data as Map<String, dynamic>,
+        includeAuth: false,
       );
 
       if (response.success && response.data != null && response.data!['detection'] != null) {
@@ -64,7 +68,13 @@ class _ReportPreviewScreenState extends ConsumerState<ReportPreviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.reports_preview_title),
+        title: Text(
+          AppLocalizations.of(context)!.reports_preview_title,
+          style: TeaTypography.titleMedium.copyWith(color: TeaColors.white),
+        ),
+        backgroundColor: TeaColors.freshLeaf,
+        foregroundColor: TeaColors.white,
+        elevation: 0,
         actions: [
           if (_pdfBytes != null) ...[
             IconButton(
@@ -165,8 +175,8 @@ class _ReportPreviewScreenState extends ConsumerState<ReportPreviewScreen> {
             canChangePageFormat: false,
             canChangeOrientation: false,
             canDebug: false,
-            allowPrinting: true,
-            allowSharing: true,
+            allowPrinting: false,
+            allowSharing: false,
             pdfFileName:
                 'iTeaGrow_Report_${_reportData?['report_id'] ?? 'unknown'}.pdf',
           ),

@@ -28,15 +28,19 @@ class DiseaseStorageService {
   }
 
   Future<Map<String, dynamic>?> _postToDb(
-      String url, Map<String, dynamic> body) async {
+      String url, Map<String, dynamic> body, {String? authToken}) async {
     try {
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+      if (authToken != null && authToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
       final response = await _client
           .post(
             Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
+            headers: headers,
             body: jsonEncode(body),
           )
           .timeout(const Duration(seconds: 30));
@@ -62,7 +66,7 @@ class DiseaseStorageService {
   }) async {
     final imageBase64 = await _imageToBase64(imagePath);
     final body = {
-      'user_id': null,
+      'user_id': result.userId,
       'image_path': imagePath,
       'image_data': imageBase64,
       'disease_name': result.diseaseType,
@@ -80,7 +84,7 @@ class DiseaseStorageService {
       'validation_message': result.validationMessage,
       'extra': null,
     };
-    return _postToDb(ApiConfig.dbDisease, body);
+    return _postToDb(ApiConfig.dbDisease, body, authToken: authToken);
   }
 
   /// Alias – previously used multipart, now delegates to saveDetection.
@@ -108,7 +112,7 @@ class DiseaseStorageService {
 
     final imageBase64 = await _imageToBase64(imagePath);
     final body = {
-      'user_id': null,
+      'user_id': result.userId,
       'image_path': imagePath,
       'image_data': imageBase64,
       'disease_name': primaryDisease,
@@ -127,7 +131,7 @@ class DiseaseStorageService {
       'summary': result.summary?.toJson(),
       'extra': null,
     };
-    return _postToDb(ApiConfig.dbDisease, body);
+    return _postToDb(ApiConfig.dbDisease, body, authToken: authToken);
   }
 
   // ── Read / History ──────────────────────────────────────────────────────────
@@ -144,9 +148,15 @@ class DiseaseStorageService {
       String url = '${ApiConfig.dbDisease}?skip=$skip&limit=$limit';
       if (diseaseName != null) url += '&disease_name=$diseaseName';
 
-      final response = await _client.get(Uri.parse(url), headers: {
+      final headers = {
         'Accept': 'application/json'
-      }).timeout(const Duration(seconds: 30));
+      };
+      if (authToken != null && authToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      final response = await _client.get(Uri.parse(url), headers: headers)
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = jsonDecode(response.body);
@@ -167,10 +177,15 @@ class DiseaseStorageService {
   /// Get disease detection statistics (proxies to DB microservice list).
   Future<Map<String, dynamic>?> getStatistics({String? authToken}) async {
     try {
+      final headers = {
+        'Accept': 'application/json'
+      };
+      if (authToken != null && authToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
       final response = await _client.get(Uri.parse(ApiConfig.dbDisease),
-          headers: {
-            'Accept': 'application/json'
-          }).timeout(const Duration(seconds: 30));
+          headers: headers).timeout(const Duration(seconds: 30));
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = jsonDecode(response.body);
         if (data is List) return {'total': data.length, 'records': data};
@@ -182,12 +197,81 @@ class DiseaseStorageService {
     }
   }
 
-  /// Get detailed statistics (alias).
+  /// Get detailed statistics - computes analytics from the raw detections list.
   Future<Map<String, dynamic>?> getDetailedStatistics({
     int days = 30,
     String? authToken,
-  }) =>
-      getStatistics(authToken: authToken);
+  }) async {
+    try {
+      final headers = {'Accept': 'application/json'};
+      if (authToken != null && authToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
+      final response = await _client
+          .get(
+            Uri.parse('${ApiConfig.dbDisease}?skip=0&limit=200'),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) return null;
+
+      final data = jsonDecode(response.body);
+      final List<dynamic> list = data is List ? data : [];
+
+      final cutoff = DateTime.now().subtract(Duration(days: days));
+      final filtered = list.where((doc) {
+        final createdAt = doc['created_at'];
+        if (createdAt == null) return true;
+        try {
+          return DateTime.parse(createdAt.toString()).isAfter(cutoff);
+        } catch (_) {
+          return true;
+        }
+      }).toList();
+
+      final totalScans = filtered.length;
+      int healthyCount = 0;
+      int infectedCount = 0;
+      final Map<String, int> diseaseMap = {};
+      final Map<String, int> severityMap = {};
+
+      for (final doc in filtered) {
+        final disease = (doc['disease_name'] ?? 'Unknown') as String;
+        final isHealthy = disease.toLowerCase() == 'healthy';
+        if (isHealthy) {
+          healthyCount++;
+        } else {
+          infectedCount++;
+        }
+        diseaseMap[disease] = (diseaseMap[disease] ?? 0) + 1;
+
+        final severity = (doc['severity'] ?? 'Unknown') as String;
+        severityMap[severity] = (severityMap[severity] ?? 0) + 1;
+      }
+
+      final healthRate =
+          totalScans > 0 ? (healthyCount / totalScans) * 100 : 0.0;
+
+      final diseaseDistribution = diseaseMap.entries
+          .map((e) => {'disease_name': e.key, 'count': e.value})
+          .toList()
+        ..sort((a, b) => (b['count'] as int).compareTo(a['count'] as int));
+
+      return {
+        'total_scans': totalScans,
+        'healthy_count': healthyCount,
+        'infected_count': infectedCount,
+        'health_rate': healthRate,
+        'disease_distribution': diseaseDistribution,
+        'severity_distribution': severityMap,
+      };
+    } catch (e) {
+      debugPrint('Error getting detailed statistics: $e');
+      return null;
+    }
+  }
 
   /// Get recent detections.
   Future<Map<String, dynamic>?> getRecentDetections({
@@ -195,9 +279,16 @@ class DiseaseStorageService {
     String? authToken,
   }) async {
     try {
+      final headers = {
+        'Accept': 'application/json'
+      };
+      if (authToken != null && authToken.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $authToken';
+      }
+
       final response = await _client.get(
         Uri.parse('${ApiConfig.dbDisease}?limit=$limit'),
-        headers: {'Accept': 'application/json'},
+        headers: headers,
       ).timeout(const Duration(seconds: 30));
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return {'records': jsonDecode(response.body)};

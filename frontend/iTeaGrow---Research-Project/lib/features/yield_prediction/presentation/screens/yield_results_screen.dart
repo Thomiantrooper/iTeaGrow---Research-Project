@@ -4,6 +4,8 @@ import 'package:iteagrow/l10n/app_localizations.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../../../../core/design_system/tea_colors.dart';
+import '../../../../core/design_system/tea_typography.dart';
 import '../../data/models/prediction_request_model.dart';
 import '../../domain/entities/yield_prediction_result.dart';
 
@@ -26,10 +28,15 @@ class YieldResultsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.yield_results_title),
+        title: Text(
+          AppLocalizations.of(context)!.yield_results_title,
+          style: TeaTypography.titleMedium.copyWith(color: TeaColors.white),
+        ),
+        backgroundColor: TeaColors.freshLeaf,
+        foregroundColor: TeaColors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.share, color: Colors.white),
             onPressed: () => _generateAndSharePdf(context, result),
           ),
         ],

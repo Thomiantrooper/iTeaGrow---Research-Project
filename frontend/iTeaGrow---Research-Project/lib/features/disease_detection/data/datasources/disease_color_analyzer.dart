@@ -10,6 +10,10 @@ class ColorAnalysisResult {
   /// Fraction of pixels that look like red-rust patches (0–1).
   final double rustScore;
 
+  /// Fraction of rust-coloured pixels that are part of small local clusters
+  /// (0–1). Helps avoid treating scattered texture as disease.
+  final double rustClusterScore;
+
   /// Fraction of pixels that are natural healthy green (0–1).
   final double greenScore;
 
@@ -18,6 +22,9 @@ class ColorAnalysisResult {
 
   /// Confidence of the colour-based suggestion (0–1).
   final double suggestedConfidence;
+  /// Fraction of image pixels identified as "leaf-like" during analysis
+  /// (0–1). Helps avoid treating tiny textured regions as leaves.
+  final double leafFraction;
 
   const ColorAnalysisResult({
     required this.blisterScore,
@@ -25,6 +32,8 @@ class ColorAnalysisResult {
     required this.greenScore,
     required this.suggestedDisease,
     required this.suggestedConfidence,
+    required this.leafFraction,
+    required this.rustClusterScore,
   });
 }
 
@@ -70,6 +79,8 @@ class DiseaseColorAnalyzer {
         greenScore: 0,
         suggestedDisease: 'Healthy',
         suggestedConfidence: 0,
+        leafFraction: 0,
+        rustClusterScore: 0,
       );
     }
   }
@@ -112,20 +123,58 @@ class DiseaseColorAnalyzer {
     // because background tables/glare can falsely trigger Blister Blight on small leaves.
     if (modelDisease.toLowerCase() == 'not a leaf' ||
         modelDisease.toLowerCase() == 'not_a_leaf') {
-      if (colorDisease == 'Red Rust' && colorConf >= 0.35) {
-        debugPrint('COLOR OVERRIDE: Backend said Not A Leaf, but color found '
-            '$colorDisease($colorConf)');
-        return CorrectedPrediction(
-          diseaseType: colorDisease,
-          confidence: colorConf.clamp(0.45, 0.85),
-          source: 'color-override-notaleaf',
-        );
+      // Conservative tuning: require very strong colour confidence before
+      // overriding a backend "Not A Leaf" result to Red Rust. This reduces
+      // false positives on uniformly coloured non-leaf images (e.g. powders).
+      // Require very strong colour confidence AND a sizable leaf area
+      // before converting a backend "Not A Leaf" into `Red Rust`.
+      // Raises the bar to avoid false positives on uniform non-leaf textures
+      // (powders, fabrics, desks) while preserving detection on real leaves.
+      if (colorDisease == 'Red Rust') {
+        final lf = colorResult.leafFraction;
+        // Safer two-tier rule:
+        // - Large leaf area (>= 40% of image): allow override with modest colour confidence.
+        // - Smaller leaf area (>= 15%): only allow override when colour confidence is very high
+        //   AND we see at least a tiny amount of green (to avoid uniform non-leaf textures).
+        // For large-area detections we also require at least a tiny green signal
+        // to reduce false positives on uniformly textured non-leaf images.
+        // Tighten large-area rule: require stronger colour confidence and
+        // explicit clustered-rust evidence and a small green signal. Relying
+        // solely on leafFraction allowed textured non-leaf scenes (desks, PCs)
+        // to slip through; require actual rust clustering instead.
+        final allowLarge = lf >= 0.40 && colorConf >= 0.88 &&
+          colorResult.greenScore >= 0.02 && colorResult.rustClusterScore >= 0.10;
+        final allowSmall = lf >= 0.18 && colorConf >= 0.94 &&
+          colorResult.greenScore >= 0.03 && colorResult.rustClusterScore >= 0.10;
+        // Conservative exception: if rust evidence is strongly clustered and
+        // covers a substantial leaf area, allow a slightly lower colour
+        // confidence threshold. This helps recover true positives that lack
+        // green signal due to severe rusting.
+        final allowClusteredStrong = lf >= 0.40 && colorConf >= 0.80 &&
+          colorResult.rustClusterScore >= 0.18;
+        if (allowLarge || allowSmall || allowClusteredStrong) {
+          debugPrint('COLOR OVERRIDE: Backend said Not A Leaf, but color found '
+              '$colorDisease(${colorConf.toStringAsFixed(2)}) leafFraction=${lf.toStringAsFixed(3)} '
+              'green=${colorResult.greenScore.toStringAsFixed(3)} '
+              'rustCluster=${colorResult.rustClusterScore.toStringAsFixed(3)} '
+              '[allowLarge=$allowLarge allowSmall=$allowSmall allowClusteredStrong=$allowClusteredStrong]');
+          return CorrectedPrediction(
+            diseaseType: colorDisease,
+            confidence: colorConf.clamp(0.55, 0.92),
+            source: 'color-override-notaleaf',
+          );
+        }
       }
 
-      // Also allow overriding "Not A Leaf" to Healthy if the leaf is small but clearly green
-      if (colorDisease == 'Healthy' && colorConf >= 0.40) {
+      // Also allow overriding "Not A Leaf" to Healthy if the colour signal is
+      // strong AND we detected a reasonable leaf area. This prevents small
+      // background green screens or tiny green reflections from being treated
+      // as actual leaves.
+      if (colorDisease == 'Healthy' && colorConf >= 0.40 &&
+          colorResult.leafFraction >= 0.20) {
         debugPrint(
-            'COLOR OVERRIDE: Backend said Not A Leaf, but color found Healthy($colorConf)');
+            'COLOR OVERRIDE: Backend said Not A Leaf, but color found Healthy($colorConf)'
+            ' leafFraction=${colorResult.leafFraction.toStringAsFixed(3)}');
         return CorrectedPrediction(
           diseaseType: 'Healthy',
           // Boost confidence artificially so it doesn't look like a completely uncertain guess
@@ -234,6 +283,8 @@ class DiseaseColorAnalyzer {
         greenScore: 0,
         suggestedDisease: 'Healthy',
         suggestedConfidence: 0,
+        leafFraction: 0,
+        rustClusterScore: 0,
       );
     }
 
@@ -244,6 +295,7 @@ class DiseaseColorAnalyzer {
 
     int blisterPixels = 0;
     int rustPixels = 0;
+    int rustClusterPixels = 0; // rust pixels that are part of small local clusters
     int greenPixels = 0;
     int leafPixels = 0; // non-background pixels
     final total = src.width * src.height;
@@ -282,7 +334,28 @@ class DiseaseColorAnalyzer {
             v < 210) {
           // R channel should dominate for true rust
           if (r > g && r > (b * 0.9) && (r - g) > 10) {
+            // Check small neighbourhood to ensure this isn't isolated noise.
+            int neighRust = 0;
+            for (int ny = y - 1; ny <= y + 1; ny++) {
+              for (int nx = x - 1; nx <= x + 1; nx++) {
+                if (nx < 0 || nx >= src.width || ny < 0 || ny >= src.height) continue;
+                final np = src.getPixel(nx, ny);
+                final nr = np.r.toInt();
+                final ng = np.g.toInt();
+                final nb = np.b.toInt();
+                final nhsv = _rgbToHsv(nr, ng, nb);
+                final nh = nhsv[0];
+                final ns = nhsv[1];
+                final nv = nhsv[2];
+                if (((nh >= 0 && nh <= 35) || (nh >= 340 && nh <= 360)) &&
+                    ns > 40 && ns < 230 && nv > 30 && nv < 210 &&
+                    nr > ng && nr > (nb * 0.9) && (nr - ng) > 10) {
+                  neighRust++;
+                }
+              }
+            }
             rustPixels++;
+            if (neighRust >= 3) rustClusterPixels++;
             continue;
           }
         }
@@ -337,7 +410,9 @@ class DiseaseColorAnalyzer {
     final effectiveTotal = leafPixels > 100 ? leafPixels : total;
     final blisterScore = blisterPixels / effectiveTotal;
     final rustScore = rustPixels / effectiveTotal;
+    final rustClusterScore = rustClusterPixels / effectiveTotal;
     final greenScore = greenPixels / effectiveTotal;
+    final leafFraction = total > 0 ? leafPixels / total : 0.0;
 
     // ── Determine suggestion ────────────────────────────────────────────
     String suggestedDisease = 'Healthy';
@@ -356,12 +431,15 @@ class DiseaseColorAnalyzer {
 
     // Red Rust check
     if (rustScore >= _rustThreshold) {
+      // Prefer clustered rust evidence — single noisy pixels shouldn't dominate.
       final strength = rustScore >= _strongRustThreshold
           ? 0.85
           : 0.40 + (rustScore / _strongRustThreshold) * 0.45;
-      if (strength > suggestedConfidence) {
+      // Reduce effective strength if rust pixels are not clustered
+      final clusteredStrength = (rustClusterScore >= 0.06) ? strength : strength * 0.65;
+      if (clusteredStrength > suggestedConfidence) {
         suggestedDisease = 'Red Rust';
-        suggestedConfidence = strength.clamp(0.0, 0.95);
+        suggestedConfidence = clusteredStrength.clamp(0.0, 0.95);
       }
     }
 
@@ -381,6 +459,8 @@ class DiseaseColorAnalyzer {
       greenScore: greenScore,
       suggestedDisease: suggestedDisease,
       suggestedConfidence: suggestedConfidence,
+      leafFraction: leafFraction,
+      rustClusterScore: rustClusterScore,
     );
   }
 

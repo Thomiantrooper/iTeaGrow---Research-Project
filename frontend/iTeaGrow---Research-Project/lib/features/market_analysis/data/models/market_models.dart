@@ -33,11 +33,13 @@ class PricingResponse {
   final double pricePerKg;
   final Map<String, dynamic> inputs;
   final String status;
+  final String? id;
 
   PricingResponse({
     required this.pricePerKg,
     required this.inputs,
     required this.status,
+    this.id,
   });
 
   factory PricingResponse.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,16 @@ class PricingResponse {
       pricePerKg: (json['price_per_kg'] as num?)?.toDouble() ?? 0.0,
       inputs: (json['inputs'] as Map<String, dynamic>?) ?? {},
       status: json['status']?.toString() ?? 'success',
+      id: json['id']?.toString(),
+    );
+  }
+
+  PricingResponse copyWith({String? id}) {
+    return PricingResponse(
+      pricePerKg: pricePerKg,
+      inputs: inputs,
+      status: status,
+      id: id ?? this.id,
     );
   }
 }

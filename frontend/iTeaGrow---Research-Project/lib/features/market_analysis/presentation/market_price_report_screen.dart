@@ -250,9 +250,13 @@ class _MarketPriceReportScreenState
     return Scaffold(
       backgroundColor: TeaColors.mistGreen,
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.market_report_title),
+        title: Text(
+          AppLocalizations.of(context)!.market_report_title,
+          style: TeaTypography.titleMedium.copyWith(color: TeaColors.white),
+        ),
         backgroundColor: TeaColors.freshLeaf,
-        foregroundColor: Colors.white,
+        foregroundColor: TeaColors.white,
+        elevation: 0,
       ),
       body: Column(
         children: [

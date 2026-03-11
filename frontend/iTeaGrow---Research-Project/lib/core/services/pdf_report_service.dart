@@ -272,6 +272,206 @@ class PdfReportService {
     return pdf.save();
   }
 
+  /// Generate a PDF document for market price prediction findings.
+  Future<Uint8List> generateMarketReport(
+    Map<String, dynamic> mainReport,
+    List<Map<String, dynamic>> historicalRecords,
+  ) async {
+    final pdf = pw.Document();
+
+    final record = mainReport['record'] as Map<String, dynamic>? ?? {};
+    final farmer = mainReport['farmer'] as Map<String, dynamic>? ?? {};
+    final organization =
+        mainReport['organization'] as Map<String, dynamic>? ?? {};
+    final reportId = mainReport['report_id'] ?? 'N/A';
+    final generatedAt =
+        mainReport['generated_at'] ?? DateTime.now().toIso8601String();
+
+    final dateFormat = DateFormat('MMM dd, yyyy hh:mm a');
+    final predictionDate = record['created_at'] != null
+        ? dateFormat.format(
+            DateTime.tryParse(record['created_at']) ?? DateTime.now())
+        : 'N/A';
+
+    // Decode image if available
+    pw.MemoryImage? productScan;
+    if (record['image_data'] != null) {
+      try {
+        final imageBytes = base64Decode(record['image_data']);
+        productScan = pw.MemoryImage(imageBytes);
+      } catch (_) {}
+    }
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(40),
+        header: (context) => _buildHeader(),
+        footer: (context) => _buildFooter(reportId, generatedAt, organization),
+        build: (context) => [
+          // Title
+          pw.Center(
+            child: pw.Text(
+              'Tea Market Value Prediction Report',
+              style: pw.TextStyle(
+                fontSize: 20,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColor.fromHex('#2E7D32'),
+              ),
+            ),
+          ),
+          pw.SizedBox(height: 20),
+          pw.Divider(color: PdfColor.fromHex('#4CAF50'), thickness: 2),
+          pw.SizedBox(height: 16),
+
+          // Primary Prediction Section
+          _buildSectionTitle('Current Price Prediction'),
+          pw.SizedBox(height: 12),
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              if (productScan != null)
+                pw.Container(
+                  width: 150,
+                  height: 150,
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.grey400),
+                    borderRadius: pw.BorderRadius.circular(8),
+                  ),
+                  child: pw.ClipRRect(
+                    horizontalRadius: 8,
+                    verticalRadius: 8,
+                    child: pw.Image(productScan, fit: pw.BoxFit.cover),
+                  ),
+                ),
+              if (productScan != null) pw.SizedBox(width: 20),
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow('Selected Grade', record['grade'] ?? 'N/A'),
+                    _buildInfoRow('Predicted Price',
+                        'Rs. ${(record['price_per_kg'] as num?)?.toStringAsFixed(2) ?? "0.00"} / kg'),
+                    _buildInfoRow('Quantity',
+                        '${(record['quantity'] as num?)?.toStringAsFixed(1) ?? "0.0"} kg'),
+                    _buildInfoRow('Total Estimated Value',
+                        'Rs. ${(record['total_price'] as num?)?.toStringAsFixed(2) ?? "0.00"}'),
+                    _buildInfoRow('Market Benchmark',
+                        'Rs. ${(record['market_price'] as num?)?.toStringAsFixed(2) ?? "0.00"}'),
+                    _buildInfoRow('Confidence Score',
+                        '${((record['confidence'] as num? ?? 0)).toStringAsFixed(1)}%'),
+                    _buildInfoRow('Farmer Name', farmer['name'] ?? 'Unknown'),
+                    _buildInfoRow('Analysis Date', predictionDate),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          pw.SizedBox(height: 20),
+
+          // Quality Metrics
+          _buildSectionTitle('Quality Factor Analysis'),
+          pw.SizedBox(height: 10),
+          pw.Row(
+            children: [
+              _buildStatCard('Color',
+                  '${((record['color'] as num? ?? 0) * 10).toStringAsFixed(1)}/10', PdfColors.orange700),
+              pw.SizedBox(width: 10),
+              _buildStatCard('Aroma',
+                  '${((record['aroma'] as num? ?? 0) * 10).toStringAsFixed(1)}/10', PdfColors.blue700),
+              pw.SizedBox(width: 10),
+              _buildStatCard('Freshness',
+                  '${((record['age'] as num? ?? 0) * 10).toStringAsFixed(1)}/10', PdfColors.green700),
+            ],
+          ),
+
+          pw.SizedBox(height: 30),
+
+          // Historical Comparison Section
+          if (historicalRecords.isNotEmpty) ...[
+            _buildSectionTitle('Historical Price Comparison'),
+            pw.SizedBox(height: 12),
+            pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.grey300),
+              columnWidths: {
+                0: const pw.FlexColumnWidth(2),
+                1: const pw.FlexColumnWidth(2),
+                2: const pw.FlexColumnWidth(2),
+                3: const pw.FlexColumnWidth(2),
+              },
+              children: [
+                pw.TableRow(
+                  decoration: pw.BoxDecoration(color: PdfColors.grey100),
+                  children: [
+                    pw.Padding(
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text('Date',
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                    pw.Padding(
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text('Grade',
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                    pw.Padding(
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text('Price/kg',
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                    pw.Padding(
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Text('Total Value',
+                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                  ],
+                ),
+                ...historicalRecords.map((h) {
+                  final hDate = h['created_at'] != null
+                      ? DateFormat('yyyy-MM-dd').format(
+                          DateTime.tryParse(h['created_at']) ?? DateTime.now())
+                      : 'N/A';
+                  return pw.TableRow(
+                    children: [
+                      pw.Padding(
+                          padding: const pw.EdgeInsets.all(6),
+                          child: pw.Text(hDate)),
+                      pw.Padding(
+                          padding: const pw.EdgeInsets.all(6),
+                          child: pw.Text(h['grade'] ?? 'N/A')),
+                      pw.Padding(
+                          padding: const pw.EdgeInsets.all(6),
+                          child: pw.Text(
+                              'Rs. ${(h['price_per_kg'] as num?)?.toStringAsFixed(2) ?? "0.00"}')),
+                      pw.Padding(
+                          padding: const pw.EdgeInsets.all(6),
+                          child: pw.Text(
+                              'Rs. ${(h['total_price'] as num?)?.toStringAsFixed(2) ?? "0.00"}')),
+                    ],
+                  );
+                }).toList(),
+              ],
+            ),
+            pw.SizedBox(height: 20),
+          ],
+
+          // Footer Notice
+          pw.Spacer(),
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              color: PdfColor.fromHex('#F1F8E9'),
+              borderRadius: pw.BorderRadius.circular(6),
+              border: pw.Border.all(color: PdfColor.fromHex('#C8E6C9')),
+            ),
+            child: pw.Text(
+              'This prediction is based on regional market benchmarks and quality attributes. Actual auction results may vary depending on buyer demand.',
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return pdf.save();
+  }
+
   pw.Widget _buildHeader() {
     return pw.Container(
       padding: const pw.EdgeInsets.only(bottom: 12),

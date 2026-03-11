@@ -2,6 +2,41 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint, compute;
 import 'package:image/image.dart' as img;
 
+// Safe pixel getter and small RGB holder (top-level to avoid nested class errors)
+// Some versions of the `image` package return an `int` for pixels; decode
+// channels manually and return a small holder with `.r/.g/.b` fields.
+dynamic _safeGetPixel(img.Image image, int x, int y) {
+  try {
+    if (x < 0 || x >= image.width || y < 0 || y >= image.height) return null;
+    final dynamic p = image.getPixel(x, y);
+    if (p is int) {
+      final int pi = p as int;
+      final r = (pi >> 16) & 0xFF;
+      final g = (pi >> 8) & 0xFF;
+      final b = pi & 0xFF;
+      return _Rgb(r, g, b);
+    }
+    // If the package returns an object with r/g/b fields, prefer those.
+    try {
+      final r = (p).r as int;
+      final g = (p).g as int;
+      final b = (p).b as int;
+      return _Rgb(r, g, b);
+    } catch (_) {
+      return null;
+    }
+  } catch (e) {
+    return null;
+  }
+}
+
+class _Rgb {
+  final int r;
+  final int g;
+  final int b;
+  const _Rgb(this.r, this.g, this.b);
+}
+
 /// Result of pre-scan powder validation.
 class PowderValidationResult {
   final bool isValid;
@@ -58,7 +93,17 @@ class PowderValidationService {
 
   /// Static top-level function — must be top-level or static to run via [compute].
   static PowderValidationResult _analyzeImage(Uint8List bytes) {
-    final image = img.decodeImage(bytes);
+    img.Image? image;
+    try {
+      image = img.decodeImage(bytes);
+    } catch (e) {
+      debugPrint('PowderValidation: image decode error: $e');
+      return const PowderValidationResult(
+        isValid: false,
+        message:
+            'Unable to process this image. Please upload a clear, undamaged photo of the tea powder.',
+      );
+    }
     if (image == null) {
       return const PowderValidationResult(
         isValid: false,
@@ -158,7 +203,8 @@ class PowderValidationService {
 
     for (int y = 0; y < image.height; y++) {
       for (int x = 0; x < image.width; x++) {
-        final pixel = image.getPixel(x, y);
+        final pixel = _safeGetPixel(image, x, y);
+        if (pixel == null) continue;
         final r = pixel.r.toDouble();
         final g = pixel.g.toDouble();
         final b = pixel.b.toDouble();
@@ -204,7 +250,8 @@ class PowderValidationService {
 
     for (int y = 0; y < image.height; y++) {
       for (int x = 0; x < image.width; x++) {
-        final pixel = image.getPixel(x, y);
+        final pixel = _safeGetPixel(image, x, y);
+        if (pixel == null) continue;
         final r = pixel.r.toDouble();
         final g = pixel.g.toDouble();
         final b = pixel.b.toDouble();
@@ -245,12 +292,20 @@ class PowderValidationService {
 
     for (int y = 1; y < gray.height - 1; y++) {
       for (int x = 1; x < gray.width - 1; x++) {
-        final center = gray.getPixel(x, y).r.toInt();
+        final centerPixel = _safeGetPixel(gray, x, y);
+        final left = _safeGetPixel(gray, x - 1, y);
+        final right = _safeGetPixel(gray, x + 1, y);
+        final up = _safeGetPixel(gray, x, y - 1);
+        final down = _safeGetPixel(gray, x, y + 1);
+        if (centerPixel == null || left == null || right == null || up == null || down == null) {
+          continue;
+        }
+        final center = centerPixel.r.toInt();
         final laplacian = (4 * center -
-                gray.getPixel(x - 1, y).r.toInt() -
-                gray.getPixel(x + 1, y).r.toInt() -
-                gray.getPixel(x, y - 1).r.toInt() -
-                gray.getPixel(x, y + 1).r.toInt())
+                left.r.toInt() -
+                right.r.toInt() -
+                up.r.toInt() -
+                down.r.toInt())
             .toDouble();
         sum += laplacian * laplacian;
         count++;
@@ -268,7 +323,8 @@ class PowderValidationService {
 
     for (int y = 0; y < image.height; y++) {
       for (int x = 0; x < image.width; x++) {
-        final pixel = image.getPixel(x, y);
+        final pixel = _safeGetPixel(image, x, y);
+        if (pixel == null) continue;
         final r = pixel.r.toDouble();
         final g = pixel.g.toDouble();
         final b = pixel.b.toDouble();
@@ -297,7 +353,8 @@ class PowderValidationService {
 
     for (int y = 0; y < image.height; y++) {
       for (int x = 0; x < image.width; x++) {
-        final pixel = image.getPixel(x, y);
+        final pixel = _safeGetPixel(image, x, y);
+        if (pixel == null) continue;
         final r = pixel.r.toDouble();
         final g = pixel.g.toDouble();
         final b = pixel.b.toDouble();

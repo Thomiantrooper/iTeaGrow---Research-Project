@@ -256,7 +256,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       }
 
       final response = await _storageService.saveDetectionWithImage(
-        result: _result!,
+        result: _result!.copyWith(userId: authState.user?.id),
         imagePath: _selectedImage!.path,
         authToken: authToken,
       );
