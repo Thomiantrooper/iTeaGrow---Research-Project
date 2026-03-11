@@ -41,7 +41,7 @@ Automated detection of visible tea leaf diseases and stress indicators, synchron
 - Actionable treatment recommendations  
 
 ---
-### 1. Leaf Maturity Detection & Yield Decision Support  
+### 2. Leaf Maturity Detection & Yield Decision Support  
 **Lead: Kanzurrizk M R A (IT22166524)**
 
 #### Scope
@@ -51,11 +51,10 @@ This module addresses inaccuracies in manual leaf grading and traditional yield 
 - Real-time classification into *Tender*, *Mature*, and *Coarser* stages  
 - Multi-leaf detection using instance segmentation
 - Predicts factory-usable yield using a hybrid machine learning model
-- Supports "What-If" simulations adjusting Good Leaf % for economic forecasting
 
 ---
 
-### 3. Growth Analyzer & Fertilization Management  
+### 3. Soil Monitoring & Fertilization Management  
 **Lead: Ashwin V (IT22204448)**
 
 #### Scope
@@ -87,7 +86,7 @@ Objective grading and valuation of processed tea powders to replace subjective a
 - Grad-CAM heatmaps highlight regions influencing model predictions and SHAP to verify the predicted tabular form
 - Improves trust and auditability for supervisors and managers  
 
-### Offline Design
+### Offline/Hybrid Design
 - All inference and logging functions operate without internet  
 - Designed for remote plantation environments  
 
@@ -102,7 +101,7 @@ Objective grading and valuation of processed tea powders to replace subjective a
 ## Technology Stack
 
 ### Hardware
-- ESP32-WROOM-32  
+- ESP32  
 - SIM800L GSM module  
 - NEO-6M GPS  
 - NPK, pH, moisture, temperature sensors  
@@ -111,7 +110,7 @@ Objective grading and valuation of processed tea powders to replace subjective a
 ### AI / Machine Learning
 - YOLOv8n
 - Random Forest  
-- MobileNetV3
+- MobileNetV3/V2
 - ShuffleNetV2  
 - XGBoost
 - CatBoost
