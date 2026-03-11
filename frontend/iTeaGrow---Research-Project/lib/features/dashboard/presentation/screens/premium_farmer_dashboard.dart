@@ -580,16 +580,19 @@ class _PremiumFarmerDashboardState
                     style: TeaTypography.titleSmall.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: TeaTypography.labelSmall.copyWith(
                       color: TeaColors.darkGray,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
                   ),
                 ],
               ),
