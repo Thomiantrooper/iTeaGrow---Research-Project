@@ -8,6 +8,7 @@ import '../../../../core/design_system/tea_typography.dart';
 import '../../../../core/design_system/tea_spacing.dart';
 import '../../../../core/widgets/cards/tea_card.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/api/api_config.dart';
 import '../../../auth/data/providers/auth_provider.dart';
 import 'package:iteagrow/l10n/app_localizations.dart';
 
@@ -45,8 +46,8 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
     try {
       final apiService = ref.read(apiServiceProvider);
       final endpoint = (_isAdminOrManager && _showAllReports)
-          ? '/api/reports/admin/all'
-          : '/api/reports/user/history';
+          ? ApiConfig.reportAdminAll
+          : ApiConfig.reportHistory;
       final response = await apiService.get<Map<String, dynamic>>(
         endpoint,
         fromJson: (data) => data as Map<String, dynamic>,

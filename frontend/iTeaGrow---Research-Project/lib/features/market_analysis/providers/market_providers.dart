@@ -1,11 +1,15 @@
-import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:io';
+import '../../../core/services/local_auth_service.dart';
 import '../data/models/market_models.dart';
 import '../data/services/market_api_service.dart';
 import '../data/services/grading_ml_service.dart';
 
 // Services
-final marketApiServiceProvider = Provider((ref) => MarketApiService());
+final marketApiServiceProvider = Provider((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return MarketApiService(prefs);
+});
 final gradingMlServiceProvider = Provider<GradingMlService>((ref) {
   final service = GradingMlService();
   service.initModel(); // Ideally initialize early or on demand
@@ -84,6 +88,20 @@ final marketPricesProvider = FutureProvider<MarketPriceResponse>((ref) async {
   return await api.getMarketPrices();
 });
 
+// Market History Provider
+final marketHistoryProvider =
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final api = ref.watch(marketApiServiceProvider);
+  return await api.getMarketHistory();
+});
+
+// Market Report Data Provider (fetch details for a specific record)
+final marketReportDataProvider =
+    FutureProvider.family<Map<String, dynamic>, String>((ref, id) async {
+  final api = ref.watch(marketApiServiceProvider);
+  return await api.getMarketReportData(id);
+});
+
 // Price Calculation Async State
 final priceCalculationProvider = StateNotifierProvider.autoDispose<
     PriceCalculationNotifier, AsyncValue<PricingResponse?>>((ref) {
@@ -113,3 +131,10 @@ class PriceCalculationNotifier
     state = const AsyncValue.data(null);
   }
 }
+
+// Market Summary Provider (for analytics)
+final marketSummaryProvider =
+    FutureProvider.family<Map<String, dynamic>, int>((ref, days) async {
+  final api = ref.watch(marketApiServiceProvider);
+  return await api.getMarketSummary(days: days);
+});

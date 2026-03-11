@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/design_system/tea_colors.dart';
+import '../../../../core/design_system/tea_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/soil_health_record.dart';
 
@@ -291,9 +292,13 @@ class SoilHealthPdfScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('${AppLocalizations.of(context)!.soil_pdf_export_title}: ${_getLocationLabel(record)}'),
+        title: Text(
+          '${AppLocalizations.of(context)!.soil_pdf_export_title}: ${_getLocationLabel(record)}',
+          style: TeaTypography.titleMedium.copyWith(color: TeaColors.white),
+        ),
         backgroundColor: TeaColors.deepForest,
-        foregroundColor: Colors.white,
+        foregroundColor: TeaColors.white,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),

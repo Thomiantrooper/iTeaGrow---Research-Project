@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/api/api_config.dart';
 import '../../../../core/design_system/tea_colors.dart';
 import '../../../../core/design_system/tea_typography.dart';
 import '../../../../core/design_system/tea_spacing.dart';
@@ -9,6 +13,7 @@ import '../../../../core/services/connectivity_service.dart';
 import '../../data/models/prediction_request_model.dart';
 import '../providers/yield_prediction_provider.dart';
 import 'yield_results_screen.dart';
+import 'yield_history_screen.dart';
 
 class YieldPredictionScreen extends ConsumerStatefulWidget {
   const YieldPredictionScreen({super.key});
@@ -116,6 +121,7 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
     final state = ref.read(yieldPredictionProvider);
 
     if (state.result != null && state.result!.success) {
+      unawaited(_saveToDb(request, state.result!));
       // Navigate to results
       if (mounted) {
         Navigator.push(
@@ -130,6 +136,35 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
       }
     } else if (state.error != null) {
       _showError(state.error!);
+    }
+  }
+
+  Future<void> _saveToDb(
+      PredictionRequestModel req, dynamic result) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('api_access_token');
+      final headers = {'Content-Type': 'application/json'};
+      if (token != null) headers['Authorization'] = 'Bearer token';
+      await http.post(
+        Uri.parse(ApiConfig.dbYield),
+        headers: headers,
+        body: jsonEncode({
+          'division_id': req.divisionId,
+          'labor_total': req.laborTotal,
+          'field_size_ha': req.fieldSizeHa,
+          'crop_harvested_kg': req.cropHarvestedKg,
+          'g_pct': req.gPct,
+          'c_pct': req.cPct,
+          'd_pct': req.dPct,
+          'prediction_days': req.predictionDays,
+          'total_predicted_yield_kg': result.summary.totalPredictedYield,
+          'average_daily_yield_kg': result.summary.averageDailyYield,
+          'days_predicted': result.summary.daysPredicted,
+        }),
+      );
+    } catch (e) {
+      debugPrint('Yield save error: e');
     }
   }
 
@@ -183,6 +218,14 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.yield_title),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'View History',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const YieldHistoryScreen()),
+            ),
+          ),
           // API Health Indicator
           Padding(
             padding: const EdgeInsets.all(8.0),

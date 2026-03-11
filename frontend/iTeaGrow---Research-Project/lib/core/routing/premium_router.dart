@@ -14,6 +14,7 @@ import '../../features/powder_grading/presentation/screens/powder_grading_screen
 import '../../features/market_analysis/presentation/market_analysis_screen.dart';
 import '../../features/market_analysis/presentation/market_value_admin_screen.dart';
 import '../../features/market_analysis/presentation/market_price_report_screen.dart';
+import '../../features/market_analysis/presentation/screens/market_history_screen.dart';
 import '../../features/market_analysis/data/models/market_models.dart';
 import '../../features/plants/presentation/screens/premium_plants_screen.dart';
 import '../../features/map/presentation/screens/premium_map_screen.dart';
@@ -252,6 +253,15 @@ final premiumRouterProvider = Provider<GoRouter>((ref) {
         path: '/market-analysis',
         pageBuilder: (context, state) => _buildPremiumTransition(
           child: const MarketAnalysisScreen(),
+          state: state,
+        ),
+      ),
+      
+      // Market History
+      GoRoute(
+        path: '/market-history',
+        pageBuilder: (context, state) => _buildPremiumTransition(
+          child: const MarketHistoryScreen(),
           state: state,
         ),
       ),

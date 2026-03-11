@@ -164,13 +164,21 @@ class ApiConfig {
   static String get analyticsYearlyAnalysis =>
       '$effectiveBaseUrl/api/analytics/yearly-analysis';
 
-  // Report Endpoints
+  // Report Endpoints (Served from DB Microservice)
   static String reportData(String detectionId) =>
-      '$effectiveBaseUrl/api/reports/$detectionId';
+      '$dbMicroserviceBaseUrl/api/reports/$detectionId';
   static String get reportHistory =>
-      '$effectiveBaseUrl/api/reports/user/history';
+      '$dbMicroserviceBaseUrl/api/reports/user/history';
+  static String get reportAdminAll =>
+      '$dbMicroserviceBaseUrl/api/reports/admin/all';
   static String get reportSummary =>
-      '$effectiveBaseUrl/api/reports/summary/range';
+      '$dbMicroserviceBaseUrl/api/reports/summary/range';
+
+  // Market Report Endpoints
+  static String get marketHistory =>
+      '$dbMicroserviceBaseUrl/api/reports/market-history';
+  static String marketReportData(String recordId) =>
+      '$dbMicroserviceBaseUrl/api/reports/market/$recordId';
 
   // Disease Detection Storage Endpoints
   static String get diseaseDetections =>

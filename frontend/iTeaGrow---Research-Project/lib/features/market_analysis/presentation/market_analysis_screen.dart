@@ -6,10 +6,11 @@ import 'package:iteagrow/core/design_system/design_system.dart';
 import 'package:iteagrow/l10n/app_localizations.dart';
 import 'dart:async';
 import '../../../../core/services/connectivity_service.dart';
-import '../data/models/market_models.dart';
-import '../providers/market_providers.dart';
+import 'package:go_router/go_router.dart';
 import 'widgets/market_charts.dart';
 import '../../powder_grading/data/datasources/powder_validation_service.dart';
+import '../data/models/market_models.dart';
+import '../providers/market_providers.dart';
 
 class MarketAnalysisScreen extends ConsumerStatefulWidget {
   const MarketAnalysisScreen({super.key});
@@ -143,6 +144,11 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () => context.push('/market-history'),
+            tooltip: 'View History',
           ),
         ],
       ),

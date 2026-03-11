@@ -1,15 +1,19 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:printing/printing.dart';
+import '../../../../core/api/api_config.dart';
 import '../../../../core/design_system/tea_colors.dart';
 import '../../data/datasources/leaf_maturity_pytorch_service.dart';
 import '../../domain/entities/leaf_maturity_result.dart';
 import '../services/leaf_maturity_report_service.dart';
 import '../../../disease_detection/data/datasources/leaf_validation_service.dart';
 import 'package:iteagrow/l10n/app_localizations.dart';
+import 'leaf_maturity_history_screen.dart';
 
 class LeafMaturityScreen extends StatefulWidget {
   final bool isManagerOrAdmin;
@@ -98,9 +102,35 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
         _result = result;
         _isProcessing = false;
       });
+      unawaited(_saveToDb(result));
     } catch (e) {
       setState(() => _isProcessing = false);
       _showError(AppLocalizations.of(context)!.error_analysis(e.toString()));
+    }
+  }
+
+  Future<void> _saveToDb(LeafMaturityResult result) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('api_access_token');
+      final headers = {'Content-Type': 'application/json'};
+      if (token != null) headers['Authorization'] = 'Bearer token';
+      await http.post(
+        Uri.parse(ApiConfig.dbMaturity),
+        headers: headers,
+        body: jsonEncode({
+          'species': result.species,
+          'maturity': result.maturity,
+          'species_confidence': result.speciesConfidence,
+          'maturity_confidence': result.maturityConfidence,
+          'raw_confidence': result.rawConfidence,
+          'confidence_label': result.confidenceLabel,
+          'is_ambiguous': result.isAmbiguous,
+          'color_validated': result.colorValidated,
+        }),
+      );
+    } catch (e) {
+      debugPrint('Maturity save error: e');
     }
   }
 
@@ -162,6 +192,15 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
       appBar: AppBar(
         title: Text(l10n.leaf_title),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'View History',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const LeafMaturityHistoryScreen()),
+            ),
+          ),
           if (_selectedImage != null)
             IconButton(
               icon: const Icon(Icons.delete),

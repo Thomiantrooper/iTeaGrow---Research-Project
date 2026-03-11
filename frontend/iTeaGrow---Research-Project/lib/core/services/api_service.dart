@@ -78,13 +78,13 @@ class ApiService {
   bool get hasToken => accessToken != null && accessToken!.isNotEmpty;
 
   /// Get headers with authorization if token exists
-  Map<String, String> get _headers {
+  Map<String, String> _getHeaders({bool includeAuth = true}) {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 
-    if (hasToken) {
+    if (includeAuth && hasToken) {
       headers['Authorization'] = 'Bearer $accessToken';
     }
 
@@ -95,6 +95,7 @@ class ApiService {
   Future<ApiResponse<T>> get<T>(
     String endpoint, {
     T Function(dynamic)? fromJson,
+    bool includeAuth = true,
   }) async {
     try {
       final String url = endpoint.startsWith('http')
@@ -103,7 +104,7 @@ class ApiService {
 
       final response = await _client.get(
         Uri.parse(url),
-        headers: _headers,
+        headers: _getHeaders(includeAuth: includeAuth),
       ).timeout(const Duration(seconds: 10));
 
       return _handleResponse<T>(response, fromJson);
@@ -122,6 +123,7 @@ class ApiService {
     Map<String, dynamic>? body,
     T Function(dynamic)? fromJson,
     Duration timeout = const Duration(seconds: 10),
+    bool includeAuth = true,
   }) async {
     try {
       final String url = endpoint.startsWith('http')
@@ -130,7 +132,7 @@ class ApiService {
 
       final response = await _client.post(
         Uri.parse(url),
-        headers: _headers,
+        headers: _getHeaders(includeAuth: includeAuth),
         body: body != null ? jsonEncode(body) : null,
       ).timeout(timeout);
 
@@ -149,6 +151,7 @@ class ApiService {
     String endpoint, {
     Map<String, dynamic>? body,
     T Function(dynamic)? fromJson,
+    bool includeAuth = true,
   }) async {
     try {
       final String url = endpoint.startsWith('http')
@@ -157,7 +160,7 @@ class ApiService {
 
       final response = await _client.put(
         Uri.parse(url),
-        headers: _headers,
+        headers: _getHeaders(includeAuth: includeAuth),
         body: body != null ? jsonEncode(body) : null,
       ).timeout(const Duration(seconds: 10));
 
@@ -175,6 +178,7 @@ class ApiService {
   Future<ApiResponse<T>> delete<T>(
     String endpoint, {
     T Function(dynamic)? fromJson,
+    bool includeAuth = true,
   }) async {
     try {
       final String url = endpoint.startsWith('http')
@@ -183,7 +187,7 @@ class ApiService {
 
       final response = await _client.delete(
         Uri.parse(url),
-        headers: _headers,
+        headers: _getHeaders(includeAuth: includeAuth),
       ).timeout(const Duration(seconds: 10));
 
       return _handleResponse<T>(response, fromJson);

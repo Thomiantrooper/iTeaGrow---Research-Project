@@ -188,14 +188,8 @@ class DiseaseDetectionResult {
   /// Check if the detection confidence is uncertain
   bool get isUncertain => severity == 'Uncertain' || confidence < 0.45;
 
-  /// Human-readable reliability label
-  String get reliabilityLabel {
-    if (confidence >= 0.85) return 'Very High';
-    if (confidence >= 0.70) return 'High';
-    if (confidence >= 0.50) return 'Moderate';
-    if (confidence >= 0.30) return 'Low';
-    return 'Very Low';
-  }
+  // Ownership
+  final String? userId;
 
   DiseaseDetectionResult({
     required this.diseaseType,
@@ -203,6 +197,7 @@ class DiseaseDetectionResult {
     required this.severity,
     required this.recommendations,
     required this.timestamp,
+    this.userId,
     this.temperature,
     this.humidity,
     this.airQuality,
@@ -217,6 +212,51 @@ class DiseaseDetectionResult {
     this.isPotentialFalsePositive = false,
     this.heatmapPath,
   });
+
+  DiseaseDetectionResult copyWith({
+    String? diseaseType,
+    double? confidence,
+    String? severity,
+    List<String>? recommendations,
+    DateTime? timestamp,
+    String? userId,
+    double? temperature,
+    double? humidity,
+    double? airQuality,
+    String? requestId,
+    String? imageId,
+    String? dbId,
+    double? processingTimeMs,
+    List<Detection>? detections,
+    DetectionSummary? summary,
+    double? imageQualityScore,
+    String? validationMessage,
+    bool? isPotentialFalsePositive,
+    String? heatmapPath,
+  }) {
+    return DiseaseDetectionResult(
+      diseaseType: diseaseType ?? this.diseaseType,
+      confidence: confidence ?? this.confidence,
+      severity: severity ?? this.severity,
+      recommendations: recommendations ?? this.recommendations,
+      timestamp: timestamp ?? this.timestamp,
+      userId: userId ?? this.userId,
+      temperature: temperature ?? this.temperature,
+      humidity: humidity ?? this.humidity,
+      airQuality: airQuality ?? this.airQuality,
+      requestId: requestId ?? this.requestId,
+      imageId: imageId ?? this.imageId,
+      dbId: dbId ?? this.dbId,
+      processingTimeMs: processingTimeMs ?? this.processingTimeMs,
+      detections: detections ?? this.detections,
+      summary: summary ?? this.summary,
+      imageQualityScore: imageQualityScore ?? this.imageQualityScore,
+      validationMessage: validationMessage ?? this.validationMessage,
+      isPotentialFalsePositive:
+          isPotentialFalsePositive ?? this.isPotentialFalsePositive,
+      heatmapPath: heatmapPath ?? this.heatmapPath,
+    );
+  }
 
   /// Create from API response
   factory DiseaseDetectionResult.fromApiResponse(Map<String, dynamic> json) {
@@ -328,6 +368,7 @@ class DiseaseDetectionResult {
       severity: severity,
       recommendations: recommendations,
       timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+      userId: json['user_id'],
       requestId: json['request_id'],
       imageId: json['image_id'],
       dbId: json['_id'] ?? json['id'] ?? json['db_id'],
@@ -369,6 +410,7 @@ class DiseaseDetectionResult {
         'severity': severity,
         'recommendations': recommendations,
         'timestamp': timestamp.toIso8601String(),
+        'user_id': userId,
         'temperature': temperature,
         'humidity': humidity,
         'air_quality': airQuality,
@@ -391,6 +433,7 @@ class DiseaseDetectionResult {
       severity: json['severity'] ?? 'Low',
       recommendations: List<String>.from(json['recommendations'] ?? []),
       timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+      userId: json['user_id'],
       temperature: (json['temperature'] as num?)?.toDouble(),
       humidity: (json['humidity'] as num?)?.toDouble(),
       airQuality: (json['air_quality'] as num?)?.toDouble(),

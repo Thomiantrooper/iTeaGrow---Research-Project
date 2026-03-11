@@ -13,6 +13,7 @@ import '../../features/disease_detection/presentation/screens/enhanced_disease_d
 import '../../features/market_analysis/presentation/market_analysis_screen.dart';
 import '../../features/market_analysis/presentation/market_value_admin_screen.dart';
 import '../../features/market_analysis/presentation/market_price_report_screen.dart';
+import '../../features/market_analysis/presentation/screens/market_history_screen.dart';
 import '../../features/market_analysis/data/models/market_models.dart';
 import '../../features/auth/data/providers/auth_provider.dart';
 import '../enums/app_enums.dart';
@@ -115,6 +116,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/market-analysis',
         builder: (context, state) => const MarketAnalysisScreen(),
+      ),
+      GoRoute(
+        path: '/market-history',
+        builder: (context, state) => const MarketHistoryScreen(),
       ),
       GoRoute(
           path: '/market-admin',
