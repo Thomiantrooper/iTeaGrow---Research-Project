@@ -287,10 +287,10 @@ class AppLocalizationsTa extends AppLocalizations {
   String get leaf_results => 'முடிவுகள்';
 
   @override
-  String get leaf_tender => 'மென்மையான இலைகள்';
+  String get leaf_tender => 'இளம்';
 
   @override
-  String get leaf_mature => 'முதிர்ந்த இலைகள்';
+  String get leaf_mature => 'முதிர்ந்த';
 
   @override
   String get leaf_coarser => 'கரடுமுரடான இலைகள்';
@@ -2555,4 +2555,92 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get chart_premium_target => 'பிரீமியம் இலக்கு';
+
+  @override
+  String get disease_scan_multiple => 'பல இலைகளை ஸ்கேன் செய் (தானியங்கி)';
+
+  @override
+  String disease_scanned_leaves(String count) {
+    return 'ஸ்கேன் செய்யப்பட்ட $count இலைகள்';
+  }
+
+  @override
+  String get disease_all_healthy => 'அனைத்து இலைகளும் ஆரோக்கியமாக உள்ளன.';
+
+  @override
+  String disease_infected_healthy(String infected, String healthy) {
+    return '$infected பாதிக்கப்பட்டவை / $healthy ஆரோக்கியமானவை';
+  }
+
+  @override
+  String disease_red_rust_count(String count) {
+    return '$count ரெட் ரஸ்ட்';
+  }
+
+  @override
+  String disease_blight_count(String count) {
+    return '$count ப்ளைட்';
+  }
+
+  @override
+  String get disease_individual_details => 'தனிப்பட்ட இலை விவரங்களைக் காண்க';
+
+  @override
+  String disease_confidence_percent(String value) {
+    return 'நம்பிக்கை: $value%';
+  }
+
+  @override
+  String get disease_multi_tip =>
+      'குறிப்பு: சிறந்த முடிவுகளுக்கு நோயுற்ற இலைகளை வெள்ளை அல்லது கிரீம் பின்னணியில் வைக்கவும்.\nசிறந்த பல-இலை முடிவுகளுக்கு இலைகள் ஒன்றையொன்று மேலெழுதக்கூடாது.';
+
+  @override
+  String get leaf_scan_multiple => 'பல இலைகளை ஸ்கேன் செய் (தானியங்கி)';
+
+  @override
+  String leaf_scanned_leaves(String count) {
+    return 'ஸ்கேன் செய்யப்பட்ட $count இலைகள்';
+  }
+
+  @override
+  String get leaf_individual_details => 'தனிப்பட்ட இலை விவரங்களைக் காண்க';
+
+  @override
+  String get leaf_multi_tip =>
+      'குறிப்பு: சிறந்த முடிவுகளுக்கு இலைகளை வெள்ளை பின்னணியில் வைக்கவும்.\nதுல்லியமான பல-இலை கண்டறிதலுக்காக இலைகள் ஒன்றையொன்று மேலெழுதக்கூடாது.';
+
+  @override
+  String get leaf_analysis_1_leaf =>
+      'பகுப்பாய்வு முடிந்தது — 1 இலை கண்டறியப்பட்டது';
+
+  @override
+  String leaf_analysis_n_leaves(String count) {
+    return 'பகுப்பாய்வு முடிந்தது — $count இலைகள் கண்டறியப்பட்டன';
+  }
+
+  @override
+  String get leaf_overall_summary => 'ஒட்டுமொத்த சுருக்கம்';
+
+  @override
+  String get leaf_unknown => 'தெரியாது';
+
+  @override
+  String leaf_leaf_number(String number) {
+    return 'இலை $number';
+  }
+
+  @override
+  String get leaf_high_confidence => 'அதிக';
+
+  @override
+  String get leaf_moderate_confidence => 'மிதமான';
+
+  @override
+  String get leaf_low_confidence => 'குறைந்த';
+
+  @override
+  String get leaf_assamica => 'அசாமிகா';
+
+  @override
+  String get leaf_dt1 => 'DT1';
 }

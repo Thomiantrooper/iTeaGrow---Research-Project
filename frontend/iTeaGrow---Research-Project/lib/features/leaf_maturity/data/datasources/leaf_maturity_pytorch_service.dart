@@ -1,20 +1,24 @@
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:io';
+import 'dart:ui' show Rect;
 
 import 'package:flutter/foundation.dart' show debugPrint;
-import 'package:flutter/services.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../../core/api/api_config.dart';
 import '../../domain/entities/leaf_maturity_result.dart';
+import '../../domain/entities/leaf_detection.dart';
 import 'leaf_maturity_color_validator.dart';
+import 'leaf_segmenter_service.dart';
 
 class LeafMaturityPyTorchService {
   ClassificationModel? _model;
   bool _isInitialized = false;
+
+  final LeafSegmenterService _segmenter = LeafSegmenterService();
 
   static const String _modelPath = 'assets/models/tea_maturity_explain.ptl';
   static const int _inputSize = 224;
@@ -102,91 +106,127 @@ class LeafMaturityPyTorchService {
             'Maximum is ${_maxImageSizeBytes ~/ 1024 ~/ 1024} MB.');
       }
 
-      // ── 3. ML inference ────────────────────────────────────────────────
-      // Returns List<double>: [logits(4) + features(1024*7*7)]
-      final List<double> combined = await _model!.getImagePredictionList(
-        imageBytes,
-        mean: _mean,
-        std: _std,
-      );
-
-      if (combined.length < 4) throw Exception('Incomplete model output');
-
-      final List<double> logits = combined.sublist(0, 4);
-
-      // Guard against NaN / Inf
-      if (logits.any((v) => v.isNaN || v.isInfinite)) {
-        throw Exception('Model produced invalid values (NaN/Inf)');
-      }
-
-      final probabilities = _softmax(logits);
-      final baseResult = _extractResult(probabilities);
-
-      // ── 4. Colour cross-validation ─────────────────────────────────────
-      final colorResult = await _colorValidator.analyze(imageBytes);
-      debugPrint(
-          'LeafMaturity color: tender=${colorResult.tenderScore.toStringAsFixed(3)}, '
-          'mature=${colorResult.matureScore.toStringAsFixed(3)}, '
-          'brown=${colorResult.brownScore.toStringAsFixed(3)}, '
-          'suggested=${colorResult.suggestedMaturity}'
-          '(${colorResult.suggestedConfidence.toStringAsFixed(2)})');
-
-      final corrected = MaturityColorValidator.crossValidate(
-        modelMaturity: baseResult.maturity,
-        modelConfidence: baseResult.maturityConfidence,
-        colorResult: colorResult,
-      );
-      debugPrint('LeafMaturity corrected: ${corrected.maturity} '
-          '(${corrected.confidence.toStringAsFixed(2)}) [${corrected.source}]');
-
-      // ── 5. Ambiguity detection ──────────────────────────────────────────
-      final tenderProb = baseResult.maturityProbabilities['Tender'] ?? 0.0;
-      final matureProb = baseResult.maturityProbabilities['Mature'] ?? 0.0;
-      final isAmbiguous = (tenderProb - matureProb).abs() < _ambiguityThreshold;
-
-      // ── 6. Confidence banding ───────────────────────────────────────────
-      final conf = corrected.confidence;
-      final confidenceLabel = conf >= 0.85
-          ? 'High'
-          : conf >= 0.70
-              ? 'Moderate'
-              : conf >= 0.55
-                  ? 'Low'
-                  : 'Uncertain';
-
-      // If color cross-val flipped the maturity, rebuild the probability map
-      // so the UI still shows sensible probability bars.
-      Map<String, double> finalMaturityProbs = baseResult.maturityProbabilities;
-      if (corrected.maturity != baseResult.maturity) {
-        final other = corrected.maturity == 'Tender' ? 'Mature' : 'Tender';
-        finalMaturityProbs = {
-          corrected.maturity: corrected.confidence,
-          other: (1.0 - corrected.confidence).clamp(0.0, 1.0),
-        };
-      }
-
-      final finalResult = LeafMaturityResult(
-        species: baseResult.species,
-        maturity: corrected.maturity,
-        speciesConfidence: baseResult.speciesConfidence,
-        maturityConfidence: corrected.confidence,
-        speciesProbabilities: baseResult.speciesProbabilities,
-        maturityProbabilities: finalMaturityProbs,
-        timestamp: baseResult.timestamp,
-        rawConfidence: baseResult.rawConfidence,
-        isAmbiguous: isAmbiguous,
-        confidenceLabel: confidenceLabel,
-        colorValidated: true,
-      );
-
-      // Save to DB Microservice
-      _saveToDb(finalResult, imageFile.path);
-
-      return finalResult;
+      final result = await _runInference(imageBytes);
+      _saveToDb(result, imageFile.path);
+      return result;
     } catch (e) {
-      debugPrint('LeafMaturity: Inference/CAM error: $e');
+      debugPrint('LeafMaturity: Inference error: $e');
       rethrow;
     }
+  }
+
+  /// Detects and classifies every leaf found in [imageFile].
+  ///
+  /// - If the image contains a plain background (white paper), the segmenter
+  ///   finds each leaf automatically and classifies them individually.
+  /// - If no regions are found (dark / coloured background), falls back to
+  ///   classifying the full image as a single leaf.
+  Future<List<LeafDetection>> predictMultiple(XFile imageFile) async {
+    if (!_isInitialized) await initialize();
+
+    final Uint8List imageBytes = await imageFile.readAsBytes();
+
+    // ── file-size guard ────────────────────────────────────────────────
+    if (imageBytes.length < _minImageSizeBytes ||
+        imageBytes.length > _maxImageSizeBytes) {
+      // Delegate the exact error message to predict() for consistency.
+      final err = await predict(imageFile);
+      return [LeafDetection(index: 0, bounds: const Rect.fromLTWH(0, 0, 0, 0), result: err)];
+    }
+
+    // ── Stage 1: segment ──────────────────────────────────────────────
+    final regions = await _segmenter.segment(imageBytes);
+
+    if (regions.isEmpty) {
+      debugPrint('LeafSegmenter: no regions found — running full-image fallback');
+      final result = await _runInference(imageBytes);
+      return [LeafDetection(index: 0, bounds: const Rect.fromLTWH(0, 0, 0, 0), result: result)];
+    }
+
+    // ── Stage 2: classify each crop ───────────────────────────────────
+    final List<LeafDetection> detections = [];
+    for (int i = 0; i < regions.length; i++) {
+      final region = regions[i];
+      debugPrint('LeafMaturity: classifying leaf ${i + 1}/${regions.length}');
+      final result = await _runInference(region.croppedBytes);
+      _saveToDb(result, imageFile.path);
+      detections.add(LeafDetection(
+        index: i,
+        bounds: region.bounds,
+        result: result,
+      ));
+    }
+    return detections;
+  }
+
+  /// Core ML inference + colour cross-validation for a single image buffer.
+  Future<LeafMaturityResult> _runInference(Uint8List imageBytes) async {
+    // ── ML inference ────────────────────────────────────────────────────
+    final List<double> combined = await _model!.getImagePredictionList(
+      imageBytes,
+      mean: _mean,
+      std: _std,
+    );
+
+    if (combined.length < 4) throw Exception('Incomplete model output');
+    final List<double> logits = combined.sublist(0, 4);
+    if (logits.any((v) => v.isNaN || v.isInfinite)) {
+      throw Exception('Model produced invalid values (NaN/Inf)');
+    }
+
+    final probabilities = _softmax(logits);
+    final baseResult = _extractResult(probabilities);
+
+    // ── Colour cross-validation ──────────────────────────────────────────
+    final colorResult = await _colorValidator.analyze(imageBytes);
+    debugPrint(
+        'LeafMaturity color: tender=${colorResult.tenderScore.toStringAsFixed(3)}, '
+        'mature=${colorResult.matureScore.toStringAsFixed(3)}, '
+        'suggested=${colorResult.suggestedMaturity}');
+
+    final corrected = MaturityColorValidator.crossValidate(
+      modelMaturity: baseResult.maturity,
+      modelConfidence: baseResult.maturityConfidence,
+      colorResult: colorResult,
+    );
+
+    // ── Ambiguity detection ──────────────────────────────────────────────
+    final tenderProb = baseResult.maturityProbabilities['Tender'] ?? 0.0;
+    final matureProb = baseResult.maturityProbabilities['Mature'] ?? 0.0;
+    final isAmbiguous = (tenderProb - matureProb).abs() < _ambiguityThreshold;
+
+    // ── Confidence banding ───────────────────────────────────────────────
+    final conf = corrected.confidence;
+    final confidenceLabel = conf >= 0.85
+        ? 'High'
+        : conf >= 0.70
+            ? 'Moderate'
+            : conf >= 0.55
+                ? 'Low'
+                : 'Uncertain';
+
+    Map<String, double> finalMaturityProbs = baseResult.maturityProbabilities;
+    if (corrected.maturity != baseResult.maturity) {
+      final other = corrected.maturity == 'Tender' ? 'Mature' : 'Tender';
+      finalMaturityProbs = {
+        corrected.maturity: corrected.confidence,
+        other: (1.0 - corrected.confidence).clamp(0.0, 1.0),
+      };
+    }
+
+    return LeafMaturityResult(
+      species: baseResult.species,
+      maturity: corrected.maturity,
+      speciesConfidence: baseResult.speciesConfidence,
+      maturityConfidence: corrected.confidence,
+      speciesProbabilities: baseResult.speciesProbabilities,
+      maturityProbabilities: finalMaturityProbs,
+      timestamp: baseResult.timestamp,
+      rawConfidence: baseResult.rawConfidence,
+      isAmbiguous: isAmbiguous,
+      confidenceLabel: confidenceLabel,
+      colorValidated: true,
+    );
   }
 
   List<double> _softmax(List<double> logits) {

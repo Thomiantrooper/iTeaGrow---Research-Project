@@ -937,5 +937,73 @@
   "chart_radar_aroma": "සුවඳ",
   "chart_radar_freshness": "නැවුම් බව",
   "chart_your_batch": "ඔබේ කණ්ඩය",
-  "chart_premium_target": "ප්‍රිමියම් ඉලක්කය"
+  "chart_premium_target": "ප්‍රිමියම් ඉලක්කය",
+
+  "disease_scan_multiple": "බහු කොළ ස්කෑන් කරන්න (ස්වයංක්‍රීය)",
+  "disease_scanned_leaves": "කොළ {count}ක් ස්කෑන් කර ඇත",
+  "@disease_scanned_leaves": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "disease_all_healthy": "සියලුම කොළ සෞඛ්‍ය සම්පන්නව පෙනේ.",
+  "disease_infected_healthy": "රෝගී {infected} / සෞඛ්‍ය සම්පන්න {healthy}",
+  "@disease_infected_healthy": {
+    "placeholders": {
+      "infected": { "type": "String" },
+      "healthy": { "type": "String" }
+    }
+  },
+  "disease_red_rust_count": "රතු මලකඩ {count}",
+  "@disease_red_rust_count": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "disease_blight_count": "බ්ලයිට් {count}",
+  "@disease_blight_count": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "disease_individual_details": "තනි කොළ විස්තර බලන්න",
+  "disease_confidence_percent": "විශ්වාසය: {value}%",
+  "@disease_confidence_percent": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "disease_multi_tip": "ඉඟිය: හොඳම ප්‍රතිඵල සඳහා රෝගී කොළ සුදු හෝ ක්‍රීම් පසුබිමක තබන්න.\nහොඳම බහු-කොළ ප්‍රතිඵල සඳහා කොළ එකිනෙක මත නොතිබිය යුතුය.",
+  "leaf_scan_multiple": "බහු කොළ ස්කෑන් කරන්න (ස්වයංක්‍රීය)",
+  "leaf_scanned_leaves": "කොළ {count}ක් ස්කෑන් කර ඇත",
+  "@leaf_scanned_leaves": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "leaf_individual_details": "තනි කොළ විස්තර බලන්න",
+  "leaf_multi_tip": "ඉඟිය: හොඳම ප්‍රතිඵල සඳහා කොළ සුදු පසුබිමක තබන්න.\nනිවැරදි බහු-කොළ හඳුනාගැනීම සඳහා කොළ එකිනෙක මත නොතිබිය යුතුය.",
+
+  "leaf_analysis_1_leaf": "විශ්ලේෂණය සම්පූර්ණයි — කොළ 1ක් හඳුනාගෙන ඇත",
+  "leaf_analysis_n_leaves": "විශ්ලේෂණය සම්පූර්ණයි — කොළ {count}ක් හඳුනාගෙන ඇත",
+  "@leaf_analysis_n_leaves": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "leaf_overall_summary": "සමස්ත සාරාංශය",
+  "leaf_unknown": "නොදනී",
+  "leaf_leaf_number": "කොළය {number}",
+  "@leaf_leaf_number": {
+    "placeholders": {
+      "number": { "type": "String" }
+    }
+  },
+  "leaf_high_confidence": "ඉහළ",
+  "leaf_moderate_confidence": "මධ්‍යස්ථ",
+  "leaf_low_confidence": "අඩු",
+  "leaf_mature": "පරිණත",
+  "leaf_tender": "නොමේරූ",
+  "leaf_assamica": "අසාමිකා",
+  "leaf_dt1": "DT1"
 }

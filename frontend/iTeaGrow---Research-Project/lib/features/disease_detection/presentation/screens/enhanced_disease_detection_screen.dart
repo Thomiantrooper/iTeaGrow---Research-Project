@@ -19,6 +19,7 @@ import '../../data/datasources/disease_storage_service.dart';
 import '../../data/datasources/leaf_validation_service.dart';
 import '../../data/datasources/multi_leaf_scan_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
+import '../../domain/entities/disease_leaf_detection.dart';
 
 class EnhancedDiseaseDetectionScreen extends ConsumerStatefulWidget {
   const EnhancedDiseaseDetectionScreen({super.key});
@@ -40,6 +41,7 @@ class _EnhancedDiseaseDetectionScreenState
   XFile? _selectedImage;
   Uint8List? _imageBytes;
   DiseaseDetectionResult? _result;
+  List<DiseaseLeafDetection>? _multiDetections;
   bool _isProcessing = false;
   bool _isValidating = false;
   bool _isBackendConnected = false;
@@ -256,6 +258,51 @@ class _EnhancedDiseaseDetectionScreenState
     }
   }
 
+  Future<void> _analyzeMultiple() async {
+    if (_selectedImage == null) return;
+
+    setState(() {
+      _isProcessing = true;
+      _savedToDb = false;
+      _multiDetections = null;
+      _result = null;
+    });
+    _scanController.repeat();
+
+    try {
+      final iotState = ref.read(iotLiveProvider);
+      final temp = (iotState.devices.isNotEmpty && iotState.devices.values.first.temperature != null)
+          ? iotState.devices.values.first.temperature!
+          : 26.5;
+      final humidity = (iotState.devices.isNotEmpty && iotState.devices.values.first.humidity != null)
+          ? iotState.devices.values.first.humidity!
+          : 72.0;
+
+      final detections = await _mlService.predictMultiple(
+        _selectedImage!.path,
+        liveTemperature: temp,
+        liveHumidity: humidity,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _multiDetections = detections;
+        _isProcessing = false;
+        _isBackendConnected = _mlService.isBackendAvailable;
+      });
+      _scanController.stop();
+      _scanController.reset();
+
+      // We skip session tracking and auto-save for auto-multiple-leaf for now,
+      // focusing purely on UI display of the grouped results.
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      _scanController.stop();
+      _showError('Multi-leaf analysis failed: $e');
+    }
+  }
+
   // ───────────────────────────────────────────────────────────────────────────
   // Multi-leaf session
   // ───────────────────────────────────────────────────────────────────────────
@@ -291,6 +338,7 @@ class _EnhancedDiseaseDetectionScreenState
       _selectedImage = null;
       _imageBytes = null;
       _result = null;
+      _multiDetections = null;
       _savedToDb = false;
     });
   }
@@ -618,9 +666,62 @@ class _EnhancedDiseaseDetectionScreenState
 
                         // Action Buttons
                         if (_selectedImage == null && !_isValidating)
-                          _buildCaptureButtons(),
-                        if (_selectedImage != null && _result == null)
-                          _buildAnalyzeButton(),
+                          Column(
+                            children: [
+                              _buildCaptureButtons(),
+                              const SizedBox(height: JarvisTheme.spacingMd),
+                              // Helper Tip
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.lightbulb_outline, color: Colors.blue, size: 20),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        AppLocalizations.of(context)!.disease_multi_tip,
+                                        style: const TextStyle(color: JarvisTheme.textSecondary, fontSize: 13, height: 1.4),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        if (_selectedImage != null && _result == null && _multiDetections == null)
+                          Column(
+                            children: [
+                              _buildAnalyzeButton(),
+                              const SizedBox(height: JarvisTheme.spacingMd),
+                              _buildAnalyzeMultipleButton(),
+                            ],
+                          ),
+
+                        // Multi-leaf results
+                        if (_multiDetections != null) ...[
+                          const SizedBox(height: JarvisTheme.spacingLg),
+                          _buildMultiLeafSummary(_multiDetections!),
+                          const SizedBox(height: JarvisTheme.spacingMd),
+                          OutlinedButton.icon(
+                            onPressed: _addAnotherLeaf,
+                            icon: const Icon(Icons.refresh),
+                            label: Text(AppLocalizations.of(context)!.common_try_again),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: JarvisTheme.healthy,
+                              side: const BorderSide(color: JarvisTheme.healthy),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
 
                         // Results
                         if (_result != null) ...[
@@ -1413,6 +1514,193 @@ class _EnhancedDiseaseDetectionScreenState
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildAnalyzeMultipleButton() {
+    return HologramCard(
+      onTap: _isProcessing ? null : _analyzeMultiple,
+      enableGlow: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(
+            color: _isProcessing ? JarvisTheme.textMuted.withOpacity(0.3) : JarvisTheme.teaGreen.withOpacity(0.4),
+          ),
+          borderRadius: BorderRadius.circular(JarvisTheme.radiusMd),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.view_comfy_rounded,
+              color: _isProcessing ? JarvisTheme.textMuted : JarvisTheme.teaGreen,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              AppLocalizations.of(context)!.disease_scan_multiple,
+              style: TextStyle(
+                color: _isProcessing ? JarvisTheme.textMuted : JarvisTheme.teaGreen,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMultiLeafSummary(List<DiseaseLeafDetection> detections) {
+    if (detections.isEmpty) return const SizedBox.shrink();
+
+    int healthyCount = 0;
+    int redRustCount = 0;
+    int blisterBlightCount = 0;
+    int otherCount = 0;
+
+    for (final d in detections) {
+      if (d.result.diseaseType == 'Healthy' || d.result.diseaseType == 'Not A Leaf') {
+        healthyCount++;
+      } else if (d.result.diseaseType == 'Red Rust') {
+        redRustCount++;
+      } else if (d.result.diseaseType == 'Blister Blight') {
+        blisterBlightCount++;
+      } else {
+        otherCount++;
+      }
+    }
+
+    final total = detections.length;
+    final infectedCount = total - healthyCount;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Overall Summary Card
+        HologramCard(
+          enableGlow: infectedCount > 0,
+          glowColor: infectedCount > 0 ? JarvisTheme.critical : JarvisTheme.healthy,
+          child: Container(
+            padding: const EdgeInsets.all(JarvisTheme.spacingLg),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: infectedCount > 0 ? JarvisTheme.critical.withOpacity(0.5) : JarvisTheme.healthy.withOpacity(0.5),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(JarvisTheme.radiusMd),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  infectedCount > 0 ? Icons.warning_rounded : Icons.check_circle_rounded,
+                  color: infectedCount > 0 ? JarvisTheme.critical : JarvisTheme.healthy,
+                  size: 40,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  AppLocalizations.of(context)!.disease_scanned_leaves(total.toString()),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                if (infectedCount == 0)
+                  Text(
+                    AppLocalizations.of(context)!.disease_all_healthy,
+                    style: const TextStyle(color: JarvisTheme.textMuted),
+                  )
+                else
+                  Text(
+                    AppLocalizations.of(context)!.disease_infected_healthy(infectedCount.toString(), healthyCount.toString()),
+                    style: const TextStyle(color: JarvisTheme.critical, fontWeight: FontWeight.w600),
+                  ),
+                if (redRustCount > 0 || blisterBlightCount > 0 || otherCount > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (redRustCount > 0) _buildSummaryChip(AppLocalizations.of(context)!.disease_red_rust_count(redRustCount.toString()), JarvisTheme.warning),
+                        if (redRustCount > 0 && blisterBlightCount > 0) const SizedBox(width: 8),
+                        if (blisterBlightCount > 0) _buildSummaryChip(AppLocalizations.of(context)!.disease_blight_count(blisterBlightCount.toString()), JarvisTheme.critical),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: JarvisTheme.spacingMd),
+        // Individual leaves expandable
+        Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: HologramCard(
+            enableGlow: false,
+            child: ExpansionTile(
+              title: Text(AppLocalizations.of(context)!.disease_individual_details,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              children: detections.map((det) {
+                final isHealthy = det.result.diseaseType == 'Healthy' || det.result.diseaseType == 'Not A Leaf';
+                final color = isHealthy ? JarvisTheme.healthy : JarvisTheme.critical;
+                
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: color.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text('${det.index + 1}',
+                              style: TextStyle(fontWeight: FontWeight.w700, color: color)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(det.result.diseaseType,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            Text(AppLocalizations.of(context)!.disease_confidence_percent((det.result.confidence * 100).toStringAsFixed(1)),
+                                style: const TextStyle(color: JarvisTheme.textMuted, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
       ),
     );
   }

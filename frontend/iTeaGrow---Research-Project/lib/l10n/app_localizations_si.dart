@@ -287,10 +287,10 @@ class AppLocalizationsSi extends AppLocalizations {
   String get leaf_results => 'ප්‍රතිඵල';
 
   @override
-  String get leaf_tender => 'මෘදු කොළ';
+  String get leaf_tender => 'නොමේරූ';
 
   @override
-  String get leaf_mature => 'පරිණත කොළ';
+  String get leaf_mature => 'පරිණත';
 
   @override
   String get leaf_coarser => 'රළු කොළ';
@@ -2518,4 +2518,92 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get chart_premium_target => 'ප්‍රිමියම් ඉලක්කය';
+
+  @override
+  String get disease_scan_multiple => 'බහු කොළ ස්කෑන් කරන්න (ස්වයංක්‍රීය)';
+
+  @override
+  String disease_scanned_leaves(String count) {
+    return 'කොළ $countක් ස්කෑන් කර ඇත';
+  }
+
+  @override
+  String get disease_all_healthy => 'සියලුම කොළ සෞඛ්‍ය සම්පන්නව පෙනේ.';
+
+  @override
+  String disease_infected_healthy(String infected, String healthy) {
+    return 'රෝගී $infected / සෞඛ්‍ය සම්පන්න $healthy';
+  }
+
+  @override
+  String disease_red_rust_count(String count) {
+    return 'රතු මලකඩ $count';
+  }
+
+  @override
+  String disease_blight_count(String count) {
+    return 'බ්ලයිට් $count';
+  }
+
+  @override
+  String get disease_individual_details => 'තනි කොළ විස්තර බලන්න';
+
+  @override
+  String disease_confidence_percent(String value) {
+    return 'විශ්වාසය: $value%';
+  }
+
+  @override
+  String get disease_multi_tip =>
+      'ඉඟිය: හොඳම ප්‍රතිඵල සඳහා රෝගී කොළ සුදු හෝ ක්‍රීම් පසුබිමක තබන්න.\nහොඳම බහු-කොළ ප්‍රතිඵල සඳහා කොළ එකිනෙක මත නොතිබිය යුතුය.';
+
+  @override
+  String get leaf_scan_multiple => 'බහු කොළ ස්කෑන් කරන්න (ස්වයංක්‍රීය)';
+
+  @override
+  String leaf_scanned_leaves(String count) {
+    return 'කොළ $countක් ස්කෑන් කර ඇත';
+  }
+
+  @override
+  String get leaf_individual_details => 'තනි කොළ විස්තර බලන්න';
+
+  @override
+  String get leaf_multi_tip =>
+      'ඉඟිය: හොඳම ප්‍රතිඵල සඳහා කොළ සුදු පසුබිමක තබන්න.\nනිවැරදි බහු-කොළ හඳුනාගැනීම සඳහා කොළ එකිනෙක මත නොතිබිය යුතුය.';
+
+  @override
+  String get leaf_analysis_1_leaf =>
+      'විශ්ලේෂණය සම්පූර්ණයි — කොළ 1ක් හඳුනාගෙන ඇත';
+
+  @override
+  String leaf_analysis_n_leaves(String count) {
+    return 'විශ්ලේෂණය සම්පූර්ණයි — කොළ $countක් හඳුනාගෙන ඇත';
+  }
+
+  @override
+  String get leaf_overall_summary => 'සමස්ත සාරාංශය';
+
+  @override
+  String get leaf_unknown => 'නොදනී';
+
+  @override
+  String leaf_leaf_number(String number) {
+    return 'කොළය $number';
+  }
+
+  @override
+  String get leaf_high_confidence => 'ඉහළ';
+
+  @override
+  String get leaf_moderate_confidence => 'මධ්‍යස්ථ';
+
+  @override
+  String get leaf_low_confidence => 'අඩු';
+
+  @override
+  String get leaf_assamica => 'අසාමිකා';
+
+  @override
+  String get leaf_dt1 => 'DT1';
 }
