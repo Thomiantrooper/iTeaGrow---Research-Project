@@ -240,11 +240,10 @@ class _LeafMaturityScreenState extends State<LeafMaturityScreen> {
                   children: [
                     const Icon(Icons.lightbulb_outline, color: TeaColors.freshLeaf, size: 18),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Tip: Place leaves on a white or creme background for best results.'
-                        'Leaves must not overlap for best multi-leaf results.',
-                        style: TextStyle(fontSize: 12, color: TeaColors.freshLeaf),
+                        l10n.leaf_multi_tip,
+                        style: const TextStyle(fontSize: 12, color: TeaColors.freshLeaf),
                       ),
                     ),
                   ],

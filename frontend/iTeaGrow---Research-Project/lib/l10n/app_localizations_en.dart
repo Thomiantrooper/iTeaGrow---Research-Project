@@ -2561,7 +2561,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaf_multi_tip =>
-      'Tip: Place leaves on a white background for best results.\nLeaves must not overlap for accurate multi-leaf detection.';
+      'Tip: Place leaves on a white or creme background for best results.\nLeaves must not overlap for best multi-leaf results.';
 
   @override
   String get leaf_analysis_1_leaf => 'Analysis Complete — 1 Leaf Detected';

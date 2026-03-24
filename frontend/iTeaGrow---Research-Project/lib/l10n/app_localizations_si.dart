@@ -2570,7 +2570,7 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get leaf_multi_tip =>
-      'ඉඟිය: හොඳම ප්‍රතිඵල සඳහා කොළ සුදු පසුබිමක තබන්න.\nනිවැරදි බහු-කොළ හඳුනාගැනීම සඳහා කොළ එකිනෙක මත නොතිබිය යුතුය.';
+      'ඉඟිය: හොඳම ප්‍රතිඵල සඳහා කොළ සුදු හෝ ක්‍රීම් පසුබිමක තබන්න.\nහොඳම බහු-කොළ ප්‍රතිඵල සඳහා කොළ එකිනෙක මත නොපැවතිය යුතුයි.';
 
   @override
   String get leaf_analysis_1_leaf =>

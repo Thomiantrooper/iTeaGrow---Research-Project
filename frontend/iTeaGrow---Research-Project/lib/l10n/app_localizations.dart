@@ -4975,7 +4975,7 @@ abstract class AppLocalizations {
   /// No description provided for @leaf_multi_tip.
   ///
   /// In en, this message translates to:
-  /// **'Tip: Place leaves on a white background for best results.\nLeaves must not overlap for accurate multi-leaf detection.'**
+  /// **'Tip: Place leaves on a white or creme background for best results.\nLeaves must not overlap for best multi-leaf results.'**
   String get leaf_multi_tip;
 
   /// No description provided for @leaf_analysis_1_leaf.

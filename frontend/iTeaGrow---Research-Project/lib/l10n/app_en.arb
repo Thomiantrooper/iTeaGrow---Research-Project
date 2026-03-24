@@ -986,7 +986,7 @@
     }
   },
   "leaf_individual_details": "View individual leaf details",
-  "leaf_multi_tip": "Tip: Place leaves on a white background for best results.\nLeaves must not overlap for accurate multi-leaf detection.",
+  "leaf_multi_tip": "Tip: Place leaves on a white or creme background for best results.\nLeaves must not overlap for best multi-leaf results.",
 
   "leaf_analysis_1_leaf": "Analysis Complete — 1 Leaf Detected",
   "leaf_analysis_n_leaves": "Analysis Complete — {count} Leaves Detected",
