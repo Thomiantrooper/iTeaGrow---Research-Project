@@ -941,5 +941,73 @@
   "chart_radar_aroma": "வாசனை",
   "chart_radar_freshness": "புத்துணர்ச்சி",
   "chart_your_batch": "உங்கள் தொகுதி",
-  "chart_premium_target": "பிரீமியம் இலக்கு"
+  "chart_premium_target": "பிரீமியம் இலக்கு",
+
+  "disease_scan_multiple": "பல இலைகளை ஸ்கேன் செய் (தானியங்கி)",
+  "disease_scanned_leaves": "ஸ்கேன் செய்யப்பட்ட {count} இலைகள்",
+  "@disease_scanned_leaves": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "disease_all_healthy": "அனைத்து இலைகளும் ஆரோக்கியமாக உள்ளன.",
+  "disease_infected_healthy": "{infected} பாதிக்கப்பட்டவை / {healthy} ஆரோக்கியமானவை",
+  "@disease_infected_healthy": {
+    "placeholders": {
+      "infected": { "type": "String" },
+      "healthy": { "type": "String" }
+    }
+  },
+  "disease_red_rust_count": "{count} ரெட் ரஸ்ட்",
+  "@disease_red_rust_count": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "disease_blight_count": "{count} ப்ளைட்",
+  "@disease_blight_count": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "disease_individual_details": "தனிப்பட்ட இலை விவரங்களைக் காண்க",
+  "disease_confidence_percent": "நம்பிக்கை: {value}%",
+  "@disease_confidence_percent": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "disease_multi_tip": "குறிப்பு: சிறந்த முடிவுகளுக்கு நோயுற்ற இலைகளை வெள்ளை அல்லது கிரீம் பின்னணியில் வைக்கவும்.\nசிறந்த பல-இலை முடிவுகளுக்கு இலைகள் ஒன்றையொன்று மேலெழுதக்கூடாது.",
+  "leaf_scan_multiple": "பல இலைகளை ஸ்கேன் செய் (தானியங்கி)",
+  "leaf_scanned_leaves": "ஸ்கேன் செய்யப்பட்ட {count} இலைகள்",
+  "@leaf_scanned_leaves": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "leaf_individual_details": "தனிப்பட்ட இலை விவரங்களைக் காண்க",
+  "leaf_multi_tip": "குறிப்பு: சிறந்த முடிவுகளுக்கு இலைகளை வெள்ளை அல்லது கிரீம் பின்னணியில் வைக்கவும்.\nசிறந்த பல-இலை முடிவுகளுக்கு இலைகள் ஒன்றையொன்று மேலெழுதக்கூடாது.",
+
+  "leaf_analysis_1_leaf": "பகுப்பாய்வு முடிந்தது — 1 இலை கண்டறியப்பட்டது",
+  "leaf_analysis_n_leaves": "பகுப்பாய்வு முடிந்தது — {count} இலைகள் கண்டறியப்பட்டன",
+  "@leaf_analysis_n_leaves": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "leaf_overall_summary": "ஒட்டுமொத்த சுருக்கம்",
+  "leaf_unknown": "தெரியாது",
+  "leaf_leaf_number": "இலை {number}",
+  "@leaf_leaf_number": {
+    "placeholders": {
+      "number": { "type": "String" }
+    }
+  },
+  "leaf_high_confidence": "அதிக",
+  "leaf_moderate_confidence": "மிதமான",
+  "leaf_low_confidence": "குறைந்த",
+  "leaf_mature": "முதிர்ந்த",
+  "leaf_tender": "இளம்",
+  "leaf_assamica": "அசாமிகா",
+  "leaf_dt1": "DT1"
 }

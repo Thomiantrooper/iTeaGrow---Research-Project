@@ -17,6 +17,7 @@ import '../../../auth/data/providers/auth_provider.dart';
 import '../../data/datasources/disease_detection_ml_service.dart';
 import '../../data/datasources/disease_storage_service.dart';
 import '../../domain/entities/disease_detection_result.dart';
+import '../../domain/entities/disease_leaf_detection.dart';
 
 /// Premium Disease Detection Screen - Modern clean UI
 class PremiumDiseaseDetectionScreen extends ConsumerStatefulWidget {
@@ -36,6 +37,7 @@ class _PremiumDiseaseDetectionScreenState
   XFile? _selectedImage;
   Uint8List? _imageBytes;
   DiseaseDetectionResult? _result;
+  List<DiseaseLeafDetection>? _multiDetections; // non-null after multi-leaf scan
   bool _isProcessing = false;
   bool _isBackendConnected = false;
   bool _isCheckingConnection = true;
@@ -314,11 +316,47 @@ class _PremiumDiseaseDetectionScreenState
     }
   }
 
+  // ─── Multi-leaf analysis (single photo, multiple leaves) ─────────────────
+
+  Future<void> _analyzeMultiple() async {
+    if (_selectedImage == null) return;
+
+    setState(() {
+      _isProcessing = true;
+      _multiDetections = null;
+      _result = null;
+      _savedToDb = false;
+      _savedDetectionId = null;
+    });
+
+    try {
+      final detections = await _mlService.predictMultiple(
+        _selectedImage!.path,
+        liveTemperature: _liveTemp,
+        liveHumidity: _liveHumidity,
+        liveAirQuality: _liveAirQuality,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _multiDetections = detections;
+        _isProcessing = false;
+        _isBackendConnected = _mlService.isBackendAvailable;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        TeaSnackbar.error(context, 'Multi-leaf analysis failed: $e');
+      }
+    }
+  }
+
   void _resetScan() {
     setState(() {
       _selectedImage = null;
       _imageBytes = null;
       _result = null;
+      _multiDetections = null;
       _savedToDb = false;
       _savedDetectionId = null;
     });
@@ -363,7 +401,13 @@ class _PremiumDiseaseDetectionScreenState
                     // Action buttons
                     _buildActions(),
 
-                    // Results
+                    // Multi-leaf results
+                    if (_multiDetections != null) ...[
+                      const SizedBox(height: 24),
+                      _buildMultiLeafSummary(_multiDetections!),
+                    ],
+
+                    // Single-leaf results (existing flow — untouched)
                     if (_result != null) ...[
                       const SizedBox(height: 24),
                       _buildResultCard(),
@@ -779,21 +823,48 @@ class _PremiumDiseaseDetectionScreenState
 
   Widget _buildActions() {
     if (_selectedImage == null) {
-      return Row(
+      return Column(
         children: [
-          Expanded(
-              child: _buildActionBtn(
-                  AppLocalizations.of(context)!.common_camera,
-                  Icons.camera_alt_rounded,
-                  const [TeaColors.freshLeaf, TeaColors.matureLeaf],
-                  _captureImage)),
-          const SizedBox(width: 12),
-          Expanded(
-              child: _buildActionBtn(AppLocalizations.of(context)!.common_gallery, Icons.photo_library_rounded,
-                  [Colors.white, Colors.white], _pickFromGallery,
-                  outlined: true)),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildActionBtn(
+                      AppLocalizations.of(context)!.common_camera,
+                      Icons.camera_alt_rounded,
+                      const [TeaColors.freshLeaf, TeaColors.matureLeaf],
+                      _captureImage)),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: _buildActionBtn(AppLocalizations.of(context)!.common_gallery, Icons.photo_library_rounded,
+                      [Colors.white, Colors.white], _pickFromGallery,
+                      outlined: true)),
+            ],
+          ).animate().fadeIn(delay: 200.ms),
+          const SizedBox(height: 16),
+          // Helper Tip
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: TeaColors.infoSky.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: TeaColors.infoSky.withOpacity(0.3)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.lightbulb_outline, color: TeaColors.infoSky, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context)!.disease_multi_tip,
+                    style: TeaTypography.bodySmall.copyWith(color: TeaColors.darkGray, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 300.ms),
         ],
-      ).animate().fadeIn(delay: 200.ms);
+      );
     }
 
     if (_result == null) {
@@ -842,6 +913,101 @@ class _PremiumDiseaseDetectionScreenState
             ],
           ),
         ),
+      ).animate().fadeIn(delay: 100.ms);
+    }
+
+    if (_result == null && _multiDetections == null) {
+      return Column(
+        children: [
+          // Single-leaf Analyze button
+          GestureDetector(
+            onTap: _isProcessing ? null : _analyzeImage,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                gradient: _isProcessing
+                    ? LinearGradient(colors: [
+                        TeaColors.mediumGray,
+                        TeaColors.mediumGray.withOpacity(0.8)
+                      ])
+                    : const LinearGradient(
+                        colors: [TeaColors.freshLeaf, TeaColors.matureLeaf]),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: _isProcessing
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: TeaColors.freshLeaf.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isProcessing)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2),
+                    )
+                  else
+                    const Icon(Icons.search_rounded, color: Colors.white, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    _isProcessing
+                        ? AppLocalizations.of(context)!.disease_scanning
+                        : AppLocalizations.of(context)!.disease_analyze_leaf,
+                    style: TeaTypography.buttonMedium
+                        .copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Multi-leaf Analyze button
+          GestureDetector(
+            onTap: _isProcessing ? null : _analyzeMultiple,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                    color: _isProcessing
+                        ? TeaColors.mediumGray.withOpacity(0.3)
+                        : TeaColors.freshLeaf.withOpacity(0.4)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.view_comfy_rounded,
+                    color: _isProcessing
+                        ? TeaColors.mediumGray
+                        : TeaColors.freshLeaf,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    AppLocalizations.of(context)!.disease_scan_multiple,
+                    style: TeaTypography.buttonMedium.copyWith(
+                      color: _isProcessing
+                          ? TeaColors.mediumGray
+                          : TeaColors.freshLeaf,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ).animate().fadeIn(delay: 100.ms);
     }
 
@@ -1304,6 +1470,164 @@ class _PremiumDiseaseDetectionScreenState
         ],
       ),
     ).animate().fadeIn(duration: 400.ms, delay: 200.ms);
+  }
+
+  // ─── Multi-Leaf Summary ────────────────────────────────────────────────
+
+  Widget _buildMultiLeafSummary(List<DiseaseLeafDetection> detections) {
+    if (detections.isEmpty) return const SizedBox.shrink();
+
+    int healthyCount = 0;
+    int redRustCount = 0;
+    int blisterBlightCount = 0;
+    int otherCount = 0;
+
+    for (final d in detections) {
+      if (d.result.diseaseType == 'Healthy' || d.result.diseaseType == 'Not A Leaf') {
+        healthyCount++;
+      } else if (d.result.diseaseType == 'Red Rust') {
+        redRustCount++;
+      } else if (d.result.diseaseType == 'Blister Blight') {
+        blisterBlightCount++;
+      } else {
+        otherCount++;
+      }
+    }
+
+    final total = detections.length;
+    final infectedCount = total - healthyCount;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Overall Summary Card
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border: Border.all(
+              color: infectedCount > 0 ? TeaColors.criticalRed : TeaColors.healthyGreen,
+              width: 2,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                infectedCount > 0 ? Icons.warning_rounded : Icons.check_circle_rounded,
+                color: infectedCount > 0 ? TeaColors.criticalRed : TeaColors.healthyGreen,
+                size: 40,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                AppLocalizations.of(context)!.disease_scanned_leaves(total.toString()),
+                style: TeaTypography.titleMedium.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              if (infectedCount == 0)
+                Text(
+                  AppLocalizations.of(context)!.disease_all_healthy,
+                  style: TeaTypography.bodyMedium.copyWith(color: TeaColors.darkGray),
+                )
+              else
+                Text(
+                  AppLocalizations.of(context)!.disease_infected_healthy(infectedCount.toString(), healthyCount.toString()),
+                  style: TeaTypography.bodyMedium.copyWith(color: TeaColors.criticalRed, fontWeight: FontWeight.w600),
+                ),
+              if (redRustCount > 0 || blisterBlightCount > 0 || otherCount > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (redRustCount > 0) _buildSummaryChip(AppLocalizations.of(context)!.disease_red_rust_count(redRustCount.toString()), TeaColors.warningAmber),
+                      if (redRustCount > 0 && blisterBlightCount > 0) const SizedBox(width: 8),
+                      if (blisterBlightCount > 0) _buildSummaryChip(AppLocalizations.of(context)!.disease_blight_count(blisterBlightCount.toString()), TeaColors.criticalRed),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Individual leaves expandable
+        Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            title: Text(AppLocalizations.of(context)!.disease_individual_details,
+                style: TeaTypography.titleSmall.copyWith(fontWeight: FontWeight.w600)),
+            collapsedBackgroundColor: Colors.white,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            children: detections.map((det) {
+              final isHealthy = det.result.diseaseType == 'Healthy' || det.result.diseaseType == 'Not A Leaf';
+              final color = isHealthy ? TeaColors.healthyGreen : TeaColors.criticalRed;
+              
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF6F9F7),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: color.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text('${det.index + 1}',
+                            style: TextStyle(fontWeight: FontWeight.w700, color: color)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(det.result.diseaseType,
+                              style: TeaTypography.titleSmall.copyWith(fontWeight: FontWeight.w700)),
+                          Text(AppLocalizations.of(context)!.disease_confidence_percent((det.result.confidence * 100).toStringAsFixed(1)),
+                              style: TeaTypography.labelSmall.copyWith(color: TeaColors.darkGray)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    ).animate().fadeIn(duration: 400.ms);
+  }
+
+  Widget _buildSummaryChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+      ),
+    );
   }
 
   // ─── Post-Scan Actions ─────────────────────────────────────────────────

@@ -655,13 +655,13 @@ abstract class AppLocalizations {
   /// No description provided for @leaf_tender.
   ///
   /// In en, this message translates to:
-  /// **'Tender Leaves'**
+  /// **'Tender'**
   String get leaf_tender;
 
   /// No description provided for @leaf_mature.
   ///
   /// In en, this message translates to:
-  /// **'Mature Leaves'**
+  /// **'Mature'**
   String get leaf_mature;
 
   /// No description provided for @leaf_coarser.
@@ -4899,6 +4899,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Premium Target'**
   String get chart_premium_target;
+
+  /// No description provided for @disease_scan_multiple.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Multiple Leaves (Auto)'**
+  String get disease_scan_multiple;
+
+  /// No description provided for @disease_scanned_leaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned {count} Leaves'**
+  String disease_scanned_leaves(String count);
+
+  /// No description provided for @disease_all_healthy.
+  ///
+  /// In en, this message translates to:
+  /// **'All leaves appear healthy.'**
+  String get disease_all_healthy;
+
+  /// No description provided for @disease_infected_healthy.
+  ///
+  /// In en, this message translates to:
+  /// **'{infected} infected / {healthy} healthy'**
+  String disease_infected_healthy(String infected, String healthy);
+
+  /// No description provided for @disease_red_rust_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Red Rust'**
+  String disease_red_rust_count(String count);
+
+  /// No description provided for @disease_blight_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Blight'**
+  String disease_blight_count(String count);
+
+  /// No description provided for @disease_individual_details.
+  ///
+  /// In en, this message translates to:
+  /// **'View individual leaf details'**
+  String get disease_individual_details;
+
+  /// No description provided for @disease_confidence_percent.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: {value}%'**
+  String disease_confidence_percent(String value);
+
+  /// No description provided for @disease_multi_tip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: Place diseased leaves on a white or creme background for best results.\nLeaves must not overlap for best multi-leaf results.'**
+  String get disease_multi_tip;
+
+  /// No description provided for @leaf_scan_multiple.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Multiple Leaves (Auto)'**
+  String get leaf_scan_multiple;
+
+  /// No description provided for @leaf_scanned_leaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned {count} Leaves'**
+  String leaf_scanned_leaves(String count);
+
+  /// No description provided for @leaf_individual_details.
+  ///
+  /// In en, this message translates to:
+  /// **'View individual leaf details'**
+  String get leaf_individual_details;
+
+  /// No description provided for @leaf_multi_tip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: Place leaves on a white or creme background for best results.\nLeaves must not overlap for best multi-leaf results.'**
+  String get leaf_multi_tip;
+
+  /// No description provided for @leaf_analysis_1_leaf.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis Complete — 1 Leaf Detected'**
+  String get leaf_analysis_1_leaf;
+
+  /// No description provided for @leaf_analysis_n_leaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis Complete — {count} Leaves Detected'**
+  String leaf_analysis_n_leaves(String count);
+
+  /// No description provided for @leaf_overall_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall Summary'**
+  String get leaf_overall_summary;
+
+  /// No description provided for @leaf_unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get leaf_unknown;
+
+  /// No description provided for @leaf_leaf_number.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaf {number}'**
+  String leaf_leaf_number(String number);
+
+  /// No description provided for @leaf_high_confidence.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get leaf_high_confidence;
+
+  /// No description provided for @leaf_moderate_confidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get leaf_moderate_confidence;
+
+  /// No description provided for @leaf_low_confidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get leaf_low_confidence;
+
+  /// No description provided for @leaf_assamica.
+  ///
+  /// In en, this message translates to:
+  /// **'Assamica'**
+  String get leaf_assamica;
+
+  /// No description provided for @leaf_dt1.
+  ///
+  /// In en, this message translates to:
+  /// **'DT1'**
+  String get leaf_dt1;
 }
 
 class _AppLocalizationsDelegate

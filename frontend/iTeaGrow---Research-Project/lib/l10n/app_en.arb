@@ -941,5 +941,73 @@
   "chart_radar_aroma": "Aroma",
   "chart_radar_freshness": "Freshness",
   "chart_your_batch": "Your Batch",
-  "chart_premium_target": "Premium Target"
+  "chart_premium_target": "Premium Target",
+
+  "disease_scan_multiple": "Scan Multiple Leaves (Auto)",
+  "disease_scanned_leaves": "Scanned {count} Leaves",
+  "@disease_scanned_leaves": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "disease_all_healthy": "All leaves appear healthy.",
+  "disease_infected_healthy": "{infected} infected / {healthy} healthy",
+  "@disease_infected_healthy": {
+    "placeholders": {
+      "infected": { "type": "String" },
+      "healthy": { "type": "String" }
+    }
+  },
+  "disease_red_rust_count": "{count} Red Rust",
+  "@disease_red_rust_count": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "disease_blight_count": "{count} Blight",
+  "@disease_blight_count": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "disease_individual_details": "View individual leaf details",
+  "disease_confidence_percent": "Confidence: {value}%",
+  "@disease_confidence_percent": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "disease_multi_tip": "Tip: Place diseased leaves on a white or creme background for best results.\nLeaves must not overlap for best multi-leaf results.",
+  "leaf_scan_multiple": "Scan Multiple Leaves (Auto)",
+  "leaf_scanned_leaves": "Scanned {count} Leaves",
+  "@leaf_scanned_leaves": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "leaf_individual_details": "View individual leaf details",
+  "leaf_multi_tip": "Tip: Place leaves on a white or creme background for best results.\nLeaves must not overlap for best multi-leaf results.",
+
+  "leaf_analysis_1_leaf": "Analysis Complete — 1 Leaf Detected",
+  "leaf_analysis_n_leaves": "Analysis Complete — {count} Leaves Detected",
+  "@leaf_analysis_n_leaves": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "leaf_overall_summary": "Overall Summary",
+  "leaf_unknown": "Unknown",
+  "leaf_leaf_number": "Leaf {number}",
+  "@leaf_leaf_number": {
+    "placeholders": {
+      "number": { "type": "String" }
+    }
+  },
+  "leaf_high_confidence": "High",
+  "leaf_moderate_confidence": "Moderate",
+  "leaf_low_confidence": "Low",
+  "leaf_mature": "Mature",
+  "leaf_tender": "Tender",
+  "leaf_assamica": "Assamica",
+  "leaf_dt1": "DT1"
 }

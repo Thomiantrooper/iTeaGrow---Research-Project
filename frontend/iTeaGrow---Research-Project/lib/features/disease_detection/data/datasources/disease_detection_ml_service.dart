@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' show Rect;
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -7,7 +9,9 @@ import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_config.dart';
 import '../../../../core/api/api_exceptions.dart';
 import '../../domain/entities/disease_detection_result.dart';
+import '../../domain/entities/disease_leaf_detection.dart';
 import 'disease_color_analyzer.dart';
+import '../../../leaf_maturity/data/datasources/leaf_segmenter_service.dart';
 
 /// Image validation constants
 const int _maxImageSizeBytes = 20 * 1024 * 1024; // 20 MB
@@ -30,6 +34,7 @@ class DiseaseDetectionMLService {
   final ApiClient _apiClient = ApiClient();
 
   final DiseaseColorAnalyzer _colorAnalyzer = DiseaseColorAnalyzer();
+  final LeafSegmenterService _segmenter = LeafSegmenterService();
   bool _isInitialized = false;
   bool _isBackendAvailable = false;
 
@@ -480,6 +485,78 @@ class DiseaseDetectionMLService {
           'Isolate affected plants where possible.',
         ];
     }
+  }
+
+  // ─── Single-image multi-leaf detection ───────────────────────────────────
+  //
+  // Stage 1: LeafSegmenterService segments the image into individual leaf
+  //          regions (works best on white/light backgrounds).
+  // Stage 2: Each cropped region is saved to a temp file and classified
+  //          via the existing predict() method — all existing logic is
+  //          preserved: backend → offline fallback → color cross-validation.
+
+  /// Detect and classify every leaf found in a single photo.
+  ///
+  /// Returns one [DiseaseLeafDetection] per detected leaf.
+  /// Falls back to a single full-image classification when the segmenter
+  /// finds no distinct regions (e.g. dark or cluttered background).
+  Future<List<DiseaseLeafDetection>> predictMultiple(
+    String imagePath, {
+    double? liveTemperature,
+    double? liveHumidity,
+    double? liveAirQuality,
+  }) async {
+    if (!_isInitialized) await initialize();
+
+    final imageBytes = await File(imagePath).readAsBytes();
+    final regions = await _segmenter.segment(imageBytes);
+
+    if (regions.isEmpty) {
+      debugPrint('DiseaseSegmenter: no regions — full-image fallback');
+      final result = await predict(
+        imagePath,
+        liveTemperature: liveTemperature,
+        liveHumidity: liveHumidity,
+        liveAirQuality: liveAirQuality,
+      );
+      return [
+        DiseaseLeafDetection(
+          index: 0,
+          bounds: const Rect.fromLTWH(0, 0, 0, 0),
+          result: result,
+        )
+      ];
+    }
+
+    final List<DiseaseLeafDetection> detections = [];
+    for (int i = 0; i < regions.length; i++) {
+      final region = regions[i];
+      debugPrint('DiseaseDetection: classifying leaf ${i + 1}/${regions.length}');
+
+      // Write the crop to a temp file so predict() can read it normally
+      // (predict() uses File(imagePath).readAsBytes() internally).
+      final tmp = File(
+          '${Directory.systemTemp.path}/disease_crop_${DateTime.now().millisecondsSinceEpoch}_$i.jpg');
+      await tmp.writeAsBytes(region.croppedBytes);
+
+      try {
+        final result = await predict(
+          tmp.path,
+          liveTemperature: liveTemperature,
+          liveHumidity: liveHumidity,
+          liveAirQuality: liveAirQuality,
+        );
+        detections.add(DiseaseLeafDetection(
+          index: i,
+          bounds: region.bounds,
+          result: result,
+        ));
+      } finally {
+        // Clean up temp file regardless of success/failure.
+        try { await tmp.delete(); } catch (_) {}
+      }
+    }
+    return detections;
   }
 
   /// Batch detection for multiple leaves (Cumulative Score)

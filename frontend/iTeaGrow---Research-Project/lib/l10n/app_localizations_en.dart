@@ -287,10 +287,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leaf_results => 'Results';
 
   @override
-  String get leaf_tender => 'Tender Leaves';
+  String get leaf_tender => 'Tender';
 
   @override
-  String get leaf_mature => 'Mature Leaves';
+  String get leaf_mature => 'Mature';
 
   @override
   String get leaf_coarser => 'Coarser Leaves';
@@ -2509,4 +2509,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chart_premium_target => 'Premium Target';
+
+  @override
+  String get disease_scan_multiple => 'Scan Multiple Leaves (Auto)';
+
+  @override
+  String disease_scanned_leaves(String count) {
+    return 'Scanned $count Leaves';
+  }
+
+  @override
+  String get disease_all_healthy => 'All leaves appear healthy.';
+
+  @override
+  String disease_infected_healthy(String infected, String healthy) {
+    return '$infected infected / $healthy healthy';
+  }
+
+  @override
+  String disease_red_rust_count(String count) {
+    return '$count Red Rust';
+  }
+
+  @override
+  String disease_blight_count(String count) {
+    return '$count Blight';
+  }
+
+  @override
+  String get disease_individual_details => 'View individual leaf details';
+
+  @override
+  String disease_confidence_percent(String value) {
+    return 'Confidence: $value%';
+  }
+
+  @override
+  String get disease_multi_tip =>
+      'Tip: Place diseased leaves on a white or creme background for best results.\nLeaves must not overlap for best multi-leaf results.';
+
+  @override
+  String get leaf_scan_multiple => 'Scan Multiple Leaves (Auto)';
+
+  @override
+  String leaf_scanned_leaves(String count) {
+    return 'Scanned $count Leaves';
+  }
+
+  @override
+  String get leaf_individual_details => 'View individual leaf details';
+
+  @override
+  String get leaf_multi_tip =>
+      'Tip: Place leaves on a white or creme background for best results.\nLeaves must not overlap for best multi-leaf results.';
+
+  @override
+  String get leaf_analysis_1_leaf => 'Analysis Complete — 1 Leaf Detected';
+
+  @override
+  String leaf_analysis_n_leaves(String count) {
+    return 'Analysis Complete — $count Leaves Detected';
+  }
+
+  @override
+  String get leaf_overall_summary => 'Overall Summary';
+
+  @override
+  String get leaf_unknown => 'Unknown';
+
+  @override
+  String leaf_leaf_number(String number) {
+    return 'Leaf $number';
+  }
+
+  @override
+  String get leaf_high_confidence => 'High';
+
+  @override
+  String get leaf_moderate_confidence => 'Moderate';
+
+  @override
+  String get leaf_low_confidence => 'Low';
+
+  @override
+  String get leaf_assamica => 'Assamica';
+
+  @override
+  String get leaf_dt1 => 'DT1';
 }
