@@ -411,6 +411,11 @@
   "market_week_of": "Week of",
   "market_published": "Prices published to AI Model!",
   "market_load_failed": "Failed to load prices",
+  "market_confirm_title": "Confirm Price Update",
+  "market_confirm_msg": "Are you sure you want to publish these prices? This will update the AI model for all users immediately.",
+  "market_confirm_publish": "Publish",
+  "market_confirm_calc_title": "Confirm Calculation Details",
+  "market_confirm_calc_msg": "Please verify your tea attributes before calculating the market price prediction:",
   "market_image_validation_failed": "Image validation failed. Please try a clearer photo.",
   "market_scan_confidence_advisory": "Scan confidence is {confidenceLabel} — price will be calculated using the detected grade ({grade}), but consider re-scanning for accuracy.",
   "@market_scan_confidence_advisory": {
@@ -576,6 +581,9 @@
   "yield_results_title": "Prediction Results",
   "yield_results_charts_hint": "Tap to show detailed charts",
   "yield_total_predicted": "Total Predicted Yield",
+  "yield_confirm_title": "Confirm Prediction Details",
+  "yield_confirm_msg": "Please verify the following values before generating the prediction:",
+  "yield_confirm_proceed": "Proceed",
 
   "notif_title": "Notifications",
   "notif_mark_all_read": "Mark all as read",

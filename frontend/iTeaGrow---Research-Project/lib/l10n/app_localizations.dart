@@ -2326,6 +2326,36 @@ abstract class AppLocalizations {
   /// **'Failed to load prices'**
   String get market_load_failed;
 
+  /// No description provided for @market_confirm_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Price Update'**
+  String get market_confirm_title;
+
+  /// No description provided for @market_confirm_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to publish these prices? This will update the AI model for all users immediately.'**
+  String get market_confirm_msg;
+
+  /// No description provided for @market_confirm_publish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get market_confirm_publish;
+
+  /// No description provided for @market_confirm_calc_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Calculation Details'**
+  String get market_confirm_calc_title;
+
+  /// No description provided for @market_confirm_calc_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'Please verify your tea attributes before calculating the market price prediction:'**
+  String get market_confirm_calc_msg;
+
   /// No description provided for @market_image_validation_failed.
   ///
   /// In en, this message translates to:
@@ -2865,6 +2895,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Total Predicted Yield'**
   String get yield_total_predicted;
+
+  /// No description provided for @yield_confirm_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Prediction Details'**
+  String get yield_confirm_title;
+
+  /// No description provided for @yield_confirm_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'Please verify the following values before generating the prediction:'**
+  String get yield_confirm_msg;
+
+  /// No description provided for @yield_confirm_proceed.
+  ///
+  /// In en, this message translates to:
+  /// **'Proceed'**
+  String get yield_confirm_proceed;
 
   /// No description provided for @notif_title.
   ///

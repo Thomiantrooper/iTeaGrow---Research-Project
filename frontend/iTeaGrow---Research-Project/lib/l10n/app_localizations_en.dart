@@ -1152,6 +1152,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get market_load_failed => 'Failed to load prices';
 
   @override
+  String get market_confirm_title => 'Confirm Price Update';
+
+  @override
+  String get market_confirm_msg =>
+      'Are you sure you want to publish these prices? This will update the AI model for all users immediately.';
+
+  @override
+  String get market_confirm_publish => 'Publish';
+
+  @override
+  String get market_confirm_calc_title => 'Confirm Calculation Details';
+
+  @override
+  String get market_confirm_calc_msg =>
+      'Please verify your tea attributes before calculating the market price prediction:';
+
+  @override
   String get market_image_validation_failed =>
       'Image validation failed. Please try a clearer photo.';
 
@@ -1463,6 +1480,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yield_total_predicted => 'Total Predicted Yield';
+
+  @override
+  String get yield_confirm_title => 'Confirm Prediction Details';
+
+  @override
+  String get yield_confirm_msg =>
+      'Please verify the following values before generating the prediction:';
+
+  @override
+  String get yield_confirm_proceed => 'Proceed';
 
   @override
   String get notif_title => 'Notifications';
