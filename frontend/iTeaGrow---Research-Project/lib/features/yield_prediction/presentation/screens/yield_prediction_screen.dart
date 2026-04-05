@@ -116,6 +116,10 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
       predictionDays: _predictionDays,
     );
 
+    // Show confirmation dialog before proceeding
+    final confirmed = await _showConfirmationDialog(request);
+    if (!confirmed) return;
+
     await ref.read(yieldPredictionProvider.notifier).getPrediction(request);
 
     final state = ref.read(yieldPredictionProvider);
@@ -137,6 +141,94 @@ class _YieldPredictionScreenState extends ConsumerState<YieldPredictionScreen> {
     } else if (state.error != null) {
       _showError(state.error!);
     }
+  }
+
+  Future<bool> _showConfirmationDialog(PredictionRequestModel request) async {
+    final l10n = AppLocalizations.of(context)!;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                const Icon(Icons.assignment_turned_in,
+                    color: TeaColors.freshLeaf),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(l10n.yield_confirm_title,
+                      style: TeaTypography.titleMedium),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.yield_confirm_msg,
+                      style: const TextStyle(color: TeaColors.darkGray)),
+                  const SizedBox(height: 16),
+                  _buildConfirmItem(l10n.yield_division, request.divisionId),
+                  _buildConfirmItem(
+                      l10n.yield_workers, request.laborTotal.toString()),
+                  _buildConfirmItem(
+                      l10n.yield_field_size, '${request.fieldSizeHa} ha'),
+                  _buildConfirmItem(
+                      l10n.yield_crop, '${request.cropHarvestedKg} kg'),
+                  _buildConfirmItem(
+                      l10n.yield_prediction_days, '${request.predictionDays}'),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(l10n.common_cancel,
+                    style: const TextStyle(color: TeaColors.mediumGray)),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: TeaColors.freshLeaf,
+                  foregroundColor: TeaColors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: Text(l10n.yield_confirm_proceed),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Widget _buildConfirmItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w500, color: TeaColors.darkGray),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: TeaColors.freshLeaf),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveToDb(

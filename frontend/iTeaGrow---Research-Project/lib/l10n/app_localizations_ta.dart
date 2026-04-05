@@ -1149,7 +1149,24 @@ class AppLocalizationsTa extends AppLocalizations {
   String get market_published => 'விலைகள் AI மாதிரிக்கு வெளியிடப்பட்டன!';
 
   @override
-  String get market_load_failed => 'விலைகளை ஏற்ற தோல்வியடைநதது';
+  String get market_load_failed => 'விலைகளை ஏற்றுவதில் தோல்வி';
+
+  @override
+  String get market_confirm_title => 'விலை மாற்றத்தை உறுதிப்படுத்தவும்';
+
+  @override
+  String get market_confirm_msg =>
+      'இந்த விலைகளை வெளியிட விரும்புகிறீர்களா? இது உடனடியாக AI மாதிரியைப் புதுப்பிக்கும்.';
+
+  @override
+  String get market_confirm_publish => 'வெளியிடு';
+
+  @override
+  String get market_confirm_calc_title => 'கணக்கீட்டை உறுதிப்படுத்தவும்';
+
+  @override
+  String get market_confirm_calc_msg =>
+      'சந்தை விலையைக் கணிப்பதற்கு முன் உங்கள் தேயிலை பண்புகளைச் சரிபார்க்கவும்:';
 
   @override
   String get market_image_validation_failed =>
@@ -1476,6 +1493,16 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get yield_total_predicted => 'மொத்த கணிக்கப்பட்ட விளைச்சல்';
+
+  @override
+  String get yield_confirm_title => 'விவரங்களை உறுதிப்படுத்தவும்';
+
+  @override
+  String get yield_confirm_msg =>
+      'கணிப்பை உருவாக்குவதற்கு முன் உள்ளீடு செய்யப்பட்ட மதிப்புகளைச் சரிபார்க்கவும்:';
+
+  @override
+  String get yield_confirm_proceed => 'தொடரவும்';
 
   @override
   String get notif_title => 'அறிவிப்புகள்';

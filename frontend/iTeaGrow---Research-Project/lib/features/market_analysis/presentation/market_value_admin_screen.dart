@@ -103,6 +103,10 @@ class _MarketValueAdminScreenState
           : _sourceController.text,
     );
 
+    // Show confirmation dialog before proceeding
+    final confirmed = await _showConfirmationDialog(update);
+    if (!confirmed) return;
+
     try {
       await api.publishMarketValues(update);
       if (mounted) {
@@ -142,6 +146,89 @@ class _MarketValueAdminScreenState
   Future<void> _checkConnectivityAndHealth() async {
     ref.read(marketApiHealthProvider.notifier).checkHealth();
     await ref.read(connectivityServiceProvider).checkConnectivity();
+  }
+
+  Future<bool> _showConfirmationDialog(MarketPriceUpdate update) async {
+    final l10n = AppLocalizations.of(context)!;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                const Icon(Icons.check_circle_outline,
+                    color: TeaColors.freshLeaf),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(l10n.market_confirm_title,
+                      style: TeaTypography.titleMedium),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.market_confirm_msg,
+                      style: const TextStyle(color: TeaColors.darkGray)),
+                  const SizedBox(height: 16),
+                  _buildConfirmItem(l10n.market_week_of, update.auctionWeek),
+                  const Divider(),
+                  ...update.prices.entries.map((e) => _buildConfirmItem(
+                      e.key, 'Rs. ${e.value.toStringAsFixed(2)}')),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(l10n.common_cancel,
+                    style: const TextStyle(color: TeaColors.mediumGray)),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: TeaColors.freshLeaf,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: Text(l10n.market_confirm_publish),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Widget _buildConfirmItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w500, color: TeaColors.darkGray),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: TeaColors.freshLeaf),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

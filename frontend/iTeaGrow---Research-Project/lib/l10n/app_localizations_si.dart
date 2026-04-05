@@ -1116,38 +1116,55 @@ class AppLocalizationsSi extends AppLocalizations {
   String get market_clear_filter => 'පෙරහන ඉවත් කරන්න';
 
   @override
-  String get market_admin_title => 'පරිපාලක මිල යාවත්කාලීනය';
+  String get market_admin_title => 'පරිපාලක මිල යාවත්කාලීන කිරීම';
 
   @override
-  String get market_weekly_prices => 'සතිපතා වේන්දේෂී මිල ඇතໝලත් කරන්න';
+  String get market_weekly_prices => 'සතිපතා වෙන්දේසි මිල ඇතුළත් කරන්න';
 
   @override
-  String get market_save_publish => 'මිල සුරකින්න සහ ප්‍රකාශ කරන්න';
+  String get market_save_publish => 'මිල සුරැකීම සහ ප්‍රකාශ කිරීම';
 
   @override
-  String get market_connected => 'සේවාදායකයට සම්බන්ද';
+  String get market_connected => 'සම්බන්ධ වී ඇත';
 
   @override
   String get market_disconnected =>
-      'සම්බන්ද නේත - ආපයේ අන්තර්ජාල සම්බන්දය පර්෭ක්ෂා කරන්න';
+      'සම්බන්ධතාව ඇනහිට ඇත - අන්තර්ජාලය පරීක්ෂා කරන්න';
 
   @override
-  String get market_source => 'වේලේ ප්‍රභවය';
+  String get market_source => 'වෙළෙඳපොළ මූලාශ්‍රය';
 
   @override
-  String get market_auction_notes => 'වේන්දේෂී සටහන්';
+  String get market_auction_notes => 'වෙන්දේසි සටහන්';
 
   @override
-  String get market_prev_auctions => 'පෙර වේන්දේෂී මිල';
+  String get market_prev_auctions => 'පෙර වෙන්දේසි මිල ගණන්';
 
   @override
-  String get market_week_of => 'සතිය';
+  String get market_week_of => 'අදාළ සතිය';
 
   @override
-  String get market_published => 'මිල AI ੼ ප්‍රකාශ කරන ලදී!';
+  String get market_published => 'මිල ගණන් සාර්ථකව ප්‍රකාශයට පත් කරන ලදී!';
 
   @override
-  String get market_load_failed => 'මිල පෙරේම අසමත් විය';
+  String get market_load_failed => 'මිල පූරණය කිරීම අසාර්ථකයි';
+
+  @override
+  String get market_confirm_title => 'මිල යාවත්කාලීන කිරීම තහවුරු කරන්න';
+
+  @override
+  String get market_confirm_msg =>
+      'ඔබට මෙම මිල ගණන් ප්‍රකාශයට පත් කිරීමට අවශ්‍ය බව සහතිකද? මෙය වහාම AI ආකෘතිය යාවත්කාලීන කරනු ඇත.';
+
+  @override
+  String get market_confirm_publish => 'ප්‍රකාශයට පත් කරන්න';
+
+  @override
+  String get market_confirm_calc_title => 'ගණනය කිරීම තහවුරු කරන්න';
+
+  @override
+  String get market_confirm_calc_msg =>
+      'වෙළෙඳපොළ මිල පුරෝකථනය කිරීමට පෙර කරුණාකර ඔබේ තේ ගුණාංග පරීක්ෂා කරන්න:';
 
   @override
   String get market_image_validation_failed =>
@@ -1467,6 +1484,16 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get yield_total_predicted => 'මුළු අනාවැකි අස්වනු';
+
+  @override
+  String get yield_confirm_title => 'තොරතුරු තහවුරු කරන්න';
+
+  @override
+  String get yield_confirm_msg =>
+      'පුරෝකථනය ගණනය කිරීමට පෙර කරුණාකර ඇතුළත් කළ අගයන් පරීක්ෂා කරන්න:';
+
+  @override
+  String get yield_confirm_proceed => 'ඉදිරියට';
 
   @override
   String get notif_title => 'දැනුම්දීම්';

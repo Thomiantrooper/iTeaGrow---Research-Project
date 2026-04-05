@@ -87,7 +87,7 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
     ref.read(classificationProvider.notifier).classify(File(pickedFile.path));
   }
 
-  void _calculatePrice(ClassificationResult? classification) {
+  void _calculatePrice(ClassificationResult? classification) async {
     // If classification is ready, use it. Else fallback to manual _selectedGrade
     final String targetGrade = classification?.grade ?? _selectedGrade;
     final double targetConfidence = classification?.confidence ?? 100.0;
@@ -101,10 +101,120 @@ class _MarketAnalysisScreenState extends ConsumerState<MarketAnalysisScreen> {
       quantity: _quantity,
     );
 
+    // Show confirmation dialog before proceeding
+    final confirmed = await _showConfirmationDialog(request);
+    if (!confirmed) return;
+
     ref.read(priceCalculationProvider.notifier).calculatePrice(
           request,
           imagePath: classification?.imageFile?.path,
         );
+  }
+
+  Future<bool> _showConfirmationDialog(PricingRequest request) async {
+    final l10n = AppLocalizations.of(context)!;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                const Icon(Icons.analytics_outlined,
+                    color: TeaColors.freshLeaf),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(l10n.market_confirm_calc_title,
+                      style: TeaTypography.titleMedium),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.market_confirm_calc_msg,
+                      style: const TextStyle(color: TeaColors.darkGray)),
+                  const SizedBox(height: 16),
+                  _buildConfirmItem(l10n.market_tea_grade, request.grade),
+                  _buildConfirmItem(
+                      l10n.market_color, _getColorLabel(request.color, l10n)),
+                  _buildConfirmItem(
+                      l10n.market_aroma, _getAromaLabel(request.aroma, l10n)),
+                  _buildConfirmItem(
+                      l10n.market_age, _getAgeLabel(request.age, l10n)),
+                  _buildConfirmItem(
+                      l10n.market_quantity, '${request.quantity.toInt()} kg'),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(l10n.common_cancel,
+                    style: const TextStyle(color: TeaColors.mediumGray)),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: TeaColors.freshLeaf,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: Text(l10n.market_calculate),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Widget _buildConfirmItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w500, color: TeaColors.darkGray),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: TeaColors.freshLeaf),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getColorLabel(double val, AppLocalizations l10n) {
+    if (val >= 0.8) return l10n.market_premium;
+    if (val >= 0.4) return l10n.market_normal;
+    return l10n.market_dull;
+  }
+
+  String _getAromaLabel(double val, AppLocalizations l10n) {
+    if (val >= 0.8) return l10n.market_strong;
+    if (val >= 0.4) return l10n.market_moderate;
+    return l10n.market_weak;
+  }
+
+  String _getAgeLabel(double val, AppLocalizations l10n) {
+    if (val >= 0.8) return l10n.market_fresh;
+    if (val >= 0.4) return l10n.market_medium_age;
+    return l10n.market_old;
   }
 
   @override
