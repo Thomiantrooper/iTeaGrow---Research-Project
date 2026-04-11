@@ -16,8 +16,7 @@ import DataCollection from '../pages/admin/DataCollection';
 import Feedback from '../pages/admin/Feedback';
 import LoginPage from '../pages/LoginPage';
 import ProtectedRoute from '../components/ProtectedRoute';
-
-import MainLayout from '../layouts/MainLayout';
+import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
 
 const AppRoutes = () => {
   return (
@@ -29,6 +28,7 @@ const AppRoutes = () => {
         <Route path="contact" element={<ContactPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
       </Route>
       
       <Route path="/login" element={<LoginPage />} />
