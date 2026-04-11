@@ -17,6 +17,7 @@ import Feedback from '../pages/admin/Feedback';
 import LoginPage from '../pages/LoginPage';
 import ProtectedRoute from '../components/ProtectedRoute';
 import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
+import MainLayout from '../layouts/MainLayout';
 
 const AppRoutes = () => {
   return (
