@@ -1,5 +1,88 @@
 /* iTeaGrow Formal Research Theme - Page Specifics */
 
+/* ================================================
+   TIMELINE DESIGN SYSTEM (Milestones Page)
+   ================================================ */
+.timeline {
+    position: relative;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 0 4rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--tea-fresh-leaf), rgba(74,124,89,0.1));
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 64px;
+    margin-bottom: 3rem;
+    background: #FFFFFF;
+    border: 1px solid rgba(74, 124, 89, 0.1);
+    border-radius: 12px;
+    padding: 1.75rem 1.75rem 1.75rem 64px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+    border-color: var(--tea-fresh-leaf);
+    transform: translateX(6px);
+    box-shadow: 0 6px 25px rgba(0,0,0,0.05);
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -28px;
+    top: 1.75rem;
+    width: 18px;
+    height: 18px;
+    background: #FFFFFF;
+    border: 3px solid var(--tea-fresh-leaf);
+    border-radius: 50%;
+    z-index: 1;
+    box-shadow: 0 0 0 4px rgba(74,124,89,0.08);
+}
+
+.timeline-item.done::before {
+    background: var(--tea-fresh-leaf);
+    box-shadow: 0 0 0 4px rgba(74,124,89,0.08), 0 0 12px rgba(74,124,89,0.2);
+}
+
+.timeline-date {
+    color: var(--tea-fresh-leaf) !important;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-title {
+    color: var(--tea-text-green) !important;
+    font-size: 1.15rem !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem !important;
+}
+
+.timeline-item ul.tech-list {
+    margin-top: 0.5rem;
+}
+
+
 /* --- Centering & Layout Utilities --- */
 .centered {
     text-align: center;
