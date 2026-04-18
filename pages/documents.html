@@ -38,20 +38,7 @@
         .dropdown-summary::-webkit-details-marker {
             display: none;
         }
-        /* Matching the doc-link icon exactly to keep it unified */
-        .dropdown-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            background-color: rgba(64, 145, 108, 0.1);
-            color: var(--color-accent);
-            border-radius: var(--radius-sm);
-            font-size: 1.5rem;
-            flex-shrink: 0;
-            margin-right: var(--space-md);
-        }
+        /* No background on icon to match others */
         .dropdown-arrow {
             margin-left: auto;
             color: var(--color-text-muted);
@@ -141,7 +128,7 @@
                 <li>
                     <details class="dropdown-container">
                         <summary class="dropdown-summary">
-                            <span class="dropdown-icon"><i class="ph ph-files"></i></span>
+                            <span class="doc-icon"><i class="ph ph-files"></i></span>
                             <div>
                                 <strong>Project Proposals</strong>
                                 <div style="font-size: 0.85rem; color: var(--color-text-muted);">Click to expand the 4 individual module proposals.</div>
