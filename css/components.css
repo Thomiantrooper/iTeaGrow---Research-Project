@@ -1,135 +1,129 @@
-/* iTeaGrow Green Theme Components */
+/* iTeaGrow 60:30:10 Component System */
 
-/* High-Impact Green Buttons */
+/* [10%] High-Luminance Accent Buttons */
 .btn {
   display: inline-block;
-  padding: 0.8rem 2.2rem;
-  font-weight: 700;
+  padding: 0.9rem 2.5rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.85rem;
-  border-radius: var(--radius-sm);
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none !important;
   border: 2px solid transparent;
 }
 
 .btn-primary {
-  background-color: var(--tea-fresh-leaf);
-  color: var(--color-white) !important;
+  background-color: var(--tea-mint-bright);
+  color: var(--tea-base-green) !important;
+  box-shadow: 0 4px 15px rgba(152, 216, 170, 0.3);
 }
 
 .btn-primary:hover {
-  background-color: var(--tea-mint-bright);
-  color: var(--bg-black) !important;
-  transform: translateY(-2px);
+  background-color: var(--color-white);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
 }
 
 .btn-outline {
   background-color: transparent;
   color: var(--tea-mint-bright) !important;
-  border-color: var(--tea-fresh-leaf);
+  border-color: var(--tea-mint-bright);
 }
 
 .btn-outline:hover {
-  background-color: var(--tea-fresh-leaf);
-  color: var(--color-white) !important;
+  background-color: var(--tea-mint-bright);
+  color: var(--tea-base-green) !important;
 }
 
-/* Green Forest Cards */
+/* [30%] Secondary Cards */
 .card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(74, 124, 89, 0.15);
-  padding: 2.5rem;
+  background: var(--tea-surface-green);
+  border: 1px solid var(--tea-border-green);
+  padding: 3rem;
   border-radius: var(--radius-md);
   transition: all 0.3s ease;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-lume);
 }
 
 .card:hover {
-  border-color: var(--tea-fresh-leaf);
-  background: rgba(74, 124, 89, 0.04);
-  transform: translateY(-5px);
+  border-color: var(--tea-mint-bright);
+  transform: translateY(-8px);
+  background: var(--tea-nav-green);
 }
 
 .card-title {
-  color: var(--color-primary);
-  margin-bottom: 1.25rem;
-  font-size: 1.4rem;
+  color: var(--tea-mint-bright);
+  margin-bottom: 1.5rem;
+  font-size: 1.6rem;
   border-bottom: 1px solid rgba(152, 216, 170, 0.2);
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+}
+
+.card-title i {
+  color: var(--tea-mint-luminous);
+  font-size: 1.8rem;
 }
 
 /* Hero Presentation */
 .hero {
   text-align: center;
-  padding: 5rem 0;
+  padding: 6rem 0;
 }
 
-.hero h1 {
-  margin-bottom: 2rem;
-  line-height: 1.2;
-}
-
-.hero-lead {
-  color: var(--color-white);
-  font-size: 1.2rem;
-  max-width: 850px;
-  margin: 0 auto 3rem auto;
-  line-height: 1.7;
-  opacity: 0.9;
-}
-
-/* Green Themed Documentation Links */
+/* [30%] Secondary List Containers */
 .doc-link {
   display: flex;
   align-items: center;
-  padding: 1.5rem;
-  background-color: rgba(74, 124, 89, 0.05);
-  border: 1px solid rgba(74, 124, 89, 0.1);
-  border-radius: var(--radius-sm);
+  padding: 1.75rem;
+  background-color: var(--tea-nav-green);
+  border: 1px solid var(--tea-border-green);
+  border-radius: var(--radius-md);
   text-decoration: none !important;
   color: var(--color-white) !important;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   transition: all 0.3s ease;
 }
 
 .doc-link:hover {
-  background-color: rgba(74, 124, 89, 0.1);
+  background-color: var(--tea-surface-green);
   border-color: var(--tea-mint-bright);
-  transform: translateX(10px);
+  transform: translateX(12px);
 }
 
+/* [10%] Accent Elements */
 .doc-icon {
-  font-size: 1.75rem;
-  color: var(--tea-mint-bright);
+  font-size: 2rem;
+  color: var(--tea-mint-luminous);
   margin-right: 1.5rem;
 }
 
-/* Green Lists */
 ul.tech-list {
   list-style: none;
   padding: 0;
 }
 
 ul.tech-list li {
-  margin-bottom: 0.8rem;
-  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  padding-left: 1.75rem;
   position: relative;
   color: var(--color-white);
+  font-size: 1.05rem;
 }
 
 ul.tech-list li::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 0.6rem;
-  width: 8px;
-  height: 8px;
-  background-color: var(--color-primary);
+  top: 0.75rem;
+  width: 10px;
+  height: 10px;
+  background-color: var(--tea-mint-bright);
   border-radius: 2px;
+  box-shadow: 0 0 8px var(--tea-mint-bright);
 }

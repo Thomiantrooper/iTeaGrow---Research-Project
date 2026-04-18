@@ -1,38 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@400;600;700&display=swap');
 
 :root {
-  /* Official iTeaGrow Green Palette (Matching Web App) */
-  --tea-fresh-leaf: #4A7C59;
-  --tea-mature-leaf: #2D5A3D;
-  --tea-deep-forest: #1A261F; /* Lightened from #121A14 */
-  --tea-mint-bright: #98D8AA; /* Enhanced for High-Contrast Titles */
-  --tea-glow-green: rgba(74, 124, 89, 0.2);
+  /* 60:30:10 Professional Green Palette */
   
-  /* Core variables mapping */
-  --bg-black: #141B15;       /* Lightened from #080C09 */
-  --bg-forest: var(--tea-deep-forest);
-  --color-primary: var(--tea-mint-bright); /* Replaces Yellow */
-  --color-accent: var(--tea-fresh-leaf);   /* Replaces Cyan */
+  /* [60%] PRIMARY: Visible Forest Green (Backgrounds) */
+  --tea-base-green: #12261A;         /* Clear Green presence */
+  --tea-deep-bg: #0C1A14;            /* Secondary Depth */
+  
+  /* [30%] SECONDARY: Surface Greens (Cards, Headers, Sections) */
+  --tea-surface-green: #1A3125;      /* Section Cards */
+  --tea-nav-green: #1E3A2B;          /* Sticky Nav */
+  --tea-border-green: #2D5A3D;       /* Component Borders */
+  
+  /* [10%] ACCENTS: Luminous Mint (Icons, Buttons, Primary Titles) */
+  --tea-mint-bright: #98D8AA;        /* High-Impact Accent */
+  --tea-mint-luminous: #A6E3B9;      /* Ultra-clear Data Highlights */
+  
+  /* Core Variable Mapping */
+  --bg-primary: var(--tea-base-green);
+  --color-accent: var(--tea-mint-bright);
+  --color-secondary: var(--tea-surface-green);
   --color-white: #FFFFFF;
-  --color-muted: #BDBDBD;
+  --color-muted: #D1D5D1;            /* Improved readability from #BDBDBD */
   
-  /* Layout Gradients (Brightened for 'Active Forest' effect) */
-  --grad-bg: linear-gradient(180deg, var(--bg-black) 0%, var(--bg-forest) 100%);
+  /* Layout Gradients (Now Dominantly Green) */
+  --grad-bg: linear-gradient(180deg, var(--tea-base-green) 0%, var(--tea-deep-bg) 100%);
   
   /* Typography */
   --font-main: 'Poppins', 'Inter', Arial, sans-serif;
   
-  /* Spacing & Borders */
-  --space-unit: 1rem;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  
-  /* Borders (Strictly Green) */
-  --border-accent: 1px solid var(--color-accent);
-  --border-primary: 1px solid var(--color-primary);
-  --border-white: 1px solid rgba(255, 255, 255, 0.1);
-  
-  /* Shadows */
-  --shadow-text: 2px 2px 4px rgba(0,0,0,0.8);
-  --shadow-card: 0 4px 20px rgba(0,0,0,0.4);
+  /* Spacing & Effects */
+  --radius-md: 10px;
+  --shadow-lume: 0 4px 30px rgba(0, 0, 0, 0.4);
+  --border-lume: 1px solid rgba(152, 216, 170, 0.15);
 }

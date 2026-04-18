@@ -1,6 +1,6 @@
-/* iTeaGrow Green Theme Page Polishes */
+/* iTeaGrow 60:30:10 Page Polishes */
 
-/* --- Timeline Redesign (Green Identity) --- */
+/* --- Timeline Redesign (60:30:10 Rule) --- */
 .timeline {
     position: relative;
     max-width: 900px;
@@ -15,8 +15,8 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--tea-fresh-leaf);
-    opacity: 0.3;
+    background: var(--tea-border-green); /* Secondary (30%) Border */
+    opacity: 0.5;
 }
 
 .timeline-item {
@@ -32,41 +32,44 @@
     top: 0;
     width: 20px;
     height: 20px;
-    background: var(--bg-black);
-    border: 3px solid var(--tea-fresh-leaf);
+    background: var(--bg-primary); /* Primary (60%) Depth */
+    border: 3px solid var(--tea-border-green);
     border-radius: 50%;
     z-index: 1;
 }
 
 .timeline-item.done::after {
-    background: var(--tea-mint-bright);
-    box-shadow: 0 0 15px var(--tea-glow-green);
+    background: var(--tea-mint-bright); /* Accent (10%) Completion */
+    border-color: var(--tea-mint-bright);
+    box-shadow: 0 0 15px rgba(152, 216, 170, 0.4);
 }
 
 .timeline-date {
-    color: var(--tea-mint-bright) !important;
+    color: var(--tea-mint-luminous) !important;
     font-weight: 700;
     font-size: 0.95rem;
     margin-bottom: 0.75rem;
 }
 
 .timeline-title {
-    color: var(--color-primary) !important;
-    font-size: 1.6rem;
+    color: var(--tea-mint-bright) !important;
+    font-size: 1.8rem;
     margin-bottom: 1rem;
 }
 
-/* --- Supervisor & Member Cards (Green Laboratory) --- */
+/* --- Supervisor & Member Cards (30% Secondary Surface) --- */
 .supervisor-card {
-    border-top: 6px solid var(--tea-fresh-leaf) !important;
+    background: var(--tea-surface-green) !important;
+    border: 1px solid var(--tea-border-green) !important;
+    border-top: 6px solid var(--tea-mint-bright) !important; /* 10% Accent Top Line */
     border-radius: 12px !important;
 }
 
 .supervisor-tag {
     display: inline-block;
-    background: var(--tea-fresh-leaf);
+    background: var(--tea-border-green);
     color: var(--color-white);
-    padding: 4px 12px;
+    padding: 4px 14px;
     font-weight: 700;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -74,12 +77,13 @@
     margin-top: 0.75rem;
 }
 
-/* --- Green Accordion --- */
+/* --- Professional Accordion (30% Secondary Surface) --- */
 .premium-accordion {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(74, 124, 89, 0.2);
-    border-radius: 8px;
-    margin-bottom: 1.25rem;
+    background: var(--tea-surface-green);
+    border: 1px solid var(--tea-border-green);
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
 }
 
 .premium-accordion summary {
@@ -88,46 +92,51 @@
     list-style: none;
     display: flex;
     align-items: center;
+    background: var(--tea-nav-green);
+    font-weight: 700;
+    color: var(--tea-mint-bright);
 }
 
 .premium-accordion[open] summary {
-    border-bottom: 1px solid rgba(74, 124, 89, 0.2);
-    background: rgba(74, 124, 89, 0.05);
+    border-bottom: 1px solid var(--tea-border-green);
+    background: var(--tea-surface-green);
 }
 
 .ps-link-card {
     display: flex;
     align-items: center;
-    padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.01);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(152, 216, 170, 0.1);
     text-decoration: none !important;
     color: var(--color-white) !important;
-    border-radius: 6px;
-    margin: 0.5rem 1rem;
+    border-radius: 8px;
+    margin: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
 }
 
 .ps-link-card:hover {
     border-color: var(--tea-mint-bright);
-    background: rgba(152, 216, 170, 0.05);
+    background: rgba(152, 216, 170, 0.08);
+    transform: translateX(10px);
 }
 
-/* --- Objective List (Green Theme) --- */
+/* --- Objective List (60:30:10 Balance) --- */
 .objective-list {
     list-style: none;
     padding: 0;
 }
 
 .objective-list li {
-    padding: 1.25rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(152, 216, 170, 0.1);
     display: flex;
     gap: 1.5rem;
     align-items: flex-start;
 }
 
 .objective-list i {
-    color: var(--tea-mint-bright);
-    font-size: 1.5rem;
+    color: var(--tea-mint-bright); /* 10% Accent */
+    font-size: 1.6rem;
     margin-top: 4px;
 }

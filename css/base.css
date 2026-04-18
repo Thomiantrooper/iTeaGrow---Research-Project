@@ -1,4 +1,4 @@
-/* iTeaGrow Green Theme Base Styles */
+/* iTeaGrow 60:30:10 Base System */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -7,7 +7,7 @@
 
 html {
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.6;
   scroll-behavior: smooth;
   height: 100%;
 }
@@ -21,34 +21,36 @@ body {
   overflow-x: hidden;
 }
 
-/* Scrollbar (Themed Green) */
+/* [60%] Dominant Scrollbar */
 ::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: var(--bg-black); }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
 ::-webkit-scrollbar-thumb { 
-  background: var(--tea-fresh-leaf);
-  border: 2px solid var(--bg-black);
+  background: var(--tea-border-green);
+  border: 2px solid var(--bg-primary);
   border-radius: 10px;
 }
 
 h1, h2, h3 {
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  margin-bottom: 1rem;
 }
 
+/* [10%] Accent Headers */
 h1 { 
-  color: var(--color-primary); 
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  text-shadow: var(--shadow-text);
+  color: var(--tea-mint-bright); 
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  text-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
 h2 { 
-  color: var(--color-accent); 
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  color: var(--tea-mint-bright); 
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
 }
 
 h3 { 
-  color: var(--color-primary);
+  color: var(--tea-mint-luminous);
 }
 
 p {
@@ -57,32 +59,25 @@ p {
   font-size: 1.1rem;
 }
 
-strong {
-  color: var(--color-primary);
-}
-
-a {
-  color: var(--color-primary);
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-a:hover {
-  filter: brightness(1.2);
+.lead {
+  color: var(--tea-mint-bright);
+  font-weight: 600;
+  font-size: 1.25rem;
+  opacity: 0.95;
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 2.5rem;
 }
 
 /* Base Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+@keyframes fadeInSlide {
+  from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .reveal {
-  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fadeInSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
