@@ -186,6 +186,78 @@
     background: var(--tea-mature-leaf);
 }
 
+/* --- Professional Light Accordion (Unified with doc-link) --- */
+.premium-accordion {
+    background: #FFFFFF;
+    border: 1px solid rgba(74, 124, 89, 0.1);
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+}
+
+.premium-accordion:hover {
+    transform: translateX(10px);
+    border-color: var(--tea-fresh-leaf);
+    background: var(--tea-surface-light);
+}
+
+.premium-accordion summary {
+    padding: 1.5rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center; /* Vertical centering for the icon */
+    background: transparent;
+    transition: background 0.3s ease;
+}
+
+.premium-accordion summary::-webkit-details-marker {
+    display: none;
+}
+
+.premium-accordion[open] {
+    transform: none;
+    background: #FFFFFF;
+}
+
+.premium-accordion[open] summary {
+    border-bottom: 1px solid rgba(74, 124, 89, 0.1);
+    background: var(--tea-surface-light);
+}
+
+.accordion-title-block {
+    display: flex;
+    flex-direction: column; /* Vertical Stacking Fix */
+    gap: 2px;
+}
+
+.premium-accordion-content {
+    padding: 1rem 0;
+    background: var(--tea-base-cream);
+}
+
+.ps-link-card {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: #FFFFFF;
+  border: 1px solid rgba(74, 124, 89, 0.05);
+  text-decoration: none !important;
+  color: var(--tea-text-green) !important;
+  border-radius: 8px;
+  margin: 0.5rem 1.5rem;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.ps-link-card:hover {
+  border-color: var(--tea-fresh-leaf);
+  background: var(--tea-surface-light);
+  transform: translateX(8px);
+}
+
 @media (max-width: 900px) {
     .philosophy-grid {
         grid-template-columns: 1fr;
