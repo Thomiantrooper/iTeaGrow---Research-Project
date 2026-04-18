@@ -1,33 +1,13 @@
-/* Premium Floating Layout System */
+/* Official Navigation & Layout Systems */
 
-.container {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 0 var(--space-xl);
-}
-
-/* Floating Pill Header */
 header.site-header {
-  position: fixed;
-  top: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 3rem);
-  max-width: 1000px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: var(--glass-border);
-  box-shadow: var(--glass-inner-glow), 0 20px 40px rgba(0,0,0,0.4);
-  border-radius: 100px;
-  z-index: 2000;
-  padding: 0.5rem 2rem;
-  transition: all var(--transition-normal);
-}
-
-header.site-header:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--bg-black);
+  border-bottom: 2px solid var(--color-yellow);
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 1rem 0;
 }
 
 .header-inner {
@@ -37,10 +17,11 @@ header.site-header:hover {
 }
 
 .logo a {
-  font-family: var(--font-heading);
-  font-size: 1.4rem;
+  color: var(--color-yellow) !important;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: #fff;
+  text-decoration: none !important;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -53,78 +34,60 @@ header.site-header:hover {
 }
 
 .main-nav a {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-muted);
+  color: var(--color-white) !important;
+  text-decoration: none !important;
+  font-weight: 600;
+  font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.5rem 0.25rem;
-  position: relative;
+  transition: color 0.2s;
 }
 
 .main-nav a:hover,
 .main-nav a.active {
-  color: var(--accent-emerald);
+  color: var(--color-yellow) !important;
+  border-bottom: 2px solid var(--color-yellow);
 }
 
-.main-nav a::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 50%; width: 0; height: 2px;
-  background: var(--grad-aurora);
-  transform: translateX(-50%);
-  transition: width var(--transition-normal);
-  border-radius: 2px;
-}
-
-.main-nav a:hover::after,
-.main-nav a.active::after {
-  width: 100%;
-}
-
-/* Page Spacing */
+/* Page Scaffolding */
 .page-wrapper {
-  padding-top: 10rem;
-  padding-bottom: 6rem;
+  padding: 4rem 0 6rem;
 }
 
 .page-header {
+  margin-bottom: 4rem;
   text-align: center;
-  margin-bottom: 6rem;
 }
 
-.page-header h1 {
-  background: var(--grad-aurora);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 1.5rem;
+.page-header p.lead {
+  color: var(--color-cyan);
+  font-weight: 600;
 }
 
-/* Content Grid Refinement */
+/* Grids (Strict Efficiency) */
 .content-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
 }
 
-/* Minimalist Dark Footer */
+/* Simple Linear Footer */
 .site-footer {
-  background: var(--bg-deep);
-  border-top: var(--glass-border);
-  padding: 4rem 0;
+  background-color: var(--bg-black);
+  border-top: 2px solid var(--color-yellow);
+  padding: 3rem 0;
   text-align: center;
+  color: var(--color-muted);
 }
 
-/* Mobile Adjustments */
+.site-footer p { margin-bottom: 0.5rem; font-size: 0.9rem; }
+
+/* Mobile Menu Fallback */
 @media (max-width: 900px) {
-  header.site-header {
-    top: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 24px;
-    width: calc(100% - 1.5rem);
-  }
   .main-nav ul {
-    display: none; /* In a real project we'd add a burger menu, but for now we keep it clean */
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
   }
-  .page-wrapper { padding-top: 8rem; }
 }

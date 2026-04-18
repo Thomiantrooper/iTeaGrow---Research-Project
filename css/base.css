@@ -1,4 +1,4 @@
-/* CSS Reset and Immersive Base */
+/* Official Research Lab Base Styles */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -7,90 +7,81 @@
 
 html {
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.5;
   scroll-behavior: smooth;
-  background-color: var(--bg-deep);
+  height: 100%;
 }
 
 body {
-  font-family: var(--font-body);
-  color: var(--text-primary);
-  background-color: var(--bg-midnight);
-  overflow-x: hidden;
+  font-family: var(--font-main);
+  background: var(--grad-bg);
+  background-attachment: fixed;
+  color: var(--color-white);
   min-height: 100vh;
-  position: relative;
+  overflow-x: hidden;
 }
 
-/* Liquid Ambient Background */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
-              radial-gradient(circle at 80% 70%, rgba(34, 211, 238, 0.05) 0%, transparent 40%),
-              radial-gradient(circle at 50% 50%, rgba(2, 6, 23, 1) 0%, transparent 100%);
-  z-index: -2;
+/* Scrollbar (High Contrast) */
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: var(--bg-black); }
+::-webkit-scrollbar-thumb { 
+  background: var(--color-cyan);
+  border: 3px solid var(--bg-black);
 }
 
-/* Animated Aurora Blobs */
-.aurora-bg {
-  position: fixed;
-  top: -50%; left: -50%; width: 200%; height: 200%;
-  background: conic-gradient(from 180deg at 50% 50%, #10b981 0deg, transparent 60deg, #22d3ee 120deg, transparent 180deg, #10b981 240deg, transparent 300deg);
-  filter: blur(120px) opacity(0.15);
-  animation: rotate 30s linear infinite;
-  z-index: -1;
-  pointer-events: none;
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
+h1, h2, h3 {
   font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
-h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); }
-h2 { font-size: clamp(2rem, 5vw, 3.25rem); }
-h3 { font-size: clamp(1.5rem, 4vw, 2.5rem); }
+h1 { 
+  color: var(--color-yellow); 
+  font-size: clamp(2rem, 5vw, 4rem);
+  text-shadow: var(--shadow-text);
+}
+
+h2 { 
+  color: var(--color-cyan); 
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+h3 { 
+  color: var(--color-yellow);
+}
 
 p {
-  color: var(--text-muted);
-  font-size: 1.1rem;
+  color: var(--color-white);
   margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+strong {
+  color: var(--color-yellow);
 }
 
 a {
-  color: var(--accent-emerald);
-  text-decoration: none;
-  transition: all var(--transition-normal);
+  color: var(--color-cyan);
+  text-decoration: underline;
+  transition: opacity 0.2s ease;
 }
 
 a:hover {
-  color: var(--accent-cyan);
-  text-shadow: 0 0 8px var(--accent-glow);
+  opacity: 0.8;
 }
 
-/* Staggered Entrance Animation */
-@keyframes revealUp {
-  from { opacity: 0; transform: translateY(40px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Animations (Minimal & Functional) */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .reveal {
-  animation: revealUp 1s var(--transition-slow) both;
+  animation: fadeIn 0.6s ease-out both;
 }
-
-/* Custom Lean Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-deep); }
-::-webkit-scrollbar-thumb { 
-  background: var(--accent-emerald); 
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }

@@ -1,156 +1,124 @@
-/* High-Fidelity Tech Components */
+/* Official High-Contrast Components */
 
-/* Glow Pill Buttons */
+/* High-Impact Primary Buttons */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem 2.5rem;
-  font-family: var(--font-heading);
-  font-weight: 700;
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 0.85rem;
-  border-radius: 100px;
-  border: none;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition-normal);
-  position: relative;
-  z-index: 1;
+  transition: all 0.2s ease;
+  text-decoration: none !important;
+  border: 2px solid transparent;
 }
 
 .btn-primary {
-  background: var(--grad-aurora);
-  color: #fff !important;
-  box-shadow: 0 10px 30px -10px var(--accent-emerald);
+  background-color: var(--color-yellow);
+  color: var(--bg-black) !important;
 }
 
 .btn-primary:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 20px 40px -10px var(--accent-emerald);
+  background-color: var(--bg-black);
+  color: var(--color-yellow) !important;
+  border-color: var(--color-yellow);
 }
 
 .btn-outline {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  color: #fff !important;
-  border: var(--glass-border);
+  background-color: transparent;
+  color: var(--color-cyan) !important;
+  border-color: var(--color-cyan);
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+  background-color: var(--color-cyan);
+  color: var(--bg-black) !important;
 }
 
-/* Aurora Glass Cards */
+/* Hard-Surface Contrast Cards */
 .card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: var(--glass-border);
-  box-shadow: var(--glass-inner-glow), var(--shadow-subtle);
-  border-radius: var(--radius-xl);
-  padding: 3rem;
-  position: relative;
-  overflow: hidden;
-  transition: all var(--transition-normal);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2.5rem;
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s;
+  box-shadow: var(--shadow-card);
 }
 
 .card:hover {
-  transform: translateY(-10px);
-  border-color: rgba(16, 185, 129, 0.3);
-  box-shadow: var(--shadow-glow);
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.1), transparent);
-  pointer-events: none;
+  border-color: var(--color-cyan);
 }
 
 .card-title {
-  color: #fff;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+  color: var(--color-yellow);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,0,0.2);
+  padding-bottom: 0.5rem;
 }
 
-/* Stunning Hero Overhaul */
+/* Official Hero Presentation */
 .hero {
-  padding: 8rem 2rem;
   text-align: center;
-  position: relative;
-  background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+  padding: 6rem 0;
 }
 
 .hero h1 {
-  font-size: clamp(3rem, 10vw, 6rem);
-  font-weight: 800;
-  margin-bottom: 2rem;
-  line-height: 0.95;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
 }
 
 .hero-lead {
-  font-size: 1.5rem;
-  color: var(--text-muted);
-  max-width: 900px;
-  margin: 0 auto 3rem;
-  line-height: 1.4;
+  color: var(--color-white);
+  font-size: 1.4rem;
+  max-width: 800px;
+  margin: 0 auto 3rem auto;
+  line-height: 1.6;
 }
 
-/* Modern Link Items */
+/* Documentation Links */
 .doc-link {
   display: flex;
   align-items: center;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: var(--glass-border);
-  border-radius: var(--radius-lg);
-  color: #fff;
-  transition: all var(--transition-normal);
+  padding: 1.25rem;
+  background-color: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  text-decoration: none !important;
+  color: var(--color-white) !important;
   margin-bottom: 1rem;
+  transition: transform 0.2s ease;
 }
 
 .doc-link:hover {
-  background: rgba(255, 255, 255, 0.05);
-  transform: translateX(10px);
-  border-color: var(--accent-emerald);
+  transform: translateX(8px);
+  border-color: var(--color-cyan);
 }
 
 .doc-icon {
-  width: 56px;
-  height: 56px;
-  background: var(--grad-aurora);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--color-yellow);
   margin-right: 1.5rem;
-  font-size: 2rem;
-  color: #fff;
-  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
 }
 
-/* Glass Forms */
-.form-control {
-  background: rgba(255, 255, 255, 0.03);
-  border: var(--glass-border);
-  color: #fff;
-  padding: 1.25rem;
-  border-radius: 16px;
-  font-family: inherit;
-  font-size: 1rem;
-  transition: all var(--transition-normal);
+/* List Components */
+ul.tech-list {
+  list-style: none;
+  padding: 0;
 }
 
-.form-control:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--accent-emerald);
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+ul.tech-list li {
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+ul.tech-list li::before {
+  content: '▶';
+  position: absolute;
+  left: 0;
+  color: var(--color-cyan);
+  font-size: 0.8rem;
 }

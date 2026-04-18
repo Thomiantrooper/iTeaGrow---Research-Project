@@ -1,42 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;800&family=Outfit:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
 :root {
-  /* Midnight Tech Palette */
-  --bg-deep: #020617; /* Slate 950 base */
-  --bg-midnight: #05110d; /* Custom Deep Night Green */
-  --text-primary: #f8fafc;
-  --text-muted: #94a3b8;
+  /* Official PDF High-Contrast Palette */
+  --bg-black: #000000;
+  --bg-navy: #000033;
+  --color-yellow: #FFFF00; /* Primary Titles */
+  --color-cyan: #00FFFF;   /* Section Headers */
+  --color-white: #FFFFFF;  /* Body Text */
+  --color-muted: #CCCCCC;
   
-  /* Luminous Accents */
-  --accent-emerald: #10b981;
-  --accent-cyan: #22d3ee;
-  --accent-glow: rgba(16, 185, 129, 0.4);
-  
-  /* Aurora Liquid Gradients */
-  --grad-aurora: linear-gradient(135deg, #10b981 0%, #059669 50%, #22d3ee 100%);
-  --grad-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-  --grad-border: linear-gradient(135deg, rgba(16, 185, 129, 0.5), rgba(34, 211, 238, 0.3));
-  
-  /* Glass 2.0 Tokens */
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-blur: 24px;
-  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-  --glass-inner-glow: inset 0 0 12px rgba(255, 255, 255, 0.03);
+  /* Layout Gradients */
+  --grad-bg: linear-gradient(180deg, var(--bg-black) 0%, var(--bg-navy) 100%);
   
   /* Typography */
-  --font-heading: 'Sora', sans-serif;
-  --font-body: 'Outfit', sans-serif;
+  --font-main: 'Inter', Arial, sans-serif;
   
-  /* Refined Shadow Elevation */
-  --shadow-glow: 0 0 40px -10px var(--accent-glow);
-  --shadow-subtle: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  /* Spacing & Borders */
+  --space-unit: 1rem;
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
   
-  /* Layout & Spacing */
-  --max-width: 1200px;
-  --radius-lg: 24px;
-  --radius-xl: 32px;
+  /* Borders (Simple & Sharp) */
+  --border-cyan: 1px solid var(--color-cyan);
+  --border-yellow: 1px solid var(--color-yellow);
+  --border-white: 1px solid rgba(255, 255, 255, 0.2);
   
-  /* Animation Timing */
-  --transition-slow: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-normal: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Shadows (Minimal per academic style) */
+  --shadow-text: 2px 2px 4px rgba(0,0,0,0.8);
+  --shadow-card: 0 4px 12px rgba(0,0,0,0.5);
 }

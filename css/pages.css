@@ -1,93 +1,138 @@
-/* Page-Specific Creative Enhancements */
+/* Official Page-Specific Polishes - High Contrast Mode */
 
-/* --- Documents Page Accordion Overhaul --- */
-.premium-accordion {
-  background: rgba(255, 255, 255, 0.02);
-  border: var(--glass-border);
-  border-radius: var(--radius-lg);
-  margin-bottom: 1.5rem;
-  transition: all var(--transition-normal);
-}
-
-.premium-accordion:hover {
-  border-color: var(--accent-emerald);
-  box-shadow: var(--shadow-glow);
-}
-
-.premium-accordion summary {
-  padding: 2rem;
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  color: #fff;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.2rem;
-}
-
-.premium-accordion-content {
-  padding: 2rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-top: var(--glass-border);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-/* --- Milestones Page High-Tech Timeline --- */
+/* --- Timeline Redesign (Website.pdf Style) --- */
 .timeline {
-  border-left: 2px solid rgba(16, 185, 129, 0.2);
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-cyan);
 }
 
 .timeline-item {
-  background: rgba(255, 255, 255, 0.02);
-  border: var(--glass-border);
-  box-shadow: var(--shadow-subtle);
+    position: relative;
+    padding-left: 60px;
+    margin-bottom: 3rem;
 }
 
-.timeline-item::before {
-  background: var(--bg-midnight);
-  border: 4px solid var(--accent-emerald);
-  box-shadow: 0 0 15px var(--accent-glow);
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    background: var(--bg-black);
+    border: 3px solid var(--color-yellow);
+    border-radius: 50%;
+    z-index: 1;
 }
 
-.timeline-item.done {
-  border-color: var(--accent-emerald);
-  background: rgba(16, 185, 129, 0.05);
+.timeline-item.done::after {
+    background: var(--color-yellow);
 }
 
-.timeline-item.done::before {
-  background: var(--accent-emerald);
-  box-shadow: 0 0 20px var(--accent-emerald);
+.timeline-date {
+    color: var(--color-cyan) !important;
+    font-weight: 800;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
 }
 
-/* --- About Page Creative Supervisor markers --- */
+.timeline-title {
+    color: var(--color-yellow) !important;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* --- Supervisor & Member Cards Upgrade --- */
 .supervisor-card {
-  border-top: 4px solid var(--grad-aurora) !important;
-  background: linear-gradient(180deg, rgba(34, 211, 238, 0.05) 0%, transparent 100%);
+    border-top: 5px solid var(--color-yellow) !important;
+    border-radius: 4px !important;
 }
 
 .supervisor-tag {
-  background: var(--grad-aurora);
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+    display: inline-block;
+    background: var(--color-yellow);
+    color: var(--bg-black);
+    padding: 2px 10px;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    border-radius: 2px;
+    margin-top: 0.5rem;
 }
 
-/* --- Global Stagger Animation Implementation --- */
-.content-grid > * {
-  animation: revealUp 1s var(--transition-slow) both;
+/* --- High-Contrast Accordion --- */
+.premium-accordion {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    overflow: hidden;
 }
 
-/* 12-item Stagger support for diverse grids */
-.content-grid > *:nth-child(1) { animation-delay: 0.1s; }
-.content-grid > *:nth-child(2) { animation-delay: 0.2s; }
-.content-grid > *:nth-child(3) { animation-delay: 0.3s; }
-.content-grid > *:nth-child(4) { animation-delay: 0.4s; }
-.content-grid > *:nth-child(5) { animation-delay: 0.5s; }
-.content-grid > *:nth-child(6) { animation-delay: 0.6s; }
+.premium-accordion summary {
+    padding: 1.5rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+}
+
+.premium-accordion[open] summary {
+    border-bottom-color: rgba(0, 255, 255, 0.2);
+    background: rgba(0, 255, 255, 0.05);
+}
+
+.premium-accordion-content {
+    padding: 2rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.ps-link-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-decoration: none !important;
+    color: var(--color-white) !important;
+}
+
+.ps-link-card:hover {
+    border-color: var(--color-yellow);
+    background: rgba(255, 255, 0, 0.03);
+}
+
+/* --- Domain Page List Style --- */
+.objective-list {
+    list-style: none;
+    padding: 0;
+}
+
+.objective-list li {
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.objective-list i {
+    color: var(--color-yellow);
+    font-size: 1.25rem;
+    margin-top: 4px;
+}

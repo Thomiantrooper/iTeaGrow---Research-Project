@@ -6,7 +6,6 @@
     <title>iTeaGrow | IoT Tea Leaf Disease Detection</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- CSS Architecture Imports -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -14,13 +13,11 @@
     <link rel="stylesheet" href="css/pages.css">
 </head>
 <body>
-    <div class="aurora-bg"></div>
 
-    <!-- Header Navigation -->
     <header class="site-header">
         <div class="container header-inner">
             <div class="logo">
-                <a href="index.html"><i class="ph ph-leaf" style="color: var(--color-accent); font-size: 1.5rem;"></i> iTeaGrow</a>
+                <a href="index.html"><i class="ph ph-leaf"></i> iTeaGrow</a>
             </div>
             <nav class="main-nav">
                 <ul>
@@ -36,11 +33,9 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
     <main class="page-wrapper container">
         
-        <!-- Hero Section -->
-        <section class="hero">
+        <section class="hero reveal">
             <h1>iTeaGrow: AI-IoT System For Tea Leaf Monitoring, Fertilization, and Powder Grading</h1>
             <p class="hero-lead">An integrated AI–IoT research platform designed to modernize decision-making in the Sri Lankan tea industry. Replacing subjective, manual assessment with data-driven, explainable, and offline-capable intelligence.</p>
             <div class="hero-actions">
@@ -49,36 +44,34 @@
             </div>
         </section>
 
-        <section style="margin-bottom: var(--space-2xl); text-align: center;">
-            <div class="card" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-                <h2 style="margin-bottom: var(--space-lg); color: #fff;">High-Level System Architecture</h2>
-                <img src="https://github.com/user-attachments/assets/6a2fac10-94a0-4237-81b6-d8d2de991c8d" alt="High-Level Architecture for iTeaGrow" style="border-radius: var(--radius-lg); margin: 0 auto; filter: grayscale(0.2) contrast(1.1);">
+        <section style="margin-bottom: 6rem; text-align: center;">
+            <div class="card reveal" style="animation-delay: 0.1s;">
+                <h2 style="margin-bottom: 2rem;">High-Level System Architecture</h2>
+                <img src="https://github.com/user-attachments/assets/6a2fac10-94a0-4237-81b6-d8d2de991c8d" alt="High-Level Architecture for iTeaGrow" style="border: 2px solid var(--color-cyan); padding: 10px; background: rgba(0,0,0,0.5); width: 100%; max-width: 1000px;">
             </div>
         </section>
 
-        <!-- Brief Abstract / General Details -->
         <section class="content-grid" style="margin-top: 0;">
-            <div class="card">
-                <h3 class="card-title"><i class="ph ph-plant" style="color: var(--color-accent);"></i> Disease & Environmental Monitoring</h3>
+            <div class="card reveal" style="animation-delay: 0.2s;">
+                <h3 class="card-title"><i class="ph ph-plant"></i> Disease Monitoring</h3>
                 <p>Automated image-based detection of fungal and nutrient-related diseases, correlated with real-time temperature, humidity, and soil moisture telemetry.</p>
             </div>
-            <div class="card">
-                <h3 class="card-title"><i class="ph ph-chart-line-up" style="color: var(--color-accent);"></i> Yield & Maturity Detection</h3>
+            <div class="card reveal" style="animation-delay: 0.3s;">
+                <h3 class="card-title"><i class="ph ph-chart-line-up"></i> Yield & Maturity</h3>
                 <p>Addressing inaccuracies in manual grading by integrating vision-based maturity detection with quality-adjusted yield prediction using hybrid ML models.</p>
             </div>
-            <div class="card">
-                <h3 class="card-title"><i class="ph ph-flask" style="color: var(--color-accent);"></i> Soil Monitoring & Fertilization</h3>
+            <div class="card reveal" style="animation-delay: 0.4s;">
+                <h3 class="card-title"><i class="ph ph-flask"></i> Soil & Fertilization</h3>
                 <p>Data-driven fertilization planning via multi-depth NPK and pH sensing, aligned with Tea Research Institute (TRI) standards.</p>
             </div>
-            <div class="card">
-                <h3 class="card-title"><i class="ph ph-scales" style="color: var(--color-accent);"></i> Powder Grading & Valuation</h3>
-                <p>Providing transparent, data-backed tea powder grading and regression-based market valuation to replace subjective auction-based assessments.</p>
+            <div class="card reveal" style="animation-delay: 0.5s;">
+                <h3 class="card-title"><i class="ph ph-scales"></i> Powder Grading</h3>
+                <p>Providing transparent, data-backed tea powder grading and regression-based market valuation to replace subjective auctions.</p>
             </div>
         </section>
         
     </main>
 
-    <!-- Footer -->
     <footer class="site-footer">
         <div class="container">
             <p>&copy; 2026 iTeaGrow Research Team. All rights reserved.</p>
