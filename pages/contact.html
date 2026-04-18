@@ -10,6 +10,67 @@
     <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/layout.css">
     <link rel="stylesheet" href="../css/components.css">
+    
+    <style>
+        .contact-card {
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-sm);
+        }
+        .contact-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .contact-item {
+            margin-bottom: var(--space-md);
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: var(--space-sm);
+        }
+        .contact-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .contact-role {
+            font-size: 0.85rem;
+            color: var(--color-accent);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .contact-name {
+            font-size: 1.1rem;
+            color: var(--color-text-main);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .contact-email-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+        .contact-email-line a {
+            color: var(--color-primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .contact-email-line a:hover {
+            color: var(--color-accent);
+            text-decoration: underline;
+        }
+        
+        .contact-icon {
+            color: var(--color-accent);
+            font-size: 2rem;
+            margin-bottom: var(--space-sm);
+        }
+    </style>
 </head>
 <body>
 
@@ -33,43 +94,112 @@
     </header>
 
     <main class="page-wrapper container">
-        <div class="page-header">
-            <h1>Contact Us</h1>
-            <p class="lead">Reach out to the research team for any queries regarding the iTeaGrow system.</p>
+        <div class="page-header" style="text-align: center; max-width: 800px; margin: 0 auto var(--space-2xl) auto;">
+            <h1>Contact Directory</h1>
+            <p class="lead">Connect directly with our supervising faculty and research members via email.</p>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-2xl);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-xl);">
             
-            <!-- Contact Info -->
+            <!-- Left Column: People -->
             <div>
-                <h3>General Contacts</h3>
-                <ul style="list-style: none; padding-left: 0;">
-                    <li style="margin-bottom: var(--space-sm);"><strong>Email:</strong> research@iteagrow.local</li>
-                    <li style="margin-bottom: var(--space-sm);"><strong>Phone:</strong> +1 (555) 123-4567</li>
-                    <li style="margin-bottom: var(--space-sm);"><strong>Location:</strong> Research Lab 4, Tech Building</li>
-                </ul>
+                <!-- Supervisors -->
+                <div class="contact-card">
+                    <h3 style="margin-bottom: var(--space-lg); border-bottom: 2px solid var(--color-accent); padding-bottom: 8px; display: inline-block;">Supervisor Directory</h3>
+                    <ul class="contact-list">
+                        <li class="contact-item">
+                            <span class="contact-role">Supervisor</span>
+                            <span class="contact-name">Ms. Shashika Lokuliyana</span>
+                            <div class="contact-email-line">
+                                <i class="ph ph-envelope-simple"></i>
+                                <a href="mailto:shashika.l@sliit.lk">shashika.l@sliit.lk</a>
+                            </div>
+                        </li>
+                        <li class="contact-item">
+                            <span class="contact-role">Co-Supervisor</span>
+                            <span class="contact-name">Mr. Uditha Dharmakeerthi</span>
+                            <div class="contact-email-line">
+                                <i class="ph ph-envelope-simple"></i>
+                                <a href="mailto:uditha.d@sliit.lk">uditha.d@sliit.lk</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Team -->
+                <div class="contact-card">
+                    <h3 style="margin-bottom: var(--space-lg); border-bottom: 2px solid var(--color-accent); padding-bottom: 8px; display: inline-block;">Research Team</h3>
+                    <ul class="contact-list">
+                        <li class="contact-item">
+                            <span class="contact-role">Team Lead</span>
+                            <span class="contact-name">Kajanthan K</span>
+                            <div class="contact-email-line" style="flex-wrap: wrap;">
+                                <i class="ph ph-envelope-simple"></i>
+                                <a href="mailto:it22197214@my.sliit.lk">it22197214@my.sliit.lk</a>
+                                <span style="color: var(--color-text-muted);">/</span>
+                                <a href="mailto:kajanthankirubakaran6@gmail.com">kajanthankirubakaran6@gmail.com</a>
+                            </div>
+                        </li>
+                        <li class="contact-item">
+                            <span class="contact-role">Team Member</span>
+                            <span class="contact-name">Kanzurrizk M R A</span>
+                            <div class="contact-email-line">
+                                <i class="ph ph-envelope-simple"></i>
+                                <a href="mailto:it22166524@my.sliit.lk">it22166524@my.sliit.lk</a>
+                            </div>
+                        </li>
+                        <li class="contact-item">
+                            <span class="contact-role">Team Member</span>
+                            <span class="contact-name">Ashwin V</span>
+                            <div class="contact-email-line">
+                                <i class="ph ph-envelope-simple"></i>
+                                <a href="mailto:it22204448@my.sliit.lk">it22204448@my.sliit.lk</a>
+                            </div>
+                        </li>
+                        <li class="contact-item">
+                            <span class="contact-role">Team Member</span>
+                            <span class="contact-name">Peiris M D T N</span>
+                            <div class="contact-email-line">
+                                <i class="ph ph-envelope-simple"></i>
+                                <a href="mailto:it22109408@my.sliit.lk">it22109408@my.sliit.lk</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
-            <!-- Email Form Template -->
-            <div class="card">
-                <h3 class="card-title">Send a Message</h3>
-                <form onsubmit="event.preventDefault(); alert('Message form is standard HTML format placeholder.');">
-                    <div class="form-group">
-                        <label class="form-label" for="name">Name</label>
-                        <input type="text" id="name" class="form-control" placeholder="Your Name" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="email">Email</label>
-                        <input type="email" id="email" class="form-control" placeholder="your.email@example.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="message">Message Template</label>
-                        <textarea id="message" class="form-control" placeholder="Enter your inquiry here..." required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Send Email Request</button>
-                </form>
+            <!-- Right Column: Location & Phone -->
+            <div>
+                <!-- Phone Card -->
+                <div class="contact-card" style="text-align: center; border-top: 4px solid var(--color-primary);">
+                    <i class="ph ph-phone contact-icon"></i>
+                    <h3 style="margin-bottom: var(--space-sm);">Direct Contact Line</h3>
+                    <p style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 4px;">
+                        <a href="tel:+94775649777" style="color: inherit; text-decoration: none;">+94 77 564 9777</a>
+                    </p>
+                    <p style="color: var(--color-accent); font-weight: 600;">Kajanthan K</p>
+                    <p style="color: var(--color-text-muted); font-size: 0.85rem;">Team Lead</p>
+                </div>
+
+                <!-- Research Location -->
+                <div class="contact-card" style="text-align: center;">
+                    <i class="ph ph-map-pin contact-icon"></i>
+                    <h3 style="margin-bottom: var(--space-xs);">Location (Research)</h3>
+                    <p style="color: var(--color-text-main); font-weight: 500;">Hatton, Sri Lanka</p>
+                </div>
+
+                <!-- Academic Site -->
+                <div class="contact-card" style="text-align: center;">
+                    <i class="ph ph-buildings contact-icon"></i>
+                    <h3 style="margin-bottom: var(--space-xs);">Location (Academic Site)</h3>
+                    <p style="color: var(--color-text-main); font-weight: 500; margin-bottom: 4px;">Sri Lanka Institute of Information Technology</p>
+                    <p style="color: var(--color-text-muted); font-size: 0.9rem; line-height: 1.5;">
+                        SLIIT Malabe Campus<br>
+                        New Kandy Rd, Malabe 10115
+                    </p>
+                </div>
             </div>
-            
+
         </div>
     </main>
 
