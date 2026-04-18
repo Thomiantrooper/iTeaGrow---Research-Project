@@ -1,4 +1,4 @@
-/* Layout system (Header, Grid, Footer) - Premium Refinement */
+/* Premium Floating Layout System */
 
 .container {
   max-width: var(--max-width);
@@ -6,62 +6,75 @@
   padding: 0 var(--space-xl);
 }
 
-/* Glassmorphism Header */
+/* Floating Pill Header */
 header.site-header {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 3rem);
+  max-width: 1000px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--glass-inner-glow), 0 20px 40px rgba(0,0,0,0.4);
+  border-radius: 100px;
+  z-index: 2000;
+  padding: 0.5rem 2rem;
   transition: all var(--transition-normal);
+}
+
+header.site-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .header-inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.2rem 0;
 }
 
 .logo a {
   font-family: var(--font-heading);
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 800;
-  color: var(--color-primary);
-  letter-spacing: -0.5px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .main-nav ul {
   display: flex;
   list-style: none;
-  margin: 0;
-  padding: 0;
-  gap: var(--space-xl);
+  gap: 1.5rem;
 }
 
 .main-nav a {
-  font-weight: 600;
-  color: var(--color-text-main);
-  padding: 0.5rem 0;
-  font-size: 0.95rem;
-  opacity: 0.8;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.25rem;
   position: relative;
-  transition: opacity var(--transition-fast);
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+  color: var(--accent-emerald);
 }
 
 .main-nav a::after {
   content: '';
   position: absolute;
-  bottom: 0; left: 0; width: 0; height: 2px;
-  background: var(--color-accent);
-  transition: width var(--transition-fast);
-}
-
-.main-nav a:hover {
-  opacity: 1;
+  bottom: 0; left: 50%; width: 0; height: 2px;
+  background: var(--grad-aurora);
+  transform: translateX(-50%);
+  transition: width var(--transition-normal);
+  border-radius: 2px;
 }
 
 .main-nav a:hover::after,
@@ -69,72 +82,49 @@ header.site-header {
   width: 100%;
 }
 
-.main-nav a.active {
-  color: var(--color-primary);
-  opacity: 1;
-}
-
-/* Page Standard Layout */
+/* Page Spacing */
 .page-wrapper {
-  min-height: calc(100vh - 200px);
-  padding: var(--space-2xl) 0;
+  padding-top: 10rem;
+  padding-bottom: 6rem;
 }
 
 .page-header {
   text-align: center;
-  margin-bottom: 5rem;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
-  animation: fadeInUp 0.8s var(--ease-out);
+  margin-bottom: 6rem;
 }
 
 .page-header h1 {
-  margin-bottom: var(--space-md);
-  font-weight: 800;
+  background: var(--grad-aurora);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1.5rem;
 }
 
-.page-header p.lead {
-  font-size: 1.4rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
-
-/* Flexible content grid */
+/* Content Grid Refinement */
 .content-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--space-2xl);
-  margin-top: var(--space-xl);
+  gap: 2.5rem;
 }
 
-/* Premium Footer */
+/* Minimalist Dark Footer */
 .site-footer {
-  background: var(--color-primary);
-  background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.3));
-  color: rgba(255, 255, 255, 0.8);
+  background: var(--bg-deep);
+  border-top: var(--glass-border);
   padding: 4rem 0;
   text-align: center;
-  position: relative;
-  overflow: hidden;
 }
 
-.site-footer p {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-/* Mobile Nav Adjustments */
-@media (max-width: 768px) {
-  .header-inner {
-    flex-direction: column;
-    gap: var(--space-lg);
+/* Mobile Adjustments */
+@media (max-width: 900px) {
+  header.site-header {
+    top: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 24px;
+    width: calc(100% - 1.5rem);
   }
   .main-nav ul {
-    gap: var(--space-md);
+    display: none; /* In a real project we'd add a burger menu, but for now we keep it clean */
   }
-  .container {
-    padding: 0 var(--space-lg);
-  }
+  .page-wrapper { padding-top: 8rem; }
 }

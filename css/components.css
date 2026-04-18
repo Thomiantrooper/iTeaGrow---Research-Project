@@ -1,174 +1,156 @@
-/* Reusable UI Components - Premium Research Aesthetic */
+/* High-Fidelity Tech Components */
 
-/* Buttons */
+/* Glow Pill Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
-  padding: 0.8rem 2rem;
-  font-family: var(--font-body);
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
+  gap: 0.75rem;
+  padding: 1rem 2.5rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  border-radius: 100px;
   border: none;
-  border-radius: 100px; /* Modern pill shape */
+  cursor: pointer;
   transition: all var(--transition-normal);
   position: relative;
-  overflow: hidden;
+  z-index: 1;
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
-  color: white !important;
-  box-shadow: 0 4px 14px 0 rgba(27, 67, 50, 0.3);
+  background: var(--grad-aurora);
+  color: #fff !important;
+  box-shadow: 0 10px 30px -10px var(--accent-emerald);
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-light);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(27, 67, 50, 0.4);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 20px 40px -10px var(--accent-emerald);
 }
 
 .btn-outline {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  color: var(--color-primary) !important;
-  border: 2px solid var(--color-primary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  color: #fff !important;
+  border: var(--glass-border);
 }
 
 .btn-outline:hover {
-  background-color: var(--color-primary);
-  color: white !important;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
 }
 
-/* Glassmorphism Cards */
+/* Aurora Glass Cards */
 .card {
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-glass);
-  padding: var(--space-xl);
-  transition: all var(--transition-normal);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--glass-inner-glow), var(--shadow-subtle);
+  border-radius: var(--radius-xl);
+  padding: 3rem;
   position: relative;
-  box-shadow: var(--shadow-glass);
+  overflow: hidden;
+  transition: all var(--transition-normal);
 }
 
 .card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  border-color: rgba(64, 145, 108, 0.3);
+  transform: translateY(-10px);
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: var(--shadow-glow);
 }
 
 .card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; height: 4px;
-  background: var(--color-accent);
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-.card:hover::before {
-  opacity: 1;
-}
-
-.card-title {
-  margin-top: 0;
-  margin-bottom: var(--space-md);
-  font-size: 1.5rem;
-}
-
-/* Premium Hero Section */
-.hero {
-  position: relative;
-  background: var(--grad-primary);
-  border-radius: var(--radius-lg);
-  padding: 5rem var(--space-xl);
-  margin-bottom: var(--space-2xl);
-  text-align: center;
-  color: white;
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-}
-
-.hero::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(circle at top right, rgba(64, 145, 108, 0.3), transparent);
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.1), transparent);
   pointer-events: none;
 }
 
+.card-title {
+  color: #fff;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Stunning Hero Overhaul */
+.hero {
+  padding: 8rem 2rem;
+  text-align: center;
+  position: relative;
+  background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+}
+
 .hero h1 {
-  color: white;
-  font-size: clamp(2.5rem, 8vw, 4.5rem);
-  margin-bottom: var(--space-lg);
-  letter-spacing: -1px;
+  font-size: clamp(3rem, 10vw, 6rem);
+  font-weight: 800;
+  margin-bottom: 2rem;
+  line-height: 0.95;
 }
 
 .hero-lead {
   font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.9);
-  max-width: 800px;
-  margin: 0 auto var(--space-2xl);
+  color: var(--text-muted);
+  max-width: 900px;
+  margin: 0 auto 3rem;
   line-height: 1.4;
 }
 
-/* Document Link Refinement */
+/* Modern Link Items */
 .doc-link {
   display: flex;
   align-items: center;
-  padding: var(--space-lg);
-  background: white;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  color: var(--color-text-main);
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  color: #fff;
+  transition: all var(--transition-normal);
+  margin-bottom: 1rem;
 }
 
 .doc-link:hover {
-  transform: translateX(8px);
-  border-color: var(--color-accent);
-  color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(10px);
+  border-color: var(--accent-emerald);
 }
 
 .doc-icon {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
+  background: var(--grad-aurora);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(64, 145, 108, 0.1);
-  border-radius: 12px;
-  margin-right: var(--space-md);
-  color: var(--color-accent);
-  font-size: 1.8rem;
-  flex-shrink: 0;
+  margin-right: 1.5rem;
+  font-size: 2rem;
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
 }
 
-/* Forms - Premium Touches */
+/* Glass Forms */
 .form-control {
-  background: white;
-  border: 2px solid #edf2f0;
-  border-radius: var(--radius-md);
-  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: var(--glass-border);
+  color: #fff;
+  padding: 1.25rem;
+  border-radius: 16px;
   font-family: inherit;
   font-size: 1rem;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal);
 }
 
 .form-control:focus {
   outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 4px rgba(64, 145, 108, 0.15);
-  background: white;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent-emerald);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
 }

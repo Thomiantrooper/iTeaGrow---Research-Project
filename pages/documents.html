@@ -10,85 +10,15 @@
     <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/layout.css">
     <link rel="stylesheet" href="../css/components.css">
-    <link rel="stylesheet" href="../css/pages.css?v=2">
-    
-    <style>
-        /* Fool-proof embedded Accordion CSS to bypass any browser caching issues completely */
-        .dropdown-container {
-            background-color: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-md);
-            transition: all var(--transition-fast);
-            overflow: hidden;
-            list-style: none;
-        }
-        .dropdown-container:hover {
-            border-color: var(--color-accent);
-            box-shadow: var(--shadow-sm);
-        }
-        .dropdown-summary {
-            display: flex;
-            align-items: center;
-            padding: var(--space-md);
-            cursor: pointer;
-            list-style: none;
-            background: white;
-        }
-        .dropdown-summary::-webkit-details-marker {
-            display: none;
-        }
-        /* No background on icon to match others */
-        .dropdown-arrow {
-            margin-left: auto;
-            color: var(--color-text-muted);
-            transition: transform 0.3s ease;
-        }
-        .dropdown-container[open] .dropdown-arrow {
-            transform: rotate(180deg);
-        }
-        
-        /* The specific expanded section fixed for a beautiful vertical list layout */
-        .dropdown-inner-list {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 10px;
-            padding: 20px 24px;
-            background-color: #f8f9fa; /* subtle offset color */
-            border-top: 1px solid var(--color-border);
-        }
-        .dropdown-inner-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 18px;
-            background-color: white;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--color-text-main);
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-        .dropdown-inner-item:hover {
-            border-color: var(--color-accent);
-            color: var(--color-primary);
-            transform: translateX(4px); /* smooth slide interaction */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
-        }
-        .dropdown-inner-item i {
-            color: #d90429; /* Explicit PDF style red */
-            font-size: 1.3rem;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/pages.css">
 </head>
 <body>
+    <div class="aurora-bg"></div>
 
     <header class="site-header">
         <div class="container header-inner">
             <div class="logo">
-                <a href="../index.html"><i class="ph ph-leaf" style="color: var(--color-accent); font-size: 1.5rem;"></i> iTeaGrow</a>
+                <a href="../index.html"><i class="ph ph-leaf" style="color: var(--accent-emerald); font-size: 1.5rem;"></i> iTeaGrow</a>
             </div>
             <nav class="main-nav">
                 <ul>
@@ -110,68 +40,67 @@
             <p class="lead">Archive of project charters, proposals, and finalized technical documentation.</p>
         </div>
 
-        <section style="max-width: 800px; margin: 0 auto;">
+        <section style="max-width: 900px; margin: 0 auto;">
             <ul class="doc-list" style="list-style: none; padding: 0;">
                 
                 <!-- Project Charter -->
-                <li style="margin-bottom: var(--space-md);">
+                <li class="reveal">
                     <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQAsHy995W8tTIOwyykQcLW9AUpwH6P0MUBpmkPt9EW_2bY?e=x3lfep" target="_blank" class="doc-link">
                         <span class="doc-icon"><i class="ph ph-file-text"></i></span>
-                        <div>
-                            <strong>Project Charter</strong>
-                            <div style="font-size: 0.85rem; color: var(--color-text-muted);">Initial official project mandate document.</div>
+                        <div class="doc-content">
+                            <strong style="font-size: 1.25rem;">Project Charter</strong>
+                            <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">Initial official project mandate document.</p>
                         </div>
                     </a>
                 </li>
                 
-                <!-- Unified Dropdown Proposals -->
-                <li>
-                    <details class="dropdown-container">
-                        <summary class="dropdown-summary">
+                <!-- Expanded Unified Dropdown Proposals -->
+                <li class="reveal" style="animation-delay: 0.1s;">
+                    <details class="premium-accordion">
+                        <summary>
                             <span class="doc-icon"><i class="ph ph-files"></i></span>
-                            <div>
-                                <strong>Project Proposals</strong>
-                                <div style="font-size: 0.85rem; color: var(--color-text-muted);">Click to expand the 4 individual module proposals.</div>
+                            <div class="accordion-title-block">
+                                <strong style="font-size: 1.25rem;">Project Proposals</strong>
+                                <span style="font-size: 0.95rem; color: var(--text-muted);">Explore the 4 individual module research proposals.</span>
                             </div>
-                            <span class="dropdown-arrow"><i class="ph ph-caret-down"></i></span>
+                            <span class="accordion-icon-rotate"><i class="ph ph-caret-down" style="font-size: 1.5rem;"></i></span>
                         </summary>
                         
-                        <!-- Fixed Vertical Expanded Section -->
-                        <div class="dropdown-inner-list">
-                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQD_KboKQImCTIfvrC-P3mWkAXjrrNn7VDZMQfs-1Im62-4?e=iCtE9b" target="_blank" class="dropdown-inner-item">
-                                <i class="ph-fill ph-file-pdf"></i> Kajanthan K – Disease Detection
+                        <div class="premium-accordion-content">
+                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQD_KboKQImCTIfvrC-P3mWkAXjrrNn7VDZMQfs-1Im62-4?e=iCtE9b" target="_blank" class="ps-link-card">
+                                <i class="ph-fill ph-file-pdf" style="color: #ef4444; font-size: 1.4rem; margin-right: 12px;"></i> Kajanthan K – Disease Detection
                             </a>
-                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQDiBTa0FWL-Rp9S5clwMmZIAcfvsg4ni802BJkankT3_6M?e=yyCbkt" target="_blank" class="dropdown-inner-item">
-                                <i class="ph-fill ph-file-pdf"></i> Kanzurrizk M.R.A – Leaf Maturity
+                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQDiBTa0FWL-Rp9S5clwMmZIAcfvsg4ni802BJkankT3_6M?e=yyCbkt" target="_blank" class="ps-link-card">
+                                <i class="ph-fill ph-file-pdf" style="color: #ef4444; font-size: 1.4rem; margin-right: 12px;"></i> Kanzurrizk M.R.A – Leaf Maturity
                             </a>
-                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQBD2kJR5wRbSoBmWwYC5gS0AdrEqTW7c-CvQLP6C3B0btk?e=8ucng8" target="_blank" class="dropdown-inner-item">
-                                <i class="ph-fill ph-file-pdf"></i> Ashwin V. – Soil Monitoring
+                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQBD2kJR5wRbSoBmWwYC5gS0AdrEqTW7c-CvQLP6C3B0btk?e=8ucng8" target="_blank" class="ps-link-card">
+                                <i class="ph-fill ph-file-pdf" style="color: #ef4444; font-size: 1.4rem; margin-right: 12px;"></i> Ashwin V. – Soil Monitoring
                             </a>
-                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQBOOidg0f1gSJMMKwsspCz2Ac_5UjeLgHg51kSskssxrVU?e=OihaED" target="_blank" class="dropdown-inner-item">
-                                <i class="ph-fill ph-file-pdf"></i> Peiris M.D.T.N. – Powder Grading
+                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQBOOidg0f1gSJMMKwsspCz2Ac_5UjeLgHg51kSskssxrVU?e=OihaED" target="_blank" class="ps-link-card">
+                                <i class="ph-fill ph-file-pdf" style="color: #ef4444; font-size: 1.4rem; margin-right: 12px;"></i> Peiris M.D.T.N. – Powder Grading
                             </a>
                         </div>
                     </details>
                 </li>
 
                 <!-- Check Lists -->
-                <li style="margin-bottom: var(--space-md);">
+                <li class="reveal" style="animation-delay: 0.2s;">
                     <a href="#" class="doc-link">
                         <span class="doc-icon"><i class="ph ph-list-checks"></i></span>
-                        <div>
-                            <strong>Check List Documents</strong>
-                            <div style="font-size: 0.85rem; color: var(--color-text-muted);">Assessment tracking lists.</div>
+                        <div class="doc-content">
+                            <strong style="font-size: 1.25rem;">Check List Documents</strong>
+                            <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">Assessment tracking lists and research milestones checksheets.</p>
                         </div>
                     </a>
                 </li>
 
                 <!-- Final Tech Docs -->
-                <li>
+                <li class="reveal" style="animation-delay: 0.3s;">
                     <a href="#" class="doc-link">
                         <span class="doc-icon"><i class="ph ph-books"></i></span>
-                        <div>
-                            <strong>Final Technical Documents</strong>
-                            <div style="font-size: 0.85rem; color: var(--color-text-muted);">Main thesis component and required architectural docs.</div>
+                        <div class="doc-content">
+                            <strong style="font-size: 1.25rem;">Final Technical Documents</strong>
+                            <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">Main thesis component and required architectural documentation.</p>
                         </div>
                     </a>
                 </li>

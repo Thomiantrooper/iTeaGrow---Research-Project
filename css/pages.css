@@ -1,103 +1,93 @@
-/* Page Specific Enhancements - Premium Research Vibe */
+/* Page-Specific Creative Enhancements */
 
-/* --- Documents Page Accordion Upgrade --- */
+/* --- Documents Page Accordion Overhaul --- */
 .premium-accordion {
-    background: var(--color-surface-glass);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--color-border-glass);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-md);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    transition: all var(--transition-normal);
+  background: rgba(255, 255, 255, 0.02);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+  transition: all var(--transition-normal);
 }
 
 .premium-accordion:hover {
-    border-color: rgba(64, 145, 108, 0.4);
-    box-shadow: var(--shadow-md);
+  border-color: var(--accent-emerald);
+  box-shadow: var(--shadow-glow);
 }
 
 .premium-accordion summary {
-    display: flex;
-    align-items: center;
-    padding: 1.5rem;
-    cursor: pointer;
-    list-style: none;
-    background-color: white;
-}
-
-.premium-accordion summary::-webkit-details-marker {
-    display: none;
-}
-
-.accordion-title-block {
-    display: flex;
-    flex-direction: column;
-    margin-left: var(--space-md);
-}
-
-.accordion-icon-rotate {
-    margin-left: auto;
-    color: var(--color-accent);
-    transition: transform var(--transition-normal);
-}
-
-.premium-accordion[open] .accordion-icon-rotate {
-    transform: rotate(180deg);
+  padding: 2rem;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.2rem;
 }
 
 .premium-accordion-content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-sm);
-    padding: var(--space-lg);
-    background-color: #fbfcfb;
-    border-top: 1px solid var(--color-border);
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: var(--glass-border);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
 }
 
-/* Sub-cards within accordion */
-.ps-link-card {
-    display: flex;
-    align-items: center;
-    padding: 1.2rem;
-    background: white;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    color: var(--color-text-main);
-    font-weight: 500;
-    transition: all var(--transition-fast);
+/* --- Milestones Page High-Tech Timeline --- */
+.timeline {
+  border-left: 2px solid rgba(16, 185, 129, 0.2);
 }
 
-.ps-link-card:hover {
-    transform: translateX(10px);
-    border-color: var(--color-accent);
-    box-shadow: var(--shadow-sm);
-}
-
-/* --- Milestones Page Tracking Card --- */
 .timeline-item {
-    transition: all var(--transition-normal);
+  background: rgba(255, 255, 255, 0.02);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-subtle);
+}
+
+.timeline-item::before {
+  background: var(--bg-midnight);
+  border: 4px solid var(--accent-emerald);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 .timeline-item.done {
-    opacity: 0.8;
-    background: rgba(255, 255, 255, 0.5);
-    border-style: dashed;
+  border-color: var(--accent-emerald);
+  background: rgba(16, 185, 129, 0.05);
 }
 
-/* --- About Page Supervisor Section --- */
+.timeline-item.done::before {
+  background: var(--accent-emerald);
+  box-shadow: 0 0 20px var(--accent-emerald);
+}
+
+/* --- About Page Creative Supervisor markers --- */
 .supervisor-card {
-    border-top: 6px solid var(--color-secondary) !important; /* Gold accent for leaders */
+  border-top: 4px solid var(--grad-aurora) !important;
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.05) 0%, transparent 100%);
 }
 
-/* --- Entrance Animations for grids --- */
+.supervisor-tag {
+  background: var(--grad-aurora);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* --- Global Stagger Animation Implementation --- */
 .content-grid > * {
-    animation: fadeInUp 0.8s var(--ease-out) both;
+  animation: revealUp 1s var(--transition-slow) both;
 }
 
-/* Stagger animation for grid items */
+/* 12-item Stagger support for diverse grids */
 .content-grid > *:nth-child(1) { animation-delay: 0.1s; }
 .content-grid > *:nth-child(2) { animation-delay: 0.2s; }
 .content-grid > *:nth-child(3) { animation-delay: 0.3s; }
 .content-grid > *:nth-child(4) { animation-delay: 0.4s; }
+.content-grid > *:nth-child(5) { animation-delay: 0.5s; }
+.content-grid > *:nth-child(6) { animation-delay: 0.6s; }

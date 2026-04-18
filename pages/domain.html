@@ -10,13 +10,15 @@
     <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/layout.css">
     <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/pages.css">
 </head>
 <body>
+    <div class="aurora-bg"></div>
 
     <header class="site-header">
         <div class="container header-inner">
             <div class="logo">
-                <a href="../index.html"><i class="ph ph-leaf" style="color: var(--color-accent); font-size: 1.5rem;"></i> iTeaGrow</a>
+                <a href="../index.html"><i class="ph ph-leaf" style="color: var(--accent-emerald); font-size: 1.5rem;"></i> iTeaGrow</a>
             </div>
             <nav class="main-nav">
                 <ul>
@@ -35,63 +37,93 @@
     <main class="page-wrapper container">
         <div class="page-header">
             <h1>Research Domain</h1>
-            <p class="lead" style="max-width: 900px;">Developed as part of an undergraduate research initiative focused on applying <strong>AI, IoT, and Explainable ML</strong> to real-world agricultural decision systems in Sri Lanka.</p>
+            <p class="lead" style="max-width: 900px; margin: 0 auto;">An undergraduate research initiative applying <strong>AI, IoT, and Explainable ML</strong> to the Sri Lankan tea industry.</p>
         </div>
 
-        <section class="content-grid" style="align-items: start;">
-            <div class="card">
-                <h2 class="card-title"><i class="ph ph-target" style="margin-right: 8px;"></i>System Objectives</h2>
-                <ul style="padding-left: var(--space-lg);">
-                    <li>Enable early detection of disease and environmental/soil-related stress.</li>
-                    <li>Reduce subjectivity in leaf maturity assessment and yield forecasting to improve harvesting quality.</li>
-                    <li>Provide transparent, data-backed tea powder grading and valuation.</li>
-                    <li>Support rural deployments through an offline system design.</li>
+        <section class="content-grid" style="align-items: stretch;">
+            <!-- Objectives -->
+            <div class="card reveal">
+                <h2 class="card-title"><i class="ph ph-target" style="color: var(--accent-emerald);"></i> System Objectives</h2>
+                <ul style="list-style: none; padding: 0; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                    <li style="display: flex; gap: 12px; line-height: 1.6;">
+                        <i class="ph ph-check-circle" style="color: var(--accent-emerald); font-size: 1.25rem; flex-shrink: 0;"></i> 
+                        <span>Enable early detection of disease and environmental/soil-related stress using multi-sensor fusion.</span>
+                    </li>
+                    <li style="display: flex; gap: 12px; line-height: 1.6;">
+                        <i class="ph ph-check-circle" style="color: var(--accent-emerald); font-size: 1.25rem; flex-shrink: 0;"></i> 
+                        <span>Reduce subjectivity in leaf maturity assessment and yield forecasting via computer vision.</span>
+                    </li>
+                    <li style="display: flex; gap: 12px; line-height: 1.6;">
+                        <i class="ph ph-check-circle" style="color: var(--accent-emerald); font-size: 1.25rem; flex-shrink: 0;"></i> 
+                        <span>Provide transparent, data-backed tea powder grading and valuation to replace manual auctions.</span>
+                    </li>
+                    <li style="display: flex; gap: 12px; line-height: 1.6;">
+                        <i class="ph ph-check-circle" style="color: var(--accent-emerald); font-size: 1.25rem; flex-shrink: 0;"></i> 
+                        <span>Support rural deployments through an edge-driven, offline-first system architecture.</span>
+                    </li>
                 </ul>
             </div>
 
-            <div class="card">
-                <h2 class="card-title"><i class="ph ph-cpu" style="margin-right: 8px;"></i>Key Technical Features</h2>
-                <ul style="padding-left: var(--space-lg);">
-                    <li><strong>Explainable AI (XAI):</strong> Grad-CAM heatmaps highlight prediction regions and SHAP verifies tabular forms, improving trust.</li>
-                    <li><strong>Offline/Hybrid Design:</strong> Inference and logging operate without internet for remote plantations.</li>
-                    <li><strong>Multilingual UI:</strong> Sinhala, Tamil, and English support.</li>
-                    <li><strong>Continuous Learning:</strong> Feedback loops enable dataset refinement.</li>
+            <!-- Features -->
+            <div class="card reveal" style="animation-delay: 0.1s;">
+                <h2 class="card-title"><i class="ph ph-cpu" style="color: var(--accent-cyan);"></i> Technical Innovations</h2>
+                <ul style="list-style: none; padding: 0; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                    <li style="display: flex; gap: 12px; line-height: 1.6;">
+                        <i class="ph ph-sparkle" style="color: var(--accent-cyan); font-size: 1.25rem; flex-shrink: 0;"></i> 
+                        <span><strong>Explainable AI (XAI):</strong> Grad-CAM heatmaps highlight prediction regions to improve farmer trust.</span>
+                    </li>
+                    <li style="display: flex; gap: 12px; line-height: 1.6;">
+                        <i class="ph ph-lightning" style="color: var(--accent-cyan); font-size: 1.25rem; flex-shrink: 0;"></i> 
+                        <span><strong>Edge ML:</strong> Optimized YOLOv8 and Mobilenet models for low-power IoT inference.</span>
+                    </li>
+                    <li style="display: flex; gap: 12px; line-height: 1.6;">
+                        <i class="ph ph-globe-hemisphere-west" style="color: var(--accent-cyan); font-size: 1.25rem; flex-shrink: 0;"></i> 
+                        <span><strong>Offline-First:</strong> Local database synchronization and hybrid cloud connectivity via GSM.</span>
+                    </li>
+                    <li style="display: flex; gap: 12px; line-height: 1.6;">
+                        <i class="ph ph-translate" style="color: var(--accent-cyan); font-size: 1.25rem; flex-shrink: 0;"></i> 
+                        <span><strong>Localization:</strong> Full Sinhala, Tamil, and English UI support for local tea plantation accessibility.</span>
+                    </li>
                 </ul>
             </div>
         </section>
 
         <!-- Technology Stack Section -->
-        <section style="margin-top: var(--space-2xl);">
-            <h2 style="text-align: center; margin-bottom: var(--space-xl);">Technology Stack</h2>
+        <section style="margin-top: 8rem;">
+            <div class="page-header">
+                <h2>The iTeaGrow Stack</h2>
+                <p class="lead" style="max-width: 800px; margin: 0 auto;">A robust integration of high-performance hardware, deep learning models, and cloud infrastructure.</p>
+            </div>
+            
             <div class="content-grid" style="margin-top: 0;">
                 
-                <div class="card">
-                    <h3 class="card-title"><i class="ph ph-circuitry" style="color: var(--color-accent); margin-right: 8px;"></i>Hardware & IoT</h3>
-                    <ul>
-                        <li>ESP32 & SIM800L GSM module</li>
-                        <li>NEO-6M GPS</li>
-                        <li>NPK, pH, moisture, and temperature sensors</li>
-                        <li>Solar–battery hybrid power system</li>
+                <div class="card reveal">
+                    <h3 class="card-title"><i class="ph ph-circuitry" style="color: var(--accent-emerald);"></i> Hardware & IoT</h3>
+                    <ul style="list-style: none; padding: 0; margin-top: 1rem; color: var(--text-muted); line-height: 1.8;">
+                        <li>• ESP32 & SIM800L GSM module</li>
+                        <li>• NEO-6M GPS & NPK/pH Sensing</li>
+                        <li>• Multi-depth Soil Moisture Telemetry</li>
+                        <li>• Solar–Battery Hybrid Power Management</li>
                     </ul>
                 </div>
 
-                <div class="card">
-                    <h3 class="card-title"><i class="ph ph-brain" style="color: var(--color-accent); margin-right: 8px;"></i>AI & Machine Learning</h3>
-                    <ul>
-                        <li>YOLOv8n</li>
-                        <li>Random Forest & XGBoost / CatBoost</li>
-                        <li>MobileNetV3/V2 & ShuffleNetV2</li>
-                        <li>TensorFlow Lite & OpenCV</li>
+                <div class="card reveal" style="animation-delay: 0.1s;">
+                    <h3 class="card-title"><i class="ph ph-brain" style="color: var(--accent-cyan);"></i> Machine Learning</h3>
+                    <ul style="list-style: none; padding: 0; margin-top: 1rem; color: var(--text-muted); line-height: 1.8;">
+                        <li>• YOLOv8n (Vision Inference)</li>
+                        <li>• Random Forest & XGBoost (Tabular)</li>
+                        <li>• TensorFlow Lite & OpenCV (Mobile)</li>
+                        <li>• XAI Integration (Grad-CAM & SHAP)</li>
                     </ul>
                 </div>
 
-                <div class="card">
-                    <h3 class="card-title"><i class="ph ph-device-mobile" style="color: var(--color-accent); margin-right: 8px;"></i>Mobile & Backend</h3>
-                    <ul>
-                        <li><strong>Frontend:</strong> React Native</li>
-                        <li><strong>Local DB:</strong> SQLite</li>
-                        <li><strong>Backend:</strong> Node.js & Firebase</li>
-                        <li><strong>Cloud & Analytics:</strong> GCP & Python (Pandas/Scikit-learn)</li>
+                <div class="card reveal" style="animation-delay: 0.2s;">
+                    <h3 class="card-title"><i class="ph ph-device-mobile" style="color: var(--accent-emerald);"></i> Cloud & Mobile</h3>
+                    <ul style="list-style: none; padding: 0; margin-top: 1rem; color: var(--text-muted); line-height: 1.8;">
+                        <li>• Frontend: React Native</li>
+                        <li>• Database: SQLite & Firebase</li>
+                        <li>• Backend: Node.js & Google Cloud</li>
+                        <li>• Analytics: Python (Pandas/Scikit)</li>
                     </ul>
                 </div>
 

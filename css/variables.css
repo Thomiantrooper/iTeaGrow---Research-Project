@@ -1,55 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;800&family=Outfit:wght@300;400;600&display=swap');
+
 :root {
-  /* Premium Research Color Palette */
-  --color-primary: #1b4332; /* Deep Forest Green */
-  --color-primary-light: #2d6a4f;
-  --color-accent: #40916c; /* Matcha Green */
-  --color-accent-hover: #52b788;
-  --color-secondary: #c7923e; /* Research Gold Accent */
+  /* Midnight Tech Palette */
+  --bg-deep: #020617; /* Slate 950 base */
+  --bg-midnight: #05110d; /* Custom Deep Night Green */
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
   
-  /* Modern Gradient Tokens */
-  --grad-primary: linear-gradient(135deg, #1b4332 0%, #081c15 100%);
-  --grad-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
-  --grad-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  /* Luminous Accents */
+  --accent-emerald: #10b981;
+  --accent-cyan: #22d3ee;
+  --accent-glow: rgba(16, 185, 129, 0.4);
   
-  /* Background system */
-  --color-bg: #f5f7f5; 
-  --mesh-bg: radial-gradient(at 0% 0%, hsla(153, 42%, 18%, 0.05) 0, transparent 50%), 
-             radial-gradient(at 50% 0%, hsla(153, 42%, 18%, 0.03) 0, transparent 50%), 
-             radial-gradient(at 100% 0%, hsla(40, 53%, 51%, 0.05) 0, transparent 50%);
-
-  --color-surface: #ffffff;
-  --color-surface-glass: rgba(255, 255, 255, 0.85);
-
-  --color-text-main: #1a1c1a;
-  --color-text-muted: #5c635c;
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-glass: rgba(255, 255, 255, 0.2);
-
+  /* Aurora Liquid Gradients */
+  --grad-aurora: linear-gradient(135deg, #10b981 0%, #059669 50%, #22d3ee 100%);
+  --grad-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  --grad-border: linear-gradient(135deg, rgba(16, 185, 129, 0.5), rgba(34, 211, 238, 0.3));
+  
+  /* Glass 2.0 Tokens */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-blur: 24px;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-inner-glow: inset 0 0 12px rgba(255, 255, 255, 0.03);
+  
   /* Typography */
-  --font-heading: 'Playfair Display', serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Sora', sans-serif;
+  --font-body: 'Outfit', sans-serif;
   
-  /* Spacing */
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 4rem;
+  /* Refined Shadow Elevation */
+  --shadow-glow: 0 0 40px -10px var(--accent-glow);
+  --shadow-subtle: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
   
-  /* UI Elements */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  /* Layout & Spacing */
+  --max-width: 1200px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
   
-  /* Premium Shadows */
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-
-  /* Animation & Transitions */
-  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Animation Timing */
+  --transition-slow: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
