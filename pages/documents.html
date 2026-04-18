@@ -10,7 +10,91 @@
     <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/layout.css">
     <link rel="stylesheet" href="../css/components.css">
-    <link rel="stylesheet" href="../css/pages.css">
+    <link rel="stylesheet" href="../css/pages.css?v=2">
+    
+    <style>
+        /* Fool-proof embedded Accordion CSS to bypass any browser caching issues completely */
+        .dropdown-container {
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+            transition: all var(--transition-fast);
+            overflow: hidden;
+            list-style: none;
+        }
+        .dropdown-container:hover {
+            border-color: var(--color-accent);
+            box-shadow: var(--shadow-sm);
+        }
+        .dropdown-summary {
+            display: flex;
+            align-items: center;
+            padding: var(--space-md);
+            cursor: pointer;
+            list-style: none;
+            background: white;
+        }
+        .dropdown-summary::-webkit-details-marker {
+            display: none;
+        }
+        /* Matching the doc-link icon exactly to keep it unified */
+        .dropdown-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background-color: rgba(64, 145, 108, 0.1);
+            color: var(--color-accent);
+            border-radius: var(--radius-sm);
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            margin-right: var(--space-md);
+        }
+        .dropdown-arrow {
+            margin-left: auto;
+            color: var(--color-text-muted);
+            transition: transform 0.3s ease;
+        }
+        .dropdown-container[open] .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        
+        /* The specific expanded section fixed for a beautiful vertical list layout */
+        .dropdown-inner-list {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px;
+            padding: 20px 24px;
+            background-color: #f8f9fa; /* subtle offset color */
+            border-top: 1px solid var(--color-border);
+        }
+        .dropdown-inner-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            background-color: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--color-text-main);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .dropdown-inner-item:hover {
+            border-color: var(--color-accent);
+            color: var(--color-primary);
+            transform: translateX(4px); /* smooth slide interaction */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+        }
+        .dropdown-inner-item i {
+            color: #d90429; /* Explicit PDF style red */
+            font-size: 1.3rem;
+        }
+    </style>
 </head>
 <body>
 
@@ -53,37 +137,32 @@
                     </a>
                 </li>
                 
-                <!-- Premium Grouped Proposals (Collapsible) -->
+                <!-- Unified Dropdown Proposals -->
                 <li>
-                    <details class="premium-accordion">
-                        <summary>
-                            <span class="doc-icon"><i class="ph ph-files"></i></span>
-                            <div class="accordion-title-block">
+                    <details class="dropdown-container">
+                        <summary class="dropdown-summary">
+                            <span class="dropdown-icon"><i class="ph ph-files"></i></span>
+                            <div>
                                 <strong>Project Proposals</strong>
-                                <span>Click to expand the 4 individual module proposals.</span>
+                                <div style="font-size: 0.85rem; color: var(--color-text-muted);">Click to expand the 4 individual module proposals.</div>
                             </div>
-                            <span class="accordion-icon-rotate"><i class="ph ph-caret-down"></i></span>
+                            <span class="dropdown-arrow"><i class="ph ph-caret-down"></i></span>
                         </summary>
                         
-                        <!-- The Beautiful Inner Grid of PDFs -->
-                        <div class="premium-accordion-content">
-                            
-                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQD_KboKQImCTIfvrC-P3mWkAXjrrNn7VDZMQfs-1Im62-4?e=iCtE9b" target="_blank" class="ps-link-card">
+                        <!-- Fixed Vertical Expanded Section -->
+                        <div class="dropdown-inner-list">
+                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQD_KboKQImCTIfvrC-P3mWkAXjrrNn7VDZMQfs-1Im62-4?e=iCtE9b" target="_blank" class="dropdown-inner-item">
                                 <i class="ph-fill ph-file-pdf"></i> Kajanthan K – Disease Detection
                             </a>
-                            
-                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQDiBTa0FWL-Rp9S5clwMmZIAcfvsg4ni802BJkankT3_6M?e=yyCbkt" target="_blank" class="ps-link-card">
+                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQDiBTa0FWL-Rp9S5clwMmZIAcfvsg4ni802BJkankT3_6M?e=yyCbkt" target="_blank" class="dropdown-inner-item">
                                 <i class="ph-fill ph-file-pdf"></i> Kanzurrizk M.R.A – Leaf Maturity
                             </a>
-                            
-                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQBD2kJR5wRbSoBmWwYC5gS0AdrEqTW7c-CvQLP6C3B0btk?e=8ucng8" target="_blank" class="ps-link-card">
+                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQBD2kJR5wRbSoBmWwYC5gS0AdrEqTW7c-CvQLP6C3B0btk?e=8ucng8" target="_blank" class="dropdown-inner-item">
                                 <i class="ph-fill ph-file-pdf"></i> Ashwin V. – Soil Monitoring
                             </a>
-                            
-                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQBOOidg0f1gSJMMKwsspCz2Ac_5UjeLgHg51kSskssxrVU?e=OihaED" target="_blank" class="ps-link-card">
+                            <a href="https://mysliit-my.sharepoint.com/:b:/g/personal/it22166524_my_sliit_lk/IQBOOidg0f1gSJMMKwsspCz2Ac_5UjeLgHg51kSskssxrVU?e=OihaED" target="_blank" class="dropdown-inner-item">
                                 <i class="ph-fill ph-file-pdf"></i> Peiris M.D.T.N. – Powder Grading
                             </a>
-                            
                         </div>
                     </details>
                 </li>
