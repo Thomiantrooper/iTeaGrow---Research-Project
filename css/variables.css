@@ -1,36 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@400;600;700&display=swap');
 
 :root {
-  /* 60:30:10 Professional Green Palette */
+  /* [60%] PRIMARY: Sophisticated Light Cream */
+  --tea-base-cream: #FDFBF7;         /* Warm background base */
+  --tea-surface-light: #F4F7F2;      /* Secondary surface for depth */
   
-  /* [60%] PRIMARY: Visible Forest Green (Backgrounds) */
-  --tea-base-green: #12261A;         /* Clear Green presence */
-  --tea-deep-bg: #0C1A14;            /* Secondary Depth */
+  /* [30%] SECONDARY: Mature Green (Text & Borders) */
+  --tea-text-green: #12261A;         /* Primary readability */
+  --tea-fresh-leaf: #4A7C59;         /* High-visibility branding */
+  --tea-mature-leaf: #2D5A3D;        /* Secondary contrast */
   
-  /* [30%] SECONDARY: Surface Greens (Cards, Headers, Sections) */
-  --tea-surface-green: #1A3125;      /* Section Cards */
-  --tea-nav-green: #1E3A2B;          /* Sticky Nav */
-  --tea-border-green: #2D5A3D;       /* Component Borders */
+  /* [10%] ACCENTS: High-Contrast Interaction */
+  --tea-mint-bright: #3D8B59;        /* Darkened Mint for visibility on light bg */
+  --tea-mint-luminous: #4A7C59;      /* Brand consistency */
   
-  /* [10%] ACCENTS: Luminous Mint (Icons, Buttons, Primary Titles) */
-  --tea-mint-bright: #98D8AA;        /* High-Impact Accent */
-  --tea-mint-luminous: #A6E3B9;      /* Ultra-clear Data Highlights */
+  /* Core Variable Mapping (Inverted) */
+  --bg-primary: var(--tea-base-cream);
+  --bg-forest: var(--tea-surface-light);
+  --color-white: var(--tea-text-green); /* Text is now dark */
+  --color-muted: #5C6E60;            /* Darkened muted text */
+  --color-accent: var(--tea-fresh-leaf);
+  --color-primary: var(--tea-mature-leaf);
   
-  /* Core Variable Mapping */
-  --bg-primary: var(--tea-base-green);
-  --color-accent: var(--tea-mint-bright);
-  --color-secondary: var(--tea-surface-green);
-  --color-white: #FFFFFF;
-  --color-muted: #D1D5D1;            /* Improved readability from #BDBDBD */
+  /* Layout Gradients (Now Soft Cream to Light Green) */
+  --grad-bg: linear-gradient(180deg, var(--tea-base-cream) 0%, var(--tea-surface-light) 100%);
   
-  /* Layout Gradients (Now Dominantly Green) */
-  --grad-bg: linear-gradient(180deg, var(--tea-base-green) 0%, var(--tea-deep-bg) 100%);
-  
-  /* Typography */
+  /* Typography Scale */
   --font-main: 'Poppins', 'Inter', Arial, sans-serif;
   
-  /* Spacing & Effects */
+  /* Spacing & Borders */
   --radius-md: 10px;
-  --shadow-lume: 0 4px 30px rgba(0, 0, 0, 0.4);
-  --border-lume: 1px solid rgba(152, 216, 170, 0.15);
+  --border-green: 1px solid rgba(74, 124, 89, 0.2);
+  --shadow-warm: 0 4px 30px rgba(0, 0, 0, 0.05); /* Softer shadows for light mode */
 }

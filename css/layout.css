@@ -1,15 +1,15 @@
-/* iTeaGrow 60:30:10 Layout System */
+/* iTeaGrow Light Cream Layout System */
 
-/* [30%] Secondary Navigation Surface */
 header.site-header {
-  background-color: var(--tea-nav-green);
-  border-bottom: 2px solid var(--tea-border-green);
+  background-color: rgba(253, 251, 247, 0.95); /* Creamy translucency */
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(74, 124, 89, 0.1);
   width: 100%;
   position: sticky;
   top: 0;
   z-index: 1000;
-  padding: 1.25rem 0;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  padding: 1rem 0;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.03);
 }
 
 .header-inner {
@@ -18,39 +18,38 @@ header.site-header {
   align-items: center;
 }
 
-/* [10%] Accent Brand */
 .logo a {
-  color: var(--tea-mint-bright) !important;
-  font-size: 1.6rem;
+  color: var(--tea-fresh-leaf) !important;
+  font-size: 1.5rem;
   font-weight: 800;
   text-decoration: none !important;
   text-transform: uppercase;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .main-nav ul {
   display: flex;
   list-style: none;
-  gap: 1.75rem;
+  gap: 1.5rem;
 }
 
 .main-nav a {
-  color: var(--color-white) !important;
+  color: var(--tea-text-green) !important;
   text-decoration: none !important;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.5rem 0;
+  letter-spacing: 0.05em;
+  padding: 0.4rem 0;
   transition: all 0.2s ease;
   position: relative;
 }
 
 .main-nav a:hover,
 .main-nav a.active {
-  color: var(--tea-mint-bright) !important;
+  color: var(--tea-fresh-leaf) !important;
 }
 
 .main-nav a::after {
@@ -60,7 +59,7 @@ header.site-header {
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--tea-mint-bright);
+  background: var(--tea-fresh-leaf);
   transition: width 0.3s ease;
 }
 
@@ -71,37 +70,35 @@ header.site-header {
 
 /* Page Scaffolding */
 .page-wrapper {
-  padding: 4rem 0 8rem;
+  padding: 4rem 0 6rem;
 }
 
 .page-header {
-  margin-bottom: 4rem;
+  margin-bottom: 3rem;
   text-align: center;
 }
 
-/* Grids */
 .content-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2.5rem;
 }
 
-/* [30%] Secondary Footer Surface */
+/* Light Footer */
 .site-footer {
-  background-color: var(--tea-deep-bg);
-  border-top: 1px solid var(--tea-border-green);
-  padding: 5rem 0;
+  background-color: var(--tea-surface-light);
+  border-top: 1px solid rgba(74, 124, 89, 0.1);
+  padding: 4rem 0;
   text-align: center;
   color: var(--color-muted);
 }
 
-.site-footer p { margin-bottom: 0.75rem; font-size: 1rem; }
+.site-footer p { margin-bottom: 0.5rem; font-size: 0.95rem; }
 
-/* Mobile Menu */
 @media (max-width: 1000px) {
   .main-nav ul {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 1.25rem;
+    gap: 1rem;
   }
 }

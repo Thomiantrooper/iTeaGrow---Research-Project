@@ -1,4 +1,4 @@
-/* iTeaGrow 60:30:10 Base System */
+/* iTeaGrow Light Cream Base System */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -9,24 +9,24 @@ html {
   font-size: 16px;
   line-height: 1.6;
   scroll-behavior: smooth;
-  height: 100%;
 }
 
 body {
   font-family: var(--font-main);
-  background: var(--grad-bg);
+  background-color: var(--bg-primary);
+  background-image: var(--grad-bg);
   background-attachment: fixed;
-  color: var(--color-white);
+  color: var(--tea-text-green);
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* [60%] Dominant Scrollbar */
+/* Light Scrollbar */
 ::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-track { background: var(--tea-surface-light); }
 ::-webkit-scrollbar-thumb { 
-  background: var(--tea-border-green);
-  border: 2px solid var(--bg-primary);
+  background: var(--tea-fresh-leaf);
+  border: 2px solid var(--tea-surface-light);
   border-radius: 10px;
 }
 
@@ -35,46 +35,48 @@ h1, h2, h3 {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin-bottom: 1rem;
+  color: var(--tea-text-green);
 }
 
-/* [10%] Accent Headers */
+/* Normalized Typography Scale */
 h1 { 
-  color: var(--tea-mint-bright); 
-  font-size: clamp(2.2rem, 5vw, 3.8rem);
-  text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  color: var(--tea-text-green); 
+  font-size: clamp(2rem, 5vw, 3rem); /* Scaled down from 3.8rem */
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
 }
 
 h2 { 
-  color: var(--tea-mint-bright); 
-  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  color: var(--tea-mature-leaf); 
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
 }
 
 h3 { 
-  color: var(--tea-mint-luminous);
+  color: var(--tea-fresh-leaf);
 }
 
 p {
-  color: var(--color-white);
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
+  color: var(--color-muted);
+  margin-bottom: 1.25rem;
+  font-size: 1.05rem;
 }
 
 .lead {
-  color: var(--tea-mint-bright);
+  color: var(--tea-mature-leaf);
   font-weight: 600;
-  font-size: 1.25rem;
-  opacity: 0.95;
+  font-size: 1.15rem; /* Scaled down */
+  opacity: 0.9;
 }
 
 .container {
-  max-width: 1240px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2.5rem;
+  padding: 0 2rem;
 }
 
 /* Base Animations */
 @keyframes fadeInSlide {
-  from { opacity: 0; transform: translateY(15px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 

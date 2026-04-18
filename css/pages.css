@@ -1,6 +1,6 @@
-/* iTeaGrow 60:30:10 Page Polishes */
+/* iTeaGrow Light Cream Page Polishes */
 
-/* --- Timeline Redesign (60:30:10 Rule) --- */
+/* --- Timeline Redesign (High Contrast Light mode) --- */
 .timeline {
     position: relative;
     max-width: 900px;
@@ -15,8 +15,8 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--tea-border-green); /* Secondary (30%) Border */
-    opacity: 0.5;
+    background: var(--tea-fresh-leaf);
+    opacity: 0.2;
 }
 
 .timeline-item {
@@ -32,55 +32,54 @@
     top: 0;
     width: 20px;
     height: 20px;
-    background: var(--bg-primary); /* Primary (60%) Depth */
-    border: 3px solid var(--tea-border-green);
+    background: #FFFFFF;
+    border: 3px solid var(--tea-fresh-leaf);
     border-radius: 50%;
     z-index: 1;
 }
 
 .timeline-item.done::after {
-    background: var(--tea-mint-bright); /* Accent (10%) Completion */
-    border-color: var(--tea-mint-bright);
-    box-shadow: 0 0 15px rgba(152, 216, 170, 0.4);
+    background: var(--tea-fresh-leaf);
+    box-shadow: 0 0 10px rgba(74, 124, 89, 0.3);
 }
 
 .timeline-date {
-    color: var(--tea-mint-luminous) !important;
+    color: var(--tea-fresh-leaf) !important;
     font-weight: 700;
     font-size: 0.95rem;
     margin-bottom: 0.75rem;
 }
 
 .timeline-title {
-    color: var(--tea-mint-bright) !important;
-    font-size: 1.8rem;
+    color: var(--tea-text-green) !important;
+    font-size: 1.6rem;
     margin-bottom: 1rem;
 }
 
-/* --- Supervisor & Member Cards (30% Secondary Surface) --- */
+/* --- Supervisor Cards (Light Mode) --- */
 .supervisor-card {
-    background: var(--tea-surface-green) !important;
-    border: 1px solid var(--tea-border-green) !important;
-    border-top: 6px solid var(--tea-mint-bright) !important; /* 10% Accent Top Line */
+    border-top: 6px solid var(--tea-fresh-leaf) !important;
     border-radius: 12px !important;
+    background: #FFFFFF !important;
 }
 
 .supervisor-tag {
     display: inline-block;
-    background: var(--tea-border-green);
-    color: var(--color-white);
+    background: var(--tea-surface-light);
+    color: var(--tea-mature-leaf);
     padding: 4px 14px;
     font-weight: 700;
     font-size: 0.75rem;
     text-transform: uppercase;
     border-radius: 4px;
     margin-top: 0.75rem;
+    border: 1px solid rgba(74, 124, 89, 0.1);
 }
 
-/* --- Professional Accordion (30% Secondary Surface) --- */
+/* --- Professional Light Accordion --- */
 .premium-accordion {
-    background: var(--tea-surface-green);
-    border: 1px solid var(--tea-border-green);
+    background: #FFFFFF;
+    border: 1px solid rgba(74, 124, 89, 0.1);
     border-radius: 10px;
     margin-bottom: 1.5rem;
     overflow: hidden;
@@ -92,36 +91,36 @@
     list-style: none;
     display: flex;
     align-items: center;
-    background: var(--tea-nav-green);
+    background: var(--tea-surface-light);
     font-weight: 700;
-    color: var(--tea-mint-bright);
+    color: var(--tea-text-green);
 }
 
 .premium-accordion[open] summary {
-    border-bottom: 1px solid var(--tea-border-green);
-    background: var(--tea-surface-green);
+    border-bottom: 1px solid rgba(74, 124, 89, 0.1);
+    background: #FFFFFF;
 }
 
 .ps-link-card {
-    display: flex;
-    align-items: center;
-    padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(152, 216, 170, 0.1);
-    text-decoration: none !important;
-    color: var(--color-white) !important;
-    border-radius: 8px;
-    margin: 0.75rem 1.5rem;
-    transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  background: var(--tea-surface-light);
+  border: 1px solid rgba(74, 124, 89, 0.05);
+  text-decoration: none !important;
+  color: var(--tea-text-green) !important;
+  border-radius: 8px;
+  margin: 0.75rem 1.5rem;
+  transition: all 0.2s ease;
 }
 
 .ps-link-card:hover {
-    border-color: var(--tea-mint-bright);
-    background: rgba(152, 216, 170, 0.08);
-    transform: translateX(10px);
+  border-color: var(--tea-fresh-leaf);
+  background: #FFFFFF;
+  transform: translateX(10px);
 }
 
-/* --- Objective List (60:30:10 Balance) --- */
+/* --- Objective List (Light Mode Contrast) --- */
 .objective-list {
     list-style: none;
     padding: 0;
@@ -129,14 +128,14 @@
 
 .objective-list li {
     padding: 1.5rem 0;
-    border-bottom: 1px solid rgba(152, 216, 170, 0.1);
+    border-bottom: 1px solid rgba(74, 124, 89, 0.05);
     display: flex;
     gap: 1.5rem;
     align-items: flex-start;
 }
 
 .objective-list i {
-    color: var(--tea-mint-bright); /* 10% Accent */
+    color: var(--tea-fresh-leaf);
     font-size: 1.6rem;
     margin-top: 4px;
 }
