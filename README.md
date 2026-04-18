@@ -2,7 +2,7 @@
 
 ## Project Overview
 **iTeaGrow** is an integrated AI–IoT research platform designed to modernize decision-making in the Sri Lankan tea industry.  
-The system replaces subjective, manual assessment practices with **data-driven, explainable, and offline-capable intelligence** across the full tea value chain from field-level leaf plucking to factory-grade yield estimation and market valuation.
+The system replaces subjective, manual assessment practices with **data-driven, explainable, and hybrid-capable intelligence** across the full tea value chain from field-level leaf plucking to factory-grade yield estimation and market valuation.
 
 The platform combines **computer vision**, **machine learning**, and **edge IoT sensing** to support smallholder farmers, estate supervisors, and factory-level analysts in improving productivity, consistency, and economic outcomes.
 

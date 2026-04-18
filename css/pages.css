@@ -1,141 +1,196 @@
-/* iTeaGrow Light Cream Page Polishes */
+/* iTeaGrow Formal Research Theme - Page Specifics */
 
-/* --- Timeline Redesign (High Contrast Light mode) --- */
-.timeline {
-    position: relative;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2.5rem 0;
+/* --- Centering & Layout Utilities --- */
+.centered {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 20px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
+.rule-line {
+    width: 60px;
+    height: 4px;
     background: var(--tea-fresh-leaf);
-    opacity: 0.2;
+    margin: 1.5rem auto;
+    border-radius: 2px;
 }
 
-.timeline-item {
-    position: relative;
-    padding-left: 60px;
+/* --- Glassmorphic Panels --- */
+.glass-panel {
+    background: #FFFFFF; /* Opaque white for the light theme */
+    border: 1px solid rgba(74, 124, 89, 0.1);
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    padding: 2.5rem;
+    transition: all 0.3s ease;
+}
+
+.glass-panel:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 35px rgba(0, 0, 0, 0.06);
+    border-color: var(--tea-fresh-leaf);
+}
+
+/* --- Section Headers --- */
+.section-header {
     margin-bottom: 4rem;
 }
 
-.timeline-item::after {
-    content: '';
-    position: absolute;
-    left: 11px;
-    top: 0;
-    width: 20px;
-    height: 20px;
-    background: #FFFFFF;
-    border: 3px solid var(--tea-fresh-leaf);
-    border-radius: 50%;
-    z-index: 1;
-}
-
-.timeline-item.done::after {
-    background: var(--tea-fresh-leaf);
-    box-shadow: 0 0 10px rgba(74, 124, 89, 0.3);
-}
-
-.timeline-date {
-    color: var(--tea-fresh-leaf) !important;
-    font-weight: 700;
-    font-size: 0.95rem;
-    margin-bottom: 0.75rem;
-}
-
-.timeline-title {
-    color: var(--tea-text-green) !important;
-    font-size: 1.6rem;
+.section-icon {
+    font-size: 2.5rem;
+    color: var(--tea-fresh-leaf);
     margin-bottom: 1rem;
 }
 
-/* --- Supervisor Cards (Light Mode) --- */
-.supervisor-card {
-    border-top: 6px solid var(--tea-fresh-leaf) !important;
-    border-radius: 12px !important;
-    background: #FFFFFF !important;
+/* --- Research Hero --- */
+.research-hero {
+    padding: 2rem 0 5rem;
+    text-align: center;
 }
 
-.supervisor-tag {
+.research-badge {
     display: inline-block;
     background: var(--tea-surface-light);
     color: var(--tea-mature-leaf);
-    padding: 4px 14px;
+    padding: 6px 16px;
+    border-radius: 30px;
     font-weight: 700;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
-    border-radius: 4px;
-    margin-top: 0.75rem;
-    border: 1px solid rgba(74, 124, 89, 0.1);
-}
-
-/* --- Professional Light Accordion --- */
-.premium-accordion {
-    background: #FFFFFF;
-    border: 1px solid rgba(74, 124, 89, 0.1);
-    border-radius: 10px;
+    letter-spacing: 0.05em;
     margin-bottom: 1.5rem;
-    overflow: hidden;
+    border: 1px solid rgba(74, 124, 89, 0.1);
 }
 
-.premium-accordion summary {
-    padding: 1.75rem;
-    cursor: pointer;
-    list-style: none;
+.hero-subtitle {
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 1.2rem;
+    color: var(--color-muted);
+}
+
+/* --- Core Philosophy Grid --- */
+.philosophy-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+    align-items: stretch;
+    margin-bottom: 6rem;
+}
+
+.philosophy-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.stat-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: var(--tea-surface-light);
+    border-radius: 10px;
+    border: 1px solid rgba(74, 124, 89, 0.05);
+}
+
+.stat-row i {
+    color: var(--tea-fresh-leaf);
+    font-size: 1.5rem;
+    margin-top: 4px;
+}
+
+/* --- Technical Stack Grid --- */
+.tech-stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 6rem;
+}
+
+.tech-card {
+    text-align: center;
+}
+
+.tech-icon-box {
+    width: 70px;
+    height: 70px;
+    background: var(--tea-surface-light);
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    background: var(--tea-surface-light);
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: var(--tea-fresh-leaf);
+    font-size: 2rem;
+    border: 1px solid rgba(74, 124, 89, 0.1);
+}
+
+/* --- Team & Leadership --- */
+.formal-team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2.5rem;
+}
+
+.member-row {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.member-role {
+    display: block;
+    color: var(--tea-fresh-leaf);
     font-weight: 700;
-    color: var(--tea-text-green);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
 }
 
-.premium-accordion[open] summary {
-    border-bottom: 1px solid rgba(74, 124, 89, 0.1);
-    background: #FFFFFF;
+.member-contribution {
+    font-size: 0.95rem;
+    color: var(--color-muted);
+    margin-bottom: 1.5rem;
 }
 
-.ps-link-card {
-  display: flex;
-  align-items: center;
-  padding: 1.5rem;
-  background: var(--tea-surface-light);
-  border: 1px solid rgba(74, 124, 89, 0.05);
-  text-decoration: none !important;
-  color: var(--tea-text-green) !important;
-  border-radius: 8px;
-  margin: 0.75rem 1.5rem;
-  transition: all 0.2s ease;
-}
-
-.ps-link-card:hover {
-  border-color: var(--tea-fresh-leaf);
-  background: #FFFFFF;
-  transform: translateX(10px);
-}
-
-/* --- Objective List (Light Mode Contrast) --- */
-.objective-list {
-    list-style: none;
-    padding: 0;
-}
-
-.objective-list li {
-    padding: 1.5rem 0;
-    border-bottom: 1px solid rgba(74, 124, 89, 0.05);
+.member-socials {
     display: flex;
     gap: 1.5rem;
-    align-items: flex-start;
 }
 
-.objective-list i {
-    color: var(--tea-fresh-leaf);
-    font-size: 1.6rem;
-    margin-top: 4px;
+.member-socials a {
+    text-decoration: none !important;
+    color: var(--tea-fresh-leaf) !important;
+    font-size: 1.5rem;
+    transition: color 0.3s ease;
+}
+
+.member-socials a:hover {
+    color: var(--tea-mature-leaf) !important;
+}
+
+.supervisor-tag {
+    background: var(--tea-fresh-leaf);
+    color: #FFFFFF;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.co-supervisor-tag {
+    background: var(--tea-mature-leaf);
+}
+
+@media (max-width: 900px) {
+    .philosophy-grid {
+        grid-template-columns: 1fr;
+    }
+    .formal-team-grid {
+        grid-template-columns: 1fr;
+    }
 }
