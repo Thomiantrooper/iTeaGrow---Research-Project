@@ -1,8 +1,8 @@
-/* Official Navigation & Layout Systems */
+/* iTeaGrow Green Theme Layout System */
 
 header.site-header {
   background-color: var(--bg-black);
-  border-bottom: 2px solid var(--color-yellow);
+  border-bottom: 2px solid var(--tea-fresh-leaf);
   width: 100%;
   position: sticky;
   top: 0;
@@ -17,7 +17,7 @@ header.site-header {
 }
 
 .logo a {
-  color: var(--color-yellow) !important;
+  color: var(--color-primary) !important;
   font-size: 1.5rem;
   font-weight: 800;
   text-decoration: none !important;
@@ -41,49 +41,50 @@ header.site-header {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.5rem 0.25rem;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .main-nav a:hover,
 .main-nav a.active {
-  color: var(--color-yellow) !important;
-  border-bottom: 2px solid var(--color-yellow);
+  color: var(--color-primary) !important;
+  border-bottom: 2px solid var(--color-primary);
 }
 
 /* Page Scaffolding */
 .page-wrapper {
-  padding: 4rem 0 6rem;
+  padding: 3rem 0 6rem;
 }
 
 .page-header {
-  margin-bottom: 4rem;
+  margin-bottom: 3.5rem;
   text-align: center;
 }
 
 .page-header p.lead {
-  color: var(--color-cyan);
+  color: var(--color-primary);
+  opacity: 0.9;
   font-weight: 600;
 }
 
-/* Grids (Strict Efficiency) */
+/* Grids */
 .content-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2.5rem;
 }
 
-/* Simple Linear Footer */
+/* Footer (Green Identity) */
 .site-footer {
   background-color: var(--bg-black);
-  border-top: 2px solid var(--color-yellow);
-  padding: 3rem 0;
+  border-top: 1px solid var(--tea-fresh-leaf);
+  padding: 4rem 0;
   text-align: center;
   color: var(--color-muted);
 }
 
-.site-footer p { margin-bottom: 0.5rem; font-size: 0.9rem; }
+.site-footer p { margin-bottom: 0.5rem; font-size: 0.95rem; }
 
-/* Mobile Menu Fallback */
+/* Mobile Menu */
 @media (max-width: 900px) {
   .main-nav ul {
     flex-wrap: wrap;

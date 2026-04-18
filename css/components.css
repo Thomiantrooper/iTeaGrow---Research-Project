@@ -1,124 +1,131 @@
-/* Official High-Contrast Components */
+/* iTeaGrow Green Theme Components */
 
-/* High-Impact Primary Buttons */
+/* High-Impact Green Buttons */
 .btn {
   display: inline-block;
-  padding: 0.75rem 2rem;
-  font-weight: 800;
+  padding: 0.8rem 2.2rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none !important;
   border: 2px solid transparent;
 }
 
 .btn-primary {
-  background-color: var(--color-yellow);
-  color: var(--bg-black) !important;
+  background-color: var(--tea-fresh-leaf);
+  color: var(--color-white) !important;
 }
 
 .btn-primary:hover {
-  background-color: var(--bg-black);
-  color: var(--color-yellow) !important;
-  border-color: var(--color-yellow);
+  background-color: var(--tea-mint-bright);
+  color: var(--bg-black) !important;
+  transform: translateY(-2px);
 }
 
 .btn-outline {
   background-color: transparent;
-  color: var(--color-cyan) !important;
-  border-color: var(--color-cyan);
+  color: var(--tea-mint-bright) !important;
+  border-color: var(--tea-fresh-leaf);
 }
 
 .btn-outline:hover {
-  background-color: var(--color-cyan);
-  color: var(--bg-black) !important;
+  background-color: var(--tea-fresh-leaf);
+  color: var(--color-white) !important;
 }
 
-/* Hard-Surface Contrast Cards */
+/* Green Forest Cards */
 .card {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(74, 124, 89, 0.15);
   padding: 2.5rem;
   border-radius: var(--radius-md);
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
   box-shadow: var(--shadow-card);
 }
 
 .card:hover {
-  border-color: var(--color-cyan);
+  border-color: var(--tea-fresh-leaf);
+  background: rgba(74, 124, 89, 0.04);
+  transform: translateY(-5px);
 }
 
 .card-title {
-  color: var(--color-yellow);
-  margin-bottom: 1rem;
-  font-size: 1.5rem;
-  border-bottom: 1px solid rgba(255,255,0,0.2);
+  color: var(--color-primary);
+  margin-bottom: 1.25rem;
+  font-size: 1.4rem;
+  border-bottom: 1px solid rgba(152, 216, 170, 0.2);
   padding-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-/* Official Hero Presentation */
+/* Hero Presentation */
 .hero {
   text-align: center;
-  padding: 6rem 0;
+  padding: 5rem 0;
 }
 
 .hero h1 {
-  margin-bottom: 1.5rem;
-  line-height: 1.1;
+  margin-bottom: 2rem;
+  line-height: 1.2;
 }
 
 .hero-lead {
   color: var(--color-white);
-  font-size: 1.4rem;
-  max-width: 800px;
+  font-size: 1.2rem;
+  max-width: 850px;
   margin: 0 auto 3rem auto;
-  line-height: 1.6;
+  line-height: 1.7;
+  opacity: 0.9;
 }
 
-/* Documentation Links */
+/* Green Themed Documentation Links */
 .doc-link {
   display: flex;
   align-items: center;
-  padding: 1.25rem;
-  background-color: rgba(0, 255, 255, 0.05);
-  border: 1px solid rgba(0, 255, 255, 0.1);
+  padding: 1.5rem;
+  background-color: rgba(74, 124, 89, 0.05);
+  border: 1px solid rgba(74, 124, 89, 0.1);
   border-radius: var(--radius-sm);
   text-decoration: none !important;
   color: var(--color-white) !important;
   margin-bottom: 1rem;
-  transition: transform 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .doc-link:hover {
-  transform: translateX(8px);
-  border-color: var(--color-cyan);
+  background-color: rgba(74, 124, 89, 0.1);
+  border-color: var(--tea-mint-bright);
+  transform: translateX(10px);
 }
 
 .doc-icon {
-  font-size: 1.5rem;
-  color: var(--color-yellow);
+  font-size: 1.75rem;
+  color: var(--tea-mint-bright);
   margin-right: 1.5rem;
 }
 
-/* List Components */
+/* Green Lists */
 ul.tech-list {
   list-style: none;
   padding: 0;
 }
 
 ul.tech-list li {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.8rem;
   padding-left: 1.5rem;
   position: relative;
+  color: var(--color-white);
 }
 
 ul.tech-list li::before {
-  content: '▶';
+  content: '🌿';
   position: absolute;
   left: 0;
-  color: var(--color-cyan);
   font-size: 0.8rem;
 }

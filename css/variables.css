@@ -1,32 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@400;600;700&display=swap');
 
 :root {
-  /* Official PDF High-Contrast Palette */
-  --bg-black: #000000;
-  --bg-navy: #000033;
-  --color-yellow: #FFFF00; /* Primary Titles */
-  --color-cyan: #00FFFF;   /* Section Headers */
-  --color-white: #FFFFFF;  /* Body Text */
-  --color-muted: #CCCCCC;
+  /* Official iTeaGrow Green Palette (Matching Web App) */
+  --tea-fresh-leaf: #4A7C59;
+  --tea-mature-leaf: #2D5A3D;
+  --tea-deep-forest: #121A14;
+  --tea-mint-bright: #98D8AA; /* Enhanced for High-Contrast Titles */
+  --tea-glow-green: rgba(74, 124, 89, 0.2);
+  
+  /* Core variables mapping */
+  --bg-black: #080C09;
+  --bg-forest: var(--tea-deep-forest);
+  --color-primary: var(--tea-mint-bright); /* Replaces Yellow */
+  --color-accent: var(--tea-fresh-leaf);   /* Replaces Cyan */
+  --color-white: #FFFFFF;
+  --color-muted: #BDBDBD;
   
   /* Layout Gradients */
-  --grad-bg: linear-gradient(180deg, var(--bg-black) 0%, var(--bg-navy) 100%);
+  --grad-bg: linear-gradient(180deg, var(--bg-black) 0%, var(--bg-forest) 100%);
   
   /* Typography */
-  --font-main: 'Inter', Arial, sans-serif;
+  --font-main: 'Poppins', 'Inter', Arial, sans-serif;
   
   /* Spacing & Borders */
   --space-unit: 1rem;
-  --radius-none: 0;
   --radius-sm: 4px;
   --radius-md: 8px;
   
-  /* Borders (Simple & Sharp) */
-  --border-cyan: 1px solid var(--color-cyan);
-  --border-yellow: 1px solid var(--color-yellow);
-  --border-white: 1px solid rgba(255, 255, 255, 0.2);
+  /* Borders (Strictly Green) */
+  --border-accent: 1px solid var(--color-accent);
+  --border-primary: 1px solid var(--color-primary);
+  --border-white: 1px solid rgba(255, 255, 255, 0.1);
   
-  /* Shadows (Minimal per academic style) */
+  /* Shadows */
   --shadow-text: 2px 2px 4px rgba(0,0,0,0.8);
-  --shadow-card: 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-card: 0 4px 20px rgba(0,0,0,0.4);
 }

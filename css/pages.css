@@ -1,11 +1,11 @@
-/* Official Page-Specific Polishes - High Contrast Mode */
+/* iTeaGrow Green Theme Page Polishes */
 
-/* --- Timeline Redesign (Website.pdf Style) --- */
+/* --- Timeline Redesign (Green Identity) --- */
 .timeline {
     position: relative;
     max-width: 900px;
     margin: 0 auto;
-    padding: 2rem 0;
+    padding: 2.5rem 0;
 }
 
 .timeline::before {
@@ -15,13 +15,14 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--color-cyan);
+    background: var(--tea-fresh-leaf);
+    opacity: 0.3;
 }
 
 .timeline-item {
     position: relative;
     padding-left: 60px;
-    margin-bottom: 3rem;
+    margin-bottom: 4rem;
 }
 
 .timeline-item::after {
@@ -32,99 +33,93 @@
     width: 20px;
     height: 20px;
     background: var(--bg-black);
-    border: 3px solid var(--color-yellow);
+    border: 3px solid var(--tea-fresh-leaf);
     border-radius: 50%;
     z-index: 1;
 }
 
 .timeline-item.done::after {
-    background: var(--color-yellow);
+    background: var(--tea-mint-bright);
+    box-shadow: 0 0 15px var(--tea-glow-green);
 }
 
 .timeline-date {
-    color: var(--color-cyan) !important;
-    font-weight: 800;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
+    color: var(--tea-mint-bright) !important;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
 }
 
 .timeline-title {
-    color: var(--color-yellow) !important;
-    font-size: 1.5rem;
+    color: var(--color-primary) !important;
+    font-size: 1.6rem;
     margin-bottom: 1rem;
 }
 
-/* --- Supervisor & Member Cards Upgrade --- */
+/* --- Supervisor & Member Cards (Green Laboratory) --- */
 .supervisor-card {
-    border-top: 5px solid var(--color-yellow) !important;
-    border-radius: 4px !important;
+    border-top: 6px solid var(--tea-fresh-leaf) !important;
+    border-radius: 12px !important;
 }
 
 .supervisor-tag {
     display: inline-block;
-    background: var(--color-yellow);
-    color: var(--bg-black);
-    padding: 2px 10px;
-    font-weight: 800;
+    background: var(--tea-fresh-leaf);
+    color: var(--color-white);
+    padding: 4px 12px;
+    font-weight: 700;
     font-size: 0.75rem;
     text-transform: uppercase;
-    border-radius: 2px;
-    margin-top: 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.75rem;
 }
 
-/* --- High-Contrast Accordion --- */
+/* --- Green Accordion --- */
 .premium-accordion {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(0, 255, 255, 0.2);
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(74, 124, 89, 0.2);
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
 }
 
 .premium-accordion summary {
-    padding: 1.5rem;
+    padding: 1.75rem;
     cursor: pointer;
     list-style: none;
     display: flex;
     align-items: center;
-    border-bottom: 1px solid transparent;
 }
 
 .premium-accordion[open] summary {
-    border-bottom-color: rgba(0, 255, 255, 0.2);
-    background: rgba(0, 255, 255, 0.05);
-}
-
-.premium-accordion-content {
-    padding: 2rem;
-    display: grid;
-    gap: 1rem;
+    border-bottom: 1px solid rgba(74, 124, 89, 0.2);
+    background: rgba(74, 124, 89, 0.05);
 }
 
 .ps-link-card {
     display: flex;
     align-items: center;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     text-decoration: none !important;
     color: var(--color-white) !important;
+    border-radius: 6px;
+    margin: 0.5rem 1rem;
 }
 
 .ps-link-card:hover {
-    border-color: var(--color-yellow);
-    background: rgba(255, 255, 0, 0.03);
+    border-color: var(--tea-mint-bright);
+    background: rgba(152, 216, 170, 0.05);
 }
 
-/* --- Domain Page List Style --- */
+/* --- Objective List (Green Theme) --- */
 .objective-list {
     list-style: none;
     padding: 0;
 }
 
 .objective-list li {
-    padding: 1rem 0;
+    padding: 1.25rem 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     gap: 1.5rem;
@@ -132,7 +127,7 @@
 }
 
 .objective-list i {
-    color: var(--color-yellow);
-    font-size: 1.25rem;
+    color: var(--tea-mint-bright);
+    font-size: 1.5rem;
     margin-top: 4px;
 }
