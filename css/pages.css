@@ -1,62 +1,99 @@
-/* Page specific tweaks. Keep small, prefer components.css */
+/* Premium Page Specific Tweaks */
 
-/* Accordion styles for Documents page */
-.doc-accordion {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-md);
-  transition: all var(--transition-fast);
+/* --- Premium Accordion UI --- */
+.premium-accordion {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: border-color var(--transition-fast);
 }
 
-.doc-accordion:hover {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-sm);
+.premium-accordion:hover {
+    border-color: var(--color-accent);
 }
 
-.doc-accordion summary {
-  list-style: none;
-  cursor: pointer;
-  display: flex !important; /* To match doc-link flexbox exactly */
+.premium-accordion summary {
+    display: flex;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    list-style: none; /* Hide default arrow */
+    background-color: white;
+    transition: background var(--transition-fast);
 }
 
-/* Remove default details arrow */
-.doc-accordion summary::-webkit-details-marker {
-  display: none;
+/* Hide default arrow in webkit */
+.premium-accordion summary::-webkit-details-marker {
+    display: none;
 }
 
-.doc-accordion[open] summary .accordion-arrow {
-  transform: rotate(180deg);
+.premium-accordion summary:hover {
+    background-color: rgba(248, 249, 250, 0.8);
 }
 
-.accordion-arrow {
-  transition: transform var(--transition-fast);
+.accordion-title-block {
+    display: flex;
+    flex-direction: column;
+    margin-left: 1rem;
 }
 
-.accordion-content {
-  padding: var(--space-sm) var(--space-xl) var(--space-md) calc(var(--space-xl) + 2.5rem);
-  border-top: 1px dashed var(--color-border);
-  background-color: rgba(248, 249, 250, 0.5); /* subtle background */
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+.accordion-title-block strong {
+    font-size: 1.1rem;
+    color: var(--color-text-main);
 }
 
-.doc-sublink {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm);
-  text-decoration: none;
-  color: var(--color-text-main);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-  border: 1px solid transparent;
+.accordion-title-block span {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
 }
 
-.doc-sublink:hover {
-  background-color: white;
-  border-color: var(--color-border);
-  box-shadow: var(--shadow-sm);
-  color: var(--color-primary);
+.accordion-icon-rotate {
+    margin-left: auto;
+    color: var(--color-accent);
+    font-size: 1.2rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-accordion[open] .accordion-icon-rotate {
+    transform: rotate(180deg);
+}
+
+/* Sub-grid content */
+.premium-accordion-content {
+    display: grid !important; 
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-top: 1px dashed var(--color-border);
+    background-color: #fafafa;
+}
+
+/* Individual Premium Inner Cards */
+.ps-link-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--color-text-main);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.ps-link-card:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(27, 67, 50, 0.08); /* slight accent shadow */
+    color: var(--color-primary);
+}
+
+.ps-link-card i {
+    font-size: 1.5rem;
+    color: #e63946; /* PDF Red */
+    margin-right: 1rem;
 }
