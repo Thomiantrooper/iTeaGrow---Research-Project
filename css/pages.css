@@ -1,1 +1,62 @@
 /* Page specific tweaks. Keep small, prefer components.css */
+
+/* Accordion styles for Documents page */
+.doc-accordion {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+  transition: all var(--transition-fast);
+}
+
+.doc-accordion:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.doc-accordion summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex !important; /* To match doc-link flexbox exactly */
+}
+
+/* Remove default details arrow */
+.doc-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.doc-accordion[open] summary .accordion-arrow {
+  transform: rotate(180deg);
+}
+
+.accordion-arrow {
+  transition: transform var(--transition-fast);
+}
+
+.accordion-content {
+  padding: var(--space-sm) var(--space-xl) var(--space-md) calc(var(--space-xl) + 2.5rem);
+  border-top: 1px dashed var(--color-border);
+  background-color: rgba(248, 249, 250, 0.5); /* subtle background */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.doc-sublink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  text-decoration: none;
+  color: var(--color-text-main);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.doc-sublink:hover {
+  background-color: white;
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-primary);
+}
