@@ -1,0 +1,114 @@
+/* Layout system (Header, Grid, Footer) */
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+/* Header & Navigation */
+header.site-header {
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) 0;
+}
+
+.logo a {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.main-nav ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: var(--space-lg);
+}
+
+.main-nav a {
+  font-weight: 500;
+  color: var(--color-text-main);
+  padding: var(--space-xs) 0;
+  border-bottom: 2px solid transparent;
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+/* Page Standard Layout */
+.page-wrapper {
+  min-height: calc(100vh - 160px); /* Adjust based on header/footer */
+  padding: var(--space-2xl) 0;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-header h1 {
+  margin-bottom: var(--space-sm);
+}
+
+.page-header p.lead {
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+}
+
+/* Flexible content grid */
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-xl);
+  margin-top: var(--space-xl);
+}
+
+/* Footer layout */
+.site-footer {
+  background-color: var(--color-primary);
+  color: rgba(255, 255, 255, 0.8);
+  padding: var(--space-xl) 0;
+  text-align: center;
+}
+
+.site-footer a {
+  color: white;
+}
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile Nav Adjustments */
+@media (max-width: 768px) {
+  .header-inner {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  .main-nav ul {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-md);
+  }
+}

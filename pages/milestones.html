@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milestones | iTeaGrow</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <style>
+        .timeline { max-width: 800px; margin: 0 auto; padding-left: 20px; border-left: 3px solid var(--color-primary); }
+        .timeline-item { position: relative; margin-bottom: var(--space-xl); }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -29px; top: 0;
+            width: 16px; height: 16px; border-radius: 50%;
+            background-color: var(--color-surface); border: 4px solid var(--color-accent);
+        }
+        .timeline-date { font-weight: 600; color: var(--color-accent); margin-bottom: var(--space-xs); }
+    </style>
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <div class="logo">
+                <a href="../index.html"><i class="ph ph-leaf" style="color: var(--color-accent); font-size: 1.5rem;"></i> iTeaGrow</a>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="domain.html">Domain</a></li>
+                    <li><a href="milestones.html" class="active">Milestones</a></li>
+                    <li><a href="documents.html">Documents</a></li>
+                    <li><a href="presentations.html">Presentations</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-wrapper container">
+        <div class="page-header">
+            <h1>Project Milestones</h1>
+            <p class="lead">Key assessments and marks allocated over the project timeline.</p>
+        </div>
+
+        <div class="timeline">
+            <!-- Timeline items mapping to PDF list -->
+            <div class="timeline-item card">
+                <div class="timeline-date">Phase 1 (Month 1-2)</div>
+                <h3 class="card-title">Project Proposal</h3>
+                <p>Defining the scope, objectives, and securing approval for the iTeaGrow research plan. (15% Weight)</p>
+            </div>
+            
+            <div class="timeline-item card">
+                <div class="timeline-date">Phase 2 (Month 3-5)</div>
+                <h3 class="card-title">Progress Presentation 1</h3>
+                <p>Demonstrating preliminary research results, dataset aggregation, and core architecture design. (20% Weight)</p>
+            </div>
+
+            <div class="timeline-item card">
+                <div class="timeline-date">Phase 3 (Month 6-8)</div>
+                <h3 class="card-title">Progress Presentation 2</h3>
+                <p>Showcasing the Working prototype with active Edge Inference models and the IoT sensor fusion layer. (25% Weight)</p>
+            </div>
+
+            <div class="timeline-item card">
+                <div class="timeline-date">Phase 4 (Final Month)</div>
+                <h3 class="card-title">Final Assessment & Viva</h3>
+                <p>Comprehensive technical demonstration, defensive Viva voce evaluation, and submission of final code. (40% Weight)</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 iTeaGrow Research Team. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

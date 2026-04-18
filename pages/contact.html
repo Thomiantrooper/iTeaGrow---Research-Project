@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | iTeaGrow</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <div class="logo">
+                <a href="../index.html"><i class="ph ph-leaf" style="color: var(--color-accent); font-size: 1.5rem;"></i> iTeaGrow</a>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="domain.html">Domain</a></li>
+                    <li><a href="milestones.html">Milestones</a></li>
+                    <li><a href="documents.html">Documents</a></li>
+                    <li><a href="presentations.html">Presentations</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html" class="active">Contact Us</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-wrapper container">
+        <div class="page-header">
+            <h1>Contact Us</h1>
+            <p class="lead">Reach out to the research team for any queries regarding the iTeaGrow system.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-2xl);">
+            
+            <!-- Contact Info -->
+            <div>
+                <h3>General Contacts</h3>
+                <ul style="list-style: none; padding-left: 0;">
+                    <li style="margin-bottom: var(--space-sm);"><strong>Email:</strong> research@iteagrow.local</li>
+                    <li style="margin-bottom: var(--space-sm);"><strong>Phone:</strong> +1 (555) 123-4567</li>
+                    <li style="margin-bottom: var(--space-sm);"><strong>Location:</strong> Research Lab 4, Tech Building</li>
+                </ul>
+            </div>
+
+            <!-- Email Form Template -->
+            <div class="card">
+                <h3 class="card-title">Send a Message</h3>
+                <form onsubmit="event.preventDefault(); alert('Message form is standard HTML format placeholder.');">
+                    <div class="form-group">
+                        <label class="form-label" for="name">Name</label>
+                        <input type="text" id="name" class="form-control" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="your.email@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="message">Message Template</label>
+                        <textarea id="message" class="form-control" placeholder="Enter your inquiry here..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Email Request</button>
+                </form>
+            </div>
+            
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 iTeaGrow Research Team. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
