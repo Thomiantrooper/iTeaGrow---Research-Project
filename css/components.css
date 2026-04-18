@@ -124,8 +124,12 @@ ul.tech-list li {
 }
 
 ul.tech-list li::before {
-  content: '🌿';
+  content: '';
   position: absolute;
   left: 0;
-  font-size: 0.8rem;
+  top: 0.6rem;
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-primary);
+  border-radius: 2px;
 }

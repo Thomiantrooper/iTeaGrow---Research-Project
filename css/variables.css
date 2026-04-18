@@ -4,19 +4,19 @@
   /* Official iTeaGrow Green Palette (Matching Web App) */
   --tea-fresh-leaf: #4A7C59;
   --tea-mature-leaf: #2D5A3D;
-  --tea-deep-forest: #121A14;
+  --tea-deep-forest: #1A261F; /* Lightened from #121A14 */
   --tea-mint-bright: #98D8AA; /* Enhanced for High-Contrast Titles */
   --tea-glow-green: rgba(74, 124, 89, 0.2);
   
   /* Core variables mapping */
-  --bg-black: #080C09;
+  --bg-black: #141B15;       /* Lightened from #080C09 */
   --bg-forest: var(--tea-deep-forest);
   --color-primary: var(--tea-mint-bright); /* Replaces Yellow */
   --color-accent: var(--tea-fresh-leaf);   /* Replaces Cyan */
   --color-white: #FFFFFF;
   --color-muted: #BDBDBD;
   
-  /* Layout Gradients */
+  /* Layout Gradients (Brightened for 'Active Forest' effect) */
   --grad-bg: linear-gradient(180deg, var(--bg-black) 0%, var(--bg-forest) 100%);
   
   /* Typography */
