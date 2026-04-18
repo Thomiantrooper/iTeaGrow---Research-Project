@@ -1,9 +1,14 @@
-# iTeaGrow | Research Project Website
-
-Welcome to the static presentation and documentation website for the **iTeaGrow** research project. This platform serves as a central hub for our academic findings, tracking project milestones, and securely sharing final documentation on IoT-based Tea Leaf Disease Detection.
+# iTeaGrow: AI-IoT System For Tea Leaf Monitoring, Fertilization, and Powder Grading
 
 ## Project Overview
-The iTeaGrow research initiative focuses on bridging the gap between hardware and software in precision agriculture. The project heavily targets edge-optimized Computer Vision integrated with real-time IoT sensor telemetry to rapidly diagnose and treat tea leaf anomalies in the field.
+**iTeaGrow** is an integrated AI–IoT research platform designed to modernize decision-making in the Sri Lankan tea industry.  
+The system replaces subjective, manual assessment practices with **data-driven, explainable, and offline-capable intelligence** across the full tea value chain from field-level leaf plucking to factory-grade yield estimation and market valuation.
+
+The platform combines **computer vision**, **machine learning**, and **edge IoT sensing** to support smallholder farmers, estate supervisors, and factory-level analysts in improving productivity, consistency, and economic outcomes.
+
+## High-Level System Architecture
+iTeaGrow operates as a **hybrid edge–mobile–cloud architecture**
+<img width="1536" height="1024" alt="HA" src="https://github.com/user-attachments/assets/6a2fac10-94a0-4237-81b6-d8d2de991c8d" />
 
 ## Repository Structure
 This repository features a lightweight, custom-built CSS and HTML architecture to ensure maximum performance and cross-device compatibility, purposely staying well under external hosting size limits.

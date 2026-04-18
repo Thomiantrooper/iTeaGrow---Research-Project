@@ -35,31 +35,69 @@
     <main class="page-wrapper container">
         <div class="page-header">
             <h1>Research Domain</h1>
-            <p class="lead">Exploring the gap, methods, and technologies in Tea Leaf Disease Detection.</p>
+            <p class="lead" style="max-width: 900px;">Developed as part of an undergraduate research initiative focused on applying <strong>AI, IoT, and Explainable ML</strong> to real-world agricultural decision systems in Sri Lanka.</p>
         </div>
 
-        <section class="content-grid">
+        <section class="content-grid" style="align-items: start;">
             <div class="card">
-                <h2 class="card-title">Literature Survey</h2>
-                <p>Summary of existing literature in agricultural IoT and computer vision disease detection goes here.</p>
+                <h2 class="card-title"><i class="ph ph-target" style="margin-right: 8px;"></i>System Objectives</h2>
+                <ul style="padding-left: var(--space-lg);">
+                    <li>Enable early detection of disease and environmental/soil-related stress.</li>
+                    <li>Reduce subjectivity in leaf maturity assessment and yield forecasting to improve harvesting quality.</li>
+                    <li>Provide transparent, data-backed tea powder grading and valuation.</li>
+                    <li>Support rural deployments through an offline system design.</li>
+                </ul>
             </div>
+
             <div class="card">
-                <h2 class="card-title">Research Gap & Problem</h2>
-                <p>Identifying the latency and deployment challenges in current AI farming models.</p>
-            </div>
-            <div class="card">
-                <h2 class="card-title">Objectives</h2>
-                <p>Establishing edge-optimized CV models for real-time inference in remote fields.</p>
-            </div>
-            <div class="card">
-                <h2 class="card-title">Methodology</h2>
-                <p>Data collection, fusion of IoT sensor data with image metrics, and XAI validation.</p>
-            </div>
-            <div class="card">
-                <h2 class="card-title">Technologies Used</h2>
-                <p>Python, TensorFlow (Edge Devices), C++ (Microcontrollers), and AWS IoT Core.</p>
+                <h2 class="card-title"><i class="ph ph-cpu" style="margin-right: 8px;"></i>Key Technical Features</h2>
+                <ul style="padding-left: var(--space-lg);">
+                    <li><strong>Explainable AI (XAI):</strong> Grad-CAM heatmaps highlight prediction regions and SHAP verifies tabular forms, improving trust.</li>
+                    <li><strong>Offline/Hybrid Design:</strong> Inference and logging operate without internet for remote plantations.</li>
+                    <li><strong>Multilingual UI:</strong> Sinhala, Tamil, and English support.</li>
+                    <li><strong>Continuous Learning:</strong> Feedback loops enable dataset refinement.</li>
+                </ul>
             </div>
         </section>
+
+        <!-- Technology Stack Section -->
+        <section style="margin-top: var(--space-2xl);">
+            <h2 style="text-align: center; margin-bottom: var(--space-xl);">Technology Stack</h2>
+            <div class="content-grid" style="margin-top: 0;">
+                
+                <div class="card">
+                    <h3 class="card-title"><i class="ph ph-circuitry" style="color: var(--color-accent); margin-right: 8px;"></i>Hardware & IoT</h3>
+                    <ul>
+                        <li>ESP32 & SIM800L GSM module</li>
+                        <li>NEO-6M GPS</li>
+                        <li>NPK, pH, moisture, and temperature sensors</li>
+                        <li>Solar–battery hybrid power system</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title"><i class="ph ph-brain" style="color: var(--color-accent); margin-right: 8px;"></i>AI & Machine Learning</h3>
+                    <ul>
+                        <li>YOLOv8n</li>
+                        <li>Random Forest & XGBoost / CatBoost</li>
+                        <li>MobileNetV3/V2 & ShuffleNetV2</li>
+                        <li>TensorFlow Lite & OpenCV</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title"><i class="ph ph-device-mobile" style="color: var(--color-accent); margin-right: 8px;"></i>Mobile & Backend</h3>
+                    <ul>
+                        <li><strong>Frontend:</strong> React Native</li>
+                        <li><strong>Local DB:</strong> SQLite</li>
+                        <li><strong>Backend:</strong> Node.js & Firebase</li>
+                        <li><strong>Cloud & Analytics:</strong> GCP & Python (Pandas/Scikit-learn)</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+        
     </main>
 
     <footer class="site-footer">
