@@ -1,62 +1,103 @@
-/* Page specific tweaks. Keep small, prefer components.css */
+/* Page Specific Enhancements - Premium Research Vibe */
 
-/* Accordion styles for Documents page */
-.doc-accordion {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-md);
-  transition: all var(--transition-fast);
+/* --- Documents Page Accordion Upgrade --- */
+.premium-accordion {
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--color-border-glass);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: all var(--transition-normal);
 }
 
-.doc-accordion:hover {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-sm);
+.premium-accordion:hover {
+    border-color: rgba(64, 145, 108, 0.4);
+    box-shadow: var(--shadow-md);
 }
 
-.doc-accordion summary {
-  list-style: none;
-  cursor: pointer;
-  display: flex !important; /* To match doc-link flexbox exactly */
+.premium-accordion summary {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    cursor: pointer;
+    list-style: none;
+    background-color: white;
 }
 
-/* Remove default details arrow */
-.doc-accordion summary::-webkit-details-marker {
-  display: none;
+.premium-accordion summary::-webkit-details-marker {
+    display: none;
 }
 
-.doc-accordion[open] summary .accordion-arrow {
-  transform: rotate(180deg);
+.accordion-title-block {
+    display: flex;
+    flex-direction: column;
+    margin-left: var(--space-md);
 }
 
-.accordion-arrow {
-  transition: transform var(--transition-fast);
+.accordion-icon-rotate {
+    margin-left: auto;
+    color: var(--color-accent);
+    transition: transform var(--transition-normal);
 }
 
-.accordion-content {
-  padding: var(--space-sm) var(--space-xl) var(--space-md) calc(var(--space-xl) + 2.5rem);
-  border-top: 1px dashed var(--color-border);
-  background-color: rgba(248, 249, 250, 0.5); /* subtle background */
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+.premium-accordion[open] .accordion-icon-rotate {
+    transform: rotate(180deg);
 }
 
-.doc-sublink {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm);
-  text-decoration: none;
-  color: var(--color-text-main);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-  border: 1px solid transparent;
+.premium-accordion-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+    padding: var(--space-lg);
+    background-color: #fbfcfb;
+    border-top: 1px solid var(--color-border);
 }
 
-.doc-sublink:hover {
-  background-color: white;
-  border-color: var(--color-border);
-  box-shadow: var(--shadow-sm);
-  color: var(--color-primary);
+/* Sub-cards within accordion */
+.ps-link-card {
+    display: flex;
+    align-items: center;
+    padding: 1.2rem;
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--color-text-main);
+    font-weight: 500;
+    transition: all var(--transition-fast);
 }
+
+.ps-link-card:hover {
+    transform: translateX(10px);
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-sm);
+}
+
+/* --- Milestones Page Tracking Card --- */
+.timeline-item {
+    transition: all var(--transition-normal);
+}
+
+.timeline-item.done {
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.5);
+    border-style: dashed;
+}
+
+/* --- About Page Supervisor Section --- */
+.supervisor-card {
+    border-top: 6px solid var(--color-secondary) !important; /* Gold accent for leaders */
+}
+
+/* --- Entrance Animations for grids --- */
+.content-grid > * {
+    animation: fadeInUp 0.8s var(--ease-out) both;
+}
+
+/* Stagger animation for grid items */
+.content-grid > *:nth-child(1) { animation-delay: 0.1s; }
+.content-grid > *:nth-child(2) { animation-delay: 0.2s; }
+.content-grid > *:nth-child(3) { animation-delay: 0.3s; }
+.content-grid > *:nth-child(4) { animation-delay: 0.4s; }
