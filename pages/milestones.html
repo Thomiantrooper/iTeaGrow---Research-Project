@@ -11,14 +11,60 @@
     <link rel="stylesheet" href="../css/layout.css">
     <link rel="stylesheet" href="../css/components.css">
     <style>
-        .timeline { max-width: 800px; margin: 0 auto; padding-left: 20px; border-left: 3px solid var(--color-primary); }
-        .timeline-item { position: relative; margin-bottom: var(--space-xl); }
-        .timeline-item::before {
-            content: ''; position: absolute; left: -29px; top: 0;
-            width: 16px; height: 16px; border-radius: 50%;
-            background-color: var(--color-surface); border: 4px solid var(--color-accent);
+        .timeline { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding-left: 30px; 
+            border-left: 3px solid var(--color-primary); 
+            padding-top: var(--space-md);
         }
-        .timeline-date { font-weight: 600; color: var(--color-accent); margin-bottom: var(--space-xs); }
+        .timeline-item { 
+            position: relative; 
+            margin-bottom: var(--space-xl); 
+            background-color: white;
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-sm);
+        }
+        .timeline-item::before {
+            content: ''; 
+            position: absolute; 
+            left: -42px; /* aligns directly over the border */
+            top: 24px;
+            width: 20px; 
+            height: 20px; 
+            border-radius: 50%;
+            background-color: var(--color-surface); 
+            border: 4px solid var(--color-accent);
+            box-shadow: 0 0 0 4px white;
+        }
+        .timeline-date { 
+            font-weight: 700; 
+            color: var(--color-accent); 
+            margin-bottom: var(--space-xs); 
+            display: inline-block;
+            background: rgba(64, 145, 108, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        .timeline-title {
+            margin-top: var(--space-sm);
+            margin-bottom: var(--space-xs);
+            color: var(--color-text-main);
+            font-size: 1.25rem;
+        }
+        .timeline-tasks {
+            margin-top: var(--space-sm);
+            padding-left: 1.2rem;
+            color: var(--color-text-muted);
+            line-height: 1.6;
+        }
+        .timeline-tasks li {
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body>
@@ -44,35 +90,106 @@
 
     <main class="page-wrapper container">
         <div class="page-header">
-            <h1>Project Milestones</h1>
-            <p class="lead">Key assessments and marks allocated over the project timeline.</p>
+            <h1>Assessment Timeline</h1>
+            <p class="lead">Official tentative assessment timeline mapping for the 2025/26 July Batch.</p>
         </div>
 
         <div class="timeline">
-            <!-- Timeline items mapping to PDF list -->
-            <div class="timeline-item card">
-                <div class="timeline-date">Phase 1 (Month 1-2)</div>
-                <h3 class="card-title">Project Proposal</h3>
-                <p>Defining the scope, objectives, and securing approval for the iTeaGrow research plan. (15% Weight)</p>
-            </div>
             
-            <div class="timeline-item card">
-                <div class="timeline-date">Phase 2 (Month 3-5)</div>
-                <h3 class="card-title">Progress Presentation 1</h3>
-                <p>Demonstrating preliminary research results, dataset aggregation, and core architecture design. (20% Weight)</p>
+            <div class="timeline-item">
+                <div class="timeline-date">March 25</div>
+                <h3 class="timeline-title">Project Initiation</h3>
+                <ul class="timeline-tasks">
+                    <li>Brainstorming Workshop</li>
+                </ul>
             </div>
 
-            <div class="timeline-item card">
-                <div class="timeline-date">Phase 3 (Month 6-8)</div>
-                <h3 class="card-title">Progress Presentation 2</h3>
-                <p>Showcasing the Working prototype with active Edge Inference models and the IoT sensor fusion layer. (25% Weight)</p>
+            <div class="timeline-item">
+                <div class="timeline-date">May 26</div>
+                <h3 class="timeline-title">Team Formation</h3>
+                <ul class="timeline-tasks">
+                    <li>Group Registration</li>
+                </ul>
             </div>
 
-            <div class="timeline-item card">
-                <div class="timeline-date">Phase 4 (Final Month)</div>
-                <h3 class="card-title">Final Assessment & Viva</h3>
-                <p>Comprehensive technical demonstration, defensive Viva voce evaluation, and submission of final code. (40% Weight)</p>
+            <div class="timeline-item">
+                <div class="timeline-date">June 30 – July 16</div>
+                <h3 class="timeline-title">Topic Assessment</h3>
+                <ul class="timeline-tasks">
+                    <li>Submission of Topic Assessment Form (TAF)</li>
+                </ul>
             </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">July 23</div>
+                <h3 class="timeline-title">Project Mandate</h3>
+                <ul class="timeline-tasks">
+                    <li>Project Charter formulation and sign-off</li>
+                </ul>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">August 15</div>
+                <h3 class="timeline-title">Initial Proposal Draft</h3>
+                <ul class="timeline-tasks">
+                    <li>Proposal Reports (Draft submission)</li>
+                </ul>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">September 8 – 19</div>
+                <h3 class="timeline-title">Proposal Defense & Formatting</h3>
+                <ul class="timeline-tasks">
+                    <li><strong>Sept 8-12:</strong> Proposal Presentation</li>
+                    <li><strong>Sept 19:</strong> Proposal Reports (Final-for marking)</li>
+                </ul>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">December 15 – 19</div>
+                <h3 class="timeline-title">Mid-Year Review</h3>
+                <ul class="timeline-tasks">
+                    <li>Progress Presentation - I</li>
+                    <li>Check List I Verification</li>
+                </ul>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">March</div>
+                <h3 class="timeline-title">Academic Publication & Review 2</h3>
+                <ul class="timeline-tasks">
+                    <li>Research Paper drafting</li>
+                    <li>Progress Presentation - II</li>
+                    <li>Check List II Verification</li>
+                </ul>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">April</div>
+                <h3 class="timeline-title">Final Reporting</h3>
+                <ul class="timeline-tasks">
+                    <li>Submission of Final Reports (Thesis Document)</li>
+                </ul>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">May</div>
+                <h3 class="timeline-title">Final VIVA Evaluation</h3>
+                <ul class="timeline-tasks">
+                    <li>Final Presentation & VIVA evaluation</li>
+                </ul>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">June</div>
+                <h3 class="timeline-title">Project Wrap-up & Artifacts</h3>
+                <ul class="timeline-tasks">
+                    <li>Submission of RP - Acceptance notification</li>
+                    <li>Project Website completion</li>
+                    <li>Research Logbook review</li>
+                </ul>
+            </div>
+
         </div>
     </main>
 
