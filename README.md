@@ -28,7 +28,7 @@ This repository features a lightweight, custom-built CSS and HTML architecture t
     └── documents/
 ```
 
-## Publishing
+## Publishing Updates (Developer Guide)
 This local repository is configured with a custom git macro to ensure changes are synced across multiple project forks seamlessly.
 
 If you modify any of the HTML/CSS files, simply open your terminal in the root folder and run:
@@ -41,3 +41,14 @@ The `git publish` macro automatically pushes the website mapping to:
 1. The `iTeaGrow-RP-Website` branch on the primary `Thomiantrooper/iTeaGrow---Research-Project` repository.
 2. The `main` branch on the `kanzur/iTeaGrow-RP-Website` deployment repository.
 
+## Live Hosting via Railway
+This static repository is fully optimized to be deployed natively on [Railway](https://railway.app/) with zero configuration. Because we explicitly have an `index.html` at the root directory, Railway automatically figures out how to natively serve it!
+
+To take this site live:
+1. Log in to your Railway dashboard and click **New Project**.
+2. Select **Deploy from GitHub repo** and choose your `iTeaGrow-RP-Website` repository.
+3. Railway will instantly detect the static HTML and deploy it globally.
+4. Once deployed, click on your app in Railway, go to the Settings tab, and Generate a Public Domain!
+
+---
+*Developed for 2026 Academic Submissions.*
