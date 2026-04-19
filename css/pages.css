@@ -212,7 +212,7 @@
 /* --- Team & Leadership --- */
 .formal-team-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 2.5rem;
 }
 
@@ -347,5 +347,239 @@
     }
     .formal-team-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ================================================
+   MOBILE RESPONSIVE - PAGE SPECIFICS (≤ 768px)
+   ================================================ */
+@media (max-width: 768px) {
+
+    /* ---- Hero Section ---- */
+    .hero {
+        padding: 2rem 0;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+        max-width: 320px;
+        text-align: center;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    /* ---- Philosophy / Domain Grid ---- */
+    .philosophy-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .tech-stack-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .formal-team-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* ---- Section Headers ---- */
+    .section-header {
+        margin-bottom: 2.5rem;
+        text-align: center;
+    }
+
+    .section-header h2 {
+        text-align: center;
+    }
+
+    .lead {
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 500px;
+    }
+
+    .research-hero {
+        padding: 2rem 0 3.5rem;
+    }
+
+    .hero-subtitle {
+        text-align: center;
+        font-size: 1rem;
+    }
+
+    /* ---- Cards & Documentation ---- */
+    .card {
+        padding: 2.25rem 1.75rem;
+        text-align: center;
+    }
+
+    .card-title {
+        justify-content: center;
+    }
+
+    .doc-link {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+        padding: 2rem 1.5rem;
+    }
+
+    .doc-icon {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    /* ---- Timeline ---- */
+    .timeline {
+        padding: 1.5rem 0 2.5rem;
+    }
+
+    .timeline::before {
+        left: 12px;
+    }
+
+    .timeline-item {
+        padding: 1.25rem 1.25rem 1.25rem 50px;
+    }
+
+    .timeline-item::before {
+        left: -21px;
+        width: 14px;
+        height: 14px;
+    }
+
+    /* ---- Accordion & Document cards ---- */
+    .premium-accordion:hover {
+        transform: none;
+    }
+
+    .doc-link:hover {
+        transform: none;
+    }
+
+    .ps-link-card:hover {
+        transform: none;
+    }
+
+    .premium-accordion summary {
+        padding: 1.25rem 1rem;
+    }
+
+    .ps-link-card {
+        margin: 0.5rem 1rem;
+        padding: 1rem;
+    }
+
+    /* ---- Glass panels ---- */
+    .glass-panel {
+        padding: 1.5rem;
+    }
+
+    .glass-panel:hover {
+        transform: none;
+    }
+
+    /* ---- Cards ---- */
+    .card {
+        padding: 1.75rem;
+    }
+
+    .card:hover {
+        transform: none;
+    }
+
+    /* ---- Member socials row ---- */
+    .member-socials {
+        gap: 1rem;
+    }
+
+    /* Polish for Contact Page */
+    .contact-entry h4 {
+        font-size: 1.1rem;
+    }
+
+    .contact-entry a {
+        font-size: 0.95rem !important;
+    }
+
+    /* Polish for Hero Text */
+    h1 {
+        font-size: clamp(1.5rem, 6vw, 2rem) !important;
+    }
+
+    .hero-lead {
+        font-size: 0.95rem;
+    }
+}
+
+/* ================================================
+   SMALL MOBILE (≤ 480px)
+   ================================================ */
+@media (max-width: 480px) {
+
+    .card {
+        padding: 1.25rem;
+    }
+
+    .card-title {
+        font-size: 1.15rem;
+    }
+
+    .glass-panel {
+        padding: 1.25rem;
+    }
+
+    .timeline-item {
+        padding: 1rem 1rem 1rem 44px;
+    }
+
+    .timeline-title {
+        font-size: 1rem !important;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.8rem;
+    }
+
+    .doc-link {
+        padding: 1.25rem 1rem;
+    }
+
+    .doc-icon {
+        font-size: 1.4rem;
+        margin-right: 1rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .section-icon {
+        font-size: 2rem;
+    }
+
+    /* Force phone numbers to wrap if too long */
+    .contact-entry a, .card a[href^="tel:"] {
+        font-size: 0.85rem !important;
+        word-break: break-all;
+    }
+    
+    .card h3 {
+        font-size: 1.2rem;
     }
 }

@@ -1,13 +1,26 @@
 /* iTeaGrow Light Cream Layout System */
 
+/* --- Sticky Footer Core --- */
+html {
+  height: 100% !important;
+}
+
+body {
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0;
+}
+
 header.site-header {
-  background-color: rgba(253, 251, 247, 0.95); /* Creamy translucency */
+  flex-shrink: 0; /* Header stays at its intrinsic height */
+  background-color: rgba(253, 251, 247, 0.98);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(74, 124, 89, 0.1);
   width: 100%;
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 1060; /* Higher than menu to stay sharp */
   padding: 1rem 0;
   box-shadow: 0 2px 15px rgba(0,0,0,0.03);
 }
@@ -16,6 +29,7 @@ header.site-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .logo a {
@@ -29,6 +43,51 @@ header.site-header {
   gap: 0.5rem;
 }
 
+/* ---- Hamburger Menu Button ---- */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1.5px solid rgba(74, 124, 89, 0.25);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 6px;
+  z-index: 1100;
+  transition: background 0.2s ease;
+}
+
+.nav-toggle:hover {
+  background: rgba(74, 124, 89, 0.07);
+}
+
+.nav-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--tea-text-green);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+}
+
+/* Hamburger → X animation */
+.nav-toggle.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.nav-toggle.open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.nav-toggle.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ---- Desktop Nav ---- */
 .main-nav ul {
   display: flex;
   list-style: none;
@@ -71,6 +130,7 @@ header.site-header {
 /* Page Scaffolding */
 .page-wrapper {
   padding: 4rem 0 6rem;
+  flex: 1 0 auto !important; /* Forces expansion to fill void */
 }
 
 .page-header {
@@ -80,25 +140,145 @@ header.site-header {
 
 .content-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
 }
 
 /* Light Footer */
 .site-footer {
+  flex-shrink: 0 !important; /* Ensures footer doesn't squash */
   background-color: var(--tea-surface-light);
   border-top: 1px solid rgba(74, 124, 89, 0.1);
-  padding: 4rem 0;
+  padding: 3rem 0; /* Slightly tighter padding for a cleaner look */
   text-align: center;
   color: var(--color-muted);
 }
 
 .site-footer p { margin-bottom: 0.5rem; font-size: 0.95rem; }
 
+/* ================================================
+   RESPONSIVE BREAKPOINTS
+   ================================================ */
+
+/* --- Tablet (≤ 1000px): wrap nav --- */
 @media (max-width: 1000px) {
   .main-nav ul {
     flex-wrap: wrap;
     justify-content: center;
     gap: 1rem;
   }
+}
+
+/* --- Mobile (≤ 768px): hamburger drawer --- */
+/* ================================================
+   UNIVERSAL MOBILE SYSTEM (≤ 768px)
+   ================================================ */
+@media (max-width: 768px) {
+  .nav-toggle {
+    display: flex;
+  }
+
+  /* Universal Container Margin (Consistent for 412x915 and small phones) */
+  .container {
+    padding: 0 1.5rem; 
+    width: 100%;
+  }
+
+  .main-nav {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    max-width: 320px;
+    height: 100vh;
+    background: rgba(253, 251, 247, 0.99);
+    border-left: 1px solid rgba(74, 124, 89, 0.12);
+    box-shadow: -8px 0 40px rgba(0,0,0,0.08);
+    padding: 5rem 1.5rem 2rem;
+    transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1050;
+    overflow-y: auto;
+  }
+
+  .main-nav.open {
+    right: 0;
+  }
+
+  .main-nav ul {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .main-nav a {
+    display: block;
+    padding: 1.25rem 0.5rem;
+    font-size: 0.95rem;
+    border-bottom: 1px solid rgba(74, 124, 89, 0.05);
+  }
+
+  .nav-toggle.open {
+    border-color: var(--tea-fresh-leaf);
+    background: rgba(74, 124, 89, 0.05);
+  }
+
+  /* Universal Section Centering */
+  main section {
+    max-width: 540px !important; /* Forces manual overrides to behave on mobile */
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Overlay backdrop */
+  .nav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(18, 38, 26, 0.3);
+    z-index: 1040;
+    backdrop-filter: blur(0px);
+    transition: backdrop-filter 0.4s ease;
+  }
+
+  .nav-overlay.open {
+    display: block;
+    backdrop-filter: blur(8px);
+  }
+
+  /* Page Grid Polish */
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+    max-width: 500px; /* Perfectly centered on 412x915 and tablets */
+    margin: 0 auto;
+  }
+
+  .page-wrapper {
+    padding: 2.5rem 0 5rem;
+    flex: 1 0 auto !important; /* Restore sticky footer behavior on mobile */
+  }
+
+  .site-footer {
+    padding: 3rem 0;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* --- High-Density Small Mobile Tweaks (≤ 412px) --- */
+@media (max-width: 412px) {
+  .logo a {
+    font-size: 1.2rem;
+  }
+  
+  .container {
+    padding: 0 1.25rem; /* Slightly tighter for extra narrow screens */
+  }
+
+  h1 {
+    font-size: 1.75rem !important; /* Cap h1 for vertical space on 412x915 */
+  }
+}
+
+/* Prevent body scroll when menu open */
+body.nav-open {
+  overflow: hidden;
 }
