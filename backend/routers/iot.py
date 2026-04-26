@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends, Query
 from datetime import datetime, timedelta
 from typing import List, Optional
 from bson import ObjectId
-from database import get_database
+from database import get_database, get_database_async
 from models import IoTDataPoint, IoTDataCreate
 from auth import get_current_active_user
 
@@ -209,14 +209,18 @@ async def get_iot_statistics(
 @router.get("/live/latest")
 async def get_live_latest(
     device_id: Optional[str] = None,
-    current_user: dict = Depends(get_current_active_user),
 ):
     """
     Get the latest sensor reading(s) pushed by the MQTT bridge.
     All MQTT data is stored with user_id='iot_system', so this endpoint
     returns live readings without a per-user filter.
     """
-    db = get_database()
+    db = await get_database_async()
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable — check MongoDB Atlas network access settings",
+        )
 
     if device_id:
         data = await db.iot_data.find_one(
