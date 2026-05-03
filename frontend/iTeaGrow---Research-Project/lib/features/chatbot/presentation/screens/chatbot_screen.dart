@@ -1,28 +1,61 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/api/api_config.dart';
 import '../../../../core/design_system/design_system.dart';
 
-// ─── Domain definition ────────────────────────────────────────────────────────
+// ─── Domain ───────────────────────────────────────────────────────────────────
 
 enum _Domain {
-  general('General', Icons.chat_bubble_outline_rounded, null),
-  soil('Soil', Icons.eco_outlined, 'soil'),
-  leaf('Leaf', Icons.document_scanner_outlined, 'leaf'),
-  climate('Climate', Icons.cloud_outlined, 'climate'),
-  yield('Yield', Icons.bar_chart_rounded, 'yield'),
-  powder('Powder', Icons.coffee_outlined, 'powder');
+  general(
+    'General',
+    Icons.chat_bubble_outline_rounded,
+    null,
+    null,
+  ),
+  soil(
+    'Soil',
+    Icons.eco_outlined,
+    'soil',
+    'pH • Nutrients • Moisture • Amendments',
+  ),
+  leaf(
+    'Leaf',
+    Icons.document_scanner_outlined,
+    'leaf',
+    'Disease Detection • Treatment • Harvest Readiness',
+  ),
+  climate(
+    'Climate',
+    Icons.cloud_outlined,
+    'climate',
+    'Temperature • Humidity • Rainfall • Risk Forecast',
+  ),
+  yield(
+    'Yield',
+    Icons.bar_chart_rounded,
+    'yield',
+    'Block Readiness • Flush Cycles • Forecasts',
+  ),
+  powder(
+    'Powder',
+    Icons.coffee_outlined,
+    'powder',
+    'Grading • Quality • Factory Standards',
+  );
 
   final String label;
   final IconData icon;
   final String? contextType;
+  final String? description;
 
-  const _Domain(this.label, this.icon, this.contextType);
+  const _Domain(this.label, this.icon, this.contextType, this.description);
 }
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
@@ -43,8 +76,10 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   bool _isTyping = false;
   _Domain _activeDomain = _Domain.general;
   List<String> _suggestions = [];
-  String? _streamingBuffer;   // non-null while a streamed reply is in progress
-  http.Client? _streamClient; // held so we can cancel on dispose
+  String? _streamingBuffer;
+  http.Client? _streamClient;
+  bool _showScrollFab = false;
+  bool _sendPressed = false;
 
   static const _domainColors = {
     _Domain.general: Color(0xFF4CAF50),
@@ -94,20 +129,34 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     ],
   };
 
+  // ─── Lifecycle ─────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
     _addWelcomeMessage();
+    _fetchTeaFact();
     _loadSuggestions();
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _streamClient?.close();
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final atBottom = _scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 80;
+    if (_showScrollFab == atBottom) {
+      setState(() => _showScrollFab = !atBottom);
+    }
   }
 
   void _addWelcomeMessage() {
@@ -126,20 +175,42 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     );
   }
 
+  Future<void> _fetchTeaFact() async {
+    try {
+      final res = await http
+          .get(Uri.parse(ApiConfig.chatbotFact))
+          .timeout(const Duration(seconds: 5));
+      if (res.statusCode == 200) {
+        final fact = (jsonDecode(res.body)['fact'] as String?) ?? '';
+        if (mounted && fact.isNotEmpty) {
+          setState(() {
+            _messages.add(
+              _ChatMessage(
+                text: fact,
+                isFromUser: false,
+                timestamp: DateTime.now(),
+                isFactCard: true,
+              ),
+            );
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> _loadSuggestions() async {
     try {
       final url = Uri.parse(
         '${ApiConfig.chatbotSuggestions}?context_type=${_activeDomain.contextType ?? ""}',
       );
-      final response = await http.post(url).timeout(const Duration(seconds: 5));
+      final response =
+          await http.post(url).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final list = (data['suggestions'] as List?)?.cast<String>() ?? [];
         if (mounted) setState(() => _suggestions = list);
       }
-    } catch (_) {
-      // fallback suggestions already shown via _defaultSuggestions
-    }
+    } catch (_) {}
   }
 
   void _switchDomain(_Domain domain) {
@@ -156,58 +227,120 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F9F7),
-      body: Column(
-        children: [
-          _buildAppBar(),
-          _buildDomainTabs(),
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned(
-                  top: -60,
-                  right: -40,
-                  child: Container(
-                    width: 160,
-                    height: 160,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          _domainColor.withOpacity(0.06),
-                          Colors.transparent,
-                        ],
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFF0F5F1), Color(0xFFEBF2EC), Color(0xFFF6F9F7)],
+          ),
+        ),
+        child: Column(
+          children: [
+            _buildAppBar(),
+            _buildDomainTabs(),
+            _buildDomainBanner(),
+            Expanded(
+              child: Stack(
+                children: [
+                  // Ambient background orb
+                  Positioned(
+                    top: -60,
+                    right: -40,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            _domainColor.withOpacity(0.07),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  itemCount:
-                      _messages.length +
-                      (_isTyping ? 1 : 0) +
-                      (_streamingBuffer != null ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    // Typing dots (shown only before first token arrives)
-                    if (_isTyping && index == _messages.length) {
-                      return _buildTypingIndicator();
-                    }
-                    // Live streaming bubble
-                    final streamIdx =
-                        _messages.length + (_isTyping ? 1 : 0);
-                    if (_streamingBuffer != null && index == streamIdx) {
-                      return _buildStreamingBubble(_streamingBuffer!);
-                    }
-                    return _buildMessageBubble(_messages[index]);
-                  },
-                ),
-              ],
+                  Positioned(
+                    bottom: 40,
+                    left: -60,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      width: 160,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            _domainColor.withOpacity(0.04),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Message list
+                  ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    itemCount: _messages.length +
+                        (_isTyping ? 1 : 0) +
+                        (_streamingBuffer != null ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (_isTyping && index == _messages.length) {
+                        return _buildTypingIndicator();
+                      }
+                      final streamIdx =
+                          _messages.length + (_isTyping ? 1 : 0);
+                      if (_streamingBuffer != null && index == streamIdx) {
+                        return _buildStreamingBubble(_streamingBuffer!);
+                      }
+                      final msg = _messages[index];
+                      return msg.isFactCard
+                          ? _buildFactCard(msg)
+                          : _buildMessageBubble(msg);
+                    },
+                  ),
+                  // Scroll-to-bottom FAB
+                  if (_showScrollFab)
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: GestureDetector(
+                        onTap: _scrollToBottom,
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: _domainColor,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: _domainColor.withOpacity(0.35),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      )
+                          .animate()
+                          .scale(duration: 180.ms, curve: Curves.elasticOut),
+                    ),
+                ],
+              ),
             ),
-          ),
-          if (_messages.length <= 2) _buildSuggestions(),
-          _buildInputArea(),
-        ],
+            if (_messages.length <= 3) _buildSuggestions(),
+            _buildInputArea(),
+          ],
+        ),
       ),
     );
   }
@@ -221,7 +354,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     return Container(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withOpacity(0.92),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -251,7 +384,6 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            // Animated bot avatar
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               width: 40,
@@ -263,12 +395,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                   colors: [_domainColor, _domainColor.withOpacity(0.7)],
                 ),
                 borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: _domainColor.withOpacity(0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-              child: Icon(
-                _activeDomain.icon,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: Icon(_activeDomain.icon, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -307,15 +442,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                   ),
                   Row(
                     children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _isTyping
-                              ? TeaColors.warningAmber
-                              : TeaColors.healthyGreen,
-                        ),
+                      _PulsingDot(
+                        color: _isTyping
+                            ? TeaColors.warningAmber
+                            : TeaColors.healthyGreen,
+                        pulse: _isTyping,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -358,7 +489,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   Widget _buildDomainTabs() {
     return Container(
-      color: Colors.white,
+      color: Colors.white.withOpacity(0.92),
       padding: const EdgeInsets.only(bottom: 12, top: 4),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -384,8 +515,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                         ? [
                             BoxShadow(
                               color: color.withOpacity(0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
                             ),
                           ]
                         : [],
@@ -418,6 +549,151 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     ).animate().fadeIn(duration: 200.ms);
   }
 
+  // ─── Domain Banner ─────────────────────────────────────────────────────────
+
+  Widget _buildDomainBanner() {
+    final desc = _activeDomain.description;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      child: desc == null
+          ? const SizedBox(width: double.infinity)
+          : AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: Container(
+                key: ValueKey(_activeDomain),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: _domainColor.withOpacity(0.07),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: _domainColor.withOpacity(0.12),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(_activeDomain.icon, size: 13, color: _domainColor),
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: Text(
+                        desc,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: _domainColor,
+                          letterSpacing: 0.2,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+
+  // ─── Tea Fact Card ─────────────────────────────────────────────────────────
+
+  Widget _buildFactCard(_ChatMessage message) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF2E7D32).withOpacity(0.92),
+              const Color(0xFF4A7C59).withOpacity(0.85),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2E7D32).withOpacity(0.2),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Decorative circle
+            Positioned(
+              top: -18,
+              right: -18,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.06),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.lightbulb_outline_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Did you know? ☕',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white.withOpacity(0.75),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          message.text,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 400.ms, delay: 200.ms)
+        .slideY(begin: 0.1, end: 0, duration: 400.ms, delay: 200.ms);
+  }
+
   // ─── Message Bubble ────────────────────────────────────────────────────────
 
   Widget _buildMessageBubble(_ChatMessage message) {
@@ -442,60 +718,81 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                   colors: [color, color.withOpacity(0.7)],
                 ),
                 borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: Icon(
-                _activeDomain.icon,
-                color: Colors.white,
-                size: 14,
-              ),
+              child: Icon(_activeDomain.icon, color: Colors.white, size: 14),
             ),
           ],
           Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.72,
-              ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isUser ? color : Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(isUser ? 20 : 6),
-                  bottomRight: Radius.circular(isUser ? 6 : 20),
+            child: GestureDetector(
+              onLongPress: isUser
+                  ? null
+                  : () => _copyMessage(message.text),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.72,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isUser
-                        ? color.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isUser ? color : Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(isUser ? 20 : 6),
+                    bottomRight: Radius.circular(isUser ? 6 : 20),
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _MessageText(
-                    text: message.text,
-                    color: isUser ? Colors.white : TeaColors.nearBlack,
-                  ),
-                  const SizedBox(height: 4),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text(
-                      _formatTime(message.timestamp),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isUser
-                            ? Colors.white.withOpacity(0.6)
-                            : TeaColors.mediumGray,
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isUser
+                          ? color.withOpacity(0.2)
+                          : Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _MessageText(
+                      text: message.text,
+                      color: isUser ? Colors.white : TeaColors.nearBlack,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (!isUser)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.copy_outlined,
+                              size: 9,
+                              color: TeaColors.mediumGray.withOpacity(0.5),
+                            ),
+                          ),
+                        const Expanded(child: SizedBox()),
+                        Text(
+                          _formatTime(message.timestamp),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isUser
+                                ? Colors.white.withOpacity(0.6)
+                                : TeaColors.mediumGray,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -504,7 +801,31 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.08, end: 0);
   }
 
-  // ─── Streaming Bubble (live token-by-token) ───────────────────────────────
+  void _copyMessage(String text) {
+    // Strip markdown bold markers for clipboard
+    final plain = text.replaceAll('**', '');
+    Clipboard.setData(ClipboardData(text: plain));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle_rounded, color: _domainColor, size: 16),
+            const SizedBox(width: 8),
+            const Text('Copied to clipboard'),
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        duration: const Duration(seconds: 2),
+        elevation: 4,
+      ),
+    );
+  }
+
+  // ─── Streaming Bubble ──────────────────────────────────────────────────────
 
   Widget _buildStreamingBubble(String text) {
     final color = _domainColor;
@@ -524,6 +845,13 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 colors: [color, color.withOpacity(0.7)],
               ),
               borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Icon(_activeDomain.icon, color: Colors.white, size: 14),
           ),
@@ -532,7 +860,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.72,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: const BorderRadius.only(
@@ -543,16 +872,58 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: _MessageText(
-                text: text.isEmpty ? '…' : text,
-                color: TeaColors.nearBlack,
-              ),
+              child: text.isEmpty
+                  ? _buildShimmerPlaceholder()
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Flexible(
+                          child: _MessageText(
+                            text: text,
+                            color: TeaColors.nearBlack,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        _BlinkingCursor(color: color),
+                      ],
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerPlaceholder() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 11,
+            width: 180,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            height: 11,
+            width: 130,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
         ],
@@ -581,16 +952,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             child: Icon(_activeDomain.icon, color: Colors.white, size: 14),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -598,10 +968,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
               mainAxisSize: MainAxisSize.min,
               children: List.generate(
                 3,
-                (index) => _BouncingDot(
-                  delay: index * 200,
-                  color: _domainColor,
-                ),
+                (index) => _BouncingDot(delay: index * 200, color: _domainColor),
               ),
             ),
           ),
@@ -613,7 +980,6 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   // ─── Suggestions ───────────────────────────────────────────────────────────
 
   Widget _buildSuggestions() {
-    // Prefer API-loaded suggestions, fall back to defaults
     final apiSuggestions = _suggestions;
     final defaultList =
         _defaultSuggestions[_activeDomain] ?? _defaultSuggestions[_Domain.general]!;
@@ -656,8 +1022,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             border: Border.all(color: color.withOpacity(0.2)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 4,
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
             ],
@@ -687,12 +1053,12 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     final color = _domainColor;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withOpacity(0.95),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, -2),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 16,
+            offset: const Offset(0, -3),
           ),
         ],
       ),
@@ -704,8 +1070,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF6F9F7),
+                    color: const Color(0xFFF0F5F1),
                     borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: color.withOpacity(0.12),
+                    ),
                   ),
                   child: TextField(
                     controller: _messageController,
@@ -730,31 +1099,41 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 ),
               ),
               const SizedBox(width: 8),
+              // Animated send button
               GestureDetector(
-                onTap: _sendMessage,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [color, color.withOpacity(0.75)],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+                onTapDown: (_) => setState(() => _sendPressed = true),
+                onTapUp: (_) {
+                  setState(() => _sendPressed = false);
+                  _sendMessage();
+                },
+                onTapCancel: () => setState(() => _sendPressed = false),
+                child: AnimatedScale(
+                  scale: _sendPressed ? 0.88 : 1.0,
+                  duration: const Duration(milliseconds: 100),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [color, color.withOpacity(0.75)],
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.send_rounded,
-                    color: Colors.white,
-                    size: 20,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withOpacity(_sendPressed ? 0.15 : 0.35),
+                          blurRadius: _sendPressed ? 4 : 12,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ),
@@ -775,7 +1154,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     if (text.isEmpty) return;
 
     final history = _messages
-        .take(_messages.length)
+        .where((m) => !m.isFactCard)
         .map(
           (m) => {
             'role': m.isFromUser ? 'user' : 'assistant',
@@ -832,7 +1211,6 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         return;
       }
 
-      // Hide typing dots, show empty streaming bubble immediately
       setState(() {
         _isTyping = false;
         _streamingBuffer = '';
@@ -861,7 +1239,6 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       });
 
       if (!mounted) return;
-      // Commit the completed streamed text as a permanent message
       setState(() {
         _streamingBuffer = null;
         _messages.add(
@@ -883,11 +1260,13 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   void _addLocalResponse(String query) {
     setState(() {
       _isTyping = false;
-      _messages.add(_ChatMessage(
-        text: _localFallback(query),
-        isFromUser: false,
-        timestamp: DateTime.now(),
-      ));
+      _messages.add(
+        _ChatMessage(
+          text: _localFallback(query),
+          isFromUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
     });
   }
 
@@ -906,15 +1285,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   String _localFallback(String query) {
     switch (_activeDomain) {
       case _Domain.soil:
-        return 'For healthy tea soil:\n\n• pH: 4.5–5.5 (acidic)\n• Moisture: 40–70%\n• Apply compost every 3 months\n• Test nitrogen, phosphorus, and potassium levels seasonally\n\nConnect your IoT sensors for live readings!';
+        return 'For healthy tea soil:\n\n• pH: 4.5–5.5 (acidic)\n• Moisture: 40–70%\n• Apply compost every 3 months\n• Test N, P, K levels seasonally\n\nConnect your IoT sensors for live readings!';
       case _Domain.leaf:
         return 'Common tea diseases:\n\n🔴 **Red Rust** — copper fungicide, improve airflow\n🟤 **Blister Blight** — spray every 7–10 days in wet season\n\nUse the Disease Scanner for real-time AI analysis!';
       case _Domain.climate:
-        return 'Ideal tea climate:\n\n• Temperature: 20–30°C\n• Humidity: 50–70%\n• Rainfall: 1,500–2,500mm/year\n\nHigh humidity (>80%) raises Blister Blight risk. Check your IoT weather sensors for live data.';
+        return 'Ideal tea climate:\n\n• Temperature: 20–30°C\n• Humidity: 50–70%\n• Rainfall: 1,500–2,500mm/year\n\nHigh humidity (>80%) raises Blister Blight risk.';
       case _Domain.yield:
-        return 'Harvest planning tips:\n\n• Harvest at P+2 stage (two leaves + bud)\n• Flush cycle: every 7–10 days during season\n• Early morning plucking keeps quality high\n\nCheck Yield Prediction on your dashboard for block-level forecasts!';
+        return 'Harvest planning tips:\n\n• Harvest at P+2 stage (two leaves + bud)\n• Flush cycle: every 7–10 days during season\n• Early morning plucking keeps quality high';
       case _Domain.powder:
-        return 'Tea powder grades:\n\n• **BOPF** — most common export grade\n• **BOP** — broken orange pekoe\n• **Dust 1** — finest, used in tea bags\n\nField disease below 5% is key to maintaining grade. Use Powder Grading feature for AI classification.';
+        return 'Tea powder grades:\n\n• **BOPF** — most common export grade\n• **BOP** — broken orange pekoe\n• **Dust 1** — finest, used in tea bags\n\nField disease below 5% is key to maintaining grade.';
       default:
         return 'I can help with disease detection, soil health, climate insights, yield planning, and powder grading.\n\nSelect a domain above or describe your question in more detail!';
     }
@@ -963,6 +1342,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                   setState(() {
                     _messages.clear();
                     _addWelcomeMessage();
+                    _fetchTeaFact();
                   });
                 },
               ),
@@ -995,7 +1375,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   }
 }
 
-// ─── Message Text (simple markdown-like bold) ─────────────────────────────────
+// ─── Message Text ─────────────────────────────────────────────────────────────
 
 class _MessageText extends StatelessWidget {
   final String text;
@@ -1005,7 +1385,6 @@ class _MessageText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Render **bold** text by splitting on ** markers
     final spans = <TextSpan>[];
     final parts = text.split('**');
     for (var i = 0; i < parts.length; i++) {
@@ -1028,18 +1407,130 @@ class _MessageText extends StatelessWidget {
   }
 }
 
-// ─── Data Models ──────────────────────────────────────────────────────────────
+// ─── Data Model ───────────────────────────────────────────────────────────────
 
 class _ChatMessage {
   final String text;
   final bool isFromUser;
   final DateTime timestamp;
+  final bool isFactCard;
 
   _ChatMessage({
     required this.text,
     required this.isFromUser,
     required this.timestamp,
+    this.isFactCard = false,
   });
+}
+
+// ─── Pulsing Status Dot ───────────────────────────────────────────────────────
+
+class _PulsingDot extends StatefulWidget {
+  final Color color;
+  final bool pulse;
+
+  const _PulsingDot({required this.color, required this.pulse});
+
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _anim = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+    if (widget.pulse) _ctrl.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_PulsingDot old) {
+    super.didUpdateWidget(old);
+    if (widget.pulse && !_ctrl.isAnimating) {
+      _ctrl.repeat(reverse: true);
+    } else if (!widget.pulse) {
+      _ctrl.stop();
+      _ctrl.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, _) => Container(
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: widget.color.withOpacity(_anim.value),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Blinking Cursor ─────────────────────────────────────────────────────────
+
+class _BlinkingCursor extends StatefulWidget {
+  final Color color;
+
+  const _BlinkingCursor({required this.color});
+
+  @override
+  State<_BlinkingCursor> createState() => _BlinkingCursorState();
+}
+
+class _BlinkingCursorState extends State<_BlinkingCursor>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _ctrl,
+      child: Container(
+        width: 2,
+        height: 14,
+        margin: const EdgeInsets.only(bottom: 1),
+        decoration: BoxDecoration(
+          color: widget.color,
+          borderRadius: BorderRadius.circular(1),
+        ),
+      ),
+    );
+  }
 }
 
 // ─── Bouncing Dot ─────────────────────────────────────────────────────────────
