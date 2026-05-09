@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -46,49 +46,78 @@
             <p class="lead reveal" style="animation-delay: 0.1s;">An undergraduate research initiative applying AI, IoT, and Explainable ML to the Sri Lankan tea industry.</p>
         </div>
 
-        <section class="content-grid">
-            <!-- Objectives -->
-            <div class="card reveal" style="animation-delay: 0.2s;">
-                <h2 class="card-title">System Objectives</h2>
-                <ul class="objective-list">
-                    <li>
-                        <i class="ph ph-target"></i> 
-                        <span>Enable early detection of disease and environmental/soil-related stress using multi-sensor fusion.</span>
-                    </li>
-                    <li>
-                        <i class="ph ph-target"></i> 
-                        <span>Reduce subjectivity in leaf maturity assessment and yield forecasting via computer vision.</span>
-                    </li>
-                    <li>
-                        <i class="ph ph-target"></i> 
-                        <span>Provide transparent, data-backed tea powder grading and valuation to replace manual auctions.</span>
-                    </li>
-                    <li>
-                        <i class="ph ph-target"></i> 
-                        <span>Support rural deployments through an edge-driven, hybrid system architecture.</span>
-                    </li>
+        <div class="page-header" style="margin-bottom: 2rem; margin-top: 2rem;">
+            <h2 class="reveal">Core System Components</h2>
+        </div>
+
+        <section class="tech-stack-grid" style="margin-bottom: 4rem;">
+            <!-- Component 1 -->
+            <div class="card reveal" style="animation-delay: 0.1s;">
+                <h3 class="card-title" style="font-size: 1.15rem;"><i class="ph ph-plant"></i> Disease Identification & Environmental Monitoring</h3>
+                <p style="font-size: 0.85rem; color: var(--tea-fresh-leaf); font-weight: bold; margin-bottom: 1rem; text-transform: uppercase;">Computer Vision and IoT</p>
+                <p style="font-size: 0.95rem; margin-bottom: 1rem;">Combines real-time IoT sensors with lightweight object detection models to accurately identify diseases under varying field conditions.</p>
+                <ul class="tech-list">
+                    <li><strong>Primary Model:</strong> YOLOv8</li>
+                    <li><strong>Validated Accuracy:</strong> ~95.00%</li>
                 </ul>
             </div>
 
-            <!-- Features -->
+            <!-- Component 2 -->
+            <div class="card reveal" style="animation-delay: 0.2s;">
+                <h3 class="card-title" style="font-size: 1.15rem;"><i class="ph ph-leaf"></i> Leaf Maturity Analyzer & Usable Yield Prediction</h3>
+                <p style="font-size: 0.85rem; color: var(--tea-fresh-leaf); font-weight: bold; margin-bottom: 1rem; text-transform: uppercase;">Image Classification and ML</p>
+                <p style="font-size: 0.95rem; margin-bottom: 1rem;">Uses mobile-optimized vision models to distinguish tender leaves from mature ones, integrated with ML regression to forecast short-term usable yield.</p>
+                <ul class="tech-list">
+                    <li><strong>Vision Models:</strong> ShuffleNetV2, MobileNetV2</li>
+                    <li><strong>Maturity Accuracy:</strong> 97.25%</li>
+                    <li><strong>Yield Prediction:</strong> XGBoost (R² ≈ 0.77)</li>
+                </ul>
+            </div>
+
+            <!-- Component 3 -->
             <div class="card reveal" style="animation-delay: 0.3s;">
+                <h3 class="card-title" style="font-size: 1.15rem;"><i class="ph ph-thermometer"></i> Soil Monitoring & Fertilizer Recommendation</h3>
+                <p style="font-size: 0.85rem; color: var(--tea-fresh-leaf); font-weight: bold; margin-bottom: 1rem; text-transform: uppercase;">IoT and ML</p>
+                <p style="font-size: 0.95rem; margin-bottom: 1rem;">Leverages custom sensor networks and intelligent classification to assess soil health, providing safe, TRI-standard aligned fertilizer advice.</p>
+                <ul class="tech-list">
+                    <li><strong>Approach:</strong> ML Classification & Rule-Overrides</li>
+                    <li><strong>Validated Accuracy:</strong> ~95.00%</li>
+                </ul>
+            </div>
+
+            <!-- Component 4 -->
+            <div class="card reveal" style="animation-delay: 0.4s;">
+                <h3 class="card-title" style="font-size: 1.15rem;"><i class="ph ph-scales"></i> Tea Powder Classification & Market Value Analysis</h3>
+                <p style="font-size: 0.85rem; color: var(--tea-fresh-leaf); font-weight: bold; margin-bottom: 1rem; text-transform: uppercase;">Image Classification and ML</p>
+                <p style="font-size: 0.95rem; margin-bottom: 1rem;">Replaces subjective manual grading by classifying tea powder via imaging, while predicting market auction prices based on quality and external factors.</p>
+                <ul class="tech-list">
+                    <li><strong>Vision Model:</strong> MobileNet</li>
+                    <li><strong>Grading Accuracy:</strong> 92.50%</li>
+                    <li><strong>Market Value:</strong> XGBoost (R² = 0.9693)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="content-grid">
+            <!-- Features -->
+            <div class="card reveal" style="animation-delay: 0.1s;">
                 <h2 class="card-title">Technical Innovations</h2>
                 <ul class="objective-list">
                     <li>
                         <i class="ph ph-cpu"></i> 
-                        <span><strong>Explainable AI (XAI):</strong> Grad-CAM heatmaps highlight prediction regions to improve farmer trust.</span>
+                        <span><strong>Explainable AI (XAI):</strong> Grad-CAM heatmaps for imaging and SHAP values for tabular data ensure full model transparency and farmer trust.</span>
                     </li>
                     <li>
                         <i class="ph ph-lightning"></i> 
-                        <span><strong>Edge ML:</strong> Optimized models for low-power IoT inference.</span>
+                        <span><strong>Edge ML:</strong> Optimized lightweight models (YOLOv8n, MobileNet) enable low-power inference directly on mobile and IoT devices.</span>
                     </li>
                     <li>
                         <i class="ph ph-globe-hemisphere-west"></i> 
-                        <span><strong>Hybrid Approach</strong> Hybrid cloud connectivity via GSM for remote sensing.</span>
+                        <span><strong>Hybrid Architecture:</strong> Combines offline mobile capabilities with IoT edge storage to function effectively in rural areas with intermittent connectivity.</span>
                     </li>
                     <li>
-                        <i class="ph ph-translate"></i> 
-                        <span><strong>Localization:</strong> Full Sinhala, Tamil, and English UI support.</span>
+                        <i class="ph ph-shield-check"></i> 
+                        <span><strong>Safety-Based Overrides:</strong> Hybrid AI systems use domain-informed rules (e.g., TRI guidelines) to prevent harmful fertilizer recommendations.</span>
                     </li>
                 </ul>
             </div>
@@ -105,30 +134,30 @@
                 <div class="card reveal" style="animation-delay: 0.1s;">
                     <h3 class="card-title">Hardware & IoT</h3>
                     <ul class="tech-list">
-                        <li>ESP32 & SIM800L GSM module</li>
-                        <li>NEO-6M GPS & NPK/pH Sensing</li>
-                        <li>Multi-depth Environmental Moisture Telemetry</li>
-                        <li>Solar–Battery Hybrid Power Management</li>
+                        <li>ESP32 & Multi-sensor Environmental Telemetry</li>
+                        <li>MQTT Protocol for low-bandwidth messaging</li>
+                        <li>NPK/pH & Soil Moisture Probes</li>
+                        <li>Rechargeable Battery Hybrid Edge Devices</li>
                     </ul>
                 </div>
 
                 <div class="card reveal" style="animation-delay: 0.2s;">
-                    <h3 class="card-title">Machine Learning</h3>
+                    <h3 class="card-title">Machine Learning Models</h3>
                     <ul class="tech-list">
-                        <li>YOLOv8n (Vision Inference)</li>
-                        <li>Random Forest & XGBoost (Tabular)</li>
-                        <li>TensorFlow Lite & OpenCV (Mobile)</li>
-                        <li>XAI Integration (Grad-CAM & SHAP)</li>
+                        <li>YOLOv8 (Object Detection)</li>
+                        <li>MobileNetV2 & ShuffleNetV2 (Image Classification)</li>
+                        <li>XGBoost & Gradient Boosting (Tabular Prediction)</li>
+                        <li>Grad-CAM & SHAP (Explainability)</li>
                     </ul>
                 </div>
 
                 <div class="card reveal" style="animation-delay: 0.3s;">
-                    <h3 class="card-title">Cloud & Mobile</h3>
+                    <h3 class="card-title">Cloud & Software</h3>
                     <ul class="tech-list">
-                        <li>Frontend: React Native</li>
-                        <li>Database: SQLite & Firebase</li>
-                        <li>Backend: Node.js & Google Cloud</li>
-                        <li>Analytics: Python (Pandas/Scikit)</li>
+                        <li>Frontend: React Native (Mobile-First)</li>
+                        <li>Inference: TensorFlow Lite, ONNX</li>
+                        <li>Backend: Node.js & Python APIs (Hosted on Railway)</li>
+                        <li>Database: MongoDB & SQLite (Edge Sync)</li>
                     </ul>
                 </div>
             </div>
