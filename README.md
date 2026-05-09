@@ -6,6 +6,10 @@ The system replaces subjective, manual assessment practices with **data-driven, 
 
 The platform combines **computer vision**, **machine learning**, and **edge IoT sensing** to support smallholder farmers, estate supervisors, and factory-level analysts in improving productivity, consistency, and economic outcomes.
 
+Website Link:
+- Railway Hosted: https://iteagrow-rp.up.railway.app/
+- GitHub Hosted: https://kanzur.github.io/iTeaGrow-RP-Website/
+
 ## High-Level System Architecture
 iTeaGrow operates as a **hybrid edge–mobile–cloud architecture**
 <img width="1536" height="1024" alt="HA" src="https://github.com/user-attachments/assets/6a2fac10-94a0-4237-81b6-d8d2de991c8d" />
